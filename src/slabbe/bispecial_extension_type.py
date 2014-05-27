@@ -4,6 +4,11 @@ Bispecial factors and extension types
 
 EXAMPLES::
 
+TODO:
+
+    - remove substitutions stuff from this file
+    - add examples above
+
 """
 from collections import defaultdict, Counter
 import itertools
