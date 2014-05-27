@@ -6,165 +6,41 @@ EXAMPLES::
 
 TODO:
 
-    - remove substitutions stuff from this file
     - add examples above
+    - use __classcall_private__ stuff for ExtensionType ?
+    - rename ExtensionType2to1 to ExtendedExtensionType ?
+    - export tikz to pdf using view instead of tikz2pdf ?
+    - fix bug of apply for ExtensionType2to1 when the word appears in the
+      image of a letter
+    - add the bispecial word to the attribute of extension type
+    - use this to compute the factor complexity function
 
 """
 from collections import defaultdict, Counter
 import itertools
 from sage.misc.classcall_metaclass import ClasscallMetaclass
-from sage.combinat.words.word import FiniteWord_class
+from sage.misc.cachefunc import cached_method
+from sage.combinat.words.word import FiniteWord_class, Word
+from sage.combinat.words.morphism import WordMorphism
 
-######################################
-# the substitutions Brun, Poincare, Arnoux-Rauzy
-######################################
-def P(*arg):
-    r"""
-    INPUT:
+common_substitutions_dict = dict(
+ar1=WordMorphism({1:[1],      2:[2,1],   3:[3,1]}),
+ar2=WordMorphism({1:[1,2],   2:[2],     3:[3,2]}),
+ar3=WordMorphism({1:[1,3],   2:[2,3],   3:[3]}),
+b12=WordMorphism({1:[1,2],   2:[2],     3:[3]}),
+b13=WordMorphism({1:[1,3],   2:[2],     3:[3]}),
+b21=WordMorphism({1:[1],     2:[2,1],   3:[3]}),
+b23=WordMorphism({1:[1],     2:[2,3],   3:[3]}),
+b31=WordMorphism({1:[1],     2:[2],     3:[3,1]}),
+b32=WordMorphism({1:[1],     2:[2],     3:[3,2]}),
+p12=WordMorphism({1:[1,2],   2:[2],     3:[3,1,2]}),
+p13=WordMorphism({1:[1,3],   2:[2,1,3], 3:[3]}),
+p21=WordMorphism({1:[1],     2:[2,1],   3:[3,2,1]}),
+p23=WordMorphism({1:[1,2,3], 2:[2,3],   3:[3]}),
+p31=WordMorphism({1:[1],     2:[2,3,1], 3:[3,1]}),
+p32=WordMorphism({1:[1,3,2], 2:[2],     3:[3,2]})
+)
 
-    - string like "p23"
-
-    or
-
-    - pair of indices
-
-    EXAMPLES::
-
-        sage: print P(2,1)
-        1->1, 2->21, 3->321
-        sage: print P(1,2)
-        1->12, 2->2, 3->312
-        sage: print P(1,3)
-        1->13, 2->213, 3->3
-        sage: print P('p13')
-        1->13, 2->213, 3->3
-
-    TESTS::
-
-        sage: print P(2,2)
-        Traceback (most recent call last):
-        ...
-        ValueError: bad values for j(=2) and k(=2)
-        sage: print P('p11')
-        Traceback (most recent call last):
-        ...
-        ValueError: bad values for j(=1) and k(=1)
-    """
-    if len(arg) == 1:
-        if not isinstance(arg[0], str):
-            raise ValueError("if one input given (=%s), it must be a str" % arg[0])
-        j,k = (int(a) for a in arg[0] if a.isdigit())
-    elif len(arg) == 2:
-        j,k = arg
-    else:
-        raise TypeError("not able to parse arguments (=%s)" % (arg,))
-    if not (1 <= j <=3 and 1 <= k <= 3 and j != k):
-        raise ValueError("bad values for j(=%s) and k(=%s)" % (j,k))
-    i = 6 - j - k
-    return WordMorphism({k:[k],j:[j,k],i:[i,j,k]})
-
-
-def AR(*arg):
-    r"""
-    INPUT:
-
-    - string like "ar3"
-
-    or
-
-    - integer in [1, 2, 3]
-
-    EXAMPLES::
-
-        sage: print AR(1)
-        1->1, 2->21, 3->31
-        sage: print AR(2)
-        1->12, 2->2, 3->32
-        sage: print AR(3)
-        1->13, 2->23, 3->3
-        sage: print AR('ar3')
-        1->13, 2->23, 3->3
-
-    TESTS::
-
-        sage: print AR('ar4')
-        Traceback (most recent call last):
-        ...
-        ValueError: bad values for k(=4)
-    """
-    if len(arg) == 1:
-        if isinstance(arg[0], str):
-            k, = (int(a) for a in arg[0] if a.isdigit())
-        else:
-            k = arg[0]
-    else:
-        raise TypeError("not able to parse arguments (=%s)" % (arg,))
-    L = [1,2,3]
-    if not k in L:
-        raise ValueError("bad values for k(=%s)" % k)
-    L.remove(k)
-    i,j = L
-    return WordMorphism({k:[k],j:[j,k],i:[i,k]})
-
-
-
-def B(*arg):
-    r"""
-    INPUT:
-
-    - string like "b23"
-
-    or
-
-    - pair of indices
-
-    EXAMPLES::
-
-        sage: print B(2,1)
-        1->1, 2->21, 3->3
-        sage: print B(1,2)
-        1->12, 2->2, 3->3
-        sage: print B(1,3)
-        1->13, 2->2, 3->3
-        sage: print B('b13')
-        1->13, 2->2, 3->3
-
-    TESTS::
-
-        sage: print B(2,2)
-        Traceback (most recent call last):
-        ...
-        ValueError: bad values for j(=2) and k(=2)
-        sage: print B('b11')
-        Traceback (most recent call last):
-        ...
-        ValueError: bad values for j(=1) and k(=1)
-    """
-    if len(arg) == 1:
-        if not isinstance(arg[0], str):
-            raise ValueError("if one input given (=%s), it must be a str" % arg[0])
-        j,k = (int(a) for a in arg[0] if a.isdigit())
-    elif len(arg) == 2:
-        j,k = arg
-    else:
-        raise TypeError("not able to parse arguments (=%s)" % (arg,))
-    if not (1 <= j <=3 and 1 <= k <= 3 and j != k):
-        raise ValueError("bad values for j(=%s) and k(=%s)" % (j,k))
-    i = 6 - j - k
-    return WordMorphism({k:[k],j:[j,k],i:[i]})
-
-
-Poincare_str = ['p12', 'p21', 'p13', 'p31', 'p23', 'p32']
-Arnoux_str = ['ar1', 'ar2', 'ar3']
-Brun_str = ['b12', 'b21', 'b13', 'b31', 'b23', 'b32']
-Poincare = dict((key, P(key)) for key in Poincare_str)
-Arnoux = dict((key, AR(key)) for key in Arnoux_str)
-Brun = dict((key, B(key)) for key in Brun_str)
-M = Poincare.copy()
-M.update(Arnoux)
-all_substitutions = Poincare.copy()
-all_substitutions.update(Arnoux)
-all_substitutions.update(Brun)
 ######################################
 # Utility functions
 ######################################
@@ -180,13 +56,13 @@ def factors_length_2_from_morphism_and_factors_length_2(m, F):
 
     EXAMPLES::
 
-        sage: B(1,2)
-        WordMorphism: 1->12, 2->2, 3->3
-        sage: sorted(factors_length_2_from_morphism_and_factors_length_2(B(1,2), []))
+        sage: b12 = WordMorphism({1:[1,2],2:[2],3:[3]})
+        sage: sorted(factors_length_2_from_morphism_and_factors_length_2(b12, []))
         []
-        sage: sorted(factors_length_2_from_morphism_and_factors_length_2(B(1,2), [(1,1)]))
+        sage: sorted(factors_length_2_from_morphism_and_factors_length_2(b12, [(1,1)]))
         [(1, 2), (2, 1)]
-        sage: sorted(factors_length_2_from_morphism_and_factors_length_2(B(2,3), [(1,1)]))
+        sage: b23 = WordMorphism({1:[1],2:[2,3],3:[3]})
+        sage: sorted(factors_length_2_from_morphism_and_factors_length_2(b23, [(1,1)]))
         [(1, 1)]
 
     """
@@ -297,9 +173,8 @@ class ExtensionType(object):
 
         ::
 
-            sage: B(1,2)
-            WordMorphism: 1->12, 2->2, 3->3
-            sage: ExtensionType.from_morphism(B(1,2))
+            sage: b12 = WordMorphism({1:[1,2],2:[2],3:[3]})
+            sage: ExtensionType.from_morphism(b12)
               E(w)   1   2   3
                1         X    
                2     X   X   X
@@ -411,7 +286,7 @@ class ExtensionType(object):
         s += '\n\\end{tabular}'
         return s
 
-    def life_graph(self, substitutions):
+    def life_graph(self, substitutions, substitutions_dict=None):
         r"""
         Return the graph of extension types generated under a sequence of
         substitutions.
@@ -419,6 +294,9 @@ class ExtensionType(object):
         INPUT:
 
         - ``substitutions`` - list of substitutions keys
+        - ``substitutions_dict`` - dict of substitutions, if None then it
+          gets replaced by ``common_substitutions_dict`` defined in the
+          module.
 
         EXAMPLES:
 
@@ -440,12 +318,14 @@ class ExtensionType(object):
             sage: E.life_graph(['b12','b21','b12'])
             Looped multi-digraph on 8 vertices
         """
+        if substitutions_dict is None:
+            substitutions_dict = common_substitutions_dict
         multiedges = True
         loops = True
         G = DiGraph(multiedges=multiedges,loops=loops)
         L,newL = [self],[]
         for key in substitutions:
-            s = all_substitutions[key]
+            s = substitutions_dict[key]
             for e in L:
                 for new in e.apply(s):
                     G.add_edge((e,new,key))
@@ -505,8 +385,6 @@ class ExtensionType(object):
                 print "Creation of file %s" % filename
             import os
             os.system("tikz2pdf %s" % filename)
-
-
 
     def equivalence_class(self):
         r"""
@@ -579,7 +457,8 @@ class ExtensionType(object):
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
-            sage: E.image(B(2,3))
+            sage: b23 = WordMorphism({1:[1],2:[2,3],3:[3]})
+            sage: E.image(b23)
               E(w)   1   2   3
                31        X
                12            X
@@ -612,12 +491,6 @@ class ExtensionType(object):
 
             sage: L = [(1,2), (2,2), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
-            sage: E
-              E(w)   1   2   3
-               1         X
-               2         X
-               3     X   X   X
-             m(w)=0, ordinary
             sage: E.left_right_projection()
             (Counter({3: 3, 1: 1, 2: 1}), Counter({2: 3, 1: 1, 3: 1}))
 
@@ -626,17 +499,11 @@ class ExtensionType(object):
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
-            sage: E
-              E(w)   1   2   3
-               21        X
-               31        X
-               12    X   X   X
-               22    X
-               23    X
-             m(w)=0, not ord., empty
-            sage: E.left_right_projection()
-            (Counter({word: 12: 3, word: 22: 1, word: 23: 1, word: 31: 1, word: 21: 1}),
-             Counter({word: 1: 3, word: 2: 3, word: 3: 1}))
+            sage: left, right = E.left_right_projection()
+            sage: sorted(left.iteritems())
+            [(word: 12, 3), (word: 21, 1), (word: 22, 1), (word: 23, 1), (word: 31, 1)]
+            sage: sorted(right.iteritems())
+            [(word: 1, 3), (word: 2, 3), (word: 3, 1)]
         """
         left_projection = Counter()
         right_projection = Counter()
@@ -1035,12 +902,14 @@ class ExtensionType1to1(ExtensionType):
 
         POSSIBLE BUG::
 
-            sage: b23 = B(2,3)
+            sage: b23 = WordMorphism({1:[1],2:[2,3],3:[3]})
+            sage: b13 = WordMorphism({1:[1,3],2:[2],3:[3]})
+            sage: b31 = WordMorphism({1:[1],2:[2],3:[3,1]})
             sage: e = ExtensionType.from_morphism(b23)
             sage: r = e.apply(b23)[0]
-            sage: r.apply(B(1,3))
+            sage: r.apply(b13)
             ()
-            sage: r.apply(B(3,1))
+            sage: r.apply(b31)
             ()
         """
         images = m.images()
@@ -1389,18 +1258,20 @@ class ExtensionType2to1(ExtensionType):
 
         POSSIBLE BUG::
 
-            sage: b23 = B(2,3)
+            sage: b23 = WordMorphism({1:[1],2:[2,3],3:[3]})
+            sage: b13 = WordMorphism({1:[1,3],2:[2],3:[3]})
+            sage: b31 = WordMorphism({1:[1],2:[2],3:[3,1]})
             sage: e = ExtensionType.from_morphism(b23)
             sage: r = e.apply(b23)[0]
-            sage: r.apply(B(1,3))
+            sage: r.apply(b13)
             ()
-            sage: r.apply(B(3,1))
+            sage: r.apply(b31)
             ()
 
         On a le meme bug (ca se corrige avec de plus grandes extensions a gauche)::
 
             sage: E = ExtensionType2to1((([a],[b]) for a,b in e), (1,2,3))
-            sage: E.apply(B(2,3))[0].apply(B(1,3))
+            sage: E.apply(b23)[0].apply(b13)
             (  E(w)   1   2   3
                31            X
                32            X
@@ -1408,7 +1279,7 @@ class ExtensionType2to1(ExtensionType):
                13    X   X   X
                23            X
              m(w)=0, ordinary, empty,)
-            sage: E.apply(B(2,3))[0].apply(B(3,1))
+            sage: E.apply(b23)[0].apply(b31)
             (  E(1w)   1   2   3
                 1     X   X   X
                 3     X   X   X
@@ -1424,7 +1295,7 @@ class ExtensionType2to1(ExtensionType):
 
         EXAMPLES::
 
-        On imagine qu'on vient de faire B(1,2)::
+        On imagine qu'on vient de faire b12::
 
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:      2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
@@ -1437,7 +1308,8 @@ class ExtensionType2to1(ExtensionType):
                22    X
                23    X
              m(w)=0, not ord., empty
-            sage: E.apply(B(1,2))
+            sage: b12 = WordMorphism({1:[1,2],2:[2],3:[3]})
+            sage: E.apply(b12)
             (  E(2w)   1   2   3
                21         X
                31         X
@@ -1454,7 +1326,8 @@ class ExtensionType2to1(ExtensionType):
 
         ::
 
-            sage: E.apply(B(2,1))
+            sage: b21 = WordMorphism({1:[1],2:[2,1],3:[3]})
+            sage: E.apply(b21)
             (  E(1w)   1   2   3
                21         X
                12     X   X   X
@@ -1467,7 +1340,8 @@ class ExtensionType2to1(ExtensionType):
                12    X
                13    X
              m(w)=0, ordinary, empty)
-            sage: E.apply(B(2,3))
+            sage: b23 = WordMorphism({1:[1],2:[2,3],3:[3]})
+            sage: E.apply(b23)
             (  E(3w)   1   2   3
                12     X   X   X
                32     X
