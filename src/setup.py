@@ -13,9 +13,7 @@ setup(name='slabbe',
 	author_email='labbe@liafa.univ-paris-diderot.fr',
 	url='http://www.liafa.univ-paris-diderot.fr/~labbe/',
     license = "GPL v2",
-	packages=['slabbe', 
-              'slabbe.digital_geometry'
-             ],
+	packages=['slabbe'],
     #ext_modules=[
     #Extension('slabbe.mcf',
     #sources = [os.path.join('slabbe','mcf.pyx')]),
