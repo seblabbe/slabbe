@@ -23,6 +23,12 @@ Intersection of a line and a box::
     Intersection des objets suivants :
     Set of points x in ZZ^2 satisfying: 0 <= (pi, sqrt(2)) . x + 0 < pi + sqrt(2)
     [-5, 5] x [-5, 5]
+
+
+TODO:
+
+    - change Line to DiscreteLine
+    - change Plan to DiscretePlane
 """
 
 #*****************************************************************************
