@@ -54,7 +54,7 @@ def convex_bondary(L):
     r"""
     EXAMPLES::
 
-        sage: from slabbe.digital_geometry.discrete_subset import convex_boundary
+        sage: from slabbe.discrete_subset import convex_boundary
         sage: convex_bondary([(3,4), (1,2), (3,5)])
         [(3, 5), (1, 2), (3, 4)]
 
@@ -945,7 +945,7 @@ class DiscreteSubset(SageObject):
 
         ::
 
-            sage: from slabbe.digital_geometry.discrete_subset import M3to2
+            sage: from slabbe.discrete_subset import M3to2
             sage: p.tikz_edges(projmat=M3to2)
             \draw[very thick, blue] (0.00000, 0.00000) -- (-0.86603, -0.50000);
             \draw[very thick, blue] (0.00000, 0.00000) -- (0.86603, -0.50000);
@@ -1277,11 +1277,11 @@ class Intersection(DiscreteSubset):
         TESTS::
 
             sage: type(Intersection([DiscreteSubset(2)]))
-            <class 'slabbe.digital_geometry.discrete_subset.Intersection'>
+            <class 'slabbe.discrete_subset.Intersection'>
             sage: type(Intersection([DiscreteSubset(3)]))
-            <class 'slabbe.digital_geometry.discrete_subset.Intersection'>
+            <class 'slabbe.discrete_subset.Intersection'>
             sage: type(Intersection([DiscreteSubset(4)]))
-            <class 'slabbe.digital_geometry.discrete_subset.Intersection'>
+            <class 'slabbe.discrete_subset.Intersection'>
         """
         for o in objets:
             if not isinstance(o, DiscreteSubset):

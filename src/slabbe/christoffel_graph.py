@@ -32,8 +32,8 @@ from sage.matrix.constructor import matrix
 from sage.rings.integer_ring import ZZ
 from sage.structure.element import gcd
 from sage.functions.other import abs
-from slabbe.digital_geometry.discrete_subset import DiscreteSubset, DiscreteTube, M3to2, M4to3
-from slabbe.digital_geometry.discrete_plane import Plan 
+from slabbe.discrete_subset import DiscreteSubset, DiscreteTube, M3to2, M4to3
+from slabbe.discrete_plane import Plan 
 ################################################
 # Christoffel Edges
 ################################################

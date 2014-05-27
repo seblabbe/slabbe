@@ -37,7 +37,7 @@ Intersection of a line and a box::
 from sage.rings.real_mpfr import RealField
 from sage.functions.other import ceil, sqrt
 from sage.modules.free_module_element import vector
-from slabbe.digital_geometry.discrete_subset import DiscreteSubset
+from slabbe.discrete_subset import DiscreteSubset
 ################################################
 # Discrete plane and hyperplanes
 ################################################

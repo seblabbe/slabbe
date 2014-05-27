@@ -24,8 +24,8 @@ TODO:
 from copy import copy
 from sage.modules.free_module_element import vector
 from sage.combinat.words.word import Word
-from slabbe.digital_geometry.discrete_plane import Plan 
-from slabbe.digital_geometry.discrete_subset import DiscreteSubset, Intersection
+from slabbe.discrete_plane import Plan 
+from slabbe.discrete_subset import DiscreteSubset, Intersection
 ################################################
 # Discrete Line
 ################################################
