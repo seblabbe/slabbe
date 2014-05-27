@@ -46,14 +46,6 @@ class ChristoffelEdges(DiscreteSubset):
 
     - ``v`` - vector, normal vector
 
-    TEST:
-
-    This is a bug::
-
-        sage: C = ChristoffelEdges((2,3,5))
-        sage: isinstance(C, DiscreteSubset)  # it returns False
-        True
-
     EXAMPLES::
 
         sage: ChristoffelEdges((2,5))
@@ -80,6 +72,15 @@ class ChristoffelEdges(DiscreteSubset):
         sage: I = C & b
         sage: point_kwds = {'label':lambda p:C.level_value(p),'label_pos':'above right'}
         sage: tikz = I.tikz_noprojection(scale=0.8,point_kwds=point_kwds)
+
+    TEST:
+
+    This was once a bug::
+
+        sage: C = ChristoffelEdges((2,3,5))
+        sage: isinstance(C, DiscreteSubset)
+        True
+
     """
     def __init__(self, v, mod=None):
         r"""
