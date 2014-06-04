@@ -252,7 +252,7 @@ class DiscreteHyperplane(DiscreteSubset):
             sage: H = DiscreteHyperplane([1,3,7,9], 20, mu=13)
             sage: p = H._space((1,2,3,4))
             sage: H.level_value(p)
-            True
+            64
         """
         return self._v.dot_product(p)
 

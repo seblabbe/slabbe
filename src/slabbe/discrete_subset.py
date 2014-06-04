@@ -50,15 +50,16 @@ M4to3 = matrix([(1,  0, -1/sqrt2),
 ################################################
 # Convex boundary of a set of 2d points
 ################################################
-def convex_bondary(L):
+def convex_boundary(L):
     r"""
     EXAMPLES::
 
         sage: from slabbe.discrete_subset import convex_boundary
-        sage: convex_bondary([(3,4), (1,2), (3,5)])
+        sage: convex_boundary([(3,4), (1,2), (3,5)])
         [(3, 5), (1, 2), (3, 4)]
 
     """
+    from sage.geometry.polyhedron.constructor import Polyhedron
     P = Polyhedron(L)
     from sage.geometry.polyhedron.plot import cyclic_sort_vertices_2d
     return map(tuple, cyclic_sort_vertices_2d(P.vertices()))
@@ -1166,7 +1167,7 @@ class DiscreteSubset(SageObject):
                 clip = [projmat * c for c in clip]
             else:
                 raise ValueError("incorrect space dimension of clip data (=%s)" %len(clip[0]))
-            clip_convex = convex_bondary(clip)
+            clip_convex = convex_boundary(clip)
             clip_s = " -- ".join(str(pt) for pt in clip_convex)
             s += "\\clip %s -- cycle;\n" % clip_s
         # edges
@@ -1181,7 +1182,7 @@ class DiscreteSubset(SageObject):
                 contour = [projmat * c for c in contour]
             else:
                 raise ValueError("incorrect space dimension of contour data (=%s)" %len(contour[0]))
-            contour_convex = convex_bondary(contour)
+            contour_convex = convex_boundary(contour)
             contour_s = " -- ".join(str(pt) for pt in contour_convex)
             if clip:
                 s += "\\filldraw[fill=white,very thick,dotted,opacity=0.5,even odd rule]\n"

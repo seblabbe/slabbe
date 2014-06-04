@@ -12,6 +12,7 @@ from double_square_tile import (DoubleSquare,
                                 #snake,
                                 #triple_square_example,
                                 )
+from fruit import Fruit, Banana, Strawberry
 
 # for doctext to work, we import convex_boundary
 # from discrete_subset import convex_boundary

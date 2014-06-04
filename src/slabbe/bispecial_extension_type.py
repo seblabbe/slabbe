@@ -23,8 +23,10 @@ from collections import defaultdict, Counter
 import itertools
 from sage.misc.classcall_metaclass import ClasscallMetaclass
 from sage.misc.cachefunc import cached_method
+from sage.misc.table import table
 from sage.combinat.words.word import FiniteWord_class, Word
 from sage.combinat.words.morphism import WordMorphism
+from sage.graphs.digraph import DiGraph
 
 common_substitutions_dict = dict(
 ar1=WordMorphism({1:[1],      2:[2,1],   3:[3,1]}),
@@ -59,6 +61,7 @@ def factors_length_2_from_morphism_and_factors_length_2(m, F):
 
     EXAMPLES::
 
+        sage: from slabbe.bispecial_extension_type import factors_length_2_from_morphism_and_factors_length_2
         sage: b12 = WordMorphism({1:[1,2],2:[2],3:[3]})
         sage: sorted(factors_length_2_from_morphism_and_factors_length_2(b12, []))
         []
@@ -1491,6 +1494,7 @@ def longest_common_prefix(L):
 
     EXAMPLES::
 
+        sage: from slabbe.bispecial_extension_type import longest_common_prefix
         sage: longest_common_prefix((Word('ab'), Word('abc'), Word('abd')))
         word: ab
     """

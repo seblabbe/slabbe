@@ -1865,6 +1865,7 @@ def find_square_factorisation(ds, factorisation=None, alternate=True):
 
     EXAMPLES::
 
+        sage: from slabbe.double_square_tile import find_square_factorisation
         sage: find_square_factorisation(words.fibonacci_tile(0))
         (0, 1, 2, 3)
         sage: find_square_factorisation(words.fibonacci_tile(1))
@@ -1951,6 +1952,7 @@ def double_square_from_boundary_word(ds):
 
     EXAMPLES::
 
+        sage: from slabbe.double_square_tile import double_square_from_boundary_word
         sage: fibo = words.fibonacci_tile
         sage: W, rot180, steps = double_square_from_boundary_word(fibo(1))
         sage: map(len, W)
@@ -2016,6 +2018,7 @@ def double_square_from_four_integers(l0, l1, l2, l3):
 
     EXAMPLES::
 
+        sage: from slabbe.double_square_tile import double_square_from_four_integers
         sage: w,rot180,steps = double_square_from_four_integers(2,1,2,1)
         sage: w
         (Path: 21, Path: 2, Path: 32, Path: 3, Path: 03, Path: 0, Path: 10, Path: 1)
@@ -2116,6 +2119,7 @@ def figure_11_BGL2012(scale=0.5, boxsize=10, newcommand=True):
 
     EXAMPLES::
 
+        sage: from slabbe.double_square_tile import figure_11_BGL2012
         sage: s = figure_11_BGL2012()
         sage: s
         \newcommand{\TRIM}{\textsc{trim}}
@@ -2222,6 +2226,7 @@ def snake(i, ncols=2):
 
     EXAMPLES::
 
+        sage: from slabbe.double_square_tile import snake
         sage: for i in range(8): snake(i, 3)
         (0, 0)
         (1, 0)
@@ -2254,6 +2259,7 @@ def triple_square_example(i):
 
     EXAMPLES::
 
+        sage: from slabbe.double_square_tile import triple_square_example
         sage: triple_square_example(1)
         Path: abaBAbabaBAbabaBAbabABABabABABabABAB
         sage: triple_square_example(2)
