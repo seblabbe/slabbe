@@ -4,12 +4,46 @@ Bispecial factors and extension types
 
 EXAMPLES::
 
-    sage: print "todo"
-    not done
+The extension type of an ordinary bispecial factor::
+
+    sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
+    sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
+    sage: E
+      E(w)   1   2   3
+       1             X
+       2             X
+       3     X   X   X
+     m(w)=0, ordinary
+    sage: E.is_ordinaire()
+    True
+
+Creation of a strong-weak pair of bispecial words from a neutral
+not ordinairy word::
+
+    sage: m = WordMorphism({1:[1,2,3],2:[2,3],3:[3]})
+    sage: E = ExtensionType1to1([(1,2),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
+    sage: E
+      E(w)   1   2   3
+       1         X
+       2             X
+       3     X   X   X
+     m(w)=0, not ord.
+    sage: E1, E2 = E.apply(m)
+    sage: E1
+      E(3w)   1   2   3
+        1
+        2         X   X
+        3     X   X   X
+     m(w)=1, not ord.
+    sage: E2
+      E(23w)   1   2   3
+        1          X
+        2
+        3              X
+     m(w)=-1, not ord.
 
 TODO:
 
-    - add examples above
     - use __classcall_private__ stuff for ExtensionType ?
     - rename ExtensionType2to1 to ExtendedExtensionType ?
     - export tikz to pdf using view instead of tikz2pdf ?

@@ -26,10 +26,12 @@ TODO:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+import itertools
 from copy import copy
 from sage.modules.free_module_element import vector
 from sage.matrix.constructor import matrix
 from sage.rings.integer_ring import ZZ
+from sage.rings.real_mpfr import RR
 from sage.structure.element import gcd
 from sage.functions.other import abs
 from slabbe.discrete_subset import DiscreteSubset, DiscreteTube, M3to2, M4to3
@@ -257,8 +259,11 @@ class ChristoffelEdges(DiscreteSubset):
 
         EXAMPLES::
 
-            sage: print "todo"
-            not done
+            sage: C = ChristoffelEdges((2,3,5))
+            sage: tikz = C.tikz_kernel()
+            sage: lines = tikz.splitlines()
+            sage: len(lines)
+            306
 
         """
         # kernel to clip

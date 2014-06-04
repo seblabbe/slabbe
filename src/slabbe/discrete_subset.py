@@ -2,13 +2,104 @@
 r"""
 Digital geometry primitives
 
-EXAMPLES:
+Subsets of ZZ^d with the edge relation +e_i and -e_i.
 
-    ...
+EXAMPLES::
+
+    sage: DiscreteSubset(2)
+    Subset of ZZ^2
+    sage: DiscreteSubset(4)
+    Subset of ZZ^4
+
+A discrete 2d disk::
+
+    sage: D = DiscreteSubset(2, lambda (x,y) : x^2 + y^2 < 4)
+    sage: D.list()
+    [(0, 0), (0, 1), (0, -1), (1, 0), (-1, 0), (-1, 1), (1, -1), (1, 1), (-1, -1)]
+    sage: D
+    Subset of ZZ^2
+
+A discrete 3d ball::
+
+    sage: predicate = lambda (x,y,z) : x^2 + y^2 + z^2 <= 4
+    sage: D = DiscreteSubset(3, predicate)
+    sage: D
+    Subset of ZZ^3
+    sage: (0,0,0) in D
+    True
+    sage: (10,10,10) in D
+    False
+    sage: len(D.list())
+    33
+    sage: D.plot()    # optional long
+
+A discrete 4d hyperplane::
+
+    sage: predicate = lambda (x,y,z,w) : 0 <= 2*x + 3*y + 4*z + 5*w < 14
+    sage: D = DiscreteSubset(4, predicate)
+    sage: D
+    Subset of ZZ^4
+    sage: D.an_element()
+    (0, 0, 0, 0)
+
+A 2d discrete box::
+
+    sage: b = DiscreteBox([-5,5], [-5,5])
+    sage: b
+    Box: [-5, 5] x [-5, 5]
+    sage: b.plot()       # optional long
+
+A 3d discrete box::
+
+    sage: b = DiscreteBox([-2,2], [-5,5], [-5,5])
+    sage: b
+    Box: [-2, 2] x [-5, 5] x [-5, 5]
+    sage: b.plot()       # optional long
+
+The intersection of two discrete object of the same dimension::
+
+    sage: circ = DiscreteSubset(2, lambda p: p[0]^2+p[1]^2<=100)
+    sage: b = DiscreteBox([0,10], [0,10])
+    sage: I = circ & b
+    sage: I
+    Intersection des objets suivants :
+    Subset of ZZ^2
+    [0, 10] x [0, 10]
+    sage: I.an_element()
+    (0, 0)
+    sage: I.plot()      # optional long
+
+A discrete tube (preimage of a discrete box by a matrix)::
+
+    sage: M3to2 = matrix(2,[-sqrt(3),sqrt(3),0,-1,-1,2],ring=RR)/2
+    sage: M3to2
+    [-0.866025403784439  0.866025403784439  0.000000000000000]
+    [-0.500000000000000 -0.500000000000000   1.00000000000000]
+    sage: tube = DiscreteTube([-5,5],[-5,5], projmat=M3to2)
+    sage: tube
+    DiscreteTube: Preimage of [-5, 5] x [-5, 5] by a 2 by 3 matrix
+    sage: it = iter(tube)
+    sage: [next(it) for _ in range(4)]
+    [(0, 0, 0), (1, 0, 0), (0, 0, 1), (0, 0, -1)]
 
 TODO:
 
     - Code Complement
+    - The method projection_matrix should be outside of the class?
+    - DiscreteTube should have a method projection_matrix
+    - The user should be able to provide an element to the object or a list
+      of element
+    - Their should be an input saying whether the object is connected or
+      not and what kind of neighbor connectedness
+    - When zero is not in self, then the an_element method fails (see below)
+
+::
+
+    sage: D = DiscreteSubset(2, lambda (x,y) : 4 < x^2 + y^2 < 25)
+    sage: D.an_element()
+    Traceback (most recent call last):
+    ...
+    AssertionError: an_element method returns an element which is not in self
 
 """
 #*****************************************************************************
@@ -31,11 +122,15 @@ from sage.structure.sage_object import SageObject
 from sage.misc.cachefunc import cached_method
 from sage.modules.free_module import FreeModule
 from sage.rings.integer_ring import ZZ
+from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
+from sage.misc.latex import LatexExpr
 from sage.plot.graphics import Graphics
 from sage.plot.point import point
 from sage.plot.circle import circle
-from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
-from sage.misc.latex import LatexExpr
+from sage.plot.plot3d.shapes2 import text3d
+from sage.plot.line import line
+from sage.plot.text import text
+from sage.plot.plot3d.platonic import cube
 
 sqrt2 = sqrt(2)
 sqrt3 = sqrt(3)
