@@ -2,7 +2,7 @@
 r"""
 Bispecial factors and extension types
 
-EXAMPLES::
+EXAMPLES:
 
 The extension type of an ordinary bispecial factor::
 
