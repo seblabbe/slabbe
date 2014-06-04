@@ -20,7 +20,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Remove old documentation
-rm -fr "$SAGE_ROOT"/devel/sage/doc/en/slabbe*
-cp -r doc/en/slabbe "$SAGE_ROOT"/devel/sage/doc/en
+rm -fr "$SAGE_ROOT"/src/sage/doc/en/slabbe*
+cp -r doc/en/slabbe "$SAGE_ROOT"/src/doc/en
 
 exit 0

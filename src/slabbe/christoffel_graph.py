@@ -257,9 +257,8 @@ class ChristoffelEdges(DiscreteSubset):
 
         EXAMPLES::
 
-        Note : bounding box broken for vector (3,11,14)::
-
-            $ sage script.sage --job=kernel --coords="(3,11,14)" --way=LLL
+            sage: print "todo"
+            not done
 
         """
         # kernel to clip

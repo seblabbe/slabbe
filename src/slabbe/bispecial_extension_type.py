@@ -4,6 +4,9 @@ Bispecial factors and extension types
 
 EXAMPLES::
 
+    sage: print "todo"
+    not done
+
 TODO:
 
     - add examples above
@@ -1293,7 +1296,7 @@ class ExtensionType2to1(ExtensionType):
                23    X
              m(w)=0, not ord., empty)
 
-        EXAMPLES::
+        EXAMPLES:
 
         On imagine qu'on vient de faire b12::
 
