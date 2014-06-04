@@ -1,3 +1,4 @@
+==============================================
 Sébastien Labbé Research Code Reference Manual
 ==============================================
 
@@ -21,7 +22,8 @@ This work is licensed under a `Creative Commons Attribution-Share Alike
 
 __ https://creativecommons.org/licenses/by-sa/3.0/
 
-**Digital Geometry**
+Digital Geometry
+================
 
 .. toctree::
    :maxdepth: 1
@@ -32,22 +34,24 @@ __ https://creativecommons.org/licenses/by-sa/3.0/
    christoffel_graph
    double_square_tile
 
-**Python class inheritance**
-
-.. toctree::
-   :maxdepth: 1
-
-   fruit
-
-**Factor complexity**
+Factor complexity
+=================
 
 .. toctree::
    :maxdepth: 1
 
    bispecial_extension_type
 
+Python class inheritance
+========================
+
+.. toctree::
+   :maxdepth: 1
+
+   fruit
+
 Indices and Tables
-------------------
+==================
 
 * :ref:`genindex`
 * :ref:`modindex`
