@@ -28,10 +28,10 @@ REFERENCES:
 
 .. [WVL1984] Wijshoff, H. A. G, et J. Van Leeuwen. Arbitrary versus periodic
    storage schemes and tessellations of the plane using one type of
-   polyomino. INFORM. AND CONTROL 62 (1984): 1‑25.
+   polyomino. INFORM. AND CONTROL 62 (1984): 1-25.
 
 .. [BN1991] Beauquier, D., and M. Nivat. On translating one polyomino to tile the
-   plane. Discrete & Computational Geometry 6 (1991): 575‑592.
+   plane. Discrete & Computational Geometry 6 (1991): 575-592.
    :doi:`10.1007/BF02574705`
 
 .. [BFP2009] S. Brlek, J.-M Fédou, X. Provençal, On the Tiling by Translation
