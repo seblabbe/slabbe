@@ -15,6 +15,10 @@ Testing the spkg (make sure the line ``from slabbe import *`` is in the file
 
     sage -t --force-lib -i slabbe-0.1/src/slabbe/*
 
+Check the doctest coverage::
+
+    sage -coverage slabbe-0.1/src/slabbe/*
+
 Build the documentation::
 
     sage -docbuild slabbe inventory
