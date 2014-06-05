@@ -4,11 +4,14 @@ Billiard words
 
 EXAMPLES:
 
-    ...
+    sage: b = BilliardCube((1,pi,sqrt(2)))
+    sage: b
+    Cubic billiard of direction (1, pi, sqrt(2))
 
 TODO:
 
-    
+    - Should handle any direction
+    - Should take an initial point
 
 """
 
@@ -29,7 +32,7 @@ from slabbe.discrete_subset import DiscreteSubset, Intersection
 ################################################
 # Discrete Line
 ################################################
-class BillardCube(Intersection):
+class BilliardCube(Intersection):
     r"""
     This is the set of point `p` such that
 
@@ -39,18 +42,18 @@ class BillardCube(Intersection):
 
     INPUT:
 
-    - ``v`` - vecteur directeur
-    - ``start`` - point initial (default = (0,0,0))
+    - ``v`` - directive vector
+    - ``start`` - initial point (default = (0,0,0))
 
     EXAMPLES::
 
-        sage: b = BillardCube((1,pi,sqrt(2)))
+        sage: b = BilliardCube((1,pi,sqrt(2)))
         sage: b
-        Billard cubique de direction (1, pi, sqrt(2))
+        Cubic billiard of direction (1, pi, sqrt(2))
 
     ::
 
-        sage: b = BillardCube((1,pi,sqrt(2)))
+        sage: b = BilliardCube((1,pi,sqrt(2)))
         sage: it = iter(b)
         sage: [next(it) for _ in range(20)]
         [(0, 0, 0),
@@ -79,9 +82,9 @@ class BillardCube(Intersection):
         r"""
         EXAMPLES::
 
-            sage: b = BillardCube((1,pi,sqrt(2)))
+            sage: b = BilliardCube((1,pi,sqrt(2)))
             sage: b
-            Billard cubique de direction (1, pi, sqrt(2))
+            Cubic billiard of direction (1, pi, sqrt(2))
 
         TESTS::
 
@@ -113,11 +116,11 @@ class BillardCube(Intersection):
         r"""
         EXAMPLES::
         
-            sage: b = BillardCube((1,pi,sqrt(2)))
+            sage: b = BilliardCube((1,pi,sqrt(2)))
             sage: b
-            Billard cubique de direction (1, pi, sqrt(2))
+            Cubic billiard of direction (1, pi, sqrt(2))
         """
-        return "Billard cubique de direction %s" % self._v
+        return "Cubic billiard of direction %s" % self._v
 
     def an_element(self):
         r"""
@@ -125,7 +128,7 @@ class BillardCube(Intersection):
 
         EXAMPLES::
 
-            sage: b = BillardCube((1,pi,sqrt(2)))
+            sage: b = BilliardCube((1,pi,sqrt(2)))
             sage: b.an_element()
             (0, 0, 0)
         """
@@ -139,7 +142,7 @@ class BillardCube(Intersection):
 
         EXAMPLES::
 
-            sage: b = BillardCube((1,pi,sqrt(2)))
+            sage: b = BilliardCube((1,pi,sqrt(2)))
             sage: it = b.step_iterator()
             sage: [next(it) for _ in range(5)]
             [(0, 1, 0), (0, 0, 1), (0, 1, 0), (1, 0, 0), (0, 1, 0)]
@@ -162,7 +165,7 @@ class BillardCube(Intersection):
 
         EXAMPLES::
 
-            sage: b = BillardCube((1,pi,sqrt(2)))
+            sage: b = BilliardCube((1,pi,sqrt(2)))
             sage: b.to_word()
             word: 2321232212322312232123221322231223212322...
 

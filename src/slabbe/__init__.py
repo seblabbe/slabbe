@@ -1,5 +1,5 @@
 from discrete_subset import DiscreteSubset, DiscreteBox, DiscreteTube, Intersection
-from billiard import BillardCube
+from billiard import BilliardCube
 from discrete_plane import DiscretePlane, DiscreteLine, DiscreteHyperplane
 from christoffel_graph import ChristoffelGraph
 from bispecial_extension_type import ExtensionType, ExtensionType1to1, ExtensionType2to1
