@@ -4,7 +4,7 @@ Discrete Hyperplanes
 
 Intersection of a plane and a tube::
 
-    sage: p = Plan([1,pi,7], 1+pi+7, mu=0)
+    sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
     sage: d = DiscreteTube([-5,5],[-5,5])
     sage: I = p & d
     sage: I
@@ -16,7 +16,7 @@ Intersection of a plane and a tube::
 
 Intersection of a line and a box::
 
-    sage: L = Line([pi,sqrt(2)], pi+sqrt(2), mu=0)
+    sage: L = DiscreteLine([pi,sqrt(2)], pi+sqrt(2), mu=0)
     sage: b = DiscreteBox([-5,5],[-5,5])
     sage: I = L & b
     sage: I
@@ -27,8 +27,8 @@ Intersection of a line and a box::
 
 TODO:
 
-    - change Line to DiscreteLine
-    - change Plan to DiscretePlane
+    - do some dimension checking for DiscreteLine and DiscretePlane
+
 """
 
 #*****************************************************************************
@@ -55,19 +55,19 @@ class DiscreteHyperplane(DiscreteSubset):
 
     INPUT:
 
-    - ``v`` - vecteur normal
-    - ``omega`` - épaisseur
+    - ``v`` - normal vector
+    - ``omega`` - width
     - ``mu`` - intercept (optional, default: 0)
 
     EXAMPLES::
 
-        sage: L = Line([pi,sqrt(2)], pi+sqrt(2), mu=10)
+        sage: L = DiscreteLine([pi,sqrt(2)], pi+sqrt(2), mu=10)
         sage: L
         Set of points x in ZZ^2 satisfying: 0 <= (pi, sqrt(2)) . x + 10 < pi + sqrt(2)
 
     ::
 
-        sage: p = Plan([1,pi,7], 1+pi+7, mu=0)
+        sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
         sage: p
         Set of points x in ZZ^3 satisfying: 0 <= (1, pi, 7) . x + 0 < pi + 8
 
@@ -79,10 +79,10 @@ class DiscreteHyperplane(DiscreteSubset):
 
     TESTS::
 
-        sage: p = Plan([1,pi,7], 1+pi+7, mu=20)
+        sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=20)
         sage: vector((0,0,0)) in p
         False
-        sage: p = Plan([1,pi,7], 1+pi+7, mu=0)
+        sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
         sage: vector((0,0,0)) in p
         True
 
@@ -94,10 +94,10 @@ class DiscreteHyperplane(DiscreteSubset):
 
     ::
 
-        sage: L = Line([1,pi], 1+pi, mu=20)
+        sage: L = DiscreteLine([1,pi], 1+pi, mu=20)
         sage: vector((0,0)) in L
         False
-        sage: L = Line([1,pi], 1+pi, mu=0)
+        sage: L = DiscreteLine([1,pi], 1+pi, mu=0)
         sage: vector((0,0)) in L
         True
     """
@@ -155,13 +155,13 @@ class DiscreteHyperplane(DiscreteSubset):
 
         ::
 
-            sage: L = Line([pi,sqrt(2)], pi+sqrt(2), mu=10)
+            sage: L = DiscreteLine([pi,sqrt(2)], pi+sqrt(2), mu=10)
             sage: L.an_element()
             (-2, -2)
 
         ::
 
-            sage: L = Line([pi,sqrt(2)], pi+sqrt(2), mu=0)
+            sage: L = DiscreteLine([pi,sqrt(2)], pi+sqrt(2), mu=0)
             sage: L.an_element()
             (0, 0)
 
@@ -220,7 +220,7 @@ class DiscreteHyperplane(DiscreteSubset):
 
         EXAMPLES::
 
-            sage: L = Line([pi,sqrt(2)], pi+sqrt(2), mu=10)
+            sage: L = DiscreteLine([pi,sqrt(2)], pi+sqrt(2), mu=10)
             sage: L._an_element_2d()
             (-2, -2)
 
@@ -256,5 +256,5 @@ class DiscreteHyperplane(DiscreteSubset):
         """
         return self._v.dot_product(p)
 
-Plan = DiscreteHyperplane
-Line = DiscreteHyperplane
+DiscretePlane = DiscreteHyperplane
+DiscreteLine = DiscreteHyperplane

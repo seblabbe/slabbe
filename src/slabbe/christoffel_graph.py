@@ -14,7 +14,7 @@ Christoffel graph::
 
 TODO:
 
-    - Christoffel and Plan are using kernel (is it clean?)
+    - Christoffel and DiscretePlane are using kernel (is it clean?)
 
 """
 #*****************************************************************************
@@ -35,7 +35,7 @@ from sage.rings.real_mpfr import RR
 from sage.structure.element import gcd
 from sage.functions.other import abs
 from slabbe.discrete_subset import DiscreteSubset, DiscreteTube, M3to2, M4to3
-from slabbe.discrete_plane import Plan 
+from slabbe.discrete_plane import DiscretePlane 
 ################################################
 # Christoffel Edges
 ################################################
@@ -291,7 +291,7 @@ class ChristoffelEdges(DiscreteSubset):
         minZ = vector(RR, map(min, Z)) - vector(RR, (2,)*len(Z))
         maxZ = vector(RR, map(max, Z)) + vector(RR, (2,)*len(Z))
         tube = DiscreteTube(*zip(minZ,maxZ), projmat=projmat_tube)
-        plane = Plan(self._v, sum(self._v))
+        plane = DiscretePlane(self._v, sum(self._v))
         I = self & tube & plane
         #I = Intersection3d(I)
 

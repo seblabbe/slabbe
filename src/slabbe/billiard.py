@@ -24,7 +24,7 @@ TODO:
 from copy import copy
 from sage.modules.free_module_element import vector
 from sage.combinat.words.word import Word
-from slabbe.discrete_plane import Plan 
+from slabbe.discrete_plane import DiscretePlane 
 from slabbe.discrete_subset import DiscreteSubset, Intersection
 ################################################
 # Discrete Line
@@ -101,9 +101,9 @@ class BillardCube(Intersection):
         self._v = vector(v)
         self._start = vector(start)
         assert a>=0 and b>=0 and c>=0, "We assume positive entries for now"
-        px = Plan([0,c,-b], b+c, mu=(b+c)/2)
-        py = Plan([c,0,-a], a+c, mu=(a+c)/2)
-        pz = Plan([b,-a,0], a+b, mu=(a+b)/2)
+        px = DiscretePlane([0,c,-b], b+c, mu=(b+c)/2)
+        py = DiscretePlane([c,0,-a], a+c, mu=(a+c)/2)
+        pz = DiscretePlane([b,-a,0], a+b, mu=(a+b)/2)
         def is_positive(p):
             return all(p[i]>=self._start[i] for i in range(len(p)))
         pos = DiscreteSubset(dimension=3, predicate=is_positive)

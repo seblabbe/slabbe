@@ -349,7 +349,7 @@ class DiscreteSubset(SageObject):
         EXAMPLES::
 
             sage: d3 = DiscreteSubset(3)
-            sage: p = Plan([1,pi,7], 1+pi+7, mu=0)
+            sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: p & d3
             Intersection des objets suivants :
             Set of points x in ZZ^3 satisfying: 0 <= (1, pi, 7) . x + 0 < pi + 8
@@ -375,7 +375,7 @@ class DiscreteSubset(SageObject):
         Intersection of intersection do not stack up::
 
             sage: d3 = DiscreteSubset(3)
-            sage: p = Plan([1,pi,7], 1+pi+7, mu=0)
+            sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
             sage: p & I
             Intersection des objets suivants :
@@ -399,7 +399,7 @@ class DiscreteSubset(SageObject):
 
         ::
 
-            sage: P = Plan([3,4,5], 12)
+            sage: P = DiscretePlane([3,4,5], 12)
             sage: P.base_edges()
             [(1, 0, 0), (0, 1, 0), (0, 0, 1)]
 
@@ -416,7 +416,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
-            sage: p = Plan([1,pi,7], 1+pi+7, mu=0)
+            sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: list(p.children(vector((0,0,0))))
             [(1, 0, 0), (0, 1, 0), (0, 0, 1)]
         """
@@ -444,7 +444,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
-            sage: p = Plan([1,3,7], 10)
+            sage: p = DiscretePlane([1,3,7], 10)
             sage: p.d_neighbors((0,0,0))
             [(-1, -1, 1), (-1, 0, 1), (-1, 1, 0), (-1, 1, 1), (0, -1, 1),
             (0, 0, 0), (0, 0, 1), (0, 1, 0), (1, -1, 1), (1, 0, 0), (1, 0,
@@ -480,7 +480,7 @@ class DiscreteSubset(SageObject):
 
         ::
 
-            sage: p = Plan([1,pi,7], 1+pi+7, mu=0)
+            sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: root = vector((0,0,0))
             sage: root.set_immutable()
             sage: it = p.connected_component_iterator(roots=[root])
@@ -501,7 +501,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
-            sage: p = Plan([1,pi,7], 1+pi+7, mu=0)
+            sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: it = iter(p)
             sage: [next(it) for _ in range(5)]
             [(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1), (-1, 1, 0)]
@@ -514,7 +514,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
-            sage: P = Plan([3,4,5], 12, mu=20)
+            sage: P = DiscretePlane([3,4,5], 12, mu=20)
             sage: tube = DiscreteTube([0,2],[0,2])
             sage: I = P & tube
             sage: sorted(I.list())
@@ -562,7 +562,7 @@ class DiscreteSubset(SageObject):
 
         ::
 
-            sage: p = Plan([1,pi,7], 1+pi+7, mu=0)
+            sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: root = vector((0,0,0))
             sage: root.set_immutable()
             sage: it = p.level_iterator(roots=[root])
@@ -598,7 +598,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
-            sage: p = Plan([1,pi,7], 1+pi+7, mu=0)
+            sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: root = vector((0,0,0))
             sage: root.set_immutable()
             sage: it = p.edges_iterator(roots=[root])
@@ -749,7 +749,7 @@ class DiscreteSubset(SageObject):
             sage: alpha = solve(x+x**2+x**3==1, x)[2].right()
             sage: vv = vector((alpha, alpha+alpha**2, 1))
             sage: omega = (1+alpha)**2 / 2
-            sage: Pr = Plan(vv, omega, mu=pi, prec=200)
+            sage: Pr = DiscretePlane(vv, omega, mu=pi, prec=200)
             sage: Pr.plot_points_at_distance(200)               # optional long
             sage: Pr.plot_points_at_distance(200, projmat='isometric') # optional long
         """
@@ -827,7 +827,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
-            sage: P = Plan([3,4,5], 12, mu=20)
+            sage: P = DiscretePlane([3,4,5], 12, mu=20)
             sage: tube = DiscreteTube([-5,5],[-5,5])
             sage: I = P & tube
             sage: I.plot_cubes(color='red', frame_thickness=1 # optional long)
@@ -867,7 +867,7 @@ class DiscreteSubset(SageObject):
 
         3d example::
 
-            sage: P = Plan([1,3,7], 11)
+            sage: P = DiscretePlane([1,3,7], 11)
             sage: tube = DiscreteTube([-5,5],[-5,5])
             sage: I = P & tube
             sage: I.plot() # optional long
@@ -903,7 +903,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
-            sage: p = Plan([1,3,7], 11)
+            sage: p = DiscretePlane([1,3,7], 11)
             sage: p.tikz_projection_scale()
             [x={(-0.866025cm,-0.500000cm)}, y={(0.866025cm,-0.500000cm)},
             z={(0.000000cm,1.000000cm)}, scale=1]
@@ -1018,7 +1018,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
-            sage: p = Plan([2,3,5], 4)
+            sage: p = DiscretePlane([2,3,5], 4)
             sage: p.tikz_edges()
             \draw[very thick, blue] (0, 0, 0) -- (1, 0, 0);
             \draw[very thick, blue] (0, 0, 0) -- (0, 1, 0);
@@ -1093,7 +1093,7 @@ class DiscreteSubset(SageObject):
 
         ::
 
-            sage: p = Plan([1,3,7], 11)
+            sage: p = DiscretePlane([1,3,7], 11)
             sage: d = DiscreteTube([-1,1],[-1,1])
             sage: I = p & d
             sage: I.tikz_points()
@@ -1163,7 +1163,7 @@ class DiscreteSubset(SageObject):
 
         Object in 2d::
 
-            sage: L = Line([2,5], 2+5, mu=0)
+            sage: L = DiscreteLine([2,5], 2+5, mu=0)
             sage: b = DiscreteBox([-5,5],[-5,5])
             sage: I = L & b
             sage: point_kwds = {'label':lambda p:2*p[0]+5*p[1],'label_pos':'above right'}
@@ -1183,7 +1183,7 @@ class DiscreteSubset(SageObject):
 
         Object in 3d::
 
-            sage: p = Plan([1,3,7], 11)
+            sage: p = DiscretePlane([1,3,7], 11)
             sage: d = DiscreteTube([-5,5],[-5,5])
             sage: I = p & d
             sage: s = I.tikz_noprojection()
@@ -1245,7 +1245,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
-            sage: p = Plan([2,3,5], 10)
+            sage: p = DiscretePlane([2,3,5], 10)
             sage: p.tikz(points=False, edges=False)
             \begin{tikzpicture}
             [scale=1]
@@ -1308,8 +1308,8 @@ class Intersection(DiscreteSubset):
 
     Intersection de deux plans::
 
-        sage: p = Plan([1,3,7],11)
-        sage: q = Plan([1,3,5],9)
+        sage: p = DiscretePlane([1,3,7],11)
+        sage: q = DiscretePlane([1,3,5],9)
         sage: Intersection((p,q))
         Intersection des objets suivants :
         Set of points x in ZZ^3 satisfying: 0 <= (1, 3, 7) . x + 0 < 11
@@ -1324,7 +1324,7 @@ class Intersection(DiscreteSubset):
 
     Intersection of a plane and a tube::
 
-        sage: p = Plan([1,pi,7], 1+pi+7, mu=0)
+        sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
         sage: d = DiscreteTube([-5,5],[-5,5])
         sage: I = p & d
         sage: I
@@ -1336,7 +1336,7 @@ class Intersection(DiscreteSubset):
 
     Intersection of a line and a box::
 
-        sage: L = Line([2,5], 2+5, mu=0)
+        sage: L = DiscreteLine([2,5], 2+5, mu=0)
         sage: b = DiscreteBox([-5,5],[-5,5])
         sage: I = L & b
         sage: I
@@ -1349,7 +1349,7 @@ class Intersection(DiscreteSubset):
     Intersected objects must be of the same dimension::
 
         sage: box = DiscreteBox([-5,5],[-5,5])
-        sage: p = Plan([1,pi,7], 1+pi+7)
+        sage: p = DiscretePlane([1,pi,7], 1+pi+7)
         sage: p & box
         Traceback (most recent call last):
         ...
@@ -1363,7 +1363,7 @@ class Intersection(DiscreteSubset):
         EXAMPLES::
 
             sage: d3 = DiscreteSubset(3)
-            sage: p = Plan([1,pi,7], 1+pi+7, mu=0)
+            sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
             sage: I
             Intersection des objets suivants :
@@ -1395,8 +1395,8 @@ class Intersection(DiscreteSubset):
 
         EXAMPLES::
 
-            sage: p = Plan([1,3,7], 11)
-            sage: q = Plan([1,3,5], 9)
+            sage: p = DiscretePlane([1,3,7], 11)
+            sage: q = DiscretePlane([1,3,5], 9)
             sage: Intersection((p,q))
             Intersection des objets suivants :
             Set of points x in ZZ^3 satisfying: 0 <= (1, 3, 7) . x + 0 < 11
@@ -1417,7 +1417,7 @@ class Intersection(DiscreteSubset):
         EXAMPLES::
 
             sage: d3 = DiscreteSubset(3)
-            sage: p = Plan([1,pi,7], 1+pi+7, mu=0)
+            sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
             sage: vector((0,0,0)) in I
             True
@@ -1437,7 +1437,7 @@ class Intersection(DiscreteSubset):
         EXAMPLES::
 
             sage: d3 = DiscreteSubset(3)
-            sage: p = Plan([1,pi,7], 1+pi+7, mu=0)
+            sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
             sage: I.has_edge(vector((0,0,0)),vector((0,0,1)))
             True
@@ -1480,7 +1480,7 @@ class Intersection(DiscreteSubset):
         EXAMPLES::
 
             sage: d3 = DiscreteSubset(3)
-            sage: p = Plan([1,pi,7], 1+pi+7, mu=0)
+            sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
             sage: I & p
             Intersection des objets suivants :
@@ -1491,7 +1491,7 @@ class Intersection(DiscreteSubset):
         ::
 
             sage: d3 = DiscreteSubset(3)
-            sage: p = Plan([1,pi,7], 1+pi+7, mu=0)
+            sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
             sage: p & I
             Intersection des objets suivants :
@@ -1514,7 +1514,7 @@ class Intersection(DiscreteSubset):
 
         EXAMPLES::
 
-            sage: P = Plan([4,6,7], 17, mu=0)
+            sage: P = DiscretePlane([4,6,7], 17, mu=0)
             sage: tube = DiscreteTube([-6.4, 6.4], [-5.2, 5.2])
             sage: I = tube & P
             sage: I.an_element()
@@ -1524,7 +1524,7 @@ class Intersection(DiscreteSubset):
 
         TESTS::
 
-            sage: P = Plan([4,6,7], 17, mu=0)
+            sage: P = DiscretePlane([4,6,7], 17, mu=0)
             sage: def contain(p): return 0 < P._v.dot_product(p) + P._mu <= P._omega
             sage: P._predicate = contain
             sage: tube = DiscreteTube([-6.4, 6.4], [-5.2, 5.2])
@@ -1673,7 +1673,7 @@ class DiscreteTube(DiscreteSubset):
 
     EXAMPLES::
 
-        sage: p = Plan([1,pi,7], 1+pi+7, mu=0)
+        sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
         sage: tube = DiscreteTube([-5,5],[-5,5])
         sage: I = p & tube
         sage: I
