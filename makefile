@@ -8,7 +8,7 @@ install:
 	echo "Effectuer une commande sage pour mettre a jour les path..."
 	sage -c "a=randint(1,1000);print 'factor(%s) = %s'%(a,factor(a))"
 
-test:
+test: install
 	# src/sage/all.py must contain the line "from slabbe import *"
 	sage -t --force-lib -i src/slabbe/*
 
