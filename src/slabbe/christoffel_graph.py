@@ -2,23 +2,33 @@
 r"""
 Christoffel graph
 
+- Labbé, Sébastien, and Christophe Reutenauer. A D-dimensional Extension of
+  Christoffel Words. arXiv:1404.4021__ (April 15, 2014).
+
+__ http://arxiv.org/abs/1404.4021
+
 EXAMPLES:
 
-Christoffel graph::
+Christoffel graph in 2d (tikz code)::
 
-    sage: C = ChristoffelEdges((2,5))
+    sage: C = ChristoffelGraph((2,5))
     sage: b = DiscreteBox([-5,5],[-5,5])
     sage: I = C & b
     sage: point_kwds = {'label':lambda p:C.level_value(p),'label_pos':'above right'}
     sage: tikz = I.tikz_noprojection(scale=0.8,point_kwds=point_kwds)
 
+Christoffel graph in 3d (tikz code)::
+
+    sage: C = ChristoffelGraph((2,3,5))
+    sage: tikz = C.tikz_kernel()
+
 TODO:
 
-    - Christoffel and DiscretePlane are using kernel (is it clean?)
+    - Clean kernel_vector method of ChristoffelGraph
 
 """
 #*****************************************************************************
-#       Copyright (C) 2010-2014 Sébastien Labbé <slabqc@gmail.com>
+#       Copyright (C) 2013-2014 Sébastien Labbé <slabqc@gmail.com>
 #
 #  Distributed under the terms of the GNU General Public License version 2 (GPLv2)
 #
@@ -37,9 +47,9 @@ from sage.functions.other import abs
 from slabbe.discrete_subset import DiscreteSubset, DiscreteTube, M3to2, M4to3
 from slabbe.discrete_plane import DiscretePlane 
 ################################################
-# Christoffel Edges
+# Christoffel Graph
 ################################################
-class ChristoffelEdges(DiscreteSubset):
+class ChristoffelGraph(DiscreteSubset):
     r"""
     Subset of a discrete object such that its projection by a matrix is
     inside a certain box.
@@ -50,26 +60,26 @@ class ChristoffelEdges(DiscreteSubset):
 
     EXAMPLES::
 
-        sage: ChristoffelEdges((2,5))
+        sage: ChristoffelGraph((2,5))
         Christoffel set of edges for normal vector v=(2, 5)
 
     ::
 
-        sage: C = ChristoffelEdges((2,5))
+        sage: C = ChristoffelGraph((2,5))
         sage: it = C.edges_iterator()
         sage: it.next()
         ((0, 0), (1, 0))
 
     ::
 
-        sage: C = ChristoffelEdges((2,5,8))
+        sage: C = ChristoffelGraph((2,5,8))
         sage: it = C.edges_iterator()
         sage: it.next()
         ((0, 0, 0), (1, 0, 0))
 
     ::
 
-        sage: C = ChristoffelEdges((2,5))
+        sage: C = ChristoffelGraph((2,5))
         sage: b = DiscreteBox([-5,5],[-5,5])
         sage: I = C & b
         sage: point_kwds = {'label':lambda p:C.level_value(p),'label_pos':'above right'}
@@ -77,9 +87,9 @@ class ChristoffelEdges(DiscreteSubset):
 
     TEST:
 
-    This was once a bug::
+    This was once a bug. We make sure it is fixed::
 
-        sage: C = ChristoffelEdges((2,3,5))
+        sage: C = ChristoffelGraph((2,3,5))
         sage: isinstance(C, DiscreteSubset)
         True
 
@@ -92,7 +102,7 @@ class ChristoffelEdges(DiscreteSubset):
 
         EXAMPLES::
 
-            sage: ChristoffelEdges((2,5))
+            sage: ChristoffelGraph((2,5))
             Christoffel set of edges for normal vector v=(2, 5)
 
         """
@@ -113,7 +123,7 @@ class ChristoffelEdges(DiscreteSubset):
 
         EXAMPLES::
 
-            sage: C = ChristoffelEdges((2,5,8))
+            sage: C = ChristoffelGraph((2,5,8))
             sage: C.level_value(vector((2,3,4)))
             6
             sage: C.level_value(vector((1,1,1)))
@@ -133,7 +143,7 @@ class ChristoffelEdges(DiscreteSubset):
 
         EXAMPLES::
 
-            sage: C = ChristoffelEdges((2,5,8))
+            sage: C = ChristoffelGraph((2,5,8))
             sage: C.has_edge(vector((0,0,0)), vector((0,0,1)))
             True
             sage: C.has_edge(vector((0,0,0)), vector((0,0,2)))
@@ -143,7 +153,7 @@ class ChristoffelEdges(DiscreteSubset):
 
         ::
 
-            sage: C = ChristoffelEdges((2,5))
+            sage: C = ChristoffelGraph((2,5))
             sage: C.has_edge(vector((0,0)),vector((1,0)))
             True
             sage: C.has_edge(vector((0,0)),vector((-1,0)))
@@ -167,9 +177,9 @@ class ChristoffelEdges(DiscreteSubset):
 
         EXAMPLES::
 
-            sage: ChristoffelEdges((2,5))
+            sage: ChristoffelGraph((2,5))
             Christoffel set of edges for normal vector v=(2, 5)
-            sage: ChristoffelEdges((2,5,8))
+            sage: ChristoffelGraph((2,5,8))
             Christoffel set of edges for normal vector v=(2, 5, 8)
         """
         s = "Christoffel set of edges for normal vector v=%s" % self._v
@@ -181,7 +191,7 @@ class ChristoffelEdges(DiscreteSubset):
 
         EXAMPLES::
 
-            sage: C = ChristoffelEdges((2,5,7))
+            sage: C = ChristoffelGraph((2,5,7))
             sage: C.kernel_vector()
             [(-1, -1, 1), (3, -4, 0)]
 
@@ -259,7 +269,7 @@ class ChristoffelEdges(DiscreteSubset):
 
         EXAMPLES::
 
-            sage: C = ChristoffelEdges((2,3,5))
+            sage: C = ChristoffelGraph((2,3,5))
             sage: tikz = C.tikz_kernel()
             sage: lines = tikz.splitlines()
             sage: len(lines)

@@ -1458,7 +1458,7 @@ class Intersection(DiscreteSubset):
 
         ::
 
-            sage: C = ChristoffelEdges((2,5))
+            sage: C = ChristoffelGraph((2,5))
             sage: b = DiscreteBox([-5,5],[-5,5])
             sage: I = C & b
             sage: all(I.has_edge(a,b) for a,b in I.edges_iterator())
