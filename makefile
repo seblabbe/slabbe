@@ -1,6 +1,6 @@
 VERSION = 0.1
 
-all: test coverage install
+all: install test coverage
 
 install:
 	cd .. && sage -pkg slabbe-$(VERSION)
