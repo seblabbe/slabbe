@@ -1,6 +1,8 @@
 VERSION = 0.1
 
-test: install
+all: install test
+
+test: 
 	# src/sage/all.py must contain the line "from slabbe import *"
 	sage -t --force-lib -i src/slabbe/*
 
