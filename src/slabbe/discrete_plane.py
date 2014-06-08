@@ -176,6 +176,12 @@ class DiscreteHyperplane(DiscreteSubset):
     def _an_element_3d(self, x=0, y=0):
         r"""
         Returns an element in self.
+
+        EXAMPLES::
+
+            sage: p = DiscreteHyperplane([1,pi,7], 1+pi+7, mu=10)
+            sage: p._an_element_3d()
+            (0, 0, 0)
         """
         a,b,c = self._v
         x_sqrt3 = ceil(x / sqrt(3))

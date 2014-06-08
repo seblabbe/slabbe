@@ -217,7 +217,14 @@ class DiscreteSubset(SageObject):
     """
     def __init__(self, dimension=3, predicate=None, edge_predicate=None):
         r"""
-        Constructeur.
+        Constructor.
+
+        See class:`DiscreteSubset` for complete documentation.
+
+        EXAMPLES::
+
+            sage: DiscreteSubset(3)
+            Subset of ZZ^3
         """
         self._space = FreeModule(ZZ, dimension)
         if predicate is None:

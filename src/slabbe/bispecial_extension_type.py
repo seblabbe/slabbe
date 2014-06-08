@@ -237,8 +237,27 @@ class ExtensionType(object):
         return ExtensionType1to1(L, alphabet)
 
     def __hash__(self):
+        r"""
+        EXAMPLES::
+
+            sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
+            sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
+            sage: hash(E)
+            -73163835
+
+        """
         return hash(self._pairs)
     def __iter__(self):
+        r"""
+        EXAMPLES::
+
+            sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
+            sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
+            sage: it = E.__iter__()
+            sage: sorted(it)
+            [(1, 3), (2, 3), (3, 1), (3, 2), (3, 3)]
+
+        """
         return iter(self._pairs)
 
     def __repr__(self):
@@ -459,6 +478,31 @@ class ExtensionType(object):
             return other in self.equivalence_class()
 
     def is_empty(self):
+        r"""
+        Return whether the word associated to this extension type is empty.
+
+        EXAMPLES::
+
+            sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
+            sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
+            sage: E.is_empty()
+            False
+
+        ::
+
+            sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
+            ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
+            sage: E = ExtensionType2to1(L, (1,2,3))
+            sage: E.is_empty()
+            True
+
+        ::
+
+            sage: E = ExtensionType2to1(L, (1,2,3), empty=False)
+            sage: E.is_empty()
+            False
+
+        """
         if hasattr(self, '_empty'):
             return self._empty
         else:
@@ -476,6 +520,15 @@ class ExtensionType(object):
         """
         return self.right_valence() > 1 and self.left_valence() > 1
     def is_ordinaire(self):
+        r"""
+        EXAMPLES::
+
+            sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
+            sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
+            sage: E.is_ordinaire()
+            True
+
+        """
         raise NotImplementedError
 
     def is_neutral(self):
@@ -553,8 +606,26 @@ class ExtensionType(object):
         return left_projection, right_projection
 
     def left_extensions(self):
+        r"""
+        EXAMPLES::
+
+            sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
+            sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
+            sage: E.left_extensions()
+            set([1, 2, 3])
+
+        """
         raise NotImplementedError
     def right_extensions(self):
+        r"""
+        EXAMPLES::
+
+            sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
+            sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
+            sage: E.right_extensions()
+            set([1, 2, 3])
+
+        """
         raise NotImplementedError
     def left_valence(self):
         r"""
@@ -1135,6 +1206,16 @@ class ExtensionType2to1(ExtensionType):
             self._empty = empty
 
     def is_chignons_empty(self):
+        r"""
+        EXAMPLES::
+
+            sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
+            ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
+            sage: E = ExtensionType2to1(L, (1,2,3))
+            sage: E.is_chignons_empty()
+            True
+
+        """
         return map(len, self._chignons) == [0,0]
 
     def factors_length_2(self):
@@ -1158,6 +1239,19 @@ class ExtensionType2to1(ExtensionType):
         return self._factors_length_2
 
     def is_valid(self):
+        r"""
+        Return whether self is valid, i.e, each left and right extension is
+        non empty.
+
+        EXAMPLES::
+
+            sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
+            ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
+            sage: E = ExtensionType2to1(L, (1,2,3))
+            sage: E.is_valid()
+            True
+
+        """
         if any(len(a)==0 or len(b)==0 for a,b in self._pairs):
             return False
         return True
@@ -1539,6 +1633,12 @@ def longest_common_prefix(L):
 def longest_common_suffix(L):
     r"""
     Return the longest common suffix of a list of words.
+
+    EXAMPLES::
+
+        sage: from slabbe.bispecial_extension_type import longest_common_suffix
+        sage: longest_common_suffix((Word('abc'), Word('bc'), Word('xabc')))
+        word: bc
     """
     common = L[0]
     for w in L:
