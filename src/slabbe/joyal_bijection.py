@@ -14,14 +14,12 @@ AUTHOR:
 
     - Sébastien Labbé, May 12th 2012
 
+TODO:
+
+ - Base Endofunction class on sage's FiniteSetMap classes (for both element
+   and parent)
+
 EXAMPLES:
-
-Load the file
--------------
-
-First, you need to load this file::
-
-    sage: load joyal_bijection.sage      # not tested
 
 Creation of an endofunction
 ---------------------------
