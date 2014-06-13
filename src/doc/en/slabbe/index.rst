@@ -28,6 +28,7 @@ Combinatorics
    :maxdepth: 1
 
    joyal_bijection
+   bond_percolation
 
 Digital Geometry
 ================
