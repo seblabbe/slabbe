@@ -13,6 +13,7 @@ from double_square_tile import (DoubleSquare,
                                 #triple_square_example,
                                 )
 from fruit import Fruit, Banana, Strawberry
+from joyal_bijection import Endofunctions, Endofunction, DoubleRootedTree
 
 # for doctext to work, we import convex_boundary
 # from discrete_subset import convex_boundary

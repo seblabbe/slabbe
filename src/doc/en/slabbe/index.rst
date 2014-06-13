@@ -22,6 +22,13 @@ This work is licensed under a `Creative Commons Attribution-Share Alike
 
 __ https://creativecommons.org/licenses/by-sa/3.0/
 
+Combinatorics
+=============
+.. toctree::
+   :maxdepth: 1
+
+   joyal_bijection
+
 Digital Geometry
 ================
 
