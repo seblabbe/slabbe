@@ -9,6 +9,7 @@ from joyal_bijection import Endofunctions, Endofunction, DoubleRootedTree
 from bond_percolation import (BondPercolationSamples, 
                              BondPercolationSample, 
                              PercolationProbability)
+from kolakoski_word import KolakoskiWord
 
 # for doctext to work, we import convex_boundary
 # from discrete_subset import convex_boundary

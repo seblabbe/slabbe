@@ -14,10 +14,13 @@ setup(name='slabbe',
 	url='http://www.liafa.univ-paris-diderot.fr/~labbe/',
     license = "GPL v2",
 	packages=['slabbe'],
-    #ext_modules=[
-    #Extension('slabbe.mcf',
-    #sources = [os.path.join('slabbe','mcf.pyx')]),
-    #], 
-    #cmdclass = {'build_ext': build_ext}
+    ext_modules=[
+        Extension('slabbe.kolakoski_word_pyx',
+            sources = [os.path.join('slabbe','kolakoski_word_pyx.pyx')],
+            ),
+        #Extension('slabbe.mcf',
+            #sources = [os.path.join('slabbe','mcf.pyx')]),
+    ], 
+    cmdclass = {'build_ext': build_ext}
 )
 

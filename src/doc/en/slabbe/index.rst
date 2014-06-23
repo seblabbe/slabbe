@@ -42,6 +42,14 @@ Digital Geometry
    christoffel_graph
    double_square_tile
 
+Combinatorics on words
+======================
+
+.. toctree::
+   :maxdepth: 1
+
+   kolakoski_word
+
 Factor complexity
 =================
 
