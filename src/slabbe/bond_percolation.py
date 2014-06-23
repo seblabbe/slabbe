@@ -235,6 +235,8 @@ class BondPercolationSample(SageObject):
             True
         """
         pt, direction = arg
+        # here because creates docbuild error when the import is global
+        from random import random 
         return random() < self._p
 
     def neighbor(self, pt, d):
@@ -553,7 +555,7 @@ class BondPercolationSamples(SageObject):
     EXAMPLES::
 
         sage: BondPercolationSamples(0.2,2,3)
-        <class '__main__.BondPercolationSamples'>
+        <class 'slabbe.bond_percolation.BondPercolationSamples'>
     """
     def __init__(self, p, d, n):
         r"""
