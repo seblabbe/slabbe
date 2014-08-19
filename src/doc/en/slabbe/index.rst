@@ -12,6 +12,18 @@ Sébastien Labbé Research Code implements digital geometry, combinatorics on
 words and symbolic dynamical systems simulation code in Sage, via a set of new
 Python classes. 
 
+Some of the modules corresponds to research code written for published articles
+(double square tiles, Christoffel graphs, etc.).
+
+To use this module, import it:: 
+
+    from slabbe import *
+
+.. WARNING:: 
+
+    The above line is **mandatory** for any doctest of this reference
+    manual to work.
+
 This reference manual contains many examples that illustrate the usage of
 slabbe spkg. The examples are all tested with each release of slabbe spkg, and
 should produce exactly the same output as in this manual, except for line
