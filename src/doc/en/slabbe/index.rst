@@ -7,15 +7,15 @@ This is the reference manual for the `Sébastien Labbé
 the `Sage <http://sagemath.org/>`_ mathematical software system.  Sage is free
 open source math software that supports research and teaching in algebra,
 geometry, number theory, cryptography, and related areas.  
-
 Sébastien Labbé Research Code implements digital geometry, combinatorics on
 words and symbolic dynamical systems simulation code in Sage, via a set of new
 Python classes. 
-
 Some of the modules corresponds to research code written for published articles
-(double square tiles, Christoffel graphs, etc.).
+(double square tiles, Christoffel graphs, factor complexity).
 
-To use this module, import it:: 
+.. [BBL2012]_, [BBGL2011]_, [BGL2012]_
+
+To use this module, first thing is to import it:: 
 
     from slabbe import *
 

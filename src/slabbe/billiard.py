@@ -2,7 +2,7 @@
 r"""
 Billiard words
 
-EXAMPLES:
+EXAMPLES::
 
     sage: b = BilliardCube((1,pi,sqrt(2)))
     sage: b
