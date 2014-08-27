@@ -56,13 +56,13 @@ A 3d discrete box::
     Box: [-2, 2] x [-5, 5] x [-5, 5]
     sage: b.plot()       # optional long
 
-The intersection of two discrete object of the same dimension::
+The intersection of two discrete objects of the same dimension::
 
     sage: circ = DiscreteSubset(2, lambda p: p[0]^2+p[1]^2<=100)
     sage: b = DiscreteBox([0,10], [0,10])
     sage: I = circ & b
     sage: I
-    Intersection des objets suivants :
+    Intersection of the following objects:
     Subset of ZZ^2
     [0, 10] x [0, 10]
     sage: I.an_element()
@@ -358,7 +358,7 @@ class DiscreteSubset(SageObject):
             sage: d3 = DiscreteSubset(3)
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: p & d3
-            Intersection des objets suivants :
+            Intersection of the following objects:
             Set of points x in ZZ^3 satisfying: 0 <= (1, pi, 7) . x + 0 < pi + 8
             Subset of ZZ^3
 
@@ -385,7 +385,7 @@ class DiscreteSubset(SageObject):
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
             sage: p & I
-            Intersection des objets suivants :
+            Intersection of the following objects:
             Set of points x in ZZ^3 satisfying: 0 <= (1, pi, 7) . x + 0 < pi + 8
             Subset of ZZ^3
             Set of points x in ZZ^3 satisfying: 0 <= (1, pi, 7) . x + 0 < pi + 8
@@ -1318,14 +1318,14 @@ class Intersection(DiscreteSubset):
         sage: p = DiscretePlane([1,3,7],11)
         sage: q = DiscretePlane([1,3,5],9)
         sage: Intersection((p,q))
-        Intersection des objets suivants :
+        Intersection of the following objects:
         Set of points x in ZZ^3 satisfying: 0 <= (1, 3, 7) . x + 0 < 11
         Set of points x in ZZ^3 satisfying: 0 <= (1, 3, 5) . x + 0 < 9
 
     Shortcut::
 
         sage: p & q
-        Intersection des objets suivants :
+        Intersection of the following objects:
         Set of points x in ZZ^3 satisfying: 0 <= (1, 3, 7) . x + 0 < 11
         Set of points x in ZZ^3 satisfying: 0 <= (1, 3, 5) . x + 0 < 9
 
@@ -1335,7 +1335,7 @@ class Intersection(DiscreteSubset):
         sage: d = DiscreteTube([-5,5],[-5,5])
         sage: I = p & d
         sage: I
-        Intersection des objets suivants :
+        Intersection of the following objects:
         Set of points x in ZZ^3 satisfying: 0 <= (1, pi, 7) . x + 0 < pi + 8
         DiscreteTube: Preimage of [-5, 5] x [-5, 5] by a 2 by 3 matrix
         sage: len(list(I))
@@ -1347,7 +1347,7 @@ class Intersection(DiscreteSubset):
         sage: b = DiscreteBox([-5,5],[-5,5])
         sage: I = L & b
         sage: I
-        Intersection des objets suivants :
+        Intersection of the following objects:
         Set of points x in ZZ^2 satisfying: 0 <= (2, 5) . x + 0 < 7
         [-5, 5] x [-5, 5]
 
@@ -1373,7 +1373,7 @@ class Intersection(DiscreteSubset):
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
             sage: I
-            Intersection des objets suivants :
+            Intersection of the following objects:
             Set of points x in ZZ^3 satisfying: 0 <= (1, pi, 7) . x + 0 < pi + 8
             Subset of ZZ^3
 
@@ -1405,11 +1405,11 @@ class Intersection(DiscreteSubset):
             sage: p = DiscretePlane([1,3,7], 11)
             sage: q = DiscretePlane([1,3,5], 9)
             sage: Intersection((p,q))
-            Intersection des objets suivants :
+            Intersection of the following objects:
             Set of points x in ZZ^3 satisfying: 0 <= (1, 3, 7) . x + 0 < 11
             Set of points x in ZZ^3 satisfying: 0 <= (1, 3, 5) . x + 0 < 9
         """
-        s = "Intersection des objets suivants :\n"
+        s = "Intersection of the following objects:\n"
         s += '\n'.join(map(str, self._objets))
         return s
 
@@ -1490,7 +1490,7 @@ class Intersection(DiscreteSubset):
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
             sage: I & p
-            Intersection des objets suivants :
+            Intersection of the following objects:
             Set of points x in ZZ^3 satisfying: 0 <= (1, pi, 7) . x + 0 < pi + 8
             Subset of ZZ^3
             Set of points x in ZZ^3 satisfying: 0 <= (1, pi, 7) . x + 0 < pi + 8
@@ -1501,7 +1501,7 @@ class Intersection(DiscreteSubset):
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
             sage: p & I
-            Intersection des objets suivants :
+            Intersection of the following objects:
             Set of points x in ZZ^3 satisfying: 0 <= (1, pi, 7) . x + 0 < pi + 8
             Subset of ZZ^3
             Set of points x in ZZ^3 satisfying: 0 <= (1, pi, 7) . x + 0 < pi + 8
@@ -1684,7 +1684,7 @@ class DiscreteTube(DiscreteSubset):
         sage: tube = DiscreteTube([-5,5],[-5,5])
         sage: I = p & tube
         sage: I
-        Intersection des objets suivants :
+        Intersection of the following objects:
         Set of points x in ZZ^3 satisfying: 0 <= (1, pi, 7) . x + 0 < pi + 8
         DiscreteTube: Preimage of [-5, 5] x [-5, 5] by a 2 by 3 matrix
         sage: len(list(I))

@@ -8,7 +8,7 @@ Intersection of a plane and a tube::
     sage: d = DiscreteTube([-5,5],[-5,5])
     sage: I = p & d
     sage: I
-    Intersection des objets suivants :
+    Intersection of the following objects:
     Set of points x in ZZ^3 satisfying: 0 <= (1, pi, 7) . x + 0 < pi + 8
     DiscreteTube: Preimage of [-5, 5] x [-5, 5] by a 2 by 3 matrix
     sage: len(list(I))
@@ -20,7 +20,7 @@ Intersection of a line and a box::
     sage: b = DiscreteBox([-5,5],[-5,5])
     sage: I = L & b
     sage: I
-    Intersection des objets suivants :
+    Intersection of the following objects:
     Set of points x in ZZ^2 satisfying: 0 <= (pi, sqrt(2)) . x + 0 < pi + sqrt(2)
     [-5, 5] x [-5, 5]
 
