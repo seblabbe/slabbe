@@ -10,12 +10,14 @@ geometry, number theory, cryptography, and related areas.
 Sébastien Labbé Research Code implements digital geometry, combinatorics on
 words and symbolic dynamical systems simulation code in Sage, via a set of new
 Python classes. 
-Some of the modules corresponds to research code written for published articles
+Many of the modules corresponds to research code written for published articles
 (double square tiles, Christoffel graphs, factor complexity).
+It is meant to be reused and reusable (full documentation including doctests)
+but still has not be used for other purposes. Comments are welcome.
 
 .. [BBL2012]_, [BBGL2011]_, [BGL2012]_
 
-To use this module, first thing is to import it:: 
+To use this module, you need to import it:: 
 
     from slabbe import *
 
@@ -33,14 +35,6 @@ This work is licensed under a `Creative Commons Attribution-Share Alike
 3.0 License`__.
 
 __ https://creativecommons.org/licenses/by-sa/3.0/
-
-Combinatorics
-=============
-.. toctree::
-   :maxdepth: 1
-
-   joyal_bijection
-   bond_percolation
 
 Digital Geometry
 ================
@@ -61,14 +55,15 @@ Combinatorics on words
    :maxdepth: 1
 
    kolakoski_word
+   bispecial_extension_type
 
-Factor complexity
-=================
-
+Combinatorics
+=============
 .. toctree::
    :maxdepth: 1
 
-   bispecial_extension_type
+   joyal_bijection
+   bond_percolation
 
 Python class inheritance
 ========================
