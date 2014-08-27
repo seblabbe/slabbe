@@ -20,3 +20,9 @@ docbuild:
 	sage -docbuild slabbe html
 	sage -docbuild slabbe pdf
 
+publish:
+	cp /Users/slabbe/Applications/sage-git/src/doc/output/pdf/en/slabbe/slabbe_ref.pdf ~/Blogue/Sage/slabbe-$(VERSION).pdf
+	cd .. && cp slabbe-$(VERSION).spkg ~/Blogue/Sage/
+	#git tag -a $(VERSION) -m 'version $(VERSION)' 
+
+
