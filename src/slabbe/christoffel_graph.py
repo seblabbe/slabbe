@@ -2,8 +2,11 @@
 r"""
 Christoffel graph
 
-- Labbé, Sébastien, and Christophe Reutenauer. A D-dimensional Extension of
-  Christoffel Words. arXiv:1404.4021__ (April 15, 2014).
+This module was developped for the article on a d-dimensional extension of
+Christoffel Words written with Christophe Reutenauer [LR2014]_.
+
+.. [LR2014] Labbé, Sébastien, and Christophe Reutenauer. A d-dimensional Extension of
+   Christoffel Words. arXiv:1404.4021__ (April 15, 2014).
 
 __ http://arxiv.org/abs/1404.4021
 

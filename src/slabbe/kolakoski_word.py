@@ -2,14 +2,16 @@
 r"""
 Kolakoski Word
 
-The classical Kolakoski sequence [1,3] was first studied by
-Oldenburger [2], where it appears as the unique solution to the
-problem of a trajectory on the alphabet `\{1,2\}` which is
-identical to its exponent trajectory.
+The classical Kolakoski sequence [K65]_ was first studied by Oldenburger
+[O39]_, where it appears as the unique solution to the problem of a
+trajectory on the alphabet `\{1,2\}` which is identical to its exponent
+trajectory.
 
-It uses cython implementation inspired from the 10 lines of C code
-written by Dominique Bernardi and shared during Sage Days 28 in Orsay,
-France, in January 2011. The alphabet must be ``(1,2)``.
+See http://en.wikipedia.org/wiki/Kolakoski_sequence
+
+It uses cython implementation inspired from the 10 lines of C code written
+by Dominique Bernardi and shared during Sage Days 28 in Orsay, France, in
+January 2011. The alphabet must be ``(1,2)``.
 
 EXAMPLES::
 
@@ -38,14 +40,12 @@ length 100::
 
 REFERENCES:
 
-- [1] William Kolakoski, proposal 5304, American Mathematical Monthly
-  72 (1965), 674; for a partial solution, see "Self Generating Runs,"
-  by Necdet Üçoluk, Amer. Math. Mon. 73 (1966), 681-2.
+.. [K65] William Kolakoski, proposal 5304, American Mathematical Monthly
+   72 (1965), 674; for a partial solution, see "Self Generating Runs,"
+   by Necdet Üçoluk, Amer. Math. Mon. 73 (1966), 681-2.
 
-- [2] R. Oldenburger, Exponent trajectories in dynamical systems,
-  Trans. Amer. Math. Soc. 46 (1939), 453–466.
-
-- [3] http://en.wikipedia.org/wiki/Kolakoski_sequence
+.. [O39] R. Oldenburger, Exponent trajectories in dynamical systems,
+   Trans. Amer. Math. Soc. 46 (1939), 453–466.
 
 AUTHORS:
 
