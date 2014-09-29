@@ -6,6 +6,7 @@ EXEMPLES::
 
     sage: R = RankingScale_CQU4_2011()
     sage: R = RankingScale_USAU_2013()
+    sage: R = RankingScale_CQU4_2014()
 
 AUTHOR : 
 
@@ -23,6 +24,8 @@ AUTHOR :
 
 import csv
 import itertools
+from sage.functions.other import sqrt
+from sage.symbolic.constants import e
 
 def RankingScale_CQU4_2011():
     r"""
@@ -118,6 +121,22 @@ def RankingScale_USAU_2013():
     names = ['Serie 1500', 'Serie 1000', 'Serie 500', 'Serie 250']
     return RankingScale(names, scales)
 
+def RankingScale_CQU4_2014(R=1, base=e):
+    r"""
+    EXAMPLES::
+
+        sage: R = RankingScale_CQU4_2014()
+    """
+    L1000 = [0] + discrete_curve(100, 1000, K=1, R=R, base=base)
+    L666 = [0] + discrete_curve(50, 666, K=1, R=R, base=base)
+    L333 = [0] + discrete_curve(24, 333, K=1, R=R, base=base)
+    #L700 = [0] + discrete_curve(50, 700, K=1, R=R, base=base)
+    #L300 = [0] + discrete_curve(24, 300, K=1, R=R, base=base)
+
+    scales = L1000, L666, L333
+    names = ['S1000', 'S666', 'S333']
+    return RankingScale(names, scales)
+
 class RankingScale(object):
     def __init__(self, scale_names, scales):
         r"""
@@ -201,6 +220,15 @@ class RankingScale(object):
         rows.extend(Z)
         return table(rows)
 
+    def plot(self, pointsize=10):
+        from sage.plot.graphics import Graphics
+        G = Graphics()
+        m = len(self._scales)
+        for i,(name,scale) in enumerate(zip(self._scale_names, self._scales)):
+            G += list_plot(scale, color=hue(1.*i/m), legend_label=name,
+                    pointsize=pointsize)
+        return G
+
 ######################
 # Fonctions de courbes
 ######################
@@ -244,13 +272,25 @@ def curve(nb_equipes, max_points=100, K=1, R=2, base=2, verbose=False):
         64*log(64) - 64)/(63*log(128) - 64*log(64) + 63) + 1
         -99*(p*(log(128) + 1) - p*log(p) - 64*log(128) + 64*log(64) -
         64)/(63*log(128) - 64*log(64) + 63) + 1
+
+    The base argument seems to be useless (why?)::
+
+        sage: curve(100,100,base=3)
+        -99*(p*(log(200) + 1) - p*log(p) - 100*log(200) + 100*log(100) -
+        100)/(99*log(200) - 100*log(100) + 99) + 1
+        sage: curve(100,100,base=2)
+        -99*(p*(log(200) + 1) - p*log(p) - 100*log(200) + 100*log(100) -
+        100)/(99*log(200) - 100*log(100) + 99) + 1
         
     """
-    p = var('p')
+    from sage.symbolic.assumptions import forget, assume
+    from sage.misc.functional import integrate, log
+    from sage.calculus.var import var
+    x,p = var('x,p')
     forget()
     assume(p - 1 > 0)
     assume(p-nb_equipes < 0)
-    fn = integrate(log(R*nb_equipes, base=base) - log(x, base=base), x, p, nb_equipes)
+    fn = integrate(log(R*nb_equipes, b=base) - log(x, b=base), x, p, nb_equipes)
     if verbose: print "fn = %s" % fn
     aire = fn(p=1)
     if verbose: print "aire = %s" % n(aire)
@@ -302,6 +342,9 @@ def discrete_curve(nb_equipes, max_points=100, K=1, R=2, base=2, verbose=False):
         sage: B = discrete_curve(32+2, 70)  # la flotte
         sage: C = discrete_curve(16+2, 40) # october fest, funenuf, la viree
     """
+    from sage.misc.functional import round
+    from sage.rings.integer_ring import ZZ
+    from sage.combinat.words.word import Word
     fn_normalise = curve(nb_equipes, max_points, K=K, R=R, base=base)
     L = [ZZ(round(fn_normalise(p=i))) for i in range(1,nb_equipes+1)]
     if verbose: 
