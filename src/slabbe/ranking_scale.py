@@ -134,7 +134,7 @@ def RankingScale_CQU4_2014(R=1, base=e):
     #L300 = [0] + discrete_curve(24, 300, K=1, R=R, base=base)
 
     scales = L1000, L666, L333
-    names = ['S1000', 'S666', 'S333']
+    names = [u'Série 1000', u'Série 666', u'Série 333']
     return RankingScale(names, scales)
 
 class RankingScale(object):
@@ -220,7 +220,7 @@ class RankingScale(object):
         rows.extend(Z)
         return table(rows)
 
-    def plot(self, pointsize=10):
+    def plot(self, pointsize=20):
         from sage.plot.graphics import Graphics
         G = Graphics()
         m = len(self._scales)
@@ -351,4 +351,15 @@ def discrete_curve(nb_equipes, max_points=100, K=1, R=2, base=2, verbose=False):
         print "First difference sequence is"
         print list(Word(L).reversal().finite_differences())
     return L
+
+######################
+# Should be in Sage
+######################
+def table_to_csv(self, filename, dialect='excel'):
+    r"""
+    """
+    with open(filename, 'w') as f:
+        csv_writer = csv.writer(f, dialect=dialect)
+        csv_writer.writerows(self._rows)
+        print "Creation of file %s" % filename
 
