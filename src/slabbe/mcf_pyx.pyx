@@ -719,19 +719,19 @@ cdef inline PairPoint3d ARrevert(PairPoint3d P):
         P.z -= P.x + P.y
         P.v += P.w
         P.u += P.w
-        P.branch = 100
+        P.branch = 3
         return P
     elif P.x + P.z < P.y:
         P.y -= P.x + P.z
         P.w += P.v
         P.u += P.v
-        P.branch = 101
+        P.branch = 2
         return P
     elif P.y + P.z < P.x:
         P.x -= P.y + P.z
         P.v += P.u
         P.w += P.u
-        P.branch = 103
+        P.branch = 1
         return P
     else:
         R.x = 0.629960524947437 * (-P.x + P.y + P.z)
@@ -742,7 +742,7 @@ cdef inline PairPoint3d ARrevert(PairPoint3d P):
         R.u = 0.793700525984100 * (P.v + P.w)
         R.v = 0.793700525984100 * (P.u + P.w)
         R.w = 0.793700525984100 * (P.u + P.v)
-        R.branch = 105
+        R.branch = 4
         return R
 
 cdef inline PairPoint3d Sorted_Brun(PairPoint3d P):

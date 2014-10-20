@@ -20,6 +20,11 @@ EXAMPLES::
 #*****************************************************************************
 from slabbe.mcf_pyx import MCFAlgorithm_pyx
 
+from sage.misc.latex import latex, LatexExpr
+latex.add_to_preamble('\\usepackage{tikz}')
+latex.add_to_preamble('\\usepackage{pgfplots}')
+latex.add_to_preamble('\\usetikzlibrary{pgfplots.groupplots}')
+
 class MCFAlgorithm(MCFAlgorithm_pyx):
     def plot_invariant_measure(self, n_iterations, ndivs, norm='sup'):
         r"""
@@ -147,6 +152,30 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         plt.savefig(filename)
         #plt.subplots_adjust(left=0.02, bottom=0.06, right=0.95, top=0.94, wspace=0.05)
         print "Creation du fichier %s" % filename
+
+    def tikz_natural_extension(self, n_iterations, norm_algo='1',
+            norm_ext='1', styles=['o,black','+,red','triangle,green','|,blue' ]):
+
+        t = self.natural_extension(n_iterations, norm_algo=norm_algo, norm_ext=norm_ext)
+        domain_in, domain_out, dual_in, dual_out = t
+        style_dict = dict(zip(domain_in.keys(), styles))
+
+        s = ''
+        s += "\\begin{tikzpicture}\n"
+        s += ("\\begin{groupplot}[group style={group size=4 by 1},"
+               "height=9cm,width=9cm,"
+               "xmin=-1,xmax=1,ymin=-.6,ymax=1,"
+               "axis lines=left, xtick=\\empty, ytick=\\empty]\n")
+        for P in [domain_in, dual_in, domain_out, dual_out]:
+            s += "\\nextgroupplot\n"
+            for key,value in P.iteritems():
+                s += "\\addplot+[only marks,mark={}] ".format(style_dict[key])
+                s += "coordinates {%s};\n" % '\n'.join(map(str, value))
+                s += "\\addlegendentry{%s}\n " % key
+        s += "\\end{groupplot}\n"
+        s += "\\end{tikzpicture}\n"
+
+        return LatexExpr(s)
 
     def sample_lyapounov_exponent(self, ntimes, n_iterations=1000):
         r"""
