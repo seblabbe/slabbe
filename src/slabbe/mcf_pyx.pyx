@@ -78,6 +78,7 @@ cdef struct PairPoint3d:
 
 cdef enum Algorithm:
     sorted_brun,
+    sorted_arrevert,
     brun,
     brunmulti,
     selmer,
@@ -98,6 +99,7 @@ cdef enum Algorithm:
 
 algo_name_to_algo_id = dict(
     sorted_brun=    sorted_brun,
+    sorted_arrevert=sorted_arrevert,
     brun=           brun,
     brunmulti=      brunmulti,
     selmer=         selmer,
@@ -119,7 +121,7 @@ algo_name_to_algo_id = dict(
 
 cdef double SQRT3SUR2 = 0.866025403784439
 
-# clean
+
 class MCFAlgorithm_pyx(object):
     def __init__(self, name=None):
         self._name = name
@@ -130,6 +132,51 @@ class MCFAlgorithm_pyx(object):
         if self._algo_id == -1:
             self._algo_id = algo_name_to_algo_id[self._name]
         return self._algo_id
+    def check_definition(self, int n_iterations):
+        r"""
+        INPUT:
+
+        - ``n_iterations`` -- integer
+
+        OUTPUT:
+
+        bool
+
+        EXAMPLES::
+
+            sage: t = algo.arp.check_definition(10000)
+            True
+
+        """
+        cdef double s,t             # temporary variables
+        cdef unsigned int i         # loop counter
+
+        cdef PairPoint3d P, R
+
+        cdef Algorithm algo_id = self.algo_id()
+
+        # Loop
+        for i from 0 <= i < n_iterations:
+
+            # random initial values
+            P.x = random(); P.y = random(); P.z = random();
+            P.u = random(); P.v = random(); P.w = random();
+            s = P.x*P.u + P.y*P.v + P.z*P.w
+
+            # Apply Algo
+            R = Algo_switch(P, algo_id)
+            t = R.x*R.u + R.y*R.v + R.z*R.w
+
+            if not abs(s - t) < 0.0000001:
+                m = 'Algo {} does not preserve the scalar product\n'.format(self.name())
+                m += '{} != {}\n'.format(s,t)
+                m += 'The problem is on branch {}\n'.format(R.branch)
+                m += 'INPUT: ({}, {}, {}, {}, {}, {})\n'.format(P.x,P.y,P.z,P.u,P.v,P.w)
+                m += 'OUTPUT: ({}, {}, {}, {}, {}, {})\n'.format(R.x,R.y,R.z,R.u,R.v,R.w)
+                raise Exception(m)
+
+        return True
+
     def invariant_measure_dict(self, int n_iterations, int ndivs, v=None,
             str norm='1', verbose=False):
         r"""
@@ -586,6 +633,8 @@ cpdef inline PairPoint3d Algo_switch(PairPoint3d P, Algorithm algo):
     """
     if algo == sorted_brun:
         return Sorted_Brun(P)
+    elif algo == sorted_arrevert:
+        return Sorted_ARrevert(P)
     elif algo == brun:
         return Brun(P)
     elif algo == brunmulti:
@@ -605,7 +654,7 @@ cpdef inline PairPoint3d Algo_switch(PairPoint3d P, Algorithm algo):
     elif algo == arpmulti:
         return Sorted_ARPMulti(P)
     elif algo == arrevert:
-        return Sorted_ARrevert(P)
+        return ARrevert(P)
     elif algo == arrevertmulti:
         return Sorted_ARrevertMulti(P)
     elif algo == armonteil:
@@ -656,6 +705,45 @@ cdef inline PairPoint3d Brun(PairPoint3d P):
         P.v += P.u
         P.branch = 105
     return P
+
+cdef inline PairPoint3d ARrevert(PairPoint3d P):
+    r"""
+    EXAMPLES::
+
+        sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
+        sage: Algo_switch(D, algo_name_to_algo_id['arrevert'])
+        {'branch': 100, 'u': 0.2, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.6, 'z': 0.20000000000000007}
+    """
+    cdef PairPoint3d R
+    if P.x + P.y < P.z:
+        P.z -= P.x + P.y
+        P.v += P.w
+        P.u += P.w
+        P.branch = 100
+        return P
+    elif P.x + P.z < P.y:
+        P.y -= P.x + P.z
+        P.w += P.v
+        P.u += P.v
+        P.branch = 101
+        return P
+    elif P.y + P.z < P.x:
+        P.x -= P.y + P.z
+        P.v += P.u
+        P.w += P.u
+        P.branch = 103
+        return P
+    else:
+        R.x = 0.629960524947437 * (-P.x + P.y + P.z)
+        R.y = 0.629960524947437 * ( P.x - P.y + P.z)
+        R.z = 0.629960524947437 * ( P.x + P.y - P.z)
+        # 0.793700525984100 = 1/2*4^(1/3)
+        # 0.629960524947437 = 1/4*4^(2/3)
+        R.u = 0.793700525984100 * (P.v + P.w)
+        R.v = 0.793700525984100 * (P.u + P.w)
+        R.w = 0.793700525984100 * (P.u + P.v)
+        R.branch = 105
+        return R
 
 cdef inline PairPoint3d Sorted_Brun(PairPoint3d P):
     r"""

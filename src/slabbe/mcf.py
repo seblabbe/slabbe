@@ -246,6 +246,7 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
 # Les algos
 class Algo(object):
     sorted_brun = MCFAlgorithm('sorted_brun')
+    sorted_arrevert = MCFAlgorithm('sorted_arrevert')
     brun = MCFAlgorithm('brun')
     brunmulti = MCFAlgorithm('brunmulti')
     selmer = MCFAlgorithm('selmer')
