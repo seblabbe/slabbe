@@ -683,27 +683,27 @@ cdef inline PairPoint3d Brun(PairPoint3d P):
     if P.x < P.y < P.z:
         P.z -= P.y
         P.v += P.w
-        P.branch = 100
+        P.branch = 123
     elif P.x < P.z < P.y:
         P.y -= P.z
         P.w += P.v
-        P.branch = 101
+        P.branch = 132
     elif P.y < P.z < P.x:
         P.x -= P.z
         P.w += P.u
-        P.branch = 102
+        P.branch = 231
     elif P.y < P.x < P.z:
         P.z -= P.x
         P.u += P.w
-        P.branch = 103
+        P.branch = 213
     elif P.z < P.x < P.y:
         P.y -= P.x
         P.u += P.v
-        P.branch = 104
+        P.branch = 312
     elif P.z < P.y < P.x:
         P.x -= P.y
         P.v += P.u
-        P.branch = 105
+        P.branch = 321
     return P
 
 cdef inline PairPoint3d ARrevert(PairPoint3d P):
