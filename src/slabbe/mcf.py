@@ -295,7 +295,12 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
 # Les algos
 class Algo(object):
     sorted_brun = MCFAlgorithm('sorted_brun')
+    sorted_arp = MCFAlgorithm('sorted_arp')
     sorted_arrevert = MCFAlgorithm('sorted_arrevert')
+    sorted_selmer = MCFAlgorithm('sorted_selmer')
+    sorted_meester = MCFAlgorithm('sorted_meester')
+    sorted_poincare = MCFAlgorithm('sorted_poincare')
+    sorted_arnouxrauzy = MCFAlgorithm('sorted_arnouxrauzy')
     brun = MCFAlgorithm('brun')
     brunmulti = MCFAlgorithm('brunmulti')
     selmer = MCFAlgorithm('selmer')

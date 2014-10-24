@@ -14,22 +14,8 @@ TODO:
     - make a other class for 2d and and 1d methods
     - Read [1] and change cpdef int C[NDIVS][NDIVS][NDIVS]
     - faire une fonction sort?
+    - faire une fonction max
     - utilise les vecteurs pour les plus grandes dimensions?
-
-    - make use of enum of algorithms instead of char* branch
-
-        cdef enum CheeseState:
-            hard = 1
-            soft = 2
-            runny = 3
-
-        cpdef int ff ():
-            cdef CheeseState x = hard
-            if x == 1:
-                return 45
-            else:
-                return 88
-
     - try puttin arguments of inline methods as references
     - or avoid creating a new pairpoint R, the copy is already done by
       default
@@ -77,50 +63,62 @@ cdef struct PairPoint3d:
     int branch
 
 cdef enum Algorithm:
-    sorted_brun,
-    sorted_arrevert,
     brun,
-    brunmulti,
     selmer,
     meester,
-    arnouxrauzy,
-    arnouxrauzymulti,
-    poincare,
-    arp,
-    arpmulti,
     arrevert,
-    arrevertmulti,
-    armonteil,
-    delaunay,
+    arp,
+    arnouxrauzy,
+    poincare,
+    sorted_brun,
+    sorted_brunmulti,
+    sorted_selmer,
+    sorted_meester,
+    sorted_arnouxrauzy,
+    sorted_arnouxrauzymulti,
+    sorted_poincare,
+    sorted_arp,
+    sorted_arpmulti,
+    sorted_arrevert,
+    sorted_arrevertmulti,
+    sorted_armonteil,
+    sorted_delaunay,
     jacobi,
     jacobiadditif,
     jacobiadditifv2,
     sort
 
 algo_name_to_algo_id = dict(
-    sorted_brun=    sorted_brun,
-    sorted_arrevert=sorted_arrevert,
-    brun=           brun,
-    brunmulti=      brunmulti,
-    selmer=         selmer,
-    meester=        meester,
-    arnouxrauzy=    arnouxrauzy,
-    arnouxrauzymulti = arnouxrauzymulti,
-    poincare=       poincare,
-    arp=            arp,
-    arpmulti=       arpmulti,
-    arrevert=       arrevert,
-    arrevertmulti=  arrevertmulti,
-    armonteil=      armonteil,
-    delaunay=       delaunay,
-    jacobi=         jacobi,
-    jacobiadditif=  jacobiadditif,
-    jacobiadditifv2=jacobiadditifv2,
-    sort=           sort,
+    # not sorted
+    brun=                     brun,
+    selmer=                   selmer,
+    meester=                  meester,
+    arrevert=                 arrevert,
+    arp=                      arp,
+    arnouxrauzy=              arnouxrauzy,
+    poincare=                 poincare,
+    # sorted
+    sorted_brun=              sorted_brun,
+    sorted_brunmulti=         sorted_brunmulti,
+    sorted_selmer=            sorted_selmer,
+    sorted_meester=           sorted_meester,
+    sorted_arnouxrauzy=       sorted_arnouxrauzy,
+    sorted_arnouxrauzymulti=  sorted_arnouxrauzymulti,
+    sorted_poincare=          sorted_poincare,
+    sorted_arp=               sorted_arp,
+    sorted_arpmulti=          sorted_arpmulti,
+    sorted_arrevert=          sorted_arrevert,
+    sorted_arrevertmulti=     sorted_arrevertmulti,
+    sorted_armonteil=         sorted_armonteil,
+    sorted_delaunay=          sorted_delaunay,
+    # jacobi
+    jacobi=            jacobi,
+    jacobiadditif=     jacobiadditif,
+    jacobiadditifv2=   jacobiadditifv2,
+    sort=              sort,
     )
 
 cdef double SQRT3SUR2 = 0.866025403784439
-
 
 class MCFAlgorithm_pyx(object):
     def __init__(self, name=None):
@@ -631,36 +629,49 @@ cpdef inline PairPoint3d Algo_switch(PairPoint3d P, Algorithm algo):
         sage: Algo_switch(D, algo_name_to_algo_id['sort'])
         {'branch': 'ad', 'u': 0.3, 'v': 0.2, 'w': 0.1, 'x': 0.5, 'y': 0.6, 'z': 0.7}
     """
-    if algo == sorted_brun:
+    # not SORTED
+    if algo == brun:
+        return Brun(P)
+    elif algo == arp:
+        return ARP(P)
+    elif algo == arrevert:
+        return ARrevert(P)
+    elif algo == arnouxrauzy:
+        return ArnouxRauzy(P)
+    elif algo == poincare:
+        return Poincare(P)
+    elif algo == selmer:
+        return Selmer(P)
+    elif algo == meester:
+        return Meester(P)
+    # SORTED
+    elif algo == sorted_brun:
         return Sorted_Brun(P)
     elif algo == sorted_arrevert:
         return Sorted_ARrevert(P)
-    elif algo == brun:
-        return Brun(P)
-    elif algo == brunmulti:
-        return Sorted_BrunMulti(P)
-    elif algo == selmer:
-        return Sorted_Selmer(P)
-    elif algo == meester:
-        return Sorted_Meester(P)
-    elif algo == poincare:
-        return Sorted_Poincare(P)
-    elif algo == arnouxrauzy:
-        return Sorted_ArnouxRauzy(P)
-    elif algo == arnouxrauzymulti:
-        return Sorted_ArnouxRauzyMulti(P)
-    elif algo == arp:
+    elif algo == sorted_arp:
         return Sorted_ARP(P)
-    elif algo == arpmulti:
+    elif algo == sorted_brunmulti:
+        return Sorted_BrunMulti(P)
+    elif algo == sorted_selmer:
+        return Sorted_Selmer(P)
+    elif algo == sorted_meester:
+        return Sorted_Meester(P)
+    elif algo == sorted_poincare:
+        return Sorted_Poincare(P)
+    elif algo == sorted_arnouxrauzy:
+        return Sorted_ArnouxRauzy(P)
+    elif algo == sorted_arnouxrauzymulti:
+        return Sorted_ArnouxRauzyMulti(P)
+    elif algo == sorted_arpmulti:
         return Sorted_ARPMulti(P)
-    elif algo == arrevert:
-        return ARrevert(P)
-    elif algo == arrevertmulti:
+    elif algo == sorted_arrevertmulti:
         return Sorted_ARrevertMulti(P)
-    elif algo == armonteil:
+    elif algo == sorted_armonteil:
         return Sorted_ARMonteil(P)
-    elif algo == delaunay:
+    elif algo == sorted_delaunay:
         return Sorted_Delaunay(P)
+    # Jacobi
     elif algo == jacobi:
         return JacobiPerron(P)
     elif algo == jacobiadditif:
@@ -704,6 +715,8 @@ cdef inline PairPoint3d Brun(PairPoint3d P):
         P.x -= P.y
         P.v += P.u
         P.branch = 321
+    else:
+        raise ValueError('limit case of Brun algo: reach set of measure zero')
     return P
 
 cdef inline PairPoint3d ARrevert(PairPoint3d P):
@@ -744,6 +757,189 @@ cdef inline PairPoint3d ARrevert(PairPoint3d P):
         R.w = 0.793700525984100 * (P.u + P.v)
         R.branch = 4
         return R
+
+cdef inline PairPoint3d ARP(PairPoint3d P):
+    r"""
+    EXAMPLES::
+
+        sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
+        sage: Algo_switch(D, algo_name_to_algo_id['arp'])
+        {'branch': 23, 'u': 0.8, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.3, 'z': 0.20000000000000007}
+    """
+    if P.x + P.y < P.z:
+        P.z -= P.x + P.y
+        P.v += P.w
+        P.u += P.w
+        P.branch = 3
+        return P
+    elif P.x + P.z < P.y:
+        P.y -= P.x + P.z
+        P.w += P.v
+        P.u += P.v
+        P.branch = 2
+        return P
+    elif P.y + P.z < P.x:
+        P.x -= P.y + P.z
+        P.v += P.u
+        P.w += P.u
+        P.branch = 1
+        return P
+    else:
+        return Poincare(P)
+
+cdef inline PairPoint3d ArnouxRauzy(PairPoint3d P):
+    r"""
+    EXAMPLES::
+
+        sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
+        sage: Algo_switch(D, algo_name_to_algo_id['arnouxrauzy'])
+        Exception ValueError: ValueError('arnoux rauzy not defined',) in
+        '_Users_slabbe_GitHgSvn_slabbe_0_1_src_
+    """
+    if P.x + P.y < P.z:
+        P.z -= P.x + P.y
+        P.v += P.w
+        P.u += P.w
+        P.branch = 3
+        return P
+    elif P.x + P.z < P.y:
+        P.y -= P.x + P.z
+        P.w += P.v
+        P.u += P.v
+        P.branch = 2
+        return P
+    elif P.y + P.z < P.x:
+        P.x -= P.y + P.z
+        P.v += P.u
+        P.w += P.u
+        P.branch = 1
+        return P
+    else:
+        raise ValueError("arnoux rauzy not defined")
+
+cdef inline PairPoint3d Poincare(PairPoint3d P):
+    r"""
+    EXAMPLES::
+
+        sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
+        sage: Algo_switch(D, algo_name_to_algo_id['poincare'])
+        {'branch': 23, 'u': 0.8, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.3, 'z': 0.2000}
+    """
+    cdef PairPoint3d R
+    if P.x < P.y < P.z:
+        R.x = P.x
+        R.y = P.y - P.x
+        R.z = P.z - P.y
+        R.u = P.u + P.v + P.w
+        R.v = P.v + P.w
+        R.w = P.w
+        R.branch = 23
+    elif P.x < P.z < P.y:
+        R.x = P.x
+        R.y = P.y - P.z
+        R.z = P.z - P.x
+        R.u = P.u + P.v + P.w
+        R.v = P.v
+        R.w = P.v + P.w
+        R.branch = 32
+    elif P.y < P.x < P.z:
+        R.x = P.x - P.y
+        R.y = P.y
+        R.z = P.z - P.x
+        R.u = P.u       + P.w
+        R.v = P.u + P.v + P.w
+        R.w = P.w
+        R.branch = 13
+    elif P.z < P.x < P.y:
+        R.x = P.x - P.z
+        R.y = P.y - P.x
+        R.z = P.z
+        R.u = P.u + P.v
+        R.v = P.v
+        R.w = P.u + P.v + P.w
+        R.branch = 12
+    elif P.y < P.z < P.x:
+        R.x = P.x - P.z
+        R.y = P.y
+        R.z = P.z - P.y
+        R.u = P.u
+        R.v = P.u + P.v + P.w
+        R.w = P.u + P.w
+        R.branch = 31
+    elif P.z < P.y < P.x:
+        R.x = P.x - P.y
+        R.y = P.y - P.z
+        R.z = P.z
+        R.u = P.u
+        R.v = P.u + P.v
+        R.w = P.u + P.v + P.w
+        R.branch = 21
+    else:
+        raise ValueError('limit case of Poincare algo: reach set of measure zero')
+    return R
+
+cdef inline PairPoint3d Selmer(PairPoint3d P):
+    r"""
+    EXAMPLES::
+
+        sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
+        sage: Algo_switch(D, algo_name_to_algo_id['selmer'])
+        {'branch': 23, 'u': 0.8, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.3, 'z': 0.2000}
+    """
+    if P.x < P.y < P.z:
+        P.z -= P.x
+        P.u += P.w
+        P.branch = 123
+    elif P.x < P.z < P.y:
+        P.y -= P.x
+        P.u += P.v
+        P.branch = 132
+    elif P.y < P.z < P.x:
+        P.x -= P.y
+        P.v += P.u
+        P.branch = 231
+    elif P.y < P.x < P.z:
+        P.z -= P.y
+        P.v += P.w
+        P.branch = 213
+    elif P.z < P.x < P.y:
+        P.y -= P.z
+        P.w += P.v
+        P.branch = 312
+    elif P.z < P.y < P.x:
+        P.x -= P.z
+        P.w += P.u
+        P.branch = 321
+    else:
+        raise ValueError('limit case of Selmer algo: reach set of measure zero')
+    return P
+
+cdef inline PairPoint3d Meester(PairPoint3d P):
+    r"""
+    EXAMPLES::
+
+        sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
+        sage: Algo_switch(D, algo_name_to_algo_id['meester'])
+        {'branch': 23, 'u': 0.8, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.3, 'z': 0.2000}
+    """
+    if P.x < P.y and P.x < P.z:
+        P.y -= P.x
+        P.z -= P.x
+        P.u += P.v + P.w
+        P.branch = 1
+    elif P.y < P.x and P.x < P.z:
+        P.x -= P.y
+        P.z -= P.y
+        P.v += P.u + P.w
+        P.branch = 2
+    elif P.z < P.x and P.z < P.y:
+        P.x -= P.z
+        P.y -= P.z
+        P.w += P.u + P.v
+        P.branch = 3
+    else:
+        raise ValueError('limit case of meester algo: reach set of measure zero')
+    return P
 
 cdef inline PairPoint3d Sorted_Brun(PairPoint3d P):
     r"""
