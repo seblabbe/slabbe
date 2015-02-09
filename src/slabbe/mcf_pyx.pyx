@@ -127,9 +127,64 @@ class MCFAlgorithm_pyx(object):
     def name(self):
         return self._name
     def algo_id(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mcf import algo
+            sage: algo.brun.algo_id()
+            0
+            sage: algo.arp.algo_id()
+            4
+        """
         if self._algo_id == -1:
             self._algo_id = algo_name_to_algo_id[self._name]
         return self._algo_id
+
+    def substitutions(self):
+        r"""
+        EXAMPLES::
+
+            sage: algo.brun.substitutions()
+            {12: WordMorphism: 1->12, 2->2, 3->3,
+             13: WordMorphism: 1->13, 2->2, 3->3,
+             21: WordMorphism: 1->1, 2->21, 3->3,
+             23: WordMorphism: 1->1, 2->23, 3->3,
+             31: WordMorphism: 1->1, 2->2, 3->31,
+             32: WordMorphism: 1->1, 2->2, 3->32}
+        """
+        from sage.combinat.words.morphism import WordMorphism
+        cdef Algorithm algo = self.algo_id()
+        if algo == brun:
+            return {12: WordMorphism({1: [1, 2], 2: [2], 3: [3]}),
+                    21: WordMorphism({1: [1], 2: [2, 1], 3: [3]}),
+                    13: WordMorphism({1: [1, 3], 2: [2], 3: [3]}),
+                    31: WordMorphism({1: [1], 2: [2], 3: [3, 1]}),
+                    23: WordMorphism({1: [1], 2: [2, 3], 3: [3]}),
+                    32: WordMorphism({1: [1], 2: [2], 3: [3, 2]})}
+        elif algo == arp:
+            return {1:  WordMorphism({1: [1], 2: [2, 1], 3: [3, 1]}),
+                    2:  WordMorphism({1: [1, 2], 2: [2], 3: [3, 2]}),
+                    3:  WordMorphism({1: [1, 3], 2: [2, 3], 3: [3]}),
+                    12: WordMorphism({1: [1, 2], 2: [2], 3: [3, 1, 2]}),
+                    21: WordMorphism({1: [1], 2: [2, 1], 3: [3, 2, 1]}),
+                    13: WordMorphism({1: [1, 3], 2: [2, 1, 3], 3: [3]}),
+                    31: WordMorphism({1: [1], 2: [2, 3, 1], 3: [3, 1]}),
+                    23: WordMorphism({1: [1, 2, 3], 2: [2, 3], 3: [3]}),
+                    32: WordMorphism({1: [1, 3, 2], 2: [2], 3: [3, 2]})}
+        elif algo == arnouxrauzy:
+            return {1:  WordMorphism({1: [1], 2: [2, 1], 3: [3, 1]}),
+                    2:  WordMorphism({1: [1, 2], 2: [2], 3: [3, 2]}),
+                    3:  WordMorphism({1: [1, 3], 2: [2, 3], 3: [3]})}
+        elif algo == poincare:
+            return {12: WordMorphism({1: [1, 2], 2: [2], 3: [3, 1, 2]}),
+                    21: WordMorphism({1: [1], 2: [2, 1], 3: [3, 2, 1]}),
+                    13: WordMorphism({1: [1, 3], 2: [2, 1, 3], 3: [3]}),
+                    31: WordMorphism({1: [1], 2: [2, 3, 1], 3: [3, 1]}),
+                    23: WordMorphism({1: [1, 2, 3], 2: [2, 3], 3: [3]}),
+                    32: WordMorphism({1: [1, 3, 2], 2: [2], 3: [3, 2]})}
+        else:
+            raise NotImplementedError("code not implemented for algo(=%s)" % algo)
+
     def check_definition(self, int n_iterations):
         r"""
         INPUT:
@@ -174,6 +229,45 @@ class MCFAlgorithm_pyx(object):
                 raise Exception(m)
 
         return True
+
+    def coding_iterator(self, pt):
+        r"""
+        INPUT:
+
+        - ``pt`` -- iterable of three real numbers
+
+        OUTPUT:
+
+            iterator
+
+        EXAMPLES::
+
+            sage: from slabbe.mcf import algo
+            sage: it = algo.arp.coding_iterator((1,e,pi))
+            sage: [next(it) for _ in range(20)]
+            [23, 2, 1, 23, 1, 31, 3, 3, 3, 3, 23, 1, 1, 1, 31, 2, 21, 2, 3, 12]
+
+        """
+        cdef double s             # temporary variables
+        cdef Algorithm algo_id = self.algo_id()
+        cdef PairPoint3d P
+
+        # initial values
+        P.x, P.y, P.z = pt
+        P.u = random(); P.v = random(); P.w = random();
+
+        # Normalize (x,y,z)
+        s = P.x + P.y + P.z
+        P.x /= s; P.y /= s; P.z /= s
+
+        # Loop
+        while True:
+            P = Algo_switch(P, algo_id)
+            yield P.branch
+
+            # Normalize (x,y,z)
+            s = P.x + P.y + P.z
+            P.x /= s; P.y /= s; P.z /= s
 
     def invariant_measure_dict(self, int n_iterations, int ndivs, v=None,
             str norm='1', verbose=False):

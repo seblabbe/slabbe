@@ -8,6 +8,14 @@ EXAMPLES::
     sage: algo.brun.plot_natural_extension(3000, norm_algo='1', axis_off=True)
     Creation du fichier nat_ext_brun_iter3000.png
 
+::
+
+    sage: from slabbe.mcf import algo
+    sage: D = algo.arp.substitutions()
+    sage: it = algo.arp.coding_iterator((1,e,pi))
+    sage: words.s_adic(it, repeat(1), D)
+    word: 1232323123233231232332312323123232312323...
+
 """
 #*****************************************************************************
 #       Copyright (C) 2014 Sébastien Labbé <slabqc@gmail.com>
