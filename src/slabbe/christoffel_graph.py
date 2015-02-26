@@ -45,7 +45,7 @@ from sage.modules.free_module_element import vector
 from sage.matrix.constructor import matrix
 from sage.rings.integer_ring import ZZ
 from sage.rings.real_mpfr import RR
-from sage.structure.element import gcd
+from sage.rings.arith import gcd
 from sage.functions.other import abs
 from slabbe.discrete_subset import DiscreteSubset, DiscreteTube, M3to2, M4to3
 from slabbe.discrete_plane import DiscretePlane 
@@ -113,7 +113,7 @@ class ChristoffelGraph(DiscreteSubset):
         if mod:
             self._sum_v = mod
         else:
-            self._sum_v = sum(v)
+            self._sum_v = sum(abs(a) for a in v)
         DiscreteSubset.__init__(self, dimension=len(v), edge_predicate=self.has_edge)
 
     def level_value(self, p):
