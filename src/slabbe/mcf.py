@@ -128,6 +128,15 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
     def plot_natural_extension(self, n_iterations, norm_algo='1',
             norm_ext='1', axis_off=False):
         r"""
+        INPUT:
+
+        - ``n_iterations`` - integer, number of iterations
+        - ``norm_algo`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``norm_ext`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``axis_off`` - boolean, 
+
         EXAMPLES::
 
             sage: algo.arp.plot_natural_extension(1000)
@@ -169,6 +178,15 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
 
     def tikz_natural_extension(self, n_iterations, norm_algo='1', norm_ext='1'):
         r"""
+
+        INPUT:
+
+        - ``n_iterations`` - integer, number of iterations
+        - ``norm_algo`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``norm_ext`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+
         EXAMPLES::
 
             sage: from slabbe.mcf import algo
@@ -188,13 +206,16 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
                "height=7cm,width=8cm,"
                "xmin=-1.1,xmax=1.1,ymin=-.6,ymax=1.20,"
                "hide axis]\n")
-        for P in [domain_in, dual_in, domain_out, dual_out]:
+        for data in [domain_in, dual_in, domain_out, dual_out]:
             s += "\\nextgroupplot\n"
-            for key,value in P.iteritems():
-                s += ("\\draw[dashed] "
-                 "(axis cs:%s, %s)" % (-r*sqrt3/2,r*-.5) + " node[left]  {$e_1$} -- "
-                 "(axis cs:%s, %s)" % (r*sqrt3/2,r*-.5)  + " node[right] {$e_2$} -- "
-                 "(axis cs:%s, %s)" % (0, r)             + " node[above] {$e_3$} -- cycle;\n")
+            s += ("\\draw[dashed] "
+                  "(axis cs:%s, %s)" % (-r*sqrt3/2,r*-.5) +
+                  " node[left] {$\\mathbf{e}_1$} -- \n"
+                  "(axis cs:%s, %s)" % (r*sqrt3/2,r*-.5)  +
+                  " node[right] {$\\mathbf{e}_2$} -- \n"
+                  "(axis cs:%s, %s)" % (0, r)             +
+                  " node[above] {$\\mathbf{e}_3$} -- cycle;\n")
+            for key,value in data.iteritems():
                 s += "\\addplot+[only marks,mark=*,mark options={color=%s}] " % color_dict[key]
                 s += "coordinates {%s};\n" % '\n'.join(map(str, value))
                 s += "\\addlegendentry{%s}\n " % key
@@ -202,6 +223,71 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         s += "\\draw[draw=none] (group c1r1.center) -- node {$\\times$} (group c2r1.center);\n"
         s += "\\draw[draw=none] (group c2r1.center) -- node {$\\to$} (group c3r1.center);\n"
         s += "\\draw[draw=none] (group c3r1.center) -- node {$\\times$} (group c4r1.center);\n"
+        s += "\\end{tikzpicture}\n"
+        return LatexExpr(s)
+
+    def tikz_natural_extension_part(self, n_iterations, part='dual_out', 
+                                    norm_algo='1', norm_ext='1',
+                                    marksize='1pt', limit_nb_points=None,
+                                    verbose=False):
+        r"""
+        Return a pgfplots or some part of an orbit in the natural
+        extension.
+
+        INPUT:
+
+        - ``n_iterations`` - integer, number of iterations
+        - ``part`` - integer, taking value 0, 1, 2 or 3
+        - ``norm_algo`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``norm_ext`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``marksize`` -- string (default: ``'1pt'``), pgfplots mark size value
+        - ``limit_nb_points`` -- None or integer (default: ``None``), limit
+          number of points per patch
+        - ``verbose`` -- string (default: ``False``)
+
+        EXAMPLES::
+
+            sage: from slabbe.mcf import algo
+            sage: s = algo.arp.tikz_natural_extension_part(1000, part='dual_out')
+            sage: view(s, tightpage=True)
+        """
+        t = self.natural_extension(n_iterations, norm_algo=norm_algo, norm_ext=norm_ext)
+        domain_in, domain_out, dual_in, dual_out = t
+        sqrt3 = 1.73205080756888
+        r = 1.08
+        color_dict = dict(zip(domain_in.keys(), PGF_COLORS))
+        data = t[part]
+
+        s = ''
+        s += "\\begin{tikzpicture}[scale=.7]\n"
+        s += ("\\begin{axis}[height=7cm,width=8cm,\n"
+               "xmin=-1.1,xmax=1.1,ymin=-.6,ymax=1.20,\n"
+               "hide axis]\n")
+        s += ("\\draw[dashed] \n"
+              "(axis cs:%s, %s)" % (-r*sqrt3/2,r*-.5) +
+              " node[left] {$\\mathbf{e}_1$} -- \n"
+              "(axis cs:%s, %s)" % (r*sqrt3/2,r*-.5)  +
+              " node[right] {$\\mathbf{e}_2$} -- \n"
+              "(axis cs:%s, %s)" % (0, r)             +
+              " node[above] {$\\mathbf{e}_3$} -- cycle;\n")
+        for key,value in data.iteritems():
+            if limit_nb_points and len(value) > limit_nb_points:
+                if verbose:
+                    print "Taking only {} points instead of {} for key {}".format(
+                            limit_nb_points, len(value), key)
+                value = value[:limit_nb_points]
+            elif verbose:
+                print "Taking {} points for key {}".format(len(value), key)
+
+            s += "\\addplot+[only marks,mark=*,mark options={color=%s}," % color_dict[key]
+            s += "mark size=%s]\n" % marksize
+            s += "coordinates {\n"
+            s += '\n'.join(map(str, value))
+            s += "};\n" 
+            s += "\\addlegendentry{%s}\n " % key
+        s += "\\end{axis}\n"
         s += "\\end{tikzpicture}\n"
         return LatexExpr(s)
 
@@ -263,7 +349,7 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         t = table(columns=cols,header_column=header)
         return t
 
-    def plot_dual_domain(self):
+    def plot_dual_domain(self, savefile=False):
         r"""
         Return a plot of the dual domain
         
@@ -293,11 +379,12 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
             center = sum(map(vector, value2d)) / 3
             M = matrix(QQ, value).transpose()
             G += text("%s:\n%s" %(key,M), center, color='black')
-        title = "Transposed matrices of algo=%s" % self.name()
-        filename = 'transposed_mat_%s.png' % self.name()
-        G.save(filename, title=title)
-        print "Creation du fichier %s" % filename
-        #return G
+        if savefile:
+            title = "Transposed matrices of algo=%s" % self.name()
+            filename = 'transposed_mat_%s.png' % self.name()
+            G.save(filename, title=title)
+            print "Creation of the file %s" % filename
+        return G
 
 
 # Les algos
