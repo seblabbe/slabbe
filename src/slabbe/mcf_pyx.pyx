@@ -120,7 +120,7 @@ algo_name_to_algo_id = dict(
 
 cdef double SQRT3SUR2 = 0.866025403784439
 
-class MCFAlgorithm_pyx(object):
+cdef class MCFAlgorithm_pyx(object):
     def __init__(self, name=None):
         self._name = name
         self._algo_id = -1
@@ -269,6 +269,323 @@ class MCFAlgorithm_pyx(object):
             s = P.x + P.y + P.z
             P.x /= s; P.y /= s; P.z /= s
 
+    def orbit_iterator(self, v=None, str norm='1'):
+        r"""
+        INPUT:
+
+        - ``v`` - initial vector (default: ``None``), if None, then
+          initial point is random
+        - ``norm`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit of the algo
+
+        NOTE:
+
+            This iterator is 10x slower because of the yield statement. So
+            avoid using this when writing fast code. Just copy paste the
+            loop...
+
+        OUTPUT:
+
+        iterator of tuples ((x,y,z),b) where point (x,y,z) was computed by branch b
+
+        EXAMPLES
+
+        ::
+
+            sage: from slabbe.mcf import algo
+            sage: it = algo.brun.orbit_iterator()
+            sage: for _ in range(4): next(it)          # random
+            ((0.5086620359442752, 0.24127750025102887, 0.2500604638046959), 312)
+            ((0.3448298958227382, 0.32172927096911164, 0.33344083320815016), 231)
+            ((0.017086349092464856, 0.4826717371806543, 0.5002419137268809), 231)
+            ((0.033028060364124194, 0.9330086366249939, 0.03396330301088184), 123)
+
+        ::
+
+            sage: it = algo.brun.orbit_iterator((.3,.4,.5))
+            sage: for _ in range(4): next(it)
+            ((0.37499999999999994, 0.5, 0.12499999999999996), 123)
+            ((0.5999999999999999, 0.2000000000000001, 0.19999999999999993), 312)
+            ((0.49999999999999983, 0.25000000000000017, 0.24999999999999997), 321)
+            ((0.333333333333333, 0.33333333333333365, 0.33333333333333337), 321)
+
+        """
+        cdef double s
+        cdef Algorithm algo_id = self.algo_id()
+
+        cdef PairPoint3d P
+        if v is None:
+            P.x = random(); P.y = random(); P.z = random()
+        else:
+            P.x = v[0]; P.y = v[1]; P.z = v[2]
+
+        # Normalize (x,y,z)
+        s = P.x + P.y + P.z
+        P.x /= s; P.y /= s; P.z /= s
+
+        while True:
+            # Apply Algo
+            P = Algo_switch(P, algo_id)
+
+            # Normalize (xnew,ynew,znew)
+            if norm== '1':
+                s = P.x + P.y + P.z # norm 1
+            elif norm== 'sup':
+                s = max(P.x, P.y, P.z) # norm sup
+            else:
+                raise ValueError("Unknown value for norm(=%s)" %norm)
+            P.x /= s; P.y /= s; P.z /= s
+
+            yield (P.x,P.y,P.z), P.branch
+
+    def orbit_withdual_iterator(self, v=None, norm_left='sup', norm_right='1'):
+        r"""
+        INPUT:
+
+        - ``v`` - initial vector (default: ``None``), if None, then
+          initial point is random
+        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit of the algo
+        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'`` or ``'hypersurfac'``, the norm used for the orbit in the natural extension
+
+        NOTE:
+
+            This iterator is 10x slower because of the yield statement. So
+            avoid using this when writing fast code. Just copy paste the
+            loop...
+
+        OUTPUT:
+
+            iterator
+
+        EXAMPLES::
+
+            sage: it = algo.brun.orbit_withdual_iterator((.414578,.571324,.65513))
+            sage: for _ in range(4): next(it)
+            ((0.7256442929056017, 1.0, 0.14668734378391243), (0.25, 0.5, 0.25), 123)
+            ((1.0, 0.37808566783572695, 0.20214772612150184),
+             (0.5, 0.3333333333333333, 0.16666666666666666),
+             312)
+            ((1.0, 0.6079385025908344, 0.32504111204194974),
+             (0.3333333333333333, 0.5555555555555555, 0.1111111111111111),
+             321)
+            ((0.6449032192209051, 1.0, 0.534661171576946),
+             (0.25, 0.6666666666666666, 0.08333333333333333),
+             321)
+
+        """
+        cdef double s           # temporary variables
+        cdef Algorithm algo_id = self.algo_id()
+        cdef PairPoint3d P
+        if v is None:
+            P.x = random(); P.y = random(); P.z = random()
+        else:
+            P.x = v[0]; P.y = v[1]; P.z = v[2]
+        P.u = 1./3
+        P.v = 1./3
+        P.w = 1./3
+
+        # Normalize (x,y,z)
+        s = P.x + P.y + P.z
+        P.x /= s; P.y /= s; P.z /= s
+
+        # Loop
+        while True:
+
+            # Apply Algo
+            P = Algo_switch(P, algo_id)
+
+            # Normalize (xnew,ynew,znew)
+            if norm_left == '1':
+                s = P.x + P.y + P.z # norm 1
+            elif norm_left == 'sup':
+                s = max(P.x, P.y, P.z) # norm sup
+            else:
+                raise ValueError("Unknown value for norm_left(=%s)" %norm_left)
+            P.x /= s; P.y /= s; P.z /= s
+
+            # Normalize (unew,vnew,wnew)
+            if norm_right == '1':
+                s = P.u + P.v + P.w    # norm 1
+            elif norm_right == 'sup':
+                s = max(P.u, P.v, P.w) # norm sup
+            elif norm_right == 'hypersurface':
+                s = P.x*P.u + P.y*P.v + P.z*P.w # hypersurface
+            else:
+                raise ValueError("Unknown value for norm_right(=%s)" %norm_right)
+            P.u /= s; P.v /= s; P.w /= s
+
+            yield (P.x, P.y, P.z), (P.u, P.v, P.w), P.branch
+
+    def orbit_withdual_list(self, int n_iterations, v=None, norm_left='sup', norm_right='1'):
+        r"""
+        INPUT:
+
+        - ``v`` - initial vector (default: ``None``), if None, then
+          initial point is random
+        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit of the algo
+        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'`` or ``'hypersurfac'``, the norm used for the orbit in the natural extension
+
+        NOTE:
+
+            This method is the fastest I was able to reach.
+
+        OUTPUT:
+
+            list
+
+        EXAMPLES::
+
+            sage: it = algo.brun.orbit_withdual_iterator((.414578,.571324,.65513))
+            sage: for _ in range(4): next(it)
+            ((0.7256442929056017, 1.0, 0.14668734378391243), (0.25, 0.5, 0.25), 123)
+            ((1.0, 0.37808566783572695, 0.20214772612150184),
+             (0.5, 0.3333333333333333, 0.16666666666666666),
+             312)
+            ((1.0, 0.6079385025908344, 0.32504111204194974),
+             (0.3333333333333333, 0.5555555555555555, 0.1111111111111111),
+             321)
+            ((0.6449032192209051, 1.0, 0.534661171576946),
+             (0.25, 0.6666666666666666, 0.08333333333333333),
+             321)
+
+        """
+        cdef double s           # temporary variables
+        cdef Algorithm algo_id = self.algo_id()
+        cdef PairPoint3d P
+        if v is None:
+            P.x = random(); P.y = random(); P.z = random()
+        else:
+            P.x = v[0]; P.y = v[1]; P.z = v[2]
+        P.u = 1./3
+        P.v = 1./3
+        P.w = 1./3
+
+        # Normalize (x,y,z)
+        s = P.x + P.y + P.z
+        P.x /= s; P.y /= s; P.z /= s
+
+        L = []
+
+        # Loop
+        for i from 0 <= i < n_iterations:
+
+            # Apply Algo
+            P = Algo_switch(P, algo_id)
+
+            # Normalize (xnew,ynew,znew)
+            if norm_left == '1':
+                s = P.x + P.y + P.z # norm 1
+            elif norm_left == 'sup':
+                s = max(P.x, P.y, P.z) # norm sup
+            else:
+                raise ValueError("Unknown value for norm_left(=%s)" %norm_left)
+            P.x /= s; P.y /= s; P.z /= s
+
+            # Normalize (unew,vnew,wnew)
+            if norm_right == '1':
+                s = P.u + P.v + P.w    # norm 1
+            elif norm_right == 'sup':
+                s = max(P.u, P.v, P.w) # norm sup
+            elif norm_right == 'hypersurface':
+                s = P.x*P.u + P.y*P.v + P.z*P.w # hypersurface
+            else:
+                raise ValueError("Unknown value for norm_right(=%s)" %norm_right)
+            P.u /= s; P.v /= s; P.w /= s
+
+            L.append( (P.x, P.y, P.z, P.u, P.v, P.w, P.branch))
+
+        return L
+
+    def orbit_withdual_projected(self, int n_iterations, start=None,
+            norm_left='1', norm_right='1'):
+        r"""
+        INPUT:
+
+        - ``start`` - initial vector (default: ``None``), if None, then
+          initial point is random
+        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit of the algo
+        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'`` or ``'hypersurfac'``, the norm used for the orbit in the natural extension
+
+        NOTE:
+
+            sage: %time D=algo.brun.orbit_withdual_projected(10000000)
+            Wall time: 4.1 s
+
+        OUTPUT:
+
+            list
+
+        EXAMPLES::
+
+        """
+        cdef double s,t,u,v           # temporary variables
+        cdef Algorithm algo_id = self.algo_id()
+        cdef PairPoint3d P
+        if start is None:
+            P.x = random(); P.y = random(); P.z = random()
+        else:
+            P.x = start[0]; P.y = start[1]; P.z = start[2]
+        P.u = 1./3
+        P.v = 1./3
+        P.w = 1./3
+
+        # Normalize (x,y,z)
+        s = P.x + P.y + P.z
+        P.x /= s; P.y /= s; P.z /= s
+
+        L = []
+
+        # Loop
+        for i from 0 <= i < n_iterations:
+
+            # Apply Algo
+            P = Algo_switch(P, algo_id)
+
+            # Normalize (xnew,ynew,znew)
+            if norm_left == '1':
+                s = P.x + P.y + P.z # norm 1
+            elif norm_left == 'sup':
+                s = max(P.x, P.y, P.z) # norm sup
+            else:
+                raise ValueError("Unknown value for norm_left(=%s)" %norm_left)
+            P.x /= s; P.y /= s; P.z /= s
+
+            # Normalize (unew,vnew,wnew)
+            if norm_right == '1':
+                s = P.u + P.v + P.w    # norm 1
+            elif norm_right == 'sup':
+                s = max(P.u, P.v, P.w) # norm sup
+            elif norm_right == 'hypersurface':
+                s = P.x*P.u + P.y*P.v + P.z*P.w # hypersurface
+            else:
+                raise ValueError("Unknown value for norm_right(=%s)" %norm_right)
+            P.u /= s; P.v /= s; P.w /= s
+
+            # Projection
+            if norm_left == '1':
+                s = -SQRT3SUR2 * P.x + SQRT3SUR2 * P.y
+                t = -.5 * P.x -.5 * P.y + P.z
+            elif norm_left == 'sup':
+                s = P.x
+                t = P.y
+
+            if norm_right == '1':
+                u = -SQRT3SUR2 * P.u + SQRT3SUR2 * P.v
+                v = -.5 * P.u -.5 * P.v + P.w
+            elif norm_right == 'sup':
+                u = P.u
+                v = P.v
+            L.append( (s,t,u,v, P.branch))
+
+        return L
+
+
     def invariant_measure_dict(self, int n_iterations, int ndivs, v=None,
             str norm='1', verbose=False):
         r"""
@@ -376,14 +693,15 @@ class MCFAlgorithm_pyx(object):
                     D[(i,j)] = c
         return D
 
-    def natural_extension(self, int n_iterations, norm_algo='sup', norm_ext='1', verbose=False):
+    def natural_extension(self, int n_iterations, norm_left='sup',
+            norm_right='1', verbose=False):
         r"""
         INPUT:
 
         - ``n_iterations`` -- integer
-        - ``norm_algo`` -- string (default: ``'sup'``), either ``'sup'`` or
+        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit of the algo
-        - ``norm_ext`` -- string (default: ``'sup'``), either ``'sup'`` or
+        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
           ``'1'`` or ``'hypersurfac'``, the norm used for the orbit in the natural extension
         - ``verbose`` -- bool (default: ``False``)
 
@@ -430,10 +748,10 @@ class MCFAlgorithm_pyx(object):
         P.v = v
         P.w = w
 
-        dual_in = collections.defaultdict(list)
-        dual_out = collections.defaultdict(list)
-        domain_in = collections.defaultdict(list)
-        domain_out = collections.defaultdict(list)
+        domain_right = collections.defaultdict(list)
+        image_right = collections.defaultdict(list)
+        domain_left = collections.defaultdict(list)
+        image_left = collections.defaultdict(list)
 
         # Loop
         for i from 0 <= i < n_iterations:
@@ -448,51 +766,195 @@ class MCFAlgorithm_pyx(object):
                 #print("scal prod <(x,y,z),(u,v,w)> = %f (after algo)" % s)
 
             # Normalize (xnew,ynew,znew)
-            if norm_algo == '1':
+            if norm_left == '1':
                 s = R.x + R.y + R.z # norm 1
-            elif norm_algo == 'sup':
+            elif norm_left == 'sup':
                 s = max(R.x, R.y, R.z) # norm sup
             else:
-                raise ValueError("Unknown value for norm_algo(=%s)" %norm_algo)
+                raise ValueError("Unknown value for norm_left(=%s)" %norm_left)
             R.x /= s; R.y /= s; R.z /= s
 
             # Normalize (unew,vnew,wnew)
-            if norm_ext == '1':
+            if norm_right == '1':
                 s = R.u + R.v + R.w    # norm 1
-            elif norm_ext == 'sup':
+            elif norm_right == 'sup':
                 s = max(R.u, R.v, R.w) # norm sup
-            elif norm_ext == 'hypersurface':
+            elif norm_right == 'hypersurface':
                 s = R.x*R.u + R.y*R.v + R.z*R.w # hypersurface
             else:
-                raise ValueError("Unknown value for norm_ext(=%s)" %norm_ext)
+                raise ValueError("Unknown value for norm_right(=%s)" %norm_right)
             R.u /= s; R.v /= s; R.w /= s
 
             # Projection
-            if norm_algo == '1':
+            if norm_left == '1':
                 s = -SQRT3SUR2 * P.x + SQRT3SUR2 * P.y
                 t = -.5 * P.x -.5 * P.y + P.z
-                domain_in[R.branch].append((s,t))
+                domain_left[R.branch].append((s,t))
                 s = -SQRT3SUR2 * R.x + SQRT3SUR2 * R.y
                 t = -.5 * R.x -.5 * R.y + R.z
-                domain_out[R.branch].append((s,t))
-            elif norm_algo == 'sup':
-                domain_in[R.branch].append((P.x,P.y))
-                domain_out[R.branch].append((R.x,R.y))
+                image_left[R.branch].append((s,t))
+            elif norm_left == 'sup':
+                domain_left[R.branch].append((P.x,P.y))
+                image_left[R.branch].append((R.x,R.y))
 
-            if norm_ext == '1':
+            if norm_right == '1':
                 s = -SQRT3SUR2 * P.u + SQRT3SUR2 * P.v
                 t = -.5 * P.u -.5 * P.v + P.w
-                dual_in[R.branch].append((s,t))
+                domain_right[R.branch].append((s,t))
                 s = -SQRT3SUR2 * R.u + SQRT3SUR2 * R.v
                 t = -.5 * R.u -.5 * R.v + R.w
-                dual_out[R.branch].append((s,t))
-            elif norm_ext == 'sup':
-                dual_in[R.branch].append((P.u,P.v))
-                dual_out[R.branch].append((R.u,R.v))
+                image_right[R.branch].append((s,t))
+            elif norm_right == 'sup':
+                domain_right[R.branch].append((P.u,P.v))
+                image_right[R.branch].append((R.u,R.v))
 
             P = R
 
-        return domain_in, domain_out, dual_in, dual_out
+        return domain_left, image_left, domain_right, image_right
+
+    def natural_extension_from_it(self, int n_iterations, norm_left='sup',
+            norm_right='1', verbose=False):
+        r"""
+        INPUT:
+
+        - ``n_iterations`` -- integer
+        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit of the algo
+        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'`` or ``'hypersurfac'``, the norm used for the orbit in the natural extension
+        - ``verbose`` -- bool (default: ``False``)
+
+        OUTPUT:
+
+        dict, dict, dict, dict
+
+        EXAMPLES::
+
+            sage: t = algo.arp.natural_extension(10000, a=(1,2,3))
+            sage: map(type, t)
+            [collections.defaultdict,
+             collections.defaultdict,
+             collections.defaultdict,
+             collections.defaultdict]
+
+        """
+        cdef double s,t
+        it = self.orbit_withdual_iterator(v=None, norm_left=norm_left,
+                norm_right=norm_right)
+
+        domain_left = collections.defaultdict(list)
+        domain_right = collections.defaultdict(list)
+        image_left = collections.defaultdict(list)
+        image_right = collections.defaultdict(list)
+
+        cdef double Px,Py,Pz, Pu,Pv,Pw
+        cdef int Pbranch
+        cdef double Rx,Ry,Rz, Ru,Rv,Rw
+        cdef int Rbranch
+
+        (Px,Py,Pz), (Pu,Pv,Pw), Pbranch = next(it)
+
+        # Loop
+        for i from 0 <= i < n_iterations:
+
+            (Rx,Ry,Rz), (Ru,Rv,Rw), Rbranch = next(it)
+
+            # Projection
+            if norm_left == '1':
+                s = -SQRT3SUR2 * Px + SQRT3SUR2 * Py
+                t = -.5 * Px -.5 * Py + Pz
+                domain_left[Rbranch].append((s,t))
+                s = -SQRT3SUR2 * Rx + SQRT3SUR2 * Ry
+                t = -.5 * Rx -.5 * Ry + Rz
+                image_left[Rbranch].append((s,t))
+            elif norm_left == 'sup':
+                domain_left[Rbranch].append((Px,Py))
+                image_left[Rbranch].append((Rx,Ry))
+
+            if norm_right == '1':
+                s = -SQRT3SUR2 * Pu + SQRT3SUR2 * Pv
+                t = -.5 * Pu -.5 * Pv + Pw
+                domain_right[Rbranch].append((s,t))
+                s = -SQRT3SUR2 * Ru + SQRT3SUR2 * Rv
+                t = -.5 * Ru -.5 * Rv + Rw
+                image_right[Rbranch].append((s,t))
+            elif norm_right == 'sup':
+                domain_right[Rbranch].append((Pu,Pv))
+                image_right[Rbranch].append((Ru,Rv))
+
+            (Px,Py,Pz), (Pu,Pv,Pw), Pbranch = (Rx,Ry,Rz), (Ru,Rv,Rw), Rbranch
+
+        return domain_left, image_left, domain_right, image_right
+
+    def natural_extension_from_list(self, int n_iterations, norm_left='sup',
+            norm_right='1', verbose=False):
+        r"""
+        INPUT:
+
+        - ``n_iterations`` -- integer
+        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit of the algo
+        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'`` or ``'hypersurfac'``, the norm used for the orbit in the natural extension
+        - ``verbose`` -- bool (default: ``False``)
+
+        OUTPUT:
+
+        dict, dict, dict, dict
+
+        EXAMPLES::
+
+            sage: t = algo.arp.natural_extension(10000, a=(1,2,3))
+            sage: map(type, t)
+            [collections.defaultdict,
+             collections.defaultdict,
+             collections.defaultdict,
+             collections.defaultdict]
+
+        """
+        cdef double s,t
+        L = self.orbit_withdual_list(n_iterations, v=None, norm_left=norm_left,
+                norm_right=norm_right)
+
+        domain_left = collections.defaultdict(list)
+        domain_right = collections.defaultdict(list)
+        image_left = collections.defaultdict(list)
+        image_right = collections.defaultdict(list)
+
+        cdef double Px,Py,Pz, Pu,Pv,Pw
+        cdef int Pbranch
+        cdef double Rx,Ry,Rz, Ru,Rv,Rw
+        cdef int Rbranch
+
+        Px,Py,Pz, Pu,Pv,Pw, Pbranch = L[0]
+
+        # Loop
+        for i from 1 <= i < n_iterations:
+
+            Rx,Ry,Rz, Ru,Rv,Rw, Rbranch = L[i]
+
+            # Projection
+            if norm_left == '1':
+                s,t = projection3to2(Px, Py, Pz)
+                domain_left[Rbranch].append((s,t))
+                s,t = projection3to2(Rx, Ry, Rz)
+                image_left[Rbranch].append((s,t))
+            elif norm_left == 'sup':
+                domain_left[Rbranch].append((Px,Py))
+                image_left[Rbranch].append((Rx,Ry))
+
+            if norm_right == '1':
+                s,t = projection3to2(Pu, Pv, Pw)
+                domain_right[Rbranch].append((s,t))
+                s,t = projection3to2(Ru, Rv, Rw)
+                image_right[Rbranch].append((s,t))
+            elif norm_right == 'sup':
+                domain_right[Rbranch].append((Pu,Pv))
+                image_right[Rbranch].append((Ru,Rv))
+
+            (Px,Py,Pz), (Pu,Pv,Pw), Pbranch = (Rx,Ry,Rz), (Ru,Rv,Rw), Rbranch
+
+        return domain_left, image_left, domain_right, image_right
 
     def lyapounov_exponents(self, int n_iterations=1000, verbose=False):
         r"""
@@ -1486,5 +1948,7 @@ cdef inline PairPoint3d Sort(PairPoint3d P):
         P.branch += 4
     return P
 
-print 35
-
+cdef inline (double, double) projection3to2(double x, double y, double z):
+    cdef double s = -SQRT3SUR2 * x + SQRT3SUR2 * y
+    cdef double t = -.5 * x -.5 * y + z
+    return s,t
