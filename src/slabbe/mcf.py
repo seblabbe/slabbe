@@ -427,6 +427,83 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         img.show()                      # View in default viewer
         return img
 
+    def measure_evalution(self, n_iterations, draw,
+                                norm_left='1', norm_right='1',
+                                xrange=(-.866, .866),
+                                yrange=(-.5, 1.),
+                                urange=(-.866, .866),
+                                vrange=(-.5, 1.),
+                                ndivs=1024,
+                                verbose=False):
+        r"""
+        Return a png or some part of an orbit in the natural extension.
+
+        INPUT:
+
+        - ``n_iterations`` - integer, number of iterations
+        - ``draw`` -- string (default: ``'image_right'``), possible values
+          are:
+
+          - ``'domain_left'`` - use x and y ranges
+          - ``'domain_right'`` - use u and v ranges
+          - ``'image_left'`` - use x and y ranges
+          - ``'image_right'`` - use u and v ranges
+
+        - ``norm_left`` -- string (default: ``'1'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``norm_right`` -- string (default: ``'1'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``xrange`` -- tuple (default: ``(-.866, .866)``), interval of
+          values for x
+        - ``yrange`` -- tuple (default: ``(-.5, 1.)``), interval of
+          values for y
+        - ``urange`` -- tuple (default: ``(-.866, .866)``), interval of
+          values for u
+        - ``vrange`` -- tuple (default: ``(-.5, 1.)``), interval of
+          values for v
+        - ``ndivs`` -- int (default: ``1024``), number of pixels
+        - ``verbose`` -- string (default: ``False``)
+
+
+        BENCHMARK::
+
+            sage: from slabbe.mcf import algo
+            sage: opt = dict(urange=(-.15,.25), vrange=(-.05,.05))
+            sage: algo.arp.measure_evalution(10^8, draw='right', ndivs=100, **opt)
+            4354 100 0.4354
+            2177/5000
+            sage: algo.arp.measure_evalution(10^8, draw='right', ndivs=1000, **opt)
+            357817 1000 0.357817
+            357817/1000000
+            sage: algo.arp.measure_evalution(10^8, draw='right', ndivs=2000, **opt)
+            1173597 2000 0.29339925
+            1173597/4000000
+            sage: algo.arp.measure_evalution(10^8, draw='right', ndivs=4000, **opt)
+            2839517 4000 0.1774698125
+            2839517/16000000
+
+        """
+        L = self.orbit_filtered_list(n_iterations,
+            norm_left=norm_left, norm_right=norm_right,
+            xmin=xrange[0], xmax=xrange[1],
+            ymin=yrange[0], ymax=yrange[1],
+            umin=urange[0], umax=urange[1],
+            vmin=vrange[0], vmax=vrange[1],
+            ndivs=ndivs)
+
+        if draw.endswith('left'):
+            S = set((p[0],p[1]) for p in L)
+        elif draw.endswith('right'):
+            S = set((p[2],p[3]) for p in L)
+        else:
+            raise ValueError("Unkown value for draw(={})".format(draw))
+
+        if verbose:
+            print "nombre diterations dans la fenetre : ", len(L)
+            print "{} pixels touchés parmi limage {}^2 ".format(len(S), ndivs)
+
+        print float(len(S) / ndivs**2)
+
     def sample_lyapounov_exponent(self, ntimes, n_iterations=1000):
         r"""
         Return two lists of values for theta1 and theta2
@@ -521,7 +598,6 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
             G.save(filename, title=title)
             print "Creation of the file %s" % filename
         return G
-
 
 # Les algos
 class Algo(object):
