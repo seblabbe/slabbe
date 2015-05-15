@@ -303,13 +303,15 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         s += "\\end{tikzpicture}\n"
         return LatexExpr(s)
 
-    def png_natural_extension_part(self, n_iterations, part=3,
+    def png_natural_extension_part(self, n_iterations, draw,
                                     norm_left='1', norm_right='1',
                                     xrange=(-.866, .866),
                                     yrange=(-.5, 1.),
+                                    urange=(-.866, .866),
+                                    vrange=(-.5, 1.),
                                     color_dict=None,
                                     branch_order=None,
-                                    limit_nb_points=None,
+                                    ndivs=1024,
                                     verbose=False):
         r"""
         Return a png or some part of an orbit in the natural extension.
@@ -317,69 +319,109 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         INPUT:
 
         - ``n_iterations`` - integer, number of iterations
-        - ``part`` - integer, taking value 0, 1, 2 or 3
-        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
+        - ``draw`` -- string (default: ``'image_right'``), possible values
+          are:
+
+          - ``'domain_left'`` - use x and y ranges
+          - ``'domain_right'`` - use u and v ranges
+          - ``'image_left'`` - use x and y ranges
+          - ``'image_right'`` - use u and v ranges
+
+        - ``norm_left`` -- string (default: ``'1'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
-        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
+        - ``norm_right`` -- string (default: ``'1'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
         - ``xrange`` -- tuple (default: ``(-.866, .866)``), interval of
           values for x
         - ``yrange`` -- tuple (default: ``(-.5, 1.)``), interval of
           values for y
+        - ``urange`` -- tuple (default: ``(-.866, .866)``), interval of
+          values for u
+        - ``vrange`` -- tuple (default: ``(-.5, 1.)``), interval of
+          values for v
         - ``color_dict`` -- dict (default: ``None``), dict from branches
           int to color (as RGB tuples)
         - ``branch_order`` -- list (default: ``None``), list of branches int
-        - ``limit_nb_points`` -- None or integer (default: ``None``), limit
-          number of points per patch
+        - ``ndivs`` -- int (default: ``1024``), number of pixels
         - ``verbose`` -- string (default: ``False``)
 
-        EXAMPLES::
+        BENCHMARK:
 
-            sage: from slabbe.mcf import algo
-            sage: algo.arp.png_natural_extension_part(1000, part=3)
-
-        ::
+        A minute for a picture with 10^7 points::
 
             sage: c = {}
             sage: c[1] = c[2] = c[3] = [0,0,0]
             sage: c[12] = c[13] = c[23] = c[21] = c[31] = c[32] = [255,0,0]
             sage: b = [1,2,3,12,13,21,23,31,32]
-            sage: algo.arp.png_natural_extension_part(1000, part=3,
-                            xrange=(-.6,.6), yrange=(-.6,.6), color_dict=c,
-                            branch_order=b)
+            sage: %time P=algo.arp.png_natural_extension_part(10^7, draw='image_right', 
+                    branch_order=b, color_dict=c, urange=(-.6,.6), vrange=(-.6,.6))  # not tested
+            Wall time: 1min 13s
+
+        Half a minute for a picture zoomed in the orbit of 10^8 points::
+
+            sage: %time P=algo.arp.png_natural_extension_part(10^8, draw='image_right', 
+                    branch_order=b, color_dict=c, urange=(.2,.3), vrange=(.2,.3))   # not tested
+            Wall time: 27 s
+
+        EXAMPLES::
+
+            sage: from slabbe.mcf import algo
+            sage: c = {}
+            sage: c[1] = c[2] = c[3] = [0,0,0]
+            sage: c[12] = c[13] = c[23] = c[21] = c[31] = c[32] = [255,0,0]
+            sage: b = [1,2,3,12,13,21,23,31,32]
+            sage: opt = dict(urange=(-.6,.6), vrange=(-.6,.6), color_dict=c, branch_order=b)
+            sage: algo.arp.png_natural_extension_part(10^5, draw='domain_left', **opt)
+            sage: algo.arp.png_natural_extension_part(10^5, draw='domain_right', **opt)
+            sage: algo.arp.png_natural_extension_part(10^5, draw='image_left', **opt)
+            sage: algo.arp.png_natural_extension_part(10^5, draw='image_right', **opt)
 
         """
-        t = self.natural_extension(n_iterations, norm_left=norm_left,
-                norm_right=norm_right)
-        rawdata = t[part]
+        L = self.orbit_filtered_list(n_iterations,
+            norm_left=norm_left, norm_right=norm_right,
+            xmin=xrange[0], xmax=xrange[1],
+            ymin=yrange[0], ymax=yrange[1],
+            umin=urange[0], umax=urange[1],
+            vmin=vrange[0], vmax=vrange[1],
+            ndivs=ndivs)
+        if branch_order is None:
+            raise NotImplementedError
+            branch_order = []
         if color_dict is None:
             from random import randint
             color_dict = {}
-            for key in rawdata.keys():
+            for key in branch_order:
                 color_dict[key] = [randint(0,255),randint(0,255),randint(0,255)]
-        if branch_order is None:
-            branch_order = sorted(rawdata.keys())
-        xmin,xmax = xrange
-        ymin,ymax = yrange
-        xlen = xmax - xmin
-        ylen = ymax - ymin
-        xsize = 1024
-        ysize = 1024
 
         #http://stackoverflow.com/questions/434583/what-is-the-fastest-way-to-draw-an-image-from-discrete-pixel-values-in-python
         import numpy as np
         import scipy.misc as smp
 
         # Create a 1024x1024x3 array of 8 bit unsigned integers
-        data = np.zeros( (xsize,ysize,3), dtype=np.uint8 )
+        data = np.zeros( (ndivs,ndivs,3), dtype=np.uint8 )
         data += 255   # white as default color
 
-        for key in branch_order:
-            for x,y in rawdata[key]:
-                # TODO: move this to cython
-                x = int(((x-xmin)/xlen) * xsize)
-                y = int(((ymax-y)/ylen) * ysize)
-                data[y,x] = color_dict[key]
+        if draw.startswith('domain'):
+            L.sort(key=lambda a:branch_order.index(a[5]))
+        elif draw.startswith('image'):
+            L.sort(key=lambda a:branch_order.index(a[4]))
+        else:
+            raise ValueError("Unkown value for draw(={})".format(draw))
+
+        if draw == 'domain_left':
+            for x,y,u,v,prev_br,next_br in L:
+                data[y,x] = color_dict[next_br]
+        elif draw == 'domain_right':
+            for x,y,u,v,prev_br,next_br in L:
+                data[v,u] = color_dict[next_br]
+        elif draw == 'image_left':
+            for x,y,u,v,prev_br,next_br in L:
+                data[y,x] = color_dict[prev_br]
+        elif draw == 'image_right':
+            for x,y,u,v,prev_br,next_br in L:
+                data[v,u] = color_dict[prev_br]
+        else:
+            raise ValueError("Unkown value for draw(={})".format(draw))
 
         img = smp.toimage( data )       # Create a PIL image
         img.show()                      # View in default viewer
