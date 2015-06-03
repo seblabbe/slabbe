@@ -5,7 +5,7 @@ Multidimensional Continued Fraction Algorithms
 EXAMPLES::
 
     sage: from slabbe.mcf import algo
-    sage: algo.brun.plot_natural_extension(3000, norm_algo='1', axis_off=True)
+    sage: algo.brun.plot_natural_extension(3000, norm_left='1', axis_off=True)
     Creation du fichier nat_ext_brun_iter3000.png
 
 ::
@@ -15,6 +15,10 @@ EXAMPLES::
     sage: it = algo.arp.coding_iterator((1,e,pi))
     sage: words.s_adic(it, repeat(1), D)
     word: 1232323123233231232332312323123232312323...
+
+TODO:
+
+ - Move some code to the cython part of this module (grep TODO)
 
 """
 #*****************************************************************************
@@ -125,15 +129,15 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         plt.savefig(filename)
         print "Creation du fichier %s" % filename
 
-    def plot_natural_extension(self, n_iterations, norm_algo='1',
-            norm_ext='1', axis_off=False):
+    def plot_natural_extension(self, n_iterations, norm_left='1',
+            norm_right='1', axis_off=False):
         r"""
         INPUT:
 
         - ``n_iterations`` - integer, number of iterations
-        - ``norm_algo`` -- string (default: ``'sup'``), either ``'sup'`` or
+        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
-        - ``norm_ext`` -- string (default: ``'sup'``), either ``'sup'`` or
+        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
         - ``axis_off`` - boolean, 
 
@@ -143,9 +147,10 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         """
         import matplotlib
         import matplotlib.pyplot as plt
-        t = self.natural_extension(n_iterations, norm_algo=norm_algo, norm_ext=norm_ext)
-        domain_in, domain_out, dual_in, dual_out = t
-        c = dict(zip(domain_in.keys(), ['b','r','g','c','m','y','k']))
+        t = self.natural_extension(n_iterations, norm_left=norm_left,
+                norm_right=norm_right)
+        domain_left, image_left, domain_right, image_right = t
+        c = dict(zip(domain_left.keys(), ['b','r','g','c','m','y','k']))
 
         def create_sub_plot(axx, D, title, norm):
             for key, value in D.iteritems():
@@ -164,10 +169,10 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
             cx.set_axis_off()
             dx.set_axis_off()
 
-        create_sub_plot(ax, domain_in,  "Algo IN",    norm=norm_algo)
-        create_sub_plot(bx, dual_in,    "NatExt IN",  norm=norm_ext)
-        create_sub_plot(cx, domain_out, "Algo OUT",   norm=norm_algo)
-        create_sub_plot(dx, dual_out,   "NatExt OUT", norm=norm_ext)
+        create_sub_plot(ax, domain_left,  "Algo IN",    norm=norm_left)
+        create_sub_plot(bx, domain_right,    "NatExt IN",  norm=norm_right)
+        create_sub_plot(cx, image_left, "Algo OUT",   norm=norm_left)
+        create_sub_plot(dx, image_right,   "NatExt OUT", norm=norm_right)
 
         title = "Algo=%s, nbiter=%s" % (self.name(), n_iterations)
         fig.suptitle(title)
@@ -176,15 +181,16 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         #plt.subplots_adjust(left=0.02, bottom=0.06, right=0.95, top=0.94, wspace=0.05)
         print "Creation du fichier %s" % filename
 
-    def tikz_natural_extension(self, n_iterations, norm_algo='1', norm_ext='1'):
+    def tikz_natural_extension(self, n_iterations, norm_left='1',
+            norm_right='1'):
         r"""
 
         INPUT:
 
         - ``n_iterations`` - integer, number of iterations
-        - ``norm_algo`` -- string (default: ``'sup'``), either ``'sup'`` or
+        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
-        - ``norm_ext`` -- string (default: ``'sup'``), either ``'sup'`` or
+        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
 
         EXAMPLES::
@@ -194,11 +200,12 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
             sage: view(s, tightpage=True)
         """
 
-        t = self.natural_extension(n_iterations, norm_algo=norm_algo, norm_ext=norm_ext)
-        domain_in, domain_out, dual_in, dual_out = t
+        t = self.natural_extension(n_iterations, norm_left=norm_left,
+                norm_right=norm_right)
+        domain_left, image_left, domain_right, image_right = t
         sqrt3 = 1.73205080756888
         r = 1.08
-        color_dict = dict(zip(domain_in.keys(), PGF_COLORS))
+        color_dict = dict(zip(domain_left.keys(), PGF_COLORS))
 
         s = ''
         s += "\\begin{tikzpicture}[scale=.7]\n"
@@ -206,7 +213,7 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
                "height=7cm,width=8cm,"
                "xmin=-1.1,xmax=1.1,ymin=-.6,ymax=1.20,"
                "hide axis]\n")
-        for data in [domain_in, dual_in, domain_out, dual_out]:
+        for data in [domain_left, domain_right, image_left, image_right]:
             s += "\\nextgroupplot\n"
             s += ("\\draw[dashed] "
                   "(axis cs:%s, %s)" % (-r*sqrt3/2,r*-.5) +
@@ -226,8 +233,8 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         s += "\\end{tikzpicture}\n"
         return LatexExpr(s)
 
-    def tikz_natural_extension_part(self, n_iterations, part='dual_out', 
-                                    norm_algo='1', norm_ext='1',
+    def tikz_natural_extension_part(self, n_iterations, part=3, 
+                                    norm_left='1', norm_right='1',
                                     marksize='1pt', limit_nb_points=None,
                                     verbose=False):
         r"""
@@ -238,9 +245,9 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
 
         - ``n_iterations`` - integer, number of iterations
         - ``part`` - integer, taking value 0, 1, 2 or 3
-        - ``norm_algo`` -- string (default: ``'sup'``), either ``'sup'`` or
+        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
-        - ``norm_ext`` -- string (default: ``'sup'``), either ``'sup'`` or
+        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
         - ``marksize`` -- string (default: ``'1pt'``), pgfplots mark size value
         - ``limit_nb_points`` -- None or integer (default: ``None``), limit
@@ -250,14 +257,19 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         EXAMPLES::
 
             sage: from slabbe.mcf import algo
-            sage: s = algo.arp.tikz_natural_extension_part(1000, part='dual_out')
+            sage: s = algo.arp.tikz_natural_extension_part(1000, part=3)
             sage: view(s, tightpage=True)
+
+        also ::
+
+            sage: s = algo.arp.tikz_natural_extension_part(1000, part=3, marksize='.2pt', limit_nb_points=1200, verbose=True)
         """
-        t = self.natural_extension(n_iterations, norm_algo=norm_algo, norm_ext=norm_ext)
-        domain_in, domain_out, dual_in, dual_out = t
+        t = self.natural_extension(n_iterations, norm_left=norm_left,
+                norm_right=norm_right)
+        domain_left, image_left, domain_right, image_right = t
         sqrt3 = 1.73205080756888
         r = 1.08
-        color_dict = dict(zip(domain_in.keys(), PGF_COLORS))
+        color_dict = dict(zip(domain_left.keys(), PGF_COLORS))
         data = t[part]
 
         s = ''
@@ -290,6 +302,207 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         s += "\\end{axis}\n"
         s += "\\end{tikzpicture}\n"
         return LatexExpr(s)
+
+    def png_natural_extension_part(self, n_iterations, draw,
+                                    norm_left='1', norm_right='1',
+                                    xrange=(-.866, .866),
+                                    yrange=(-.5, 1.),
+                                    urange=(-.866, .866),
+                                    vrange=(-.5, 1.),
+                                    color_dict=None,
+                                    branch_order=None,
+                                    ndivs=1024,
+                                    verbose=False):
+        r"""
+        Return a png or some part of an orbit in the natural extension.
+
+        INPUT:
+
+        - ``n_iterations`` - integer, number of iterations
+        - ``draw`` -- string (default: ``'image_right'``), possible values
+          are:
+
+          - ``'domain_left'`` - use x and y ranges
+          - ``'domain_right'`` - use u and v ranges
+          - ``'image_left'`` - use x and y ranges
+          - ``'image_right'`` - use u and v ranges
+
+        - ``norm_left`` -- string (default: ``'1'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``norm_right`` -- string (default: ``'1'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``xrange`` -- tuple (default: ``(-.866, .866)``), interval of
+          values for x
+        - ``yrange`` -- tuple (default: ``(-.5, 1.)``), interval of
+          values for y
+        - ``urange`` -- tuple (default: ``(-.866, .866)``), interval of
+          values for u
+        - ``vrange`` -- tuple (default: ``(-.5, 1.)``), interval of
+          values for v
+        - ``color_dict`` -- dict (default: ``None``), dict from branches
+          int to color (as RGB tuples)
+        - ``branch_order`` -- list (default: ``None``), list of branches int
+        - ``ndivs`` -- int (default: ``1024``), number of pixels
+        - ``verbose`` -- string (default: ``False``)
+
+        BENCHMARK:
+
+        A minute for a picture with 10^7 points::
+
+            sage: c = {}
+            sage: c[1] = c[2] = c[3] = [0,0,0]
+            sage: c[12] = c[13] = c[23] = c[21] = c[31] = c[32] = [255,0,0]
+            sage: b = [1,2,3,12,13,21,23,31,32]
+            sage: %time P=algo.arp.png_natural_extension_part(10^7, draw='image_right', 
+                    branch_order=b, color_dict=c, urange=(-.6,.6), vrange=(-.6,.6))  # not tested
+            Wall time: 1min 13s
+
+        Half a minute for a picture zoomed in the orbit of 10^8 points::
+
+            sage: %time P=algo.arp.png_natural_extension_part(10^8, draw='image_right', 
+                    branch_order=b, color_dict=c, urange=(.2,.3), vrange=(.2,.3))   # not tested
+            Wall time: 27 s
+
+        EXAMPLES::
+
+            sage: from slabbe.mcf import algo
+            sage: c = {}
+            sage: c[1] = c[2] = c[3] = [0,0,0]
+            sage: c[12] = c[13] = c[23] = c[21] = c[31] = c[32] = [255,0,0]
+            sage: b = [1,2,3,12,13,21,23,31,32]
+            sage: opt = dict(urange=(-.6,.6), vrange=(-.6,.6), color_dict=c, branch_order=b)
+            sage: algo.arp.png_natural_extension_part(10^5, draw='domain_left', **opt)
+            sage: algo.arp.png_natural_extension_part(10^5, draw='domain_right', **opt)
+            sage: algo.arp.png_natural_extension_part(10^5, draw='image_left', **opt)
+            sage: algo.arp.png_natural_extension_part(10^5, draw='image_right', **opt)
+
+        """
+        L = self.orbit_filtered_list(n_iterations,
+            norm_left=norm_left, norm_right=norm_right,
+            xmin=xrange[0], xmax=xrange[1],
+            ymin=yrange[0], ymax=yrange[1],
+            umin=urange[0], umax=urange[1],
+            vmin=vrange[0], vmax=vrange[1],
+            ndivs=ndivs)
+        if branch_order is None:
+            raise NotImplementedError
+            branch_order = []
+        if color_dict is None:
+            from random import randint
+            color_dict = {}
+            for key in branch_order:
+                color_dict[key] = [randint(0,255),randint(0,255),randint(0,255)]
+
+        #http://stackoverflow.com/questions/434583/what-is-the-fastest-way-to-draw-an-image-from-discrete-pixel-values-in-python
+        import numpy as np
+        import scipy.misc as smp
+
+        # Create a 1024x1024x3 array of 8 bit unsigned integers
+        data = np.zeros( (ndivs,ndivs,3), dtype=np.uint8 )
+        data += 255   # white as default color
+
+        if draw.startswith('domain'):
+            L.sort(key=lambda a:branch_order.index(a[5]))
+        elif draw.startswith('image'):
+            L.sort(key=lambda a:branch_order.index(a[4]))
+        else:
+            raise ValueError("Unkown value for draw(={})".format(draw))
+
+        if draw == 'domain_left':
+            for x,y,u,v,prev_br,next_br in L:
+                data[y,x] = color_dict[next_br]
+        elif draw == 'domain_right':
+            for x,y,u,v,prev_br,next_br in L:
+                data[v,u] = color_dict[next_br]
+        elif draw == 'image_left':
+            for x,y,u,v,prev_br,next_br in L:
+                data[y,x] = color_dict[prev_br]
+        elif draw == 'image_right':
+            for x,y,u,v,prev_br,next_br in L:
+                data[v,u] = color_dict[prev_br]
+        else:
+            raise ValueError("Unkown value for draw(={})".format(draw))
+
+        img = smp.toimage( data )       # Create a PIL image
+        img.show()                      # View in default viewer
+        return img
+
+    def measure_evalution(self, n_iterations, draw,
+                                norm_left='1', norm_right='1',
+                                xrange=(-.866, .866),
+                                yrange=(-.5, 1.),
+                                urange=(-.866, .866),
+                                vrange=(-.5, 1.),
+                                ndivs=1024,
+                                verbose=False):
+        r"""
+        Return a png or some part of an orbit in the natural extension.
+
+        INPUT:
+
+        - ``n_iterations`` - integer, number of iterations
+        - ``draw`` -- string (default: ``'image_right'``), possible values
+          are:
+
+          - ``'domain_left'`` - use x and y ranges
+          - ``'domain_right'`` - use u and v ranges
+          - ``'image_left'`` - use x and y ranges
+          - ``'image_right'`` - use u and v ranges
+
+        - ``norm_left`` -- string (default: ``'1'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``norm_right`` -- string (default: ``'1'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``xrange`` -- tuple (default: ``(-.866, .866)``), interval of
+          values for x
+        - ``yrange`` -- tuple (default: ``(-.5, 1.)``), interval of
+          values for y
+        - ``urange`` -- tuple (default: ``(-.866, .866)``), interval of
+          values for u
+        - ``vrange`` -- tuple (default: ``(-.5, 1.)``), interval of
+          values for v
+        - ``ndivs`` -- int (default: ``1024``), number of pixels
+        - ``verbose`` -- string (default: ``False``)
+
+
+        BENCHMARK::
+
+            sage: from slabbe.mcf import algo
+            sage: opt = dict(urange=(-.15,.25), vrange=(-.05,.05))
+            sage: algo.arp.measure_evalution(10^8, draw='right', ndivs=100, **opt)
+            4354 100 0.4354
+            2177/5000
+            sage: algo.arp.measure_evalution(10^8, draw='right', ndivs=1000, **opt)
+            357817 1000 0.357817
+            357817/1000000
+            sage: algo.arp.measure_evalution(10^8, draw='right', ndivs=2000, **opt)
+            1173597 2000 0.29339925
+            1173597/4000000
+            sage: algo.arp.measure_evalution(10^8, draw='right', ndivs=4000, **opt)
+            2839517 4000 0.1774698125
+            2839517/16000000
+
+        """
+        L = self.orbit_filtered_list(n_iterations,
+            norm_left=norm_left, norm_right=norm_right,
+            xmin=xrange[0], xmax=xrange[1],
+            ymin=yrange[0], ymax=yrange[1],
+            umin=urange[0], umax=urange[1],
+            vmin=vrange[0], vmax=vrange[1],
+            ndivs=ndivs)
+
+        if draw.endswith('left'):
+            S = set((p[0],p[1]) for p in L)
+        elif draw.endswith('right'):
+            S = set((p[2],p[3]) for p in L)
+        else:
+            raise ValueError("Unkown value for draw(={})".format(draw))
+
+        if verbose:
+            print "nombre diterations dans la fenetre : ", len(L)
+            print "{} pixels touchés parmi limage {}^2 ".format(len(S), ndivs)
+
+        print float(len(S) / ndivs**2)
 
     def sample_lyapounov_exponent(self, ntimes, n_iterations=1000):
         r"""
@@ -385,7 +598,6 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
             G.save(filename, title=title)
             print "Creation of the file %s" % filename
         return G
-
 
 # Les algos
 class Algo(object):
