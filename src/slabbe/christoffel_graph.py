@@ -45,7 +45,6 @@ from sage.modules.free_module_element import vector
 from sage.matrix.constructor import matrix
 from sage.rings.integer_ring import ZZ
 from sage.rings.real_mpfr import RR
-from sage.rings.arith import gcd
 from sage.functions.other import abs
 from slabbe.discrete_subset import DiscreteSubset, DiscreteTube, M3to2, M4to3
 from slabbe.discrete_plane import DiscretePlane 
@@ -199,6 +198,7 @@ class ChristoffelGraph(DiscreteSubset):
             [(-1, -1, 1), (3, -4, 0)]
 
         """
+        from sage.rings.arith import gcd
         if way == 'vect_gcd':
             a,b,c = self._v
             gcd_ac = gcd(a,c)
