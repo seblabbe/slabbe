@@ -27,6 +27,7 @@ Bond percolation sample
 We construct a bond percolation sample in dimension d=2 with probability of
 open edges p=0.3::
 
+    sage: from slabbe import BondPercolationSample
     sage: S = BondPercolationSample(p=0.3, d=2)
     sage: S
     Bond percolation sample d=2 p=0.300
@@ -75,6 +76,7 @@ Bond percolation samples
 Construction of 20 bond percolation samples. For each of them, compute the
 cardinality of the open cluster containing zero::
 
+    sage: from slabbe import BondPercolationSamples
     sage: S20 = BondPercolationSamples(p=0.4, d=2, n=20)
     sage: S20.cluster_cardinality(stop=100)               # random
     [4, 2, 1, 4, 1, 10, 62, 71, 1, 25, 19, 2, 2, 42, '>=100', 1, 18, 2, '>=100', 20]
@@ -101,6 +103,7 @@ One can define the percolation probability function for a given dimension
 d. It will generate n samples and consider the cluster to be infinite if
 its cardinality is larger than the given stop value::
 
+    sage: from slabbe import PercolationProbability
     sage: T = PercolationProbability(d=2, n=10, stop=100)
     sage: T
     Percolation Probability $\theta(p)$
@@ -206,6 +209,7 @@ class BondPercolationSample(SageObject):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import BondPercolationSample
             sage: S = BondPercolationSample(0.4,2)
             sage: S
             Bond percolation sample d=2 p=0.400
@@ -228,6 +232,7 @@ class BondPercolationSample(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import BondPercolationSample
             sage: S = BondPercolationSample(0.5)
             sage: (S.zero(), 1) in S        # random
             True
@@ -251,6 +256,7 @@ class BondPercolationSample(SageObject):
 
         EXAMPLES:
 
+            sage: from slabbe import BondPercolationSample
             sage: S = BondPercolationSample(0.5,2)
             sage: S.neighbor((2,3),1)
             (3, 3)
@@ -280,6 +286,7 @@ class BondPercolationSample(SageObject):
 
         The result is consistent::
 
+            sage: from slabbe import BondPercolationSample
             sage: S = BondPercolationSample(0.5)
             sage: list(S.children((0,0)))        # random
             [(1, 0), (-1, 0), (0, -1)]
@@ -321,6 +328,7 @@ class BondPercolationSample(SageObject):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import BondPercolationSample
             sage: S = BondPercolationSample(0.5,3)
             sage: S.zero()
             (0, 0, 0)
@@ -343,6 +351,7 @@ class BondPercolationSample(SageObject):
 
         EXAMPLES:
 
+            sage: from slabbe import BondPercolationSample
             sage: S = BondPercolationSample(0.5)
             sage: it = S.cluster()
             sage: next(it)
@@ -362,6 +371,7 @@ class BondPercolationSample(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import BondPercolationSample
             sage: BondPercolationSample(0.01).cluster_cardinality() # random
             1
             sage: BondPercolationSample(0.4).cluster_cardinality()  # random
@@ -381,6 +391,7 @@ class BondPercolationSample(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import BondPercolationSample
             sage: S = BondPercolationSample(0.3,2)
             sage: S.cluster_cardinality()                # random
             13
@@ -408,6 +419,7 @@ class BondPercolationSample(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import BondPercolationSample
             sage: S = BondPercolationSample(1,2)
             sage: for a in S.edges_in_box(1): print a
             ((-1, -1), (0, -1))
@@ -440,6 +452,7 @@ class BondPercolationSample(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import BondPercolationSample
             sage: S = BondPercolationSample(0.3,2)
             sage: S.cluster_in_box(2)         # random
             [(-2, -2), (-2, -1), (-1, -2), (-1, -1), (-1, 0), (0, 0)]
@@ -465,6 +478,7 @@ class BondPercolationSample(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import BondPercolationSample
             sage: S = BondPercolationSample(0.5,2)
             sage: S.plot(2)           # optional long
 
@@ -497,6 +511,7 @@ class BondPercolationSample(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import BondPercolationSample
             sage: S = BondPercolationSample(0.5,2)
             sage: S.tikz(2)
             \begin{tikzpicture}
@@ -530,8 +545,8 @@ class BondPercolationSample(SageObject):
         r"""
         EXAMPLES::
 
-            sage: d = 2
-            sage: BondPercolationSample(0.3, d).save_pdf(20)    # optional long
+            sage: from slabbe import BondPercolationSample
+            sage: BondPercolationSample(0.3, d=2).save_pdf(20)    # optional long
             Creation du fichier tikz_sample_d2_p300_m20.tikz
             Using template '/Users/slabbe/.tikz2pdf.tex'.
             tikz2pdf: calling pdflatex...
@@ -554,6 +569,7 @@ class BondPercolationSamples(SageObject):
 
     EXAMPLES::
 
+        sage: from slabbe import BondPercolationSamples
         sage: BondPercolationSamples(0.2,2,3)
         <class 'slabbe.bond_percolation.BondPercolationSamples'>
     """
@@ -577,6 +593,7 @@ class BondPercolationSamples(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import BondPercolationSamples
             sage: S20 = BondPercolationSamples(p=0.2, d=2, n=20)
             sage: S20.cluster_cardinality(100)       # random
             [1, 4, 1, 2, 2, 6, 5, 1, 5, 9, 2, 2, 2, 1, 2, 4, 4, 3, 2, 1]
@@ -604,6 +621,7 @@ class BondPercolationSamples(SageObject):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import BondPercolationSamples
             sage: S = BondPercolationSamples(0.2,2,20)
             sage: S.ntimes_over_size(100)    # random
             0
@@ -736,6 +754,7 @@ class PercolationProbability(SageObject):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import PercolationProbability
             sage: f = PercolationProbability(d=2, n=10, stop=100)
             sage: f
             Percolation Probability $\theta(p)$
@@ -752,6 +771,7 @@ class PercolationProbability(SageObject):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import PercolationProbability
             sage: f = PercolationProbability(d=2, n=10, stop=100)
             sage: f
             Percolation Probability $\theta(p)$
@@ -770,6 +790,7 @@ class PercolationProbability(SageObject):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import PercolationProbability
             sage: f = PercolationProbability(d=2, n=10, stop=100)
             sage: f
             Percolation Probability $\theta(p)$
@@ -800,6 +821,7 @@ class PercolationProbability(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import PercolationProbability
             sage: T = PercolationProbability(d=2, n=10, stop=100)
             sage: T.return_plot()           # optional long
             Graphics object consisting of 1 graphics primitive
@@ -809,8 +831,5 @@ class PercolationProbability(SageObject):
                  adaptive_tolerance=adaptive_tolerance)
         P += text(repr(self), (0.8,0.2))
         return P
-
-
-
 
 

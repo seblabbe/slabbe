@@ -14,6 +14,7 @@ EXAMPLES:
 
 Christoffel graph in 2d (tikz code)::
 
+    sage: from slabbe import ChristoffelGraph, DiscreteBox
     sage: C = ChristoffelGraph((2,5))
     sage: b = DiscreteBox([-5,5],[-5,5])
     sage: I = C & b
@@ -62,6 +63,7 @@ class ChristoffelGraph(DiscreteSubset):
 
     EXAMPLES::
 
+        sage: from slabbe import ChristoffelGraph
         sage: ChristoffelGraph((2,5))
         Christoffel set of edges for normal vector v=(2, 5)
 
@@ -81,6 +83,7 @@ class ChristoffelGraph(DiscreteSubset):
 
     ::
 
+        sage: from slabbe import DiscreteBox
         sage: C = ChristoffelGraph((2,5))
         sage: b = DiscreteBox([-5,5],[-5,5])
         sage: I = C & b
@@ -104,6 +107,7 @@ class ChristoffelGraph(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import ChristoffelGraph
             sage: ChristoffelGraph((2,5))
             Christoffel set of edges for normal vector v=(2, 5)
 
@@ -125,6 +129,7 @@ class ChristoffelGraph(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import ChristoffelGraph
             sage: C = ChristoffelGraph((2,5,8))
             sage: C.level_value(vector((2,3,4)))
             6
@@ -145,6 +150,7 @@ class ChristoffelGraph(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import ChristoffelGraph
             sage: C = ChristoffelGraph((2,5,8))
             sage: C.has_edge(vector((0,0,0)), vector((0,0,1)))
             True
@@ -179,6 +185,7 @@ class ChristoffelGraph(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import ChristoffelGraph
             sage: ChristoffelGraph((2,5))
             Christoffel set of edges for normal vector v=(2, 5)
             sage: ChristoffelGraph((2,5,8))
@@ -193,6 +200,7 @@ class ChristoffelGraph(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import ChristoffelGraph
             sage: C = ChristoffelGraph((2,5,7))
             sage: C.kernel_vector()
             [(-1, -1, 1), (3, -4, 0)]
@@ -272,6 +280,7 @@ class ChristoffelGraph(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import ChristoffelGraph
             sage: C = ChristoffelGraph((2,3,5))
             sage: tikz = C.tikz_kernel()
             sage: lines = tikz.splitlines()

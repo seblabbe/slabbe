@@ -4,6 +4,7 @@ Discrete Hyperplanes
 
 Intersection of a plane and a tube::
 
+    sage: from slabbe import DiscretePlane, DiscreteTube
     sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
     sage: d = DiscreteTube([-5,5],[-5,5])
     sage: I = p & d
@@ -16,6 +17,7 @@ Intersection of a plane and a tube::
 
 Intersection of a line and a box::
 
+    sage: from slabbe import DiscreteLine, DiscreteBox
     sage: L = DiscreteLine([pi,sqrt(2)], pi+sqrt(2), mu=0)
     sage: b = DiscreteBox([-5,5],[-5,5])
     sage: I = L & b
@@ -61,18 +63,21 @@ class DiscreteHyperplane(DiscreteSubset):
 
     EXAMPLES::
 
+        sage: from slabbe import DiscreteLine
         sage: L = DiscreteLine([pi,sqrt(2)], pi+sqrt(2), mu=10)
         sage: L
         Set of points x in ZZ^2 satisfying: 0 <= (pi, sqrt(2)) . x + 10 < pi + sqrt(2)
 
     ::
 
+        sage: from slabbe import DiscretePlane
         sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
         sage: p
         Set of points x in ZZ^3 satisfying: 0 <= (1, pi, 7) . x + 0 < pi + 8
 
     ::
 
+        sage: from slabbe import DiscreteHyperplane
         sage: p = DiscreteHyperplane([1,3,7,9], 20, mu=13)
         sage: p
         Set of points x in ZZ^4 satisfying: 0 <= (1, 3, 7, 9) . x + 13 < 20
@@ -105,6 +110,7 @@ class DiscreteHyperplane(DiscreteSubset):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import DiscreteHyperplane
             sage: p = DiscreteHyperplane([1,pi,7], 1+pi+7, mu=0)
             sage: p
             Set of points x in ZZ^3 satisfying: 0 <= (1, pi, 7) . x + 0 < pi + 8
@@ -135,6 +141,7 @@ class DiscreteHyperplane(DiscreteSubset):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import DiscreteHyperplane
             sage: p = DiscreteHyperplane([1,pi,7], 1+pi+7, mu=10)
             sage: p
             Set of points x in ZZ^3 satisfying: 0 <= (1, pi, 7) . x + 10 < pi + 8
@@ -149,12 +156,14 @@ class DiscreteHyperplane(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteHyperplane
             sage: p = DiscreteHyperplane([1,pi,7], 1+pi+7, mu=10)
             sage: p.an_element()
             (0, 0, 0)
 
         ::
 
+            sage: from slabbe import DiscreteLine
             sage: L = DiscreteLine([pi,sqrt(2)], pi+sqrt(2), mu=10)
             sage: L.an_element()
             (-2, -2)
@@ -179,6 +188,7 @@ class DiscreteHyperplane(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteHyperplane
             sage: p = DiscreteHyperplane([1,pi,7], 1+pi+7, mu=10)
             sage: p._an_element_3d()
             (0, 0, 0)
@@ -226,6 +236,7 @@ class DiscreteHyperplane(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteLine
             sage: L = DiscreteLine([pi,sqrt(2)], pi+sqrt(2), mu=10)
             sage: L._an_element_2d()
             (-2, -2)
@@ -255,6 +266,7 @@ class DiscreteHyperplane(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteHyperplane
             sage: H = DiscreteHyperplane([1,3,7,9], 20, mu=13)
             sage: p = H._space((1,2,3,4))
             sage: H.level_value(p)

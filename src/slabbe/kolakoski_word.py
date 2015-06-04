@@ -15,6 +15,7 @@ January 2011. The alphabet must be ``(1,2)``.
 
 EXAMPLES::
 
+    sage: from slabbe import KolakoskiWord
     sage: K = KolakoskiWord()
     sage: K
     word: 1221121221221121122121121221121121221221...
@@ -75,6 +76,7 @@ class KolakoskiWord(WordDatatype_Kolakoski, InfiniteWord_class):
 
         EXAMPLES::
 
+            sage: from slabbe import KolakoskiWord
             sage: K = KolakoskiWord()
             sage: K
             word: 1221121221221121122121121221121121221221...

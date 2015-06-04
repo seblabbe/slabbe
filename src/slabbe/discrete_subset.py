@@ -6,6 +6,7 @@ Subsets of ZZ^d with the edge relation +e_i and -e_i.
 
 EXAMPLES::
 
+    sage: from slabbe import DiscreteSubset
     sage: DiscreteSubset(2)
     Subset of ZZ^2
     sage: DiscreteSubset(4)
@@ -44,6 +45,7 @@ A discrete 4d hyperplane::
 
 A 2d discrete box::
 
+    sage: from slabbe import DiscreteBox
     sage: b = DiscreteBox([-5,5], [-5,5])
     sage: b
     Box: [-5, 5] x [-5, 5]
@@ -75,6 +77,7 @@ A discrete tube (preimage of a discrete box by a matrix)::
     sage: M3to2
     [-0.866025403784439  0.866025403784439  0.000000000000000]
     [-0.500000000000000 -0.500000000000000   1.00000000000000]
+    sage: from slabbe import DiscreteTube
     sage: tube = DiscreteTube([-5,5],[-5,5], projmat=M3to2)
     sage: tube
     DiscreteTube: Preimage of [-5, 5] x [-5, 5] by a 2 by 3 matrix
@@ -178,6 +181,7 @@ class DiscreteSubset(SageObject):
 
     EXAMPLES::
 
+        sage: from slabbe import DiscreteSubset
         sage: DiscreteSubset(3)
         Subset of ZZ^3
 
@@ -206,6 +210,7 @@ class DiscreteSubset(SageObject):
 
     No edges go outside of the box::
 
+        sage: from slabbe import DiscreteBox
         sage: B = DiscreteBox([-1,1],[-1,1])
         sage: len(list(B.edges_iterator()))
         12
@@ -223,6 +228,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteSubset
             sage: DiscreteSubset(3)
             Subset of ZZ^3
         """
@@ -242,6 +248,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteSubset
             sage: DiscreteSubset(3)
             Subset of ZZ^3
 
@@ -263,12 +270,14 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteSubset
             sage: d = DiscreteSubset(3)
             sage: d.dimension()
             3
 
         ::
 
+            sage: from slabbe import DiscreteBox
             sage: p = DiscreteBox([0,3], [0,3], [0,3], [0,3])
             sage: p.dimension()
             4
@@ -285,6 +294,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteSubset
             sage: d = DiscreteSubset(3)
             sage: (0,0,0) in d
             True
@@ -314,6 +324,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteSubset
             sage: F = lambda p: Integers(7)(2*p[0]+5*p[1])
             sage: edge_predicate = lambda p,s: F(p) < F(s)
             sage: D = DiscreteSubset(dimension=3, edge_predicate=edge_predicate)
@@ -334,6 +345,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteSubset
             sage: p = DiscreteSubset(3)
             sage: p.an_element()
             (0, 0, 0)
@@ -355,6 +367,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteSubset, DiscretePlane
             sage: d3 = DiscreteSubset(3)
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: p & d3
@@ -400,12 +413,14 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteSubset
             sage: d = DiscreteSubset(2)
             sage: d.base_edges()
             [(1, 0), (0, 1)]
 
         ::
 
+            sage: from slabbe import DiscretePlane
             sage: P = DiscretePlane([3,4,5], 12)
             sage: P.base_edges()
             [(1, 0, 0), (0, 1, 0), (0, 0, 1)]
@@ -423,6 +438,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscretePlane
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: list(p.children(vector((0,0,0))))
             [(1, 0, 0), (0, 1, 0), (0, 0, 1)]
@@ -451,6 +467,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscretePlane
             sage: p = DiscretePlane([1,3,7], 10)
             sage: p.d_neighbors((0,0,0))
             [(-1, -1, 1), (-1, 0, 1), (-1, 1, 0), (-1, 1, 1), (0, -1, 1),
@@ -487,6 +504,7 @@ class DiscreteSubset(SageObject):
 
         ::
 
+            sage: from slabbe import DiscretePlane
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: root = vector((0,0,0))
             sage: root.set_immutable()
@@ -508,6 +526,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscretePlane
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: it = iter(p)
             sage: [next(it) for _ in range(5)]
@@ -521,6 +540,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscretePlane, DiscreteTube
             sage: P = DiscretePlane([3,4,5], 12, mu=20)
             sage: tube = DiscreteTube([0,2],[0,2])
             sage: I = P & tube
@@ -569,6 +589,7 @@ class DiscreteSubset(SageObject):
 
         ::
 
+            sage: from slabbe import DiscretePlane
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: root = vector((0,0,0))
             sage: root.set_immutable()
@@ -605,6 +626,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscretePlane
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: root = vector((0,0,0))
             sage: root.set_immutable()
@@ -654,19 +676,19 @@ class DiscreteSubset(SageObject):
         EXAMPLES::
 
             sage: d = DiscreteSubset(3)
-            sage: d.projection_matrix(vector((2,3,4)))
+            sage: d.projection_matrix(vector((2,3,4))) # tolerance 0.00001
             [  1.00000000000000  0.000000000000000 -0.500000000000000]
             [ 0.000000000000000   1.00000000000000 -0.750000000000000]
-            sage: d.projection_matrix((2,3,4))
+            sage: d.projection_matrix((2,3,4)) # tolerance 0.00001
             [  1.00000000000000  0.000000000000000 -0.500000000000000]
             [ 0.000000000000000   1.00000000000000 -0.750000000000000]
-            sage: d.projection_matrix()
+            sage: d.projection_matrix()         # tolerance 0.00001
             [-0.866025403784  0.866025403784             0.0]
             [           -0.5            -0.5             1.0]
-            sage: d.projection_matrix(_)
+            sage: d.projection_matrix(_) # tolerance 0.00001
             [-0.866025403784439  0.866025403784439  0.000000000000000]   
             [-0.500000000000000 -0.500000000000000   1.00000000000000]   
-            sage: d.projection_matrix('belle')
+            sage: d.projection_matrix('belle')    # tolerance 0.00001
             [0.333333333333            1.0            0.0]
             [0.666666666667            0.0            1.0]
         """
@@ -756,6 +778,7 @@ class DiscreteSubset(SageObject):
             sage: alpha = solve(x+x**2+x**3==1, x)[2].right()
             sage: vv = vector((alpha, alpha+alpha**2, 1))
             sage: omega = (1+alpha)**2 / 2
+            sage: from slabbe import DiscretePlane
             sage: Pr = DiscretePlane(vv, omega, mu=pi, prec=200)
             sage: Pr.plot_points_at_distance(200)               # optional long
             sage: Pr.plot_points_at_distance(200, projmat='isometric') # optional long
@@ -834,6 +857,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscretePlane, DiscreteTube
             sage: P = DiscretePlane([3,4,5], 12, mu=20)
             sage: tube = DiscreteTube([-5,5],[-5,5])
             sage: I = P & tube
@@ -874,6 +898,7 @@ class DiscreteSubset(SageObject):
 
         3d example::
 
+            sage: from slabbe import DiscretePlane, DiscreteTube
             sage: P = DiscretePlane([1,3,7], 11)
             sage: tube = DiscreteTube([-5,5],[-5,5])
             sage: I = P & tube
@@ -910,6 +935,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscretePlane
             sage: p = DiscretePlane([1,3,7], 11)
             sage: p.tikz_projection_scale()
             [x={(-0.866025cm,-0.500000cm)}, y={(0.866025cm,-0.500000cm)},
@@ -1025,6 +1051,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscretePlane
             sage: p = DiscretePlane([2,3,5], 4)
             sage: p.tikz_edges()
             \draw[very thick, blue] (0, 0, 0) -- (1, 0, 0);
@@ -1100,6 +1127,7 @@ class DiscreteSubset(SageObject):
 
         ::
 
+            sage: from slabbe import DiscretePlane, DiscreteTube
             sage: p = DiscretePlane([1,3,7], 11)
             sage: d = DiscreteTube([-1,1],[-1,1])
             sage: I = p & d
@@ -1170,6 +1198,7 @@ class DiscreteSubset(SageObject):
 
         Object in 2d::
 
+            sage: from slabbe import DiscreteLine, DiscreteBox
             sage: L = DiscreteLine([2,5], 2+5, mu=0)
             sage: b = DiscreteBox([-5,5],[-5,5])
             sage: I = L & b
@@ -1190,6 +1219,7 @@ class DiscreteSubset(SageObject):
 
         Object in 3d::
 
+            sage: from slabbe import DiscretePlane, DiscreteTube
             sage: p = DiscretePlane([1,3,7], 11)
             sage: d = DiscreteTube([-5,5],[-5,5])
             sage: I = p & d
@@ -1252,6 +1282,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscretePlane
             sage: p = DiscretePlane([2,3,5], 10)
             sage: p.tikz(points=False, edges=False)
             \begin{tikzpicture}
@@ -1315,6 +1346,7 @@ class Intersection(DiscreteSubset):
 
     Intersection de deux plans::
 
+        sage: from slabbe import DiscretePlane, Intersection
         sage: p = DiscretePlane([1,3,7],11)
         sage: q = DiscretePlane([1,3,5],9)
         sage: Intersection((p,q))
@@ -1331,6 +1363,7 @@ class Intersection(DiscreteSubset):
 
     Intersection of a plane and a tube::
 
+        sage: from slabbe import DiscreteTube
         sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
         sage: d = DiscreteTube([-5,5],[-5,5])
         sage: I = p & d
@@ -1343,6 +1376,7 @@ class Intersection(DiscreteSubset):
 
     Intersection of a line and a box::
 
+        sage: from slabbe import DiscreteLine, DiscreteBox
         sage: L = DiscreteLine([2,5], 2+5, mu=0)
         sage: b = DiscreteBox([-5,5],[-5,5])
         sage: I = L & b
@@ -1369,6 +1403,7 @@ class Intersection(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscretePlane, DiscreteSubset
             sage: d3 = DiscreteSubset(3)
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
@@ -1379,6 +1414,7 @@ class Intersection(DiscreteSubset):
 
         TESTS::
 
+            sage: from slabbe import Intersection
             sage: type(Intersection([DiscreteSubset(2)]))
             <class 'slabbe.discrete_subset.Intersection'>
             sage: type(Intersection([DiscreteSubset(3)]))
@@ -1402,6 +1438,7 @@ class Intersection(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscretePlane, Intersection
             sage: p = DiscretePlane([1,3,7], 11)
             sage: q = DiscretePlane([1,3,5], 9)
             sage: Intersection((p,q))
@@ -1423,6 +1460,7 @@ class Intersection(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscretePlane, DiscreteSubset
             sage: d3 = DiscreteSubset(3)
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
@@ -1443,6 +1481,7 @@ class Intersection(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscretePlane, DiscreteSubset
             sage: d3 = DiscreteSubset(3)
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
@@ -1453,6 +1492,7 @@ class Intersection(DiscreteSubset):
 
         TESTS::
 
+            sage: from slabbe import DiscreteBox
             sage: F = lambda p: (2*p[0]+5*p[1]) % 7
             sage: edge_predicate = lambda p,s: F(p) < F(s)
             sage: D = DiscreteSubset(dimension=2, edge_predicate=edge_predicate)
@@ -1465,6 +1505,7 @@ class Intersection(DiscreteSubset):
 
         ::
 
+            sage: from slabbe import ChristoffelGraph
             sage: C = ChristoffelGraph((2,5))
             sage: b = DiscreteBox([-5,5],[-5,5])
             sage: I = C & b
@@ -1486,6 +1527,7 @@ class Intersection(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscretePlane, DiscreteSubset
             sage: d3 = DiscreteSubset(3)
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
@@ -1521,6 +1563,7 @@ class Intersection(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscretePlane, DiscreteTube
             sage: P = DiscretePlane([4,6,7], 17, mu=0)
             sage: tube = DiscreteTube([-6.4, 6.4], [-5.2, 5.2])
             sage: I = tube & P
@@ -1669,6 +1712,7 @@ class DiscreteTube(DiscreteSubset):
 
     EXAMPLES::
 
+        sage: from slabbe import DiscreteTube
         sage: DiscreteTube([-5,5],[-5,5])
         DiscreteTube: Preimage of [-5, 5] x [-5, 5] by a 2 by 3 matrix
 
@@ -1680,6 +1724,7 @@ class DiscreteTube(DiscreteSubset):
 
     EXAMPLES::
 
+        sage: from slabbe import DiscretePlane, DiscreteTube
         sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
         sage: tube = DiscreteTube([-5,5],[-5,5])
         sage: I = p & tube
@@ -1700,6 +1745,7 @@ class DiscreteTube(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteTube
             sage: DiscreteTube([2,10],[3,4])
             DiscreteTube: Preimage of [2, 10] x [3, 4] by a 2 by 3 matrix
 
@@ -1717,6 +1763,7 @@ class DiscreteTube(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteTube
             sage: DiscreteTube([2,10],[3,4])
             DiscreteTube: Preimage of [2, 10] x [3, 4] by a 2 by 3 matrix
         """
@@ -1735,6 +1782,7 @@ class DiscreteTube(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteTube
             sage: tube = DiscreteTube([-6,6],[-4,3])
             sage: tube.clip()
             [(-5, -3), (5, -3), (5, 2), (-5, 2), (-5, -3)]

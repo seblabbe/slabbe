@@ -4,6 +4,7 @@ Ranking Scale
 
 EXEMPLES::
 
+    sage: from slabbe.ranking_scale import *
     sage: R = RankingScale_CQU4_2011()
     sage: R = RankingScale_USAU_2013()
     sage: R = RankingScale_CQU4_2014()
@@ -31,6 +32,7 @@ def RankingScale_CQU4_2011():
     r"""
     EXEMPLES::
         
+        sage: from slabbe.ranking_scale import RankingScale_CQU4_2011
         sage: R = RankingScale_CQU4_2011()
         sage: R.table()
           Position   Grand Chelem   Mars Attaque   La Flotte   Petit Chelem
@@ -56,6 +58,7 @@ def RankingScale_CQU4_2011():
           103        0              2              0           0
           104        0              1              0           0
     """
+    from sage.rings.integer_ring import ZZ
     serieA = [0] + discrete_curve(50, 1000, K=1, R=sqrt(2), base=e) #Movember, Bye Bye, Cdf, MA
     la_flotte = [0] + discrete_curve(32, 800, K=1, R=sqrt(2), base=e)  # la flotte
     serieB = [0] + discrete_curve(24, 400, K=1, R=sqrt(2), base=e) # october fest, funenuf, la viree
@@ -76,6 +79,7 @@ def RankingScale_USAU_2013():
     r"""
     EXAMPLES::
 
+        sage: from slabbe.ranking_scale import RankingScale_USAU_2013
         sage: R = RankingScale_USAU_2013()
         sage: R.table()
           Position   Serie 1500   Serie 1000   Serie 500   Serie 250
@@ -125,6 +129,7 @@ def RankingScale_CQU4_2014(R=1, base=e):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.ranking_scale import RankingScale_CQU4_2014
         sage: R = RankingScale_CQU4_2014()
     """
     L1000 = [0] + discrete_curve(100, 1000, K=1, R=R, base=base)
@@ -154,6 +159,7 @@ class RankingScale(object):
         r"""
         EXEMPLES::
 
+            sage: from slabbe.ranking_scale import RankingScale_CQU4_2011
             sage: R = RankingScale_CQU4_2011()
             sage: R.length()
             105
@@ -164,6 +170,7 @@ class RankingScale(object):
         r"""
         EXEMPLES::
 
+            sage: from slabbe.ranking_scale import RankingScale_CQU4_2011
             sage: R = RankingScale_CQU4_2011()
             sage: R.pointage_csv()          # not tested
             Creation of file pointage.csv
@@ -185,6 +192,7 @@ class RankingScale(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe.ranking_scale import RankingScale_CQU4_2011
             sage: R = RankingScale_CQU4_2011()
             sage: R.table()
               Position   Grand Chelem   Mars Attaque   La Flotte   Petit Chelem
@@ -210,6 +218,7 @@ class RankingScale(object):
               103        0              2              0           0
               104        0              1              0           0
         """
+        from sage.misc.table import table
         rows = []
         M = self.length()
         names = ('Position',) + self._scale_names
@@ -245,6 +254,7 @@ def curve(nb_equipes, max_points=100, K=1, R=2, base=2, verbose=False):
 
     EXEMPLES::
 
+        sage: from slabbe.ranking_scale import curve
         sage: curve(20, 100)
         -99*(p*(log(40) + 1) - p*log(p) - 20*log(40) + 20*log(20) -
         20)/(19*log(40) - 20*log(20) + 19) + 1
@@ -284,7 +294,7 @@ def curve(nb_equipes, max_points=100, K=1, R=2, base=2, verbose=False):
         
     """
     from sage.symbolic.assumptions import forget, assume
-    from sage.misc.functional import integrate, log
+    from sage.misc.functional import integrate, log, n
     from sage.calculus.var import var
     x,p = var('x,p')
     forget()
@@ -311,6 +321,7 @@ def discrete_curve(nb_equipes, max_points=100, K=1, R=2, base=2, verbose=False):
 
     EXEMPLES::
         
+        sage: from slabbe.ranking_scale import discrete_curve
         sage: A = discrete_curve(64, 100,verbose=True)
         First difference sequence is
         [1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,

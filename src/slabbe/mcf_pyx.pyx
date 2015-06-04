@@ -147,6 +147,7 @@ cdef class MCFAlgorithm_pyx(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe.mcf import algo
             sage: algo.brun.substitutions()
             {12: WordMorphism: 1->12, 2->2, 3->3,
              13: WordMorphism: 1->13, 2->2, 3->3,
@@ -200,6 +201,7 @@ cdef class MCFAlgorithm_pyx(object):
 
         EXAMPLES::
 
+            sage: from slabbe.mcf import algo
             sage: t = algo.arp.check_definition(10000)
             True
 
@@ -295,6 +297,7 @@ cdef class MCFAlgorithm_pyx(object):
 
         EXAMPLES::
 
+            sage: from slabbe.mcf import algo
             sage: it = algo.brun.orbit_iterator((.414578,.571324,.65513))
             sage: for _ in range(4): next(it)
             ((0.7256442929056017, 1.0, 0.14668734378391243), (0.25, 0.5, 0.25), 123)
@@ -578,7 +581,8 @@ cdef class MCFAlgorithm_pyx(object):
 
         ::
 
-            sage: D = brun.invariant_measure_dict(4, 10, verbose=True)
+            sage: from slabbe.mcf import algo
+            sage: D = algo.brun.invariant_measure_dict(4, 10, verbose=True)
             0.102209671626 0.241453007005 0.656337321369
             1 2 6
             0.134744020568 0.318309886184 0.546946093248
@@ -590,13 +594,13 @@ cdef class MCFAlgorithm_pyx(object):
 
         ::
 
-            sage: D = brun.invariant_measure_dict(100000, 5)
+            sage: D = algo.brun.invariant_measure_dict(100000, 5)
             sage: D
             {(0, 1, 2): 21299, (0, 2, 2): 10079, (0, 0, 4): 19223, (1, 1, 1): 4912, (0, 1, 3): 19415, (0, 0, 3): 12307, (1, 1, 2): 12765}
 
         It is 1000 times faster using C counter instead of a python dict counter::
 
-            sage: time D = brun.invariant_measure_dict(1000000, 10)
+            sage: time D = algo.brun.invariant_measure_dict(1000000, 10)
             Time: CPU 0.05 s, Wall: 0.05 s
 
         """
@@ -683,6 +687,7 @@ cdef class MCFAlgorithm_pyx(object):
 
         EXAMPLES::
 
+            sage: from slabbe import algo
             sage: t = algo.arp.natural_extension(10000, a=(1,2,3))
             sage: map(type, t)
             [collections.defaultdict,
@@ -926,6 +931,7 @@ cdef class MCFAlgorithm_pyx(object):
 
         EXAMPLES::
 
+            sage: from slabbe import algo
             sage: algo.brun.dual_domain()
             {100: [(1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.5, 0.5)],
              102: [(1.0, 0.0, 0.0), (0.0, 0.0, 1.0), (0.0, 0.5, 0.5)],
@@ -1003,6 +1009,7 @@ cpdef inline PairPoint3d Algo_switch(PairPoint3d P, Algorithm algo):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
         sage: Algo_switch(D, algo_name_to_algo_id['brun'])
         {'branch': 'brun1', 'u': 0.2, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.3, 'z': 0.5}
@@ -1071,6 +1078,7 @@ cdef inline PairPoint3d Brun(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
         sage: Algo_switch(D, algo_name_to_algo_id['brun'])
         {'branch': 100, 'u': 0.2, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.6, 'z': 0.20000000000000007}
@@ -1107,6 +1115,7 @@ cdef inline PairPoint3d ARrevert(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
         sage: Algo_switch(D, algo_name_to_algo_id['arrevert'])
         {'branch': 100, 'u': 0.2, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.6, 'z': 0.20000000000000007}
@@ -1146,6 +1155,7 @@ cdef inline PairPoint3d ARP(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
         sage: Algo_switch(D, algo_name_to_algo_id['arp'])
         {'branch': 23, 'u': 0.8, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.3, 'z': 0.20000000000000007}
@@ -1175,6 +1185,7 @@ cdef inline PairPoint3d ArnouxRauzy(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
         sage: Algo_switch(D, algo_name_to_algo_id['arnouxrauzy'])
         Exception ValueError: ValueError('arnoux rauzy not defined',) in
@@ -1205,6 +1216,7 @@ cdef inline PairPoint3d Poincare(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
         sage: Algo_switch(D, algo_name_to_algo_id['poincare'])
         {'branch': 23, 'u': 0.8, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.3, 'z': 0.2000}
@@ -1266,6 +1278,7 @@ cdef inline PairPoint3d Selmer(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
         sage: Algo_switch(D, algo_name_to_algo_id['selmer'])
         {'branch': 23, 'u': 0.8, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.3, 'z': 0.2000}
@@ -1302,6 +1315,7 @@ cdef inline PairPoint3d Meester(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
         sage: Algo_switch(D, algo_name_to_algo_id['meester'])
         {'branch': 23, 'u': 0.8, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.3, 'z': 0.2000}
@@ -1329,14 +1343,15 @@ cdef inline PairPoint3d Sorted_Brun(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-        sage: Algo_switch(D, algo_name_to_algo_id['brun'])
+        sage: Algo_switch(D, algo_name_to_algo_id['sorted_brun'])
         {'branch': 106, 'u': 0.3, 'v': 0.2, 'w': 0.6, 'x': 0.20000000000000007, 'y': 0.3, 'z': 0.6}
         sage: D = {'x':.3,'y':.45,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-        sage: Algo_switch(D, algo_name_to_algo_id['brun'])
+        sage: Algo_switch(D, algo_name_to_algo_id['sorted_brun'])
         {'branch': 102, 'u': 0.2, 'v': 0.3, 'w': 0.6, 'x': 0.3, 'y': 0.35000000000000003, 'z': 0.45}
         sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-        sage: Algo_switch(D, algo_name_to_algo_id['brun'])
+        sage: Algo_switch(D, algo_name_to_algo_id['sorted_brun'])
         {'branch': 100, 'u': 0.2, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.3, 'z': 0.5}
     """
     P.z -= P.y
@@ -1348,8 +1363,9 @@ cdef inline PairPoint3d Sorted_BrunMulti(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-        sage: Algo_switch(D, 'brunmulti')
+        sage: Algo_switch(D, algo_name_to_algo_id['sorted_brunmulti'])
         {'branch': 'brun1', 'u': 0.2, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.3, 'z': 0.5}
     """
     cdef int m = <int>(P.z / P.y)
@@ -1362,8 +1378,9 @@ cdef inline PairPoint3d Sorted_Selmer(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.2,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-        sage: Algo_switch(D, algo_name_to_algo_id['selmer'])
+        sage: Algo_switch(D, algo_name_to_algo_id['sorted_selmer'])
         {'branch': 100, 'u': 0.5, 'v': 0.3, 'w': 0.3, 'x': 0.2, 'y': 0.3, 'z': 0.6000000000000001}
     """
     P.z -= P.x
@@ -1375,8 +1392,9 @@ cdef inline PairPoint3d Sorted_Meester(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.5,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-        sage: Algo_switch(D, algo_name_to_algo_id['meester'])
+        sage: Algo_switch(D, algo_name_to_algo_id['sorted_meester'])
         {'branch': 103, 'u': 0.3, 'v': 0.3, 'w': 0.8, 'x': 0.09999999999999998, 'y': 0.30000000000000004, 'z': 0.5}
     """
     # Apply the algo
@@ -1390,14 +1408,15 @@ cdef inline PairPoint3d Sorted_ArnouxRauzy(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = dict(x=.3,y=.4,z=.8,u=.2,v=.3,w=.4,branch=999)
-        sage: Algo_switch(D, algo_name_to_algo_id['arnouxrauzy'])
+        sage: Algo_switch(D, algo_name_to_algo_id['sorted_arnouxrauzy'])
         {'branch': 106, 'u': 0.4, 'v': 0.6000000000000001, 'w': 0.7, 'x': 0.10000000000000009, 'y': 0.3, 'z': 0.4}
 
         ::
 
         sage: D = dict(x=.3,y=.7,z=.8,u=.2,v=.3,w=.4,branch=999)
-        sage: Algo_switch(D, algo_name_to_algo_id['arnouxrauzy'])
+        sage: Algo_switch(D, algo_name_to_algo_id['sorted_arnouxrauzy'])
         {'branch': 206, 'u': 0.4, 'v': 0.8999999999999999, 'w': 0.7, 'x': 0.10000000000000009, 'y': 0.3, 'z': 0.39999999999999997}
 
     """
@@ -1430,14 +1449,15 @@ cdef inline PairPoint3d Sorted_ARP(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = dict(x=.3,y=.4,z=.8,u=.2,v=.3,w=.4,branch=999)
-        sage: Algo_switch(D, algo_name_to_algo_id['arp'])
+        sage: Algo_switch(D, algo_name_to_algo_id['sorted_arp'])
         {'branch': 106, 'u': 0.4, 'v': 0.6000000000000001, 'w': 0.7, 'x': 0.10000000000000009, 'y': 0.3, 'z': 0.4}
 
         ::
 
         sage: D = dict(x=.3,y=.7,z=.8,u=.2,v=.3,w=.4,branch=999)
-        sage: Algo_switch(D, algo_name_to_algo_id['arp'])
+        sage: Algo_switch(D, algo_name_to_algo_id['sorted_arp'])
         {'branch': 206, 'u': 0.4, 'v': 0.8999999999999999, 'w': 0.7, 'x': 0.10000000000000009, 'y': 0.3, 'z': 0.39999999999999997}
     """
     # Apply the algo
@@ -1450,8 +1470,9 @@ cdef inline PairPoint3d Sorted_ARPMulti(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.3,'y':.5,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-        sage: Algo_switch(D, algo_name_to_algo_id['arpmulti'])
+        sage: Algo_switch(D, algo_name_to_algo_id['sorted_arpmulti'])
         {'branch': 201, 'u': 0.6, 'v': 0.8, 'w': 0.3, 'x': 0.2, 'y': 0.3, 'z': 0.30000000000000004}
     """
     # Apply the algo
@@ -1464,13 +1485,14 @@ cdef inline PairPoint3d Sorted_Poincare(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = dict(x=.3,y=.7,z=.8,u=.2,v=.3,w=.4,branch=999)
-        sage: Algo_switch(D, algo_name_to_algo_id['poincare'])
+        sage: Algo_switch(D, algo_name_to_algo_id['sorted_poincare'])
         {'branch': 206, 'u': 0.4, 'v': 0.9, 'w': 0.7, 'x': 0.10000000000000009, 'y': 0.3, 'z': 0.39999999999999997}
 
     ::
 
-        sage: Algo_switch(D, algo_name_to_algo_id['poincare'])
+        sage: Algo_switch(D, algo_name_to_algo_id['sorted_poincare'])
         {'branch': 206, 'u': 0.10000000000000003, 'v': 1.8, 'w': 0.09999999999999998, 'x': 0.10000000000000009, 'y': 0.3, 'z': 0.39999999999999997}
 
     """
@@ -1489,8 +1511,9 @@ cdef inline PairPoint3d Sorted_ARrevert(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-        sage: Algo_switch(D, 'arrevert')
+        sage: Algo_switch(D, algo_name_to_algo_id['sorted_arrevert'])
         {'branch': 'brun1', 'u': 0.2, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.3, 'z': 0.5}
     """
     cdef PairPoint3d R
@@ -1534,8 +1557,9 @@ cdef inline PairPoint3d Sorted_ARrevertMulti(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-        sage: Algo_switch(D, 'arrevertmulti')
+        sage: Algo_switch(D, algo_name_to_algo_id['sorted_arrevertmulti'])
         {'branch': 'brun1', 'u': 0.2, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.3, 'z': 0.5}
     """
     cdef PairPoint3d R
@@ -1580,8 +1604,9 @@ cdef inline PairPoint3d Sorted_ARMonteil(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-        sage: Algo_switch(D, 'armonteil')
+        sage: Algo_switch(D, algo_name_to_algo_id['sorted_armonteil'])
         {'branch': 'brun1', 'u': 0.2, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.3, 'z': 0.5}
     """
     cdef PairPoint3d R
@@ -1613,8 +1638,9 @@ cdef inline PairPoint3d Sorted_Delaunay(PairPoint3d P):
 
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-        sage: Algo_switch(D, 'delaunay')
+        sage: Algo_switch(D, algo_name_to_algo_id['sorted_delaunay'])
         {'branch': 'brun1', 'u': 0.2, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.3, 'z': 0.5}
     """
     cdef PairPoint3d R
@@ -1635,8 +1661,9 @@ cdef inline PairPoint3d JacobiPerron(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-        sage: Algo_switch(D, 'jacobi')
+        sage: Algo_switch(D, algo_name_to_algo_id['jacobi'])
         {'branch': 'brun1', 'u': 0.2, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.3, 'z': 0.5}
     """
     cdef PairPoint3d R
@@ -1669,8 +1696,9 @@ cdef inline PairPoint3d JacobiPerronAdditif(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-        sage: Algo_switch(D, 'jacobiadditif')
+        sage: Algo_switch(D, algo_name_to_algo_id['jacobiadditif'])
         {'branch': 'brun1', 'u': 0.2, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.3, 'z': 0.5}
     """
     cdef PairPoint3d R
@@ -1706,8 +1734,9 @@ cdef inline PairPoint3d JacobiPerronAdditifv2(PairPoint3d P):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-        sage: Algo_switch(D, 'jacobiadditifv2')
+        sage: Algo_switch(D, algo_name_to_algo_id['jacobiadditifv2'])
         {'branch': 'brun1', 'u': 0.2, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.3, 'z': 0.5}
     """
     cdef PairPoint3d R
@@ -1745,9 +1774,6 @@ cdef inline PairPoint3d Sort(PairPoint3d P):
     r"""
     EXAMPLES::
 
-        sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-        sage: Algo_switch(D, 'brun')
-        {'branch': 'brun1', 'u': 0.2, 'v': 0.6, 'w': 0.3, 'x': 0.3, 'y': 0.3, 'z': 0.5}
     """
     cdef double tmp
     if P.x > P.y:

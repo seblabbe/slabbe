@@ -12,6 +12,7 @@ AUTHORS:
 
 EXAMPLES::
 
+    sage: from slabbe import Fruit
     sage: f = Fruit(5)
     sage: f
     A fruit of 5 kilos.
@@ -24,6 +25,7 @@ Because of class inheritance which says that a banana is a fruit and a
 strawberry is a fruit, the methods written for fruits are defined for
 bananas and strawberries automatically::
 
+    sage: from slabbe import Strawberry
     sage: s = Strawberry(32)
     sage: s
     A strawberry of 32 kilos.
@@ -34,6 +36,7 @@ bananas and strawberries automatically::
 
 ::
 
+    sage: from slabbe import Banana
     sage: b = Banana(13)
     sage: b
     A banana of 13 kilos.
@@ -78,6 +81,7 @@ class Fruit(SageObject):
 
     EXAMPLES::
 
+        sage: from slabbe import Fruit
         sage: f = Fruit(5)
         sage: f
         A fruit of 5 kilos.
@@ -89,6 +93,7 @@ class Fruit(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import Fruit
             sage: f = Fruit(3)
 
         TESTS:
@@ -116,6 +121,7 @@ class Fruit(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import Fruit
             sage: f = Fruit(3)
             sage: f
             A fruit of 3 kilos.
@@ -136,6 +142,7 @@ class Fruit(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import Fruit
             sage: s = Fruit(32)
             sage: t = Fruit(7)
             sage: u = Fruit(32)
@@ -156,6 +163,7 @@ class Fruit(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import Fruit
             sage: f = Fruit(3)
             sage: f.weight()
             3
@@ -172,6 +180,7 @@ class Fruit(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import Fruit
             sage: f = Fruit(3)
             sage: f.is_a_fruit()
             True
@@ -192,6 +201,7 @@ class Banana(Fruit):
 
     EXAMPLES::
 
+        sage: from slabbe import Banana
         sage: b = Banana(9)
         sage: b
         A banana of 9 kilos.
@@ -219,6 +229,7 @@ class Banana(Fruit):
 
         EXAMPLES::
 
+            sage: from slabbe import Banana
             sage: b = Banana(9)
             sage: b
             A banana of 9 kilos.
@@ -239,6 +250,7 @@ class Banana(Fruit):
 
         EXAMPLES::
 
+            sage: from slabbe import Banana
             sage: s = Banana(32)
             sage: t = Banana(7)
             sage: u = Banana(32)
@@ -263,6 +275,7 @@ class Strawberry(Fruit):
 
     EXAMPLES::
 
+        sage: from slabbe import Strawberry
         sage: s = Strawberry(34)
         sage: s
         A strawberry of 34 kilos.
@@ -290,6 +303,7 @@ class Strawberry(Fruit):
 
         EXAMPLES::
 
+            sage: from slabbe import Strawberry
             sage: f = Strawberry(34)
             sage: f
             A strawberry of 34 kilos.
@@ -310,6 +324,7 @@ class Strawberry(Fruit):
 
         EXAMPLES::
 
+            sage: from slabbe import Strawberry
             sage: s = Strawberry(32)
             sage: t = Strawberry(7)
             sage: u = Strawberry(32)
@@ -334,6 +349,7 @@ class Strawberry(Fruit):
 
         EXAMPLES::
 
+            sage: from slabbe import Strawberry
             sage: f = Strawberry(34)
             sage: g = Strawberry(20)
             sage: f + g

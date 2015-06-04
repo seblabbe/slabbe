@@ -15,6 +15,7 @@ EXAMPLES:
 
 The extension type of an ordinary bispecial factor::
 
+    sage: from slabbe import ExtensionType1to1
     sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
     sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
     sage: E
@@ -153,6 +154,7 @@ class ExtensionType(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType
             sage: W = Words([0,1,2])
             sage: ExtensionType.from_factor(W(), W([0,1,1,2,0]))
               E(w)   0   1   2
@@ -174,6 +176,7 @@ class ExtensionType(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType
             sage: W = Words([0,1,2])
             sage: ExtensionType.from_factor2(W(), W([0,1,1,2,0]))
               E(w)   0   1   2
@@ -202,6 +205,7 @@ class ExtensionType(object):
 
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType
             sage: ar = WordMorphism({1:[1,3],2:[2,3],3:[3]})
             sage: ExtensionType.from_morphism(ar)
               E(w)   1   2   3
@@ -249,10 +253,12 @@ class ExtensionType(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
             sage: hash(E)
-            -73163835
+            -73163835              # 32-bit
+            -3118706505388155963   # 64-bit
 
         """
         return hash(self._pairs)
@@ -260,6 +266,7 @@ class ExtensionType(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
             sage: it = E.__iter__()
@@ -273,6 +280,7 @@ class ExtensionType(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3])
             sage: E
@@ -294,6 +302,7 @@ class ExtensionType(object):
 
         ::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: ExtensionType2to1(L, (1,2,3))
@@ -314,6 +323,7 @@ class ExtensionType(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3], ('a', 'b'))
             sage: latex(E)
@@ -329,6 +339,7 @@ class ExtensionType(object):
 
         ::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
@@ -370,6 +381,7 @@ class ExtensionType(object):
 
         From an ordinaire word::
 
+            sage: from slabbe import ExtensionType1to1
             sage: e = ExtensionType1to1([(1,3),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
             sage: e.life_graph(['p23'])
             Looped multi-digraph on 2 vertices
@@ -380,6 +392,7 @@ class ExtensionType(object):
 
         2to1::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
@@ -427,6 +440,7 @@ class ExtensionType(object):
 
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: e = ExtensionType1to1([(1,3),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
             sage: e.life_graph_save_tikz('a.tikz', ['p32','p13','ar2'])    # not tested
 
@@ -434,6 +448,7 @@ class ExtensionType(object):
 
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
+            sage: from slabbe import ExtensionType2to1
             sage: E = ExtensionType2to1(L, (1,2,3))
             sage: E.life_graph_save_tikz('b.tikz', ['b12','b21','b12']) # not tested
             Creation of file b.tikz
@@ -458,6 +473,7 @@ class ExtensionType(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
@@ -475,6 +491,7 @@ class ExtensionType(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
@@ -492,6 +509,7 @@ class ExtensionType(object):
 
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
             sage: E.is_empty()
@@ -499,6 +517,7 @@ class ExtensionType(object):
 
         ::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
@@ -521,6 +540,7 @@ class ExtensionType(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
@@ -532,6 +552,7 @@ class ExtensionType(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
             sage: E.is_ordinaire()
@@ -544,6 +565,7 @@ class ExtensionType(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3])
             sage: E.is_neutral()
@@ -556,6 +578,7 @@ class ExtensionType(object):
 
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
@@ -580,6 +603,7 @@ class ExtensionType(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3])
             sage: E.cardinality()
@@ -591,6 +615,7 @@ class ExtensionType(object):
 
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,2), (2,2), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
             sage: E.left_right_projection()
@@ -598,6 +623,7 @@ class ExtensionType(object):
 
         ::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
@@ -618,10 +644,11 @@ class ExtensionType(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
             sage: E.left_extensions()
-            set([1, 2, 3])
+            {1, 2, 3}
 
         """
         raise NotImplementedError
@@ -629,10 +656,11 @@ class ExtensionType(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
             sage: E.right_extensions()
-            set([1, 2, 3])
+            {1, 2, 3}
 
         """
         raise NotImplementedError
@@ -640,6 +668,7 @@ class ExtensionType(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3])
             sage: E.left_valence()
@@ -651,6 +680,7 @@ class ExtensionType(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3])
             sage: E.right_valence()
@@ -662,6 +692,7 @@ class ExtensionType(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3])
             sage: E.multiplicity()
@@ -669,6 +700,7 @@ class ExtensionType(object):
 
         ::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
@@ -687,6 +719,7 @@ class ExtensionType1to1(ExtensionType):
 
     EXAMPLES::
 
+        sage: from slabbe import ExtensionType1to1
         sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
         sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
         sage: E
@@ -710,6 +743,7 @@ class ExtensionType1to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3])
             sage: E
@@ -729,6 +763,7 @@ class ExtensionType1to1(ExtensionType):
 
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
             sage: E.table()
@@ -768,6 +803,7 @@ class ExtensionType1to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
             sage: print E._repr_old()
@@ -806,6 +842,7 @@ class ExtensionType1to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3])
             sage: print E._latex_old()
@@ -851,6 +888,7 @@ class ExtensionType1to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3])
             sage: ar = WordMorphism({1:[1,3],2:[2,3],3:[3]})
@@ -869,6 +907,7 @@ class ExtensionType1to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3], ('a', 'b'))
             sage: E.chignons_multiplicity_tuple()
@@ -880,6 +919,7 @@ class ExtensionType1to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3])
             sage: E
@@ -1022,6 +1062,7 @@ class ExtensionType1to1(ExtensionType):
 
         POSSIBLE BUG::
 
+            sage: from slabbe import ExtensionType
             sage: b23 = WordMorphism({1:[1],2:[2,3],3:[3]})
             sage: b13 = WordMorphism({1:[1,3],2:[2],3:[3]})
             sage: b31 = WordMorphism({1:[1],2:[2],3:[3,1]})
@@ -1068,6 +1109,7 @@ class ExtensionType1to1(ExtensionType):
 
         ordinary::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
             sage: E
@@ -1137,6 +1179,7 @@ class ExtensionType1to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3])
             sage: E.cardinality()
@@ -1147,10 +1190,11 @@ class ExtensionType1to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3])
             sage: E.left_extensions()
-            set([1, 2, 3])
+            {1, 2, 3}
 
         """
         return set(a for a,b in self)
@@ -1158,10 +1202,11 @@ class ExtensionType1to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3])
             sage: E.right_extensions()
-            set([1, 2, 3])
+            {1, 2, 3}
         """
         return set(b for a,b in self)
 class ExtensionType2to1(ExtensionType):
@@ -1183,6 +1228,7 @@ class ExtensionType2to1(ExtensionType):
 
     EXAMPLES::
 
+        sage: from slabbe import ExtensionType2to1
         sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
         ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
         sage: E = ExtensionType2to1(L, (1,2,3))
@@ -1201,6 +1247,7 @@ class ExtensionType2to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
@@ -1218,6 +1265,7 @@ class ExtensionType2to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
@@ -1236,11 +1284,12 @@ class ExtensionType2to1(ExtensionType):
 
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
-            sage: E.factors_length_2()
-            set([(1, 2), (3, 1), (2, 3), (2, 1), (2, 2)])
+            sage: sorted(E.factors_length_2())
+            [(1, 2), (2, 1), (2, 2), (2, 3), (3, 1)]
         """
         if self._factors_length_2 is None:
             # We suppose here the factor is the empty word...
@@ -1254,6 +1303,7 @@ class ExtensionType2to1(ExtensionType):
 
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
@@ -1269,6 +1319,7 @@ class ExtensionType2to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
@@ -1281,6 +1332,7 @@ class ExtensionType2to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
@@ -1294,6 +1346,7 @@ class ExtensionType2to1(ExtensionType):
 
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
@@ -1329,6 +1382,7 @@ class ExtensionType2to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3])
             sage: ar = WordMorphism({1:[1,3],2:[2,3],3:[3]})
@@ -1347,6 +1401,7 @@ class ExtensionType2to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3], ('a', 'b'))
             sage: E.chignons_multiplicity_tuple()
@@ -1363,11 +1418,12 @@ class ExtensionType2to1(ExtensionType):
 
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:      2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
-            sage: E.factors_length_2()
-            set([(1, 2), (3, 1), (2, 3), (2, 1), (2, 2)])
+            sage: sorted(E.factors_length_2())
+            [(1, 2), (2, 1), (2, 2), (2, 3), (3, 1)]
             sage: E.letters_before_and_after()
             (defaultdict(<type 'set'>, {1: set([2, 3]), 2: set([1, 2]), 3: set([2])}),
             defaultdict(<type 'set'>, {1: set([2]), 2: set([1, 2, 3]), 3: set([1])}))
@@ -1401,6 +1457,7 @@ class ExtensionType2to1(ExtensionType):
 
         POSSIBLE BUG::
 
+            sage: from slabbe import ExtensionType
             sage: b23 = WordMorphism({1:[1],2:[2,3],3:[3]})
             sage: b13 = WordMorphism({1:[1,3],2:[2],3:[3]})
             sage: b31 = WordMorphism({1:[1],2:[2],3:[3,1]})
@@ -1413,6 +1470,7 @@ class ExtensionType2to1(ExtensionType):
 
         On a le meme bug (ca se corrige avec de plus grandes extensions a gauche)::
 
+            sage: from slabbe import ExtensionType2to1
             sage: E = ExtensionType2to1((([a],[b]) for a,b in e), (1,2,3))
             sage: E.apply(b23)[0].apply(b13)
             (  E(w)   1   2   3
@@ -1422,19 +1480,19 @@ class ExtensionType2to1(ExtensionType):
                13    X   X   X
                23            X
              m(w)=0, ordinary, empty,)
-            sage: E.apply(b23)[0].apply(b31)
-            (  E(1w)   1   2   3
-                1     X   X   X
-                3     X   X   X
-               23             X
-             m(w)=2, not ord.,   
+            sage: sorted(E.apply(b23)[0].apply(b31))
+            [  E(1w)   1   2   3
+                 1     X   X   X
+                 3     X   X   X
+                23             X
+              m(w)=2, not ord.,
                E(w)   1   2   3
-               11    X   X   X
-               31    X   X   X
-               12            X
-               13    X
-               23    X
-             m(w)=0, not ord., empty)
+                11    X   X   X
+                31    X   X   X
+                12            X
+                13    X
+                23    X
+              m(w)=0, not ord., empty]
 
         EXAMPLES:
 
@@ -1452,55 +1510,55 @@ class ExtensionType2to1(ExtensionType):
                23    X
              m(w)=0, not ord., empty
             sage: b12 = WordMorphism({1:[1,2],2:[2],3:[3]})
-            sage: E.apply(b12)
-            (  E(2w)   1   2   3
-               21         X
-               31         X
-               12     X   X   X
-               22     X
-            m(w)=0, ordinary,
+            sage: sorted(E.apply(b12))
+            [  E(2w)   1   2   3
+                21         X
+                31         X
+                12     X   X   X
+                22     X
+              m(w)=0, ordinary,
                E(w)   1   2   3
-               21        X
-               31        X
-               12        X
-               22    X   X   X
-               23    X
-            m(w)=0, not ord., empty)
+                21        X
+                31        X
+                12        X
+                22    X   X   X
+                23    X
+              m(w)=0, not ord., empty]
 
         ::
 
             sage: b21 = WordMorphism({1:[1],2:[2,1],3:[3]})
-            sage: E.apply(b21)
-            (  E(1w)   1   2   3
-               21         X
-               12     X   X   X
-               13         X
-             m(w)=0, ordinary,
-               E(w)   1   2   3
-               11        X
-               21    X   X   X
-               31        X
-               12    X
-               13    X
-             m(w)=0, ordinary, empty)
+            sage: sorted(E.apply(b21))
+            [  E(w)   1   2   3
+                11        X
+                21    X   X   X
+                31        X
+                12    X
+                13    X
+              m(w)=0, ordinary, empty,
+               E(1w)   1   2   3
+                21         X
+                12     X   X   X
+                13         X
+              m(w)=0, ordinary]
             sage: b23 = WordMorphism({1:[1],2:[2,3],3:[3]})
-            sage: E.apply(b23)
-            (  E(3w)   1   2   3
-               12     X   X   X
-               32     X
-               23     X
-             m(w)=0, ordinary,
-               E(23w)   1   2   3
-                31     X   X   X
+            sage: sorted(E.apply(b23))
+            [  E(w)   1   2   3
+                31        X
+                12            X
+                32            X
+                23    X   X   X
+                33    X
+              m(w)=0, not ord., empty,
+               E(3w)   1   2   3
+                12     X   X   X
+                32     X
                 23     X
-             m(w)=0, ordinary,
-               E(w)   1   2   3
-               31        X
-               12            X
-               32            X
-               23    X   X   X
-               33    X
-             m(w)=0, not ord., empty)
+              m(w)=0, ordinary,
+               E(23w)   1   2   3
+                 31     X   X   X
+                 23     X
+              m(w)=0, ordinary]
 
         """
         letters_before, letters_after = self.letters_before_and_after()
@@ -1552,6 +1610,7 @@ class ExtensionType2to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
@@ -1571,6 +1630,7 @@ class ExtensionType2to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
@@ -1583,6 +1643,7 @@ class ExtensionType2to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
@@ -1601,11 +1662,12 @@ class ExtensionType2to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
             sage: E.left_extensions()
-            set([1, 2, 3])
+            {1, 2, 3}
 
         """
         return self.extension_type_1to1().left_extensions()
@@ -1614,11 +1676,12 @@ class ExtensionType2to1(ExtensionType):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import ExtensionType2to1
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionType2to1(L, (1,2,3))
             sage: E.right_extensions()
-            set([1, 2, 3])
+            {1, 2, 3}
         """
         return self.extension_type_1to1().right_extensions()
         #return set(b[:1] for b in self.right_word_extensions())

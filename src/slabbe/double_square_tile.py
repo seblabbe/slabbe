@@ -61,6 +61,7 @@ EXAMPLES:
 
 Double Square tile from the boundary word of a known double square::
 
+    sage: from slabbe import DoubleSquare
     sage: DoubleSquare(words.fibonacci_tile(2))
     Double Square Tile
       w0 = 32303010   w4 = 10121232
@@ -230,6 +231,7 @@ class DoubleSquare(SageObject):
 
     From a double square::
 
+        sage: from slabbe import DoubleSquare
         sage: DoubleSquare(words.fibonacci_tile(1))
         Double Square Tile
           w0 = 32   w4 = 10
@@ -316,6 +318,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(christoffel_tile(5,6))
             sage: D
             Double Square Tile
@@ -362,6 +365,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: D.w(0)
             Path: 32303010
@@ -376,6 +380,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: D.verify_definition()
 
@@ -399,6 +404,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(1))
             sage: [D.w(i) for i in range(8)]
             [Path: 32, Path: 3, Path: 03, Path: 0, Path: 10, Path: 1, Path: 21, Path: 2]
@@ -432,6 +438,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: [D.d(i) for i in range(8)]
             [10, 16, 10, 16, 10, 16, 10, 16]
@@ -447,6 +454,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: [D.n(i) for i in range(8)]
             [0, 0, 0, 0, 0, 0, 0, 0]
@@ -481,6 +489,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: D.u(1)
             Path: 30323
@@ -516,6 +525,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: D.v(1)
             Path: 21232303010
@@ -547,6 +557,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: D == D
             True
@@ -567,6 +578,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: hash(D)                  # random
             398370403             # 32-bit
@@ -583,6 +595,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: D
             Double Square Tile
@@ -610,6 +623,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: latex(D)
             (32303010,30323,21232303,23212,10121232,12101,03010121,01030)
@@ -625,9 +639,10 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: D.alphabet()
-            set([0, 1, 2, 3])
+            {0, 1, 2, 3}
         """
         return set(self.boundary_word())
 
@@ -640,6 +655,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(1))
             sage: D.is_singular()
             False
@@ -662,6 +678,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(1))
             sage: D.is_flat()
             False
@@ -684,6 +701,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(1))
             sage: D.is_degenerate()
             False
@@ -701,6 +719,7 @@ class DoubleSquare(SageObject):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(1))
             sage: D.is_morphic_pentamino()
             True
@@ -712,6 +731,7 @@ class DoubleSquare(SageObject):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: D.boundary_word()
             Path: 3230301030323212323032321210121232121010...
@@ -733,6 +753,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(1))
             sage: D.turning_number()
             1
@@ -773,6 +794,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: D
             Double Square Tile
@@ -808,6 +830,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: D
             Double Square Tile
@@ -847,6 +870,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: D.extend(3)
             Double Square Tile
@@ -875,6 +899,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare((3,6,3,2))
             sage: D.trim(1)
             Double Square Tile
@@ -922,6 +947,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: D
             Double Square Tile
@@ -966,6 +992,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: D.apply(['SWAP_0', 'EXTEND_3', 'TRIM_3'])
             Double Square Tile
@@ -1019,6 +1046,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare((34,21,34,21))
             sage: E,op = D.reduce()
             sage: E
@@ -1123,6 +1151,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare((34,21,34,21))
             sage: D.reduce_ntimes(10)
             Double Square Tile
@@ -1153,6 +1182,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare((34,21,34,21))
             sage: D.reduction()
             ['SWAP_1', 'TRIM_1', 'TRIM_3', 'SWAP_1', 'TRIM_1', 'TRIM_3', 'TRIM_0', 'TRIM_2']
@@ -1178,6 +1208,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(christoffel_tile(9,7))
             sage: D.apply_reduction()
             Double Square Tile
@@ -1232,6 +1263,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(1))
             sage: D.factorization_points()
             [0, 2, 3, 5, 6, 8, 9, 11]
@@ -1247,6 +1279,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(1))
             sage: m = WordMorphism({0:[0],1:[1,0,1],2:[2],3:[3,2,3]})
             sage: D.apply_morphism(m)
@@ -1269,6 +1302,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: D.width()
             9
@@ -1289,6 +1323,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: D.height()
             9
@@ -1348,6 +1383,7 @@ class DoubleSquare(SageObject):
 
         The cross of area 5 together with its double square factorization points::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(1))
             sage: D.plot()              # long time (1s)
         """
@@ -1375,6 +1411,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: D.plot_reduction()          # long time (1s)
 
@@ -1401,6 +1438,7 @@ class DoubleSquare(SageObject):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: D.latex_8_tuple()
             ('{\\bf 32303010}', '{\\bf 30323}', '{\\bf 21232303}', '{\\bf 23212}',
@@ -1417,6 +1455,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(1))
             sage: print D.latex_array()
             \begin{array}{lllllll}
@@ -1456,6 +1495,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
             sage: D.latex_table()
             \begin{tabular}{|c|}
@@ -1516,6 +1556,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(1))
             sage: D.tikz_trajectory()
             \filldraw[->, very thick, draw=black, fill=black!20] (0.000, 0.000)
@@ -1564,6 +1605,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(1))
             sage: D.tikz_boxed()
             \begin{tabular}{c}
@@ -1647,6 +1689,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: fibo2 = words.fibonacci_tile(2)
             sage: cfibo2 = DoubleSquare(fibo2)
             sage: s = cfibo2.tikz_reduction(scale=0.5,ncols=4,labels=True)
@@ -1769,6 +1812,7 @@ class DoubleSquare(SageObject):
         The following command creates the tikz code for Figure 16 in
         [BGL2012]_::
 
+            sage: from slabbe import DoubleSquare
             sage: fibo2 = words.fibonacci_tile(2)
             sage: S = WordMorphism({0:[0,0],1:[1,0,1],2:[2,2],3:[3,2,3]}, codomain=fibo2.parent())
             sage: cfibo2 = DoubleSquare(fibo2)
@@ -2304,6 +2348,7 @@ def christoffel_tile(p, q):
 
     EXAMPLES:
 
+        sage: from slabbe import christoffel_tile
         sage: christoffel_tile(7,9)
         Path: 0301030101030101030101030103010103010103...
         sage: christoffel_tile(9,7)

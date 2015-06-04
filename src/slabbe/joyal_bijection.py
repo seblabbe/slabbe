@@ -26,6 +26,7 @@ Creation of an endofunction
 
 ::
 
+    sage: from slabbe import Endofunction
     sage: L = [7, 0, 6, 1, 4, 7, 2, 1, 5] 
     sage: f = Endofunction(L)
     sage: f
@@ -37,6 +38,7 @@ Creation of a double rooted tree
 
 ::
 
+    sage: from slabbe import DoubleRootedTree
     sage: L = [(0,6),(2,1),(3,1),(4,2),(5,7),(6,4),(7,0),(8,5)]
     sage: D = DoubleRootedTree(L, 1, 7)
     sage: D
@@ -117,6 +119,7 @@ A random example
 
 We define the set of all endofunctions on [0..7]::
 
+    sage: from slabbe import Endofunctions
     sage: E = Endofunctions(8)
     sage: E
     Endofunctions of [0..7]
@@ -280,6 +283,7 @@ class Endofunctions(object):
 
     EXAMPLES::
 
+        sage: from slabbe import Endofunctions
         sage: Endofunctions(10)
         Endofunctions of [0..9]
     """
@@ -287,6 +291,7 @@ class Endofunctions(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import Endofunctions
             sage: Endofunctions(10)
             Endofunctions of [0..9]
         """
@@ -296,6 +301,7 @@ class Endofunctions(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import Endofunctions
             sage: Endofunctions(1)
             Endofunctions of [0..0]
             sage: Endofunctions(10)
@@ -315,6 +321,7 @@ class Endofunctions(object):
 
         EXAMPLES::
 
+            sage: from slabbe import Endofunctions
             sage: E = Endofunctions(10)
             sage: E.random_element()          # random
             Endofunction:
@@ -337,7 +344,8 @@ class Endofunction(object):
       where the images belong to the integers from 0 to n-1.
 
     EXAMPLES::
-        
+
+        sage: from slabbe import Endofunction
         sage: L = [0, 5, 7, 2, 1, 1, 2, 6, 2, 4]
         sage: f = Endofunction(L)
         sage: f
@@ -365,6 +373,7 @@ class Endofunction(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import Endofunction
             sage: L = [1, 6, 5, 1, 6, 5, 0]
             sage: f = Endofunction(L)
             sage: len(f)
@@ -376,6 +385,7 @@ class Endofunction(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import Endofunction
             sage: L = [1, 6, 5, 1, 6, 5, 0]
             sage: f = Endofunction(L)
             sage: f(2)
@@ -387,6 +397,7 @@ class Endofunction(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import Endofunction
             sage: L = [1, 6, 5, 1, 6, 5, 0]
             sage: f = Endofunction(L)
             sage: f == f
@@ -406,6 +417,7 @@ class Endofunction(object):
 
         EXAMPLES::
 
+            sage: from slabbe import Endofunction
             sage: L = [0, 5, 7, 2, 1, 1, 2, 6, 2, 4]
             sage: f = Endofunction(L)
             sage: list(f.two_cycle_elements())
@@ -425,6 +437,7 @@ class Endofunction(object):
 
         EXAMPLES::
 
+            sage: from slabbe import Endofunction
             sage: L = [6, 5, 7, 2, 1, 1, 2, 6, 2, 4]
             sage: f = Endofunction(L)
             sage: f.cycle_elements()   # random order
@@ -456,6 +469,7 @@ class Endofunction(object):
 
         EXAMPLES::
 
+            sage: from slabbe import Endofunction
             sage: L = [0, 5, 7, 2, 1, 1, 2, 6, 2, 4]
             sage: f = Endofunction(L)
             sage: f.skeleton()
@@ -477,6 +491,7 @@ class Endofunction(object):
 
         EXAMPLES::
 
+            sage: from slabbe import Endofunction
             sage: L = [0, 5, 7, 2, 1, 1, 2, 6, 2, 4]
             sage: f = Endofunction(L)
             sage: f.to_double_rooted_tree()
@@ -509,6 +524,7 @@ class DoubleRootedTree(object):
 
     EXAMPLES::
 
+        sage: from slabbe import DoubleRootedTree
         sage: edges = [(0,5),(1,2),(2,6),(3,2),(4,1),(5,7),(7,1),(8,2),(9,4)]
         sage: D = DoubleRootedTree(edges, 6, 0)
         sage: D
@@ -521,6 +537,7 @@ class DoubleRootedTree(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import DoubleRootedTree
             sage: edges = [(0,5),(1,2),(2,6),(3,2),(4,1),(5,7),(7,1),(8,2),(9,4)]
             sage: D = DoubleRootedTree(edges, 6, 0)
             sage: D
@@ -539,6 +556,7 @@ class DoubleRootedTree(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import DoubleRootedTree
             sage: edges = [(0,5),(1,2),(2,6),(3,2),(4,1),(5,7),(7,1),(8,2),(9,4)]
             sage: D = DoubleRootedTree(edges, 6, 0)
             sage: D
@@ -557,6 +575,7 @@ class DoubleRootedTree(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import DoubleRootedTree
             sage: edges = [(0,5),(1,2),(2,6),(3,2),(4,1),(5,7),(7,1),(8,2),(9,4)]
             sage: D = DoubleRootedTree(edges, 6, 0)
             sage: D == 3
@@ -573,6 +592,7 @@ class DoubleRootedTree(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import DoubleRootedTree
             sage: edges = [(0,5),(1,2),(2,6),(3,2),(4,1),(5,7),(7,1),(8,2),(9,4)]
             sage: D = DoubleRootedTree(edges, 6, 0)
             sage: D != 3
@@ -586,6 +606,7 @@ class DoubleRootedTree(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import DoubleRootedTree
             sage: edges = [(0,5),(1,2),(2,6),(3,2),(4,1),(5,7),(7,1),(8,2),(9,4)]
             sage: D = DoubleRootedTree(edges, 6, 0)
             sage: D.graph()
@@ -604,6 +625,7 @@ class DoubleRootedTree(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import DoubleRootedTree
             sage: edges = [(0,5),(1,2),(2,6),(3,2),(4,1),(5,7),(7,1),(8,2),(9,4)]
             sage: D = DoubleRootedTree(edges, 6, 0)
             sage: D.skeleton()
@@ -616,6 +638,7 @@ class DoubleRootedTree(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import DoubleRootedTree
             sage: edges = [(0,5),(1,2),(2,6),(3,2),(4,1),(5,7),(7,1),(8,2),(9,4)]
             sage: D = DoubleRootedTree(edges, 6, 0)
             sage: D.skeleton()
@@ -638,6 +661,7 @@ class DoubleRootedTree(object):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleRootedTree
             sage: edges = [(0,5),(1,2),(2,6),(3,2),(4,1),(5,7),(7,1),(8,2),(9,4)]
             sage: D = DoubleRootedTree(edges, 6, 0)
             sage: D.to_endofunction()

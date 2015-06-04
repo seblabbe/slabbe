@@ -11,6 +11,7 @@ EXAMPLES::
 ::
 
     sage: from slabbe.mcf import algo
+    sage: from itertools import repeat
     sage: D = algo.arp.substitutions()
     sage: it = algo.arp.coding_iterator((1,e,pi))
     sage: words.s_adic(it, repeat(1), D)
@@ -57,6 +58,7 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
 
         EXAMPLES::
 
+            sage: from slabbe.mcf import algo
             sage: algo.arrevert.plot_invariant_measure(1000000, 80) # not tested
             Creation du fichier mesure_arrevert_iter1000000_div80.png
             sage: algo.brun.plot_invariant_measure(1000000, 40, norm='sup')
@@ -91,6 +93,7 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
 
         EXAMPLES::
 
+            sage: from slabbe.mcf import algo
             sage: algo.arrevert.plot_invariant_measure_inverse(1000000, 80) # not tested
             Creation du fichier mesure_arrevert_iter1000000_div80.png
 
@@ -143,7 +146,9 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
 
         EXAMPLES::
 
-            sage: algo.arp.plot_natural_extension(1000)
+            sage: from slabbe.mcf import algo
+            sage: algo.sorted_arp.plot_natural_extension(1000)
+            Creation du fichier nat_ext_sorted_arp_iter1000.png
         """
         import matplotlib
         import matplotlib.pyplot as plt
@@ -182,22 +187,24 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         print "Creation du fichier %s" % filename
 
     def tikz_natural_extension(self, n_iterations, norm_left='1',
-            norm_right='1'):
+            norm_right='1', marksize=0.2, legend_marksize=2):
         r"""
 
         INPUT:
 
-        - ``n_iterations`` - integer, number of iterations
+        - ``n_iterations`` -- integer, number of iterations
         - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
         - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
+        - ``marksize`` -- tikz marksize (default:``0.2``)
+        - ``legend_marksize`` -- tikz legend marksize (default:``2``)
 
         EXAMPLES::
 
             sage: from slabbe.mcf import algo
             sage: s = algo.brun.tikz_natural_extension(1000)
-            sage: view(s, tightpage=True)
+            sage: view(s, tightpage=True)   # not tested
         """
 
         t = self.natural_extension(n_iterations, norm_left=norm_left,
@@ -223,7 +230,11 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
                   "(axis cs:%s, %s)" % (0, r)             +
                   " node[above] {$\\mathbf{e}_3$} -- cycle;\n")
             for key,value in data.iteritems():
-                s += "\\addplot+[only marks,mark=*,mark options={color=%s}] " % color_dict[key]
+                s += "\\addplot+["
+                s += "legend image post style={mark size=%s}," % legend_marksize
+                s += "only marks,mark=*,"
+                s += "mark size=%s," % marksize
+                s += "mark options={color=%s}] " % color_dict[key]
                 s += "coordinates {%s};\n" % '\n'.join(map(str, value))
                 s += "\\addlegendentry{%s}\n " % key
         s += "\\end{groupplot}\n"
@@ -258,11 +269,20 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
 
             sage: from slabbe.mcf import algo
             sage: s = algo.arp.tikz_natural_extension_part(1000, part=3)
-            sage: view(s, tightpage=True)
+            sage: view(s, tightpage=True)    # not tested
 
         also ::
 
             sage: s = algo.arp.tikz_natural_extension_part(1000, part=3, marksize='.2pt', limit_nb_points=1200, verbose=True)
+            Taking ... points for key 32
+            Taking ... points for key 1
+            Taking ... points for key 2
+            Taking ... points for key 3
+            Taking ... points for key 12
+            Taking ... points for key 13
+            Taking ... points for key 21
+            Taking ... points for key 23
+            Taking ... points for key 31
         """
         t = self.natural_extension(n_iterations, norm_left=norm_left,
                 norm_right=norm_right)
@@ -347,21 +367,21 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
 
         BENCHMARK:
 
-        A minute for a picture with 10^7 points::
+        A minute (1min 13s) for a picture with 10^7 points::
 
+            sage: from slabbe.mcf import algo
             sage: c = {}
             sage: c[1] = c[2] = c[3] = [0,0,0]
             sage: c[12] = c[13] = c[23] = c[21] = c[31] = c[32] = [255,0,0]
             sage: b = [1,2,3,12,13,21,23,31,32]
-            sage: %time P=algo.arp.png_natural_extension_part(10^7, draw='image_right', 
-                    branch_order=b, color_dict=c, urange=(-.6,.6), vrange=(-.6,.6))  # not tested
-            Wall time: 1min 13s
+            sage: P = algo.arp.png_natural_extension_part(10^7, draw='image_right',  # not tested
+            ....:   branch_order=b, color_dict=c, urange=(-.6,.6), vrange=(-.6,.6))  # not tested
 
-        Half a minute for a picture zoomed in the orbit of 10^8 points::
+        Half a minute (27s) for a picture zoomed in the orbit of 10^8
+        points::
 
-            sage: %time P=algo.arp.png_natural_extension_part(10^8, draw='image_right', 
-                    branch_order=b, color_dict=c, urange=(.2,.3), vrange=(.2,.3))   # not tested
-            Wall time: 27 s
+            sage: P = algo.arp.png_natural_extension_part(10^8, draw='image_right', # not tested
+            ....:   branch_order=b, color_dict=c, urange=(.2,.3), vrange=(.2,.3))   # not tested
 
         EXAMPLES::
 
@@ -371,10 +391,11 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
             sage: c[12] = c[13] = c[23] = c[21] = c[31] = c[32] = [255,0,0]
             sage: b = [1,2,3,12,13,21,23,31,32]
             sage: opt = dict(urange=(-.6,.6), vrange=(-.6,.6), color_dict=c, branch_order=b)
-            sage: algo.arp.png_natural_extension_part(10^5, draw='domain_left', **opt)
-            sage: algo.arp.png_natural_extension_part(10^5, draw='domain_right', **opt)
-            sage: algo.arp.png_natural_extension_part(10^5, draw='image_left', **opt)
-            sage: algo.arp.png_natural_extension_part(10^5, draw='image_right', **opt)
+            sage: P = algo.arp.png_natural_extension_part(10^5, draw='domain_left', **opt)
+            sage: P = algo.arp.png_natural_extension_part(10^5, draw='domain_right', **opt)
+            sage: P = algo.arp.png_natural_extension_part(10^5, draw='image_left', **opt)
+            sage: P = algo.arp.png_natural_extension_part(10^5, draw='image_right', **opt)
+            sage: P.show() # not tested
 
         """
         L = self.orbit_filtered_list(n_iterations,
@@ -424,7 +445,7 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
             raise ValueError("Unkown value for draw(={})".format(draw))
 
         img = smp.toimage( data )       # Create a PIL image
-        img.show()                      # View in default viewer
+        #img.show()                      # View in default viewer
         return img
 
     def measure_evalution(self, n_iterations, draw,
@@ -436,7 +457,6 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
                                 ndivs=1024,
                                 verbose=False):
         r"""
-        Return a png or some part of an orbit in the natural extension.
 
         INPUT:
 
@@ -464,23 +484,18 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         - ``ndivs`` -- int (default: ``1024``), number of pixels
         - ``verbose`` -- string (default: ``False``)
 
-
         BENCHMARK::
 
             sage: from slabbe.mcf import algo
             sage: opt = dict(urange=(-.15,.25), vrange=(-.05,.05))
-            sage: algo.arp.measure_evalution(10^8, draw='right', ndivs=100, **opt)
-            4354 100 0.4354
-            2177/5000
-            sage: algo.arp.measure_evalution(10^8, draw='right', ndivs=1000, **opt)
-            357817 1000 0.357817
-            357817/1000000
-            sage: algo.arp.measure_evalution(10^8, draw='right', ndivs=2000, **opt)
-            1173597 2000 0.29339925
-            1173597/4000000
-            sage: algo.arp.measure_evalution(10^8, draw='right', ndivs=4000, **opt)
-            2839517 4000 0.1774698125
-            2839517/16000000
+            sage: algo.arp.measure_evalution(10^8, draw='right', ndivs=100, **opt) # optional long
+            0.435...
+            sage: algo.arp.measure_evalution(10^8, draw='right', ndivs=1000, **opt) # optional long
+            0.357...
+            sage: algo.arp.measure_evalution(10^8, draw='right', ndivs=2000, **opt) # optional long
+            0.293...
+            sage: algo.arp.measure_evalution(10^8, draw='right', ndivs=4000, **opt) # optional long
+            0.177...
 
         """
         L = self.orbit_filtered_list(n_iterations,
@@ -517,7 +532,14 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
 
         EXAMPLES::
 
-            sage: algo.brun.sample_lyapounov_exponent(10, 100000)
+            sage: from slabbe.mcf import algo
+            sage: T1, T2, U = algo.brun.sample_lyapounov_exponent(10, 100000)
+            sage: T1[0]
+            0.303680940345907
+            sage: T2[0]
+            -0.1119022164698561 
+            sage: U[0]
+            1.3684861366090153
 
         """
         Theta1 = []
@@ -545,7 +567,8 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
 
         EXAMPLES::
 
-            sage: algo.brun.table_lyapounov_exponent(10, 100000)
+            sage: from slabbe.mcf import algo
+            sage: algo.sorted_brun.table_lyapounov_exponent(10, 100000)
             n          | 10
             iterations | 100000
             min        | -0.369748622574
@@ -568,8 +591,9 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         
         EXAMPLES::
 
-            sage: algo.armonteil.plot_dual_domain()
-            Creation du fichier transposed_mat_armonteil.png
+            sage: from slabbe.mcf import algo
+            sage: algo.sorted_armonteil.plot_dual_domain()
+            Graphics object consisting of 18 graphics primitives
         """
         from sage.plot.point import point2d
         from sage.plot.colors import hue
@@ -608,6 +632,7 @@ class Algo(object):
     sorted_meester = MCFAlgorithm('sorted_meester')
     sorted_poincare = MCFAlgorithm('sorted_poincare')
     sorted_arnouxrauzy = MCFAlgorithm('sorted_arnouxrauzy')
+    sorted_armonteil = MCFAlgorithm('sorted_armonteil')
     brun = MCFAlgorithm('brun')
     brunmulti = MCFAlgorithm('brunmulti')
     selmer = MCFAlgorithm('selmer')
@@ -617,7 +642,6 @@ class Algo(object):
     arpmulti = MCFAlgorithm('arpmulti')
     arrevert = MCFAlgorithm('arrevert')
     arrevertmulti = MCFAlgorithm('arrevertmulti')
-    armonteil = MCFAlgorithm('armonteil')
     delaunay = MCFAlgorithm('delaunay')
     jacobi = MCFAlgorithm('jacobi')
     jacobiadditif = MCFAlgorithm('jacobiadditif')
@@ -626,7 +650,7 @@ class Algo(object):
         L = [   self.brun,
                 self.brunmulti,     self.selmer,    self.meester,
                 self.poincare,      self.arp,       self.arpmulti, self.arrevert,
-                self.arrevertmulti, self.armonteil, self.jacobi,
+                self.arrevertmulti, self.sorted_armonteil, self.jacobi,
                 self.jacobiadditif, self.jacobiadditifv2]
         return iter(L)
 algo = Algo()

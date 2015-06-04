@@ -4,12 +4,14 @@ Billiard words
 
 EXAMPLES::
 
+    sage: from slabbe import BilliardCube
     sage: b = BilliardCube((1,pi,sqrt(2)))
     sage: b
     Cubic billiard of direction (1, pi, sqrt(2))
 
 TODO:
 
+    - Rewrite some parts in cython because it is slow
     - Should handle any direction
     - Should use Forest structure for enumeration
     - Should use +e_i only for children
@@ -52,6 +54,7 @@ class BilliardCube(Intersection):
 
     EXAMPLES::
 
+        sage: from slabbe import BilliardCube
         sage: b = BilliardCube((1,pi,sqrt(2)))
         sage: b
         Cubic billiard of direction (1, pi, sqrt(2))
@@ -93,6 +96,7 @@ class BilliardCube(Intersection):
         r"""
         EXAMPLES::
 
+            sage: from slabbe import BilliardCube
             sage: b = BilliardCube((1,pi,sqrt(2)))
             sage: b
             Cubic billiard of direction (1, pi, sqrt(2))
@@ -122,6 +126,7 @@ class BilliardCube(Intersection):
         r"""
         EXAMPLES::
         
+            sage: from slabbe import BilliardCube
             sage: b = BilliardCube((1,pi,sqrt(2)))
             sage: b
             Cubic billiard of direction (1, pi, sqrt(2))
@@ -134,6 +139,7 @@ class BilliardCube(Intersection):
 
         EXAMPLES::
 
+            sage: from slabbe import BilliardCube
             sage: b = BilliardCube((1,pi,sqrt(2)))
             sage: b.an_element()
             (0, 0, 0)
@@ -148,13 +154,14 @@ class BilliardCube(Intersection):
 
         This method overwrites the methods
         :meth:`slabbe.discrete_subset.DiscreteSubset.children`, because for
-        billiard words, we go only in one direction is each axis.
+        billiard words, we go only in one direction in each axis.
 
         EXAMPLES::
 
-            sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
-            sage: list(p.children(vector((0,0,0))))
-            [(1, 0, 0), (0, 1, 0), (0, 0, 1)]
+            sage: from slabbe import BilliardCube
+            sage: b = BilliardCube((1,pi,sqrt(2)))
+            sage: list(b.children(vector((0,0,0))))
+            [(0, 1, 0)]
         """
         for v in self.base_edges():
             u = p+v
@@ -167,7 +174,7 @@ class BilliardCube(Intersection):
 
         This method overwrites the methods
         :meth:`slabbe.discrete_subset.DiscreteSubset.connected_component_iterator`,
-        because for billiard words, we go only in one direction is each
+        because for billiard words, we go only in one direction in each
         axis which allows to use a forest structure for the enumeration.
 
         INPUT:
@@ -176,6 +183,7 @@ class BilliardCube(Intersection):
 
         EXAMPLES::
 
+            sage: from slabbe import BilliardCube
             sage: p = BilliardCube([1,pi,sqrt(7)])
             sage: root = vector((0,0,0))
             sage: root.set_immutable()
@@ -208,6 +216,7 @@ class BilliardCube(Intersection):
 
         EXAMPLES::
 
+            sage: from slabbe import BilliardCube
             sage: b = BilliardCube((1,pi,sqrt(2)))
             sage: it = b.step_iterator()
             sage: [next(it) for _ in range(5)]
@@ -217,6 +226,7 @@ class BilliardCube(Intersection):
 
         Fix this::
 
+            sage: from slabbe import BilliardCube
             sage: B = BilliardCube((1.1,2.2,3.3))
             sage: B.to_word()
             Traceback (most recent call last):
@@ -245,6 +255,7 @@ class BilliardCube(Intersection):
 
         EXAMPLES::
 
+            sage: from slabbe import BilliardCube
             sage: b = BilliardCube((1,pi,sqrt(2)))
             sage: b.to_word()
             word: 2321232212322312232123221322231223212322...
