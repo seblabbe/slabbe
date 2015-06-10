@@ -94,6 +94,7 @@ class ChristoffelGraph(DiscreteSubset):
 
     This was once a bug. We make sure it is fixed::
 
+        sage: from slabbe import DiscreteSubset
         sage: C = ChristoffelGraph((2,3,5))
         sage: isinstance(C, DiscreteSubset)
         True

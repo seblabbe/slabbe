@@ -495,6 +495,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteSubset
             sage: p = DiscreteSubset(3)
             sage: root = vector((0,0,0))
             sage: root.set_immutable()
@@ -559,6 +560,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteSubset
             sage: p = DiscreteSubset(3)
             sage: root = vector((0,0,0))
             sage: root.set_immutable()
@@ -675,6 +677,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteSubset
             sage: d = DiscreteSubset(3)
             sage: d.projection_matrix(vector((2,3,4))) # tolerance 0.00001
             [  1.00000000000000  0.000000000000000 -0.500000000000000]
@@ -734,6 +737,7 @@ class DiscreteSubset(SageObject):
 
         A 2d plot of a 2d object::
 
+            sage: from slabbe import DiscreteSubset, DiscreteBox
             sage: D = DiscreteSubset(2)
             sage: box = DiscreteBox([-5,5],[-5,5])
             sage: I = D & box
@@ -822,6 +826,7 @@ class DiscreteSubset(SageObject):
 
         A 2d plot of a 2d object::
 
+            sage: from slabbe import DiscreteSubset, DiscreteBox
             sage: D = DiscreteSubset(2)
             sage: box = DiscreteBox([-5,5],[-5,5])
             sage: I = D & box
@@ -865,6 +870,7 @@ class DiscreteSubset(SageObject):
 
         TESTS::
 
+            sage: from slabbe import DiscreteBox
             sage: box = DiscreteBox([-5,5],[-5,5])
             sage: box.plot_cubes() # optional long
             Traceback (most recent call last):
@@ -893,6 +899,7 @@ class DiscreteSubset(SageObject):
 
         2d example::
 
+            sage: from slabbe import DiscreteBox
             sage: box = DiscreteBox([-5,5],[-5,5])
             sage: box.plot() # optional long
 
@@ -979,6 +986,7 @@ class DiscreteSubset(SageObject):
 
         2d example::
 
+            sage: from slabbe import DiscreteSubset
             sage: d = DiscreteSubset(2)
             sage: d.tikz_axes()
             %the axes
@@ -1119,6 +1127,7 @@ class DiscreteSubset(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteBox
             sage: p = DiscreteBox([0,3], [0,3], [0,3])
             sage: s = p.tikz_points()
             sage: lines = s.splitlines()
@@ -1603,6 +1612,7 @@ class DiscreteBox(DiscreteSubset):
 
     EXAMPLES::
 
+        sage: from slabbe import DiscreteBox
         sage: DiscreteBox([-5,5],[-5,5])
         Box: [-5, 5] x [-5, 5]
 
@@ -1625,6 +1635,7 @@ class DiscreteBox(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteBox
             sage: DiscreteBox([2,10],[3,4])
             Box: [2, 10] x [3, 4]
 
@@ -1642,6 +1653,7 @@ class DiscreteBox(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteBox
             sage: str(DiscreteBox([2,10],[3,4]))
             '[2, 10] x [3, 4]'
             sage: str(DiscreteBox([-5,5], [-5,5], [-1,3]))
@@ -1656,6 +1668,7 @@ class DiscreteBox(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteBox
             sage: DiscreteBox([-5,5])
             Box: [-5, 5]
             sage: DiscreteBox([-5,5], [-5,5])
@@ -1675,6 +1688,7 @@ class DiscreteBox(DiscreteSubset):
 
         EXAMPLES::
 
+            sage: from slabbe import DiscreteBox
             sage: box = DiscreteBox([-6,6],[-6,6])
             sage: box
             Box: [-6, 6] x [-6, 6]

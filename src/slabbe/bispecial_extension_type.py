@@ -1481,18 +1481,18 @@ class ExtensionType2to1(ExtensionType):
                23            X
              m(w)=0, ordinary, empty,)
             sage: sorted(E.apply(b23)[0].apply(b31))
-            [  E(1w)   1   2   3
-                 1     X   X   X
-                 3     X   X   X
-                23             X
-              m(w)=2, not ord.,
-               E(w)   1   2   3
+            [  E(w)   1   2   3
                 11    X   X   X
                 31    X   X   X
                 12            X
                 13    X
                 23    X
-              m(w)=0, not ord., empty]
+              m(w)=0, not ord., empty,
+              E(1w)   1   2   3
+                 1     X   X   X
+                 3     X   X   X
+                23             X
+              m(w)=2, not ord.]
 
         EXAMPLES:
 
@@ -1511,13 +1511,13 @@ class ExtensionType2to1(ExtensionType):
              m(w)=0, not ord., empty
             sage: b12 = WordMorphism({1:[1,2],2:[2],3:[3]})
             sage: sorted(E.apply(b12))
-            [  E(2w)   1   2   3
+            [   E(2w)   1   2   3
                 21         X
                 31         X
                 12     X   X   X
                 22     X
               m(w)=0, ordinary,
-               E(w)   1   2   3
+              E(w)   1   2   3
                 21        X
                 31        X
                 12        X
@@ -1550,14 +1550,14 @@ class ExtensionType2to1(ExtensionType):
                 23    X   X   X
                 33    X
               m(w)=0, not ord., empty,
+               E(23w)   1   2   3
+                 31     X   X   X
+                 23     X
+              m(w)=0, ordinary,
                E(3w)   1   2   3
                 12     X   X   X
                 32     X
                 23     X
-              m(w)=0, ordinary,
-               E(23w)   1   2   3
-                 31     X   X   X
-                 23     X
               m(w)=0, ordinary]
 
         """

@@ -74,6 +74,7 @@ Double Square tile from the boundary word of a known double square::
 
 ::
 
+    sage: from slabbe import christoffel_tile
     sage: DoubleSquare(christoffel_tile(4,7))
     Double Square Tile
       w0 = 03                          w4 = 21
@@ -253,6 +254,7 @@ class DoubleSquare(SageObject):
 
     ::
 
+        sage: from slabbe import christoffel_tile
         sage: DoubleSquare(christoffel_tile(9,7))
         Double Square Tile
           w0 = 03                        w4 = 21
@@ -318,7 +320,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
-            sage: from slabbe import DoubleSquare
+            sage: from slabbe import DoubleSquare, christoffel_tile
             sage: D = DoubleSquare(christoffel_tile(5,6))
             sage: D
             Double Square Tile
@@ -1189,6 +1191,7 @@ class DoubleSquare(SageObject):
 
         ::
 
+            sage: from slabbe import christoffel_tile
             sage: D = DoubleSquare(christoffel_tile(9,7))
             sage: D.reduction()
             ['TRIM_2', 'TRIM_1', 'TRIM_1', 'TRIM_1', 'TRIM_0', 'TRIM_2', 'TRIM_2']
@@ -1208,7 +1211,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
-            sage: from slabbe import DoubleSquare
+            sage: from slabbe import DoubleSquare, christoffel_tile
             sage: D = DoubleSquare(christoffel_tile(9,7))
             sage: D.apply_reduction()
             Double Square Tile
@@ -1931,6 +1934,7 @@ def find_square_factorisation(ds, factorisation=None, alternate=True):
 
     ::
 
+        sage: from slabbe import christoffel_tile
         sage: find_square_factorisation(christoffel_tile(4,5))
         (0, 7, 28, 35)
         sage: find_square_factorisation(christoffel_tile(4,5),_)
@@ -2315,6 +2319,7 @@ def triple_square_example(i):
     Provençal can not be the boundary word of a tile. One can see it by
     ploting it or by the fact that the turning number is zero::
 
+        sage: from slabbe import DoubleSquare
         sage: D = DoubleSquare(triple_square_example(1))
         sage: D
         Double Square Tile
