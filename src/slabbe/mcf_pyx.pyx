@@ -579,15 +579,15 @@ cdef class MCFAlgorithm_pyx(object):
         EXAMPLES::
 
             sage: from slabbe.mcf import algo
-            sage: D = algo.brun.invariant_measure_dict(4, 10, verbose=True)
-            0.102209671626 0.241453007005 0.656337321369
-            1 2 6
-            0.134744020568 0.318309886184 0.546946093248
-            1 3 5
-            0.197661690901 0.335396102174 0.466942206924
-            1 3 4
-            0.197931587793 0.297412777066 0.504655635141
-            1 2 5
+            sage: D = algo.brun.invariant_measure_dict(4, 10, verbose=True) # random
+            0.0799404500357 0.199341464229 0.720718085735
+            0 1
+            0.0998433745026 0.248971884172 0.651184741325
+            0 2
+            0.132942259282 0.331508073966 0.535549666752
+            1 3
+            0.198868907918 0.495904379777 0.305226712305
+            1 4
 
         ::
 
@@ -814,23 +814,18 @@ cdef class MCFAlgorithm_pyx(object):
         Some benchmarks (on my machine)::
 
             sage: from slabbe.mcf import algo
-            sage: algo.brun.lyapounov_exponents(1000000)  # 68.6 ms
+            sage: algo.brun.lyapounov_exponents(1000000)  # 68.6 ms # tolerance 0.003
             (0.3049429393152174, -0.1120652699014143, -0.367495867105725)
 
         Cython code on liafa is as fast as C on my machine::
 
-            sage: algo.brun.lyapounov_exponents(67000000)    # 3.71s
+            sage: algo.brun.lyapounov_exponents(67000000)    # 3.71s # tolerance 0.001
             (0.30452120021265766, -0.11212586210856369, -0.36820379674801734)
 
         Cython code on my machine is almost as fast as C on my machine::
 
-            sage: algo.brun.lyapounov_exponents(67000000) # 4.58 s
+            sage: algo.brun.lyapounov_exponents(67000000) # 4.58 s # tolerance 0.001
             (0.30456433843239084, -0.1121770192467067, -0.36831961293987303)
-
-        It is even faster using struct and an outside function::
-
-            sage: algo.brun.lyapounov_exponents_lazy(67000000) # 3.86 s
-            (0.3044828923859014, -0.11213201206117002, -0.36827031949977)
 
         """
         cdef double theta1=0, theta2=0    # values of Lyapunov exponents
@@ -923,14 +918,16 @@ cdef class MCFAlgorithm_pyx(object):
         r"""
         Return the dual domain of each branch.
 
+        Note: The code currently assumes the algo is a sorted version.
+
         EXAMPLES::
 
             sage: from slabbe.mcf import algo
-            sage: algo.brun.dual_domain()
+            sage: algo.sorted_brun.dual_domain()
             {100: [(1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.5, 0.5)],
              102: [(1.0, 0.0, 0.0), (0.0, 0.0, 1.0), (0.0, 0.5, 0.5)],
              106: [(0.0, 1.0, 0.0), (0.0, 0.0, 1.0), (0.5, 0.0, 0.5)]}
-            sage: algo.arp.dual_domain()
+            sage: algo.sorted_arp.dual_domain()
             {100: [(1.0, 0.0, 0.0),
               (0.0, 1.0, 0.0),
               (0.3333333333333333, 0.3333333333333333, 0.3333333333333333)],
@@ -1004,16 +1001,16 @@ cpdef inline PairPoint3d Algo_switch(PairPoint3d P, Algorithm algo):
     EXAMPLES::
 
         sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
-        sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
+        sage: D = {'x':.3,'y':.4,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
         sage: E = Algo_switch(D, algo_name_to_algo_id['brun'])
         sage: sorted(E.iteritems())
-        [('branch', 999),
-         ('u', 0.0),
-         ('v', 0.0),
-         ('w', 0.0),
-         ('x', 0.0),
-         ('y', 0.0),
-         ('z', 0.0)]
+        [('branch', 123),
+         ('u', 0.2),
+         ('v', 0.6),
+         ('w', 0.3),
+         ('x', 0.3),
+         ('y', 0.4),
+         ('z', 0.4)]
 
     ::
 
@@ -1217,9 +1214,21 @@ cdef inline PairPoint3d ArnouxRauzy(PairPoint3d P):
         sage: from slabbe.mcf_pyx import Algo_switch, algo_name_to_algo_id
         sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
         sage: E = Algo_switch(D, algo_name_to_algo_id['arnouxrauzy'])
+        Error: arnoux rauzy not defined on input:
+        {'branch': 999, 'u': 0.2, 'w': 0.3, 'v': 0.3, 'y': 0.6, 'x': 0.3, 'z': 0.8}
+
+    :: 
+
+        sage: D = {'x':.3,'y':.2,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
+        sage: E = Algo_switch(D, algo_name_to_algo_id['arnouxrauzy'])
         sage: sorted(E.iteritems())
-        Exception ValueError: ValueError('arnoux rauzy not defined',) in
-        '_Users_slabbe_GitHgSvn_slabbe_0_1_src_
+        [('branch', 3),
+         ('u', 0.5),
+         ('v', 0.6),
+         ('w', 0.3),
+         ('x', 0.3),
+         ('y', 0.2),
+         ('z', 0.30000000000000004)]
     """
     if P.x + P.y < P.z:
         P.z -= P.x + P.y
@@ -1240,7 +1249,7 @@ cdef inline PairPoint3d ArnouxRauzy(PairPoint3d P):
         P.branch = 1
         return P
     else:
-        raise ValueError("arnoux rauzy not defined")
+        print ("Error: arnoux rauzy not defined on input:\n%s"%P)
 
 cdef inline PairPoint3d Poincare(PairPoint3d P):
     r"""

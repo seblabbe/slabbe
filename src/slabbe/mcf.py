@@ -5,8 +5,8 @@ Multidimensional Continued Fraction Algorithms
 EXAMPLES::
 
     sage: from slabbe.mcf import algo
-    sage: algo.brun.plot_natural_extension(3000, norm_left='1', axis_off=True)
-    Creation du fichier nat_ext_brun_iter3000.png
+    sage: algo.brun.plot_natural_extension(3000, norm_left='1', axis_off=True, savefig=False)
+    <matplotlib.figure.Figure object at ...>
 
 ::
 
@@ -45,7 +45,8 @@ PGF_COLORS = ["red", "green", "blue", "cyan", "brown", "gray", "orange", "pink",
 "lime", "olive", "magenta", "purple", "teal", "violet"]
 
 class MCFAlgorithm(MCFAlgorithm_pyx):
-    def plot_invariant_measure(self, n_iterations, ndivs, norm='sup'):
+    def plot_invariant_measure(self, n_iterations, ndivs, norm='sup',
+            savefig=True):
         r"""
         Return a matplotlib graph of the invariant measure.
 
@@ -55,14 +56,15 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         - ``ndvis`` - integer, number of divisions per dimension
         - ``norm`` -- string (default: ``'sup'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
+        - ``savefig`` - boolean (defautl: ``True``)
 
         EXAMPLES::
 
             sage: from slabbe.mcf import algo
-            sage: algo.arrevert.plot_invariant_measure(1000000, 80) # not tested
-            Creation du fichier mesure_arrevert_iter1000000_div80.png
-            sage: algo.brun.plot_invariant_measure(1000000, 40, norm='sup')
-            Creation du fichier mesure_brun_iter1000000_div40.png
+            sage: algo.arrevert.plot_invariant_measure(1000000, 80, savefig=False)
+            <matplotlib.figure.Figure object at ...>
+            sage: algo.brun.plot_invariant_measure(1000000, 40, norm='sup',savefig=False)
+            <matplotlib.figure.Figure object at ...>
 
         """
         D = self.invariant_measure_dict(n_iterations, ndivs, norm=norm)
@@ -77,10 +79,14 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         title = "Algo=%s, nbiter=%s, ndivs=%s" % (self.name(), n_iterations, ndivs)
         filename = 'mesure_%s_iter%s_div%s.png' % (self.name(), n_iterations, ndivs)
 
-        self._plot_wideframe(X,Y,Z,title,filename)
+        fig = self._plot_wideframe(X,Y,Z,title)
+        if savefig:
+            fig.savefig(filename)
+            print "Creation du fichier %s" % filename
+        return fig
 
-
-    def plot_invariant_measure_inverse(self, n_iterations, ndivs, norm='sup'):
+    def plot_invariant_measure_inverse(self, n_iterations, ndivs,
+            norm='sup', savefig=True):
         r"""
         Return a matplotlib graph of the inverse of the invariant measure.
 
@@ -90,12 +96,13 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         - ``ndvis`` - integer, number of divisions per dimension
         - ``norm`` -- string (default: ``'sup'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
+        - ``savefig`` - boolean (defautl: ``True``)
 
         EXAMPLES::
 
             sage: from slabbe.mcf import algo
-            sage: algo.arrevert.plot_invariant_measure_inverse(1000000, 80) # not tested
-            Creation du fichier mesure_arrevert_iter1000000_div80.png
+            sage: algo.arrevert.plot_invariant_measure_inverse(1000000, 80, savefig=False)
+            <matplotlib.figure.Figure object at ...>
 
         """
         D = self.invariant_measure_dict(n_iterations, ndivs, norm=norm)
@@ -112,9 +119,13 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         title = "Algo=%s, nbiter=%s, ndivs=%s" % (self.name(), n_iterations, ndivs)
         filename = 'mesure_inversed_%s_iter%s_div%s.png' % (self.name(), n_iterations, ndivs)
 
-        self._plot_wideframe(X,Y,Z,title,filename)
+        fig = self._plot_wideframe(X,Y,Z,title)
+        if savefig:
+            fig.savefig(filename)
+            print "Creation du fichier %s" % filename
+        return fig
 
-    def _plot_wideframe(self, X,Y,Z, title, filename):
+    def _plot_wideframe(self, X,Y,Z, title):
         r"""
         EXAMPLES::
         """
@@ -129,11 +140,10 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         ax.set_zlabel('Z')
 
         ax.set_title(title)
-        plt.savefig(filename)
-        print "Creation du fichier %s" % filename
+        return fig
 
     def plot_natural_extension(self, n_iterations, norm_left='1',
-            norm_right='1', axis_off=False):
+            norm_right='1', axis_off=False, savefig=True):
         r"""
         INPUT:
 
@@ -142,13 +152,14 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
           ``'1'``, the norm used for the orbit points
         - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
-        - ``axis_off`` - boolean, 
+        - ``axis_off`` - boolean (defautl: ``False``), 
+        - ``savefig`` - boolean (defautl: ``True``)
 
         EXAMPLES::
 
             sage: from slabbe.mcf import algo
-            sage: algo.sorted_arp.plot_natural_extension(1000)
-            Creation du fichier nat_ext_sorted_arp_iter1000.png
+            sage: algo.sorted_arp.plot_natural_extension(1000, savefig=False)
+            <matplotlib.figure.Figure object at ...>
         """
         import matplotlib
         import matplotlib.pyplot as plt
@@ -181,10 +192,12 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
 
         title = "Algo=%s, nbiter=%s" % (self.name(), n_iterations)
         fig.suptitle(title)
-        filename = 'nat_ext_%s_iter%s.png' % (self.name(), n_iterations)
-        plt.savefig(filename)
-        #plt.subplots_adjust(left=0.02, bottom=0.06, right=0.95, top=0.94, wspace=0.05)
-        print "Creation du fichier %s" % filename
+        if savefig:
+            filename = 'nat_ext_%s_iter%s.png' % (self.name(), n_iterations)
+            fig.savefig(filename)
+            #plt.subplots_adjust(left=0.02, bottom=0.06, right=0.95, top=0.94, wspace=0.05)
+            print "Creation du fichier %s" % filename 
+        return fig
 
     def tikz_natural_extension(self, n_iterations, norm_left='1',
             norm_right='1', marksize=0.2, legend_marksize=2):
@@ -568,24 +581,24 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
         EXAMPLES::
 
             sage: from slabbe.mcf import algo
-            sage: algo.sorted_brun.table_lyapounov_exponent(10, 100000)
+            sage: algo.sorted_brun.table_lyapounov_exponent(10, 100000) # abs tol 0.005
             n          | 10
             iterations | 100000
-            min        | -0.369748622574
-            mean       | -0.367620100939
-            max        | -0.364250082762
+            min        | 1.364250082762
+            mean       | 1.367620100939
+            max        | 1.369748622574
             std        | 0.00155230985651
 
         """
-        L = self.sample_lyapounov_exponent(ntimes, n_iterations)
+        T1, T2, U = self.sample_lyapounov_exponent(ntimes, n_iterations)
         import numpy as np
-        a = np.array(L)
+        a = np.array(U)
         header = ['n', 'iterations', 'min','mean','max','std']
         cols = (ntimes, n_iterations, a.min(), a.mean(), a.max(), a.std()),
         t = table(columns=cols,header_column=header)
         return t
 
-    def plot_dual_domain(self, savefile=False):
+    def plot_dual_domain(self, savefig=False):
         r"""
         Return a plot of the dual domain
         
@@ -616,7 +629,7 @@ class MCFAlgorithm(MCFAlgorithm_pyx):
             center = sum(map(vector, value2d)) / 3
             M = matrix(QQ, value).transpose()
             G += text("%s:\n%s" %(key,M), center, color='black')
-        if savefile:
+        if savefig:
             title = "Transposed matrices of algo=%s" % self.name()
             filename = 'transposed_mat_%s.png' % self.name()
             G.save(filename, title=title)

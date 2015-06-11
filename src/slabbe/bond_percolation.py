@@ -516,12 +516,10 @@ class BondPercolationSample(SageObject):
             sage: S.tikz(2)
             \begin{tikzpicture}
             [inner sep=0pt,thick, 
-             reddot/.style={fill=red,draw=red,circle,minimum
-             size=5pt}]
+             reddot/.style={fill=red,draw=red,circle,minimum size=5pt}]
             \clip (-2.4, -2.4) rectangle (2.4, 2.4);
             \draw (..., ...) -- (..., ...);
             ...
-            \node[reddot] at (..., ...) {};
             \node[circle,fill=none,draw=red,minimum size=0.8cm,ultra thick,inner sep=0pt] at (0,0) {};
             \node[above right] at (0,0) {$(0, 0)$};
             \end{tikzpicture}
