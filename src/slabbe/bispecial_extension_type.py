@@ -1480,8 +1480,8 @@ class ExtensionType2to1(ExtensionType):
                13    X   X   X
                23            X
              m(w)=0, ordinary, empty,)
-            sage: sorted(E.apply(b23)[0].apply(b31))
-            [  E(w)   1   2   3
+            sage: E.apply(b23)[0].apply(b31)
+            (  E(w)   1   2   3
                 11    X   X   X
                 31    X   X   X
                 12            X
@@ -1492,7 +1492,7 @@ class ExtensionType2to1(ExtensionType):
                  1     X   X   X
                  3     X   X   X
                 23             X
-              m(w)=2, not ord.]
+              m(w)=2, not ord.)
 
         EXAMPLES:
 
@@ -1510,26 +1510,26 @@ class ExtensionType2to1(ExtensionType):
                23    X
              m(w)=0, not ord., empty
             sage: b12 = WordMorphism({1:[1,2],2:[2],3:[3]})
-            sage: sorted(E.apply(b12))
-            [   E(2w)   1   2   3
-                21         X
-                31         X
-                12     X   X   X
-                22     X
-              m(w)=0, ordinary,
-              E(w)   1   2   3
+            sage: E.apply(b12)
+            (  E(w)   1   2   3
                 21        X
                 31        X
                 12        X
                 22    X   X   X
                 23    X
-              m(w)=0, not ord., empty]
+              m(w)=0, not ord., empty,
+               E(2w)   1   2   3
+                21         X
+                31         X
+                12     X   X   X
+                22     X
+              m(w)=0, ordinary)
 
         ::
 
             sage: b21 = WordMorphism({1:[1],2:[2,1],3:[3]})
-            sage: sorted(E.apply(b21))
-            [  E(w)   1   2   3
+            sage: E.apply(b21)
+            (  E(w)   1   2   3
                 11        X
                 21    X   X   X
                 31        X
@@ -1540,25 +1540,25 @@ class ExtensionType2to1(ExtensionType):
                 21         X
                 12     X   X   X
                 13         X
-              m(w)=0, ordinary]
+              m(w)=0, ordinary)
             sage: b23 = WordMorphism({1:[1],2:[2,3],3:[3]})
-            sage: sorted(E.apply(b23))
-            [  E(w)   1   2   3
+            sage: E.apply(b23)
+            (  E(23w)   1   2   3
+                 31     X   X   X
+                 23     X
+              m(w)=0, ordinary,
+               E(w)   1   2   3
                 31        X
                 12            X
                 32            X
                 23    X   X   X
                 33    X
               m(w)=0, not ord., empty,
-               E(23w)   1   2   3
-                 31     X   X   X
-                 23     X
-              m(w)=0, ordinary,
                E(3w)   1   2   3
                 12     X   X   X
                 32     X
                 23     X
-              m(w)=0, ordinary]
+              m(w)=0, ordinary)
 
         """
         letters_before, letters_after = self.letters_before_and_after()
