@@ -840,7 +840,7 @@ cdef class MCFAlgorithm(object):
             the code of this method was translated from C to cython. The C
             version is from Vincent Delecroix.
 
-        EXAMPLES::
+        EXAMPLES:
 
         Some benchmarks (on my machine)::
 
