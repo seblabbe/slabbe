@@ -18,8 +18,8 @@ setup(name='slabbe',
         Extension('slabbe.kolakoski_word_pyx',
             sources = [os.path.join('slabbe','kolakoski_word_pyx.pyx')],
             ),
-        Extension('slabbe.mcf_pyx',
-            sources = [os.path.join('slabbe','mcf_pyx.pyx')]),
+        Extension('slabbe.mult_cont_frac',
+            sources = [os.path.join('slabbe','mult_cont_frac.pyx')]),
     ], 
     cmdclass = {'build_ext': build_ext}
 )

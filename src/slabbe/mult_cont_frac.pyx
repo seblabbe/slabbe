@@ -2,27 +2,38 @@
 r"""
 Multidimensional Continued Fraction Algorithms
 
-Gain d'optimisation in Cython:
+EXAMPLES::
 
-    - Declare x,y,z as double instead of list : factor of 4
-    - Faire les calculs dans une boucle : factor of 2
-    - Do not use yield : factor of 10
+    sage: from slabbe.mult_cont_frac import Brun
+    sage: Brun().natural_extension_plot(3000, norm_left='1', axis_off=True, savefig=False)
+    <matplotlib.figure.Figure object at ...>
+
+::
+
+    sage: from slabbe.mult_cont_frac import ARP
+    sage: from itertools import repeat
+    sage: D = ARP().substitutions()
+    sage: it = ARP().coding_iterator((1,e,pi))
+    sage: words.s_adic(it, repeat(1), D)
+    word: 1232323123233231232332312323123232312323...
 
 TODO:
 
-    - reuteneaour, nogueira, autres?
+    - Ajout les algo de reuteneaour, nogueira, autres?
     - make a other class for 2d and and 1d methods
-    - Read [1] and change cpdef int C[NDIVS][NDIVS][NDIVS]
     - faire une fonction max
     - utilise les vecteurs pour les plus grandes dimensions?
     - or avoid creating a new pairpoint R, the copy is already done by
       default
 
-    - Replace method ``natural_extension`` by ``orbit_filtered_list``
+    - Read [1] and change cpdef int C[NDIVS][NDIVS][NDIVS]
+    - Replace method ``natural_extention_dict`` by ``orbit_filtered_list``
     - Use ``orbit_filtered_list`` for ``invariant_measure`` ?
 
     - Essayer d'utiliser @staticmethod pour call pour que ARP puisse
-      apeler Poincare
+      apeler Poincare. Without the cython Error: Cannot call a static
+      method on an instance variable.
+      https://groups.google.com/d/topic/sage-support/DRI_s31D8ks/discussion
 
 Question:
 
@@ -30,6 +41,12 @@ Question:
     - Comment faire un appel de fonction rapide (pour factoriser le code)
 
 [1] https://groups.google.com/forum/?fromgroups=#!topic/sage-devel/NCBmj2KjwEM
+
+Gain d'optimisation in Cython:
+
+    - Declare x,y,z as double instead of list : factor of 4
+    - Faire les calculs dans une boucle : factor of 2
+    - Do not use yield : factor of 10
 
 AUTHORS:
 
@@ -40,7 +57,7 @@ AUTHORS:
 
 """
 #*****************************************************************************
-#       Copyright (C) 2014 Sébastien Labbé <slabqc@gmail.com>
+#       Copyright (C) 2014-2015 Sébastien Labbé <slabqc@gmail.com>
 #
 #  Distributed under the terms of the GNU General Public License version 2 (GPLv2)
 #
@@ -48,14 +65,7 @@ AUTHORS:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-import itertools
-import collections
-from math import log
-from __builtin__ import sum
-from sage.rings.real_mpfr import RealField
-from sage.plot.point import point
 from sage.misc.prandom import random
-from sage.misc.table import table
 
 cdef struct PairPoint3d:
     double x
@@ -68,18 +78,69 @@ cdef struct PairPoint3d:
 
 cdef double SQRT3SUR2 = 0.866025403784439
 
+PGF_COLORS = ["red", "green", "blue", "cyan", "brown", "gray", "orange", "pink",
+"yellow", "black", "white", "darkgray", "lightgray",
+"lime", "olive", "magenta", "purple", "teal", "violet"]
+
 cdef class MCFAlgorithm_pyx(object):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
+        This method must be implemented in the inherited classes.
+
         EXAMPLES::
 
         """
         raise NotImplementedError
+    def substitutions(self):
+        r"""
+        This method must be implemented in the inherited classes.
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: b = Brun()
+            sage: b.substitutions()
+            {12: WordMorphism: 1->12, 2->2, 3->3,
+             13: WordMorphism: 1->13, 2->2, 3->3,
+             21: WordMorphism: 1->1, 2->21, 3->3,
+             23: WordMorphism: 1->1, 2->23, 3->3,
+             31: WordMorphism: 1->1, 2->2, 3->31,
+             32: WordMorphism: 1->1, 2->2, 3->32}
+
+        """
+        raise NotImplementedError
+
+    ######################
+    # METHODS FOR THE USER:
+    ######################
+    def name(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import ARrevert, Brun
+            sage: ARrevert().name()
+            'ARrevert'
+            sage: Brun().name()
+            'Brun'
+        """
+        return self.__class__.__name__
     def __call__(self, PairPoint3d P):
         r"""
         Wrapper for the cdef call method.
 
         EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
+            sage: E = Brun()(D)
+            sage: sorted(E.iteritems())
+            [('branch', 123),
+             ('u', 0.2),
+             ('v', 0.6),
+             ('w', 0.3),
+             ('x', 0.3),
+             ('y', 0.6),
+             ('z', 0.20000000000000007)]
 
         """
         return self.call(P)
@@ -95,7 +156,7 @@ cdef class MCFAlgorithm_pyx(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import ARP, Brun
+            sage: from slabbe.mult_cont_frac import ARP, Brun
             sage: t = ARP().check_definition(10000)
             sage: t = Brun().check_definition(10000)
 
@@ -127,13 +188,6 @@ cdef class MCFAlgorithm_pyx(object):
 
         return True
 
-    def substitutions(self):
-        r"""
-        EXAMPLES::
-
-        """
-        raise NotImplementedError
-
     def coding_iterator(self, pt):
         r"""
         INPUT:
@@ -146,7 +200,7 @@ cdef class MCFAlgorithm_pyx(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import ARP
+            sage: from slabbe.mult_cont_frac import ARP
             sage: it = ARP().coding_iterator((1,e,pi))
             sage: [next(it) for _ in range(20)]
             [23, 2, 1, 23, 1, 31, 3, 3, 3, 3, 23, 1, 1, 1, 31, 2, 21, 2, 3, 12]
@@ -187,7 +241,7 @@ cdef class MCFAlgorithm_pyx(object):
 
             This iterator is 10x slower because of the yield statement. So
             avoid using this when writing fast code. Just copy paste the
-            loop...
+            loop or use orbit_list or orbit_filtered_list method.
 
         OUTPUT:
 
@@ -195,10 +249,12 @@ cdef class MCFAlgorithm_pyx(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Brun
+            sage: from slabbe.mult_cont_frac import Brun
             sage: it = Brun().orbit_iterator((.414578,.571324,.65513))
             sage: for _ in range(4): next(it)
-            ((0.7256442929056017, 1.0, 0.14668734378391243), (0.25, 0.5, 0.25), 123)
+            ((0.7256442929056017, 1.0, 0.14668734378391243), 
+             (0.25, 0.5, 0.25), 
+             123)
             ((1.0, 0.37808566783572695, 0.20214772612150184),
              (0.5, 0.3333333333333333, 0.16666666666666666),
              312)
@@ -206,6 +262,24 @@ cdef class MCFAlgorithm_pyx(object):
              (0.3333333333333333, 0.5555555555555555, 0.1111111111111111),
              321)
             ((0.6449032192209051, 1.0, 0.534661171576946),
+             (0.25, 0.6666666666666666, 0.08333333333333333),
+             321)
+
+        ::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: it = Brun().orbit_iterator((.414578,.571324,.65513), norm_left='1')
+            sage: for _ in range(4): next(it)
+            ((0.3875618393056797, 0.5340934161472103, 0.07834474454711005),
+             (0.25, 0.5, 0.25),
+             123)
+             ((0.6328179140018012, 0.23925938363378257, 0.12792270236441622),
+             (0.5, 0.3333333333333333, 0.16666666666666666),
+             312)
+            ((0.5173360300491189, 0.3145084914443481, 0.16815547850653312),
+             (0.3333333333333333, 0.5555555555555555, 0.1111111111111111),
+             321)
+            ((0.2958862889959549, 0.45880727553726447, 0.24530643546678058),
              (0.25, 0.6666666666666666, 0.08333333333333333),
              321)
 
@@ -269,13 +343,26 @@ cdef class MCFAlgorithm_pyx(object):
 
         BENCHMARK:
 
-        It could be 10 times faster...::
+        It could be 10 times faster because 10^6 iterations can be done in
+        about 60ms on this machine. But for drawing images, it does not
+        matter to be 10 times slower::
 
             sage: %time L = Brun().orbit_list(10^6)   # not tested
             CPU times: user 376 ms, sys: 267 ms, total: 643 ms
             Wall time: 660 ms
 
         EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: L = Brun().orbit_list(10^5)
+            sage: L[-1]    # random
+            (0.7307002153148079,
+             1.0,
+             0.31588474491578816,
+             0.29055326655584235,
+             0.4690741038784866,
+             0.24037262956567113,
+             321)
 
         """
         cdef double s           # temporary variables
@@ -334,6 +421,8 @@ cdef class MCFAlgorithm_pyx(object):
             double vmin=-float('inf'), double vmax=float('inf'),
             int ndivs=0):
         r"""
+        Return a list of the orbit filtered to fit into a rectangle.
+
         INPUT:
 
         - ``n_iterations`` - integer, number of iterations
@@ -359,15 +448,55 @@ cdef class MCFAlgorithm_pyx(object):
 
         BENCHMARK:
 
-            sage: from slabbe.mcf_pyx import Brun
+            sage: from slabbe.mult_cont_frac import Brun
             sage: %time D = Brun().orbit_filtered_list(10^6) # not tested
             CPU times: user 366 ms, sys: 203 ms, total: 568 ms
             Wall time: 570 ms
 
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Brun
-            sage: D = Brun().orbit_filtered_list(3)
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: D = Brun().orbit_filtered_list(3, start=(.414578,.571324,.65513))
+            sage: D      # random
+            [(0.3049590483124023,
+              -0.36889249928767137,
+              -0.21650635094610976,
+              -0.125,
+              312,
+              312),
+             (0.08651831333735083,
+              -0.31784823591841554,
+              -0.34641016151377557,
+              -0.2,
+              312,
+              312),
+             (-0.41045591033143647,
+              -0.20171750067080554,
+              -0.4330127018922195,
+              -0.25000000000000006,
+              312,
+              231)]
+
+        ::
+
+            sage: Brun().orbit_filtered_list(3, norm_left='1',ndivs=1000)
+            Traceback (most recent call last):
+            ...
+            ValueError: when ndivs is specified, you must provide a value
+            for xmin, xmax, ymin, ymax, umin, umax, vmin and vmax
+
+        ::
+
+            sage: Brun().orbit_filtered_list(7, norm_left='1', ndivs=100, # random
+            ....:       xmin=-.866, xmax=.866, ymin=-.5, ymax=1.,
+            ....:       umin=-.866, umax=.866, vmin=-.5, vmax=1.)
+            [(30, 47, 50, 50, 132, 213),
+             (15, 83, 33, 66, 213, 231),
+             (18, 80, 38, 44, 231, 231),
+             (22, 75, 41, 33, 231, 231),
+             (30, 68, 43, 26, 231, 231),
+             (44, 53, 44, 22, 231, 213),
+             (41, 78, 24, 56, 213, 321)]
 
         """
         cdef double s,x,y,u,v           # temporary variables
@@ -387,6 +516,11 @@ cdef class MCFAlgorithm_pyx(object):
         P.u = 1./3
         P.v = 1./3
         P.w = 1./3
+
+        if ndivs and float('inf') in [-xmin, -ymin, -umin, -vmin, xmax, ymax, umax, vmax]:
+            raise ValueError("when ndivs is specified, you must provide a"
+                    " value for xmin, xmax, ymin, ymax, umin, umax, vmin"
+                    " and vmax")
 
         # Normalize (x,y,z)
         s = P.x + P.y + P.z
@@ -474,7 +608,7 @@ cdef class MCFAlgorithm_pyx(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Brun
+            sage: from slabbe.mult_cont_frac import Brun
             sage: D = Brun().invariant_measure_dict(4, 10, verbose=True) # random
             0.0799404500357 0.199341464229 0.720718085735
             0 1
@@ -568,7 +702,7 @@ cdef class MCFAlgorithm_pyx(object):
                     D[(i,j)] = c
         return D
 
-    def natural_extension(self, int n_iterations, norm_left='sup',
+    def natural_extention_dict(self, int n_iterations, norm_left='sup',
             norm_right='1', verbose=False):
         r"""
         INPUT:
@@ -586,8 +720,8 @@ cdef class MCFAlgorithm_pyx(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import ARP
-            sage: t = ARP().natural_extension(10000)
+            sage: from slabbe.mult_cont_frac import ARP
+            sage: t = ARP().natural_extention_dict(10000)
             sage: map(type, t)
             [<type 'collections.defaultdict'>,
              <type 'collections.defaultdict'>,
@@ -623,6 +757,7 @@ cdef class MCFAlgorithm_pyx(object):
         P.v = v
         P.w = w
 
+        import collections
         domain_right = collections.defaultdict(list)
         image_right = collections.defaultdict(list)
         domain_left = collections.defaultdict(list)
@@ -700,14 +835,16 @@ cdef class MCFAlgorithm_pyx(object):
 
         theta1, theta2, theta2/theta1
 
-        NOTE:: the code of this method was translated from C to cython. The
-        C version is from Vincent Delecroix.
+        .. NOTE:: 
+        
+            the code of this method was translated from C to cython. The C
+            version is from Vincent Delecroix.
 
         EXAMPLES::
 
         Some benchmarks (on my machine)::
 
-            sage: from slabbe.mcf_pyx import Brun
+            sage: from slabbe.mult_cont_frac import Brun
             sage: Brun().lyapounov_exponents(1000000)  # 68.6 ms # tolerance 0.003
             (0.3049429393152174, -0.1120652699014143, -0.367495867105725)
 
@@ -722,6 +859,7 @@ cdef class MCFAlgorithm_pyx(object):
             (0.30456433843239084, -0.1121770192467067, -0.36831961293987303)
 
         """
+        from math import log
         cdef double theta1=0, theta2=0    # values of Lyapunov exponents
         cdef double theta1c=0, theta2c=0  # compensation (for Kahan summation algorithm)
         cdef double x,y,z           # vector (x,y,z)
@@ -805,95 +943,570 @@ cdef class MCFAlgorithm_pyx(object):
                 P.u /= s; P.v /= s; P.w /= s
 
         return theta1/n_iterations, theta2/n_iterations, theta2/theta1
-
-
-    def dual_domain(self):
+    ######################
+    # DRAWINGS METHODS (python):
+    ######################
+    def invariant_measure_plot(self, n_iterations, ndivs, norm='sup',
+            savefig=True):
         r"""
-        Return the dual domain of each branch.
+        Return a matplotlib graph of the invariant measure.
 
-        Note: The code currently assumes the algo is a sorted version.
+        INPUT:
+
+        - ``n_iterations`` - integer, number of iterations
+        - ``ndvis`` - integer, number of divisions per dimension
+        - ``norm`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``savefig`` - boolean (defautl: ``True``)
 
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Sorted_Brun, Sorted_ARP
-            sage: Sorted_Brun().dual_domain()
-            {100: [(1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.5, 0.5)],
-             102: [(1.0, 0.0, 0.0), (0.0, 0.0, 1.0), (0.0, 0.5, 0.5)],
-             106: [(0.0, 1.0, 0.0), (0.0, 0.0, 1.0), (0.5, 0.0, 0.5)]}
-            sage: Sorted_ARP().dual_domain()
-            {100: [(1.0, 0.0, 0.0),
-              (0.0, 1.0, 0.0),
-              (0.3333333333333333, 0.3333333333333333, 0.3333333333333333)],
-             102: [(1.0, 0.0, 0.0),
-              (0.0, 0.0, 1.0),
-              (0.3333333333333333, 0.3333333333333333, 0.3333333333333333)],
-             106: [(0.0, 1.0, 0.0),
-              (0.0, 0.0, 1.0),
-              (0.3333333333333333, 0.3333333333333333, 0.3333333333333333)],
-             203: [(0.0, 0.0, 1.0),
-              (0.5, 0.0, 0.5),
-              (0.3333333333333333, 0.3333333333333333, 0.3333333333333333)],
-             206: [(0.0, 1.0, 0.0),
-              (0.0, 0.5, 0.5),
-              (0.3333333333333333, 0.3333333333333333, 0.3333333333333333)],
-             207: [(0.0, 0.0, 1.0),
-              (0.0, 0.5, 0.5),
-              (0.3333333333333333, 0.3333333333333333, 0.3333333333333333)]}
+            sage: from slabbe.mult_cont_frac import ARrevert, Brun
+            sage: ARrevert().invariant_measure_plot(1000000, 80, savefig=False)
+            <matplotlib.figure.Figure object at ...>
+            sage: Brun().invariant_measure_plot(1000000, 40, norm='sup',savefig=False)
+            <matplotlib.figure.Figure object at ...>
+
         """
-        cdef double x,y,z           # vector (x,y,z)
-        cdef double s
-        cdef PairPoint3d P, R0, R1, R2
-        cdef int n_iterations = 100
+        D = self.invariant_measure_dict(n_iterations, ndivs, norm=norm)
+        mx,my = map(max, zip(*D.keys()))
+        len_D = float(len(D))
+        the_mean = n_iterations / len_D
 
-        D = {}
-        for i from 0 <= i < n_iterations:
-            # random initial values
-            x = random(); y = random(); z = random();
+        X = [[i for i in range(mx+1)] for j in range(my+1)]
+        Y = [[j for i in range(mx+1)] for j in range(my+1)]
+        Z = [[D.get((i,j),0)/the_mean for i in range(mx+1)] for j in range(my+1)]
 
-            # Order (x,y,z)
-            if y > z: z,y = y,z
-            if x > z: x,y,z = y,z,x
-            elif x > y: x,y = y,x
+        title = "Algo=%s, nbiter=%s, ndivs=%s" % (self.name(), n_iterations, ndivs)
+        filename = 'mesure_%s_iter%s_div%s.png' % (self.name(), n_iterations, ndivs)
 
-            P.x,P.y,P.z = x,y,z
+        fig = self._plot_wideframe(X,Y,Z,title)
+        if savefig:
+            fig.savefig(filename)
+            print "Creation du fichier %s" % filename
+        return fig
 
-            # Apply Algo
-            P.u, P.v, P.w = 1,0,0
-            R0 = Sort(self.call(P))
-            s = abs(R0.u) + abs(R0.v) + abs(R0.w);
-            R0.u /= s; R0.v /= s; R0.w /= s
+    def invariant_measure_inverse_plot(self, n_iterations, ndivs,
+            norm='sup', savefig=True):
+        r"""
+        Return a matplotlib graph of the inverse of the invariant measure.
 
-            # Apply Algo
-            P.u, P.v, P.w = 0,1,0
-            R1 = Sort(self.call(P))
-            s = abs(R1.u) + abs(R1.v) + abs(R1.w);
-            R1.u /= s; R1.v /= s; R1.w /= s
+        INPUT:
 
-            # Apply Algo
-            P.u, P.v, P.w = 0,0,1
-            R2 = Sort(self.call(P))
-            s = abs(R2.u) + abs(R2.v) + abs(R2.w);
-            R2.u /= s; R2.v /= s; R2.w /= s
+        - ``n_iterations`` - integer, number of iterations
+        - ``ndvis`` - integer, number of divisions per dimension
+        - ``norm`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``savefig`` - boolean (defautl: ``True``)
 
-            assert x==P.x
-            assert y==P.y
-            assert z==P.z
-            assert R0.branch == R1.branch == R2.branch, "problem distinct branch"
+        EXAMPLES::
 
-            if R0.branch not in D:
-                D[R0.branch] = []
-                D[R0.branch].append((R0.u,R0.v,R0.w))
-                D[R0.branch].append((R1.u,R1.v,R1.w))
-                D[R0.branch].append((R2.u,R2.v,R2.w))
+            sage: from slabbe.mult_cont_frac import ARrevert
+            sage: ARrevert().invariant_measure_inverse_plot(1000000, 80, savefig=False)
+            <matplotlib.figure.Figure object at ...>
 
-        return D
+        """
+        D = self.invariant_measure_dict(n_iterations, ndivs, norm=norm)
+        mx,my = map(max, zip(*D.keys()))
+        len_D = float(len(D))
+        the_mean = n_iterations / len_D
+
+        E = dict((key,the_mean/value) for key,value in D.iteritems())
+
+        X = [[i for i in range(mx+1)] for j in range(my+1)]
+        Y = [[j for i in range(mx+1)] for j in range(my+1)]
+        Z = [[E.get((i,j),0) for i in range(mx+1)] for j in range(my+1)]
+
+        title = "Algo=%s, nbiter=%s, ndivs=%s" % (self.name(), n_iterations, ndivs)
+        filename = 'mesure_inversed_%s_iter%s_div%s.png' % (self.name(), n_iterations, ndivs)
+
+        fig = self._plot_wideframe(X,Y,Z,title)
+        if savefig:
+            fig.savefig(filename)
+            print "Creation du fichier %s" % filename
+        return fig
+
+    def _plot_wideframe(self, X,Y,Z, title):
+        r"""
+        EXAMPLES::
+        """
+        from mpl_toolkits.mplot3d import axes3d
+        import matplotlib.pyplot as plt
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot_wireframe(X, Y, Z, rstride=1, cstride=1)
+
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+
+        ax.set_title(title)
+        return fig
+
+    def natural_extension_plot(self, n_iterations, norm_left='1',
+            norm_right='1', axis_off=False, savefig=True):
+        r"""
+        INPUT:
+
+        - ``n_iterations`` - integer, number of iterations
+        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``axis_off`` - boolean (defautl: ``False``), 
+        - ``savefig`` - boolean (defautl: ``True``)
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Sorted_ARP
+            sage: Sorted_ARP().natural_extension_plot(1000, savefig=False)
+            <matplotlib.figure.Figure object at ...>
+        """
+        import matplotlib
+        import matplotlib.pyplot as plt
+        t = self.natural_extention_dict(n_iterations, norm_left=norm_left,
+                norm_right=norm_right)
+        domain_left, image_left, domain_right, image_right = t
+        c = dict(zip(domain_left.keys(), ['b','r','g','c','m','y','k']))
+
+        def create_sub_plot(axx, D, title, norm):
+            for key, value in D.iteritems():
+                value = D[key]
+                X,Y = zip(*value)
+                A = axx.plot(X, Y, 'o', markersize=2, color=c[key], label=key)
+            axx.legend(markerscale=3,fontsize="xx-small")
+            axx.set_title(title)
+
+        fig, (ax,bx,cx,dx) = plt.subplots(1,4,sharex=True,sharey=True)
+        fig.set_figheight(2)
+        fig.set_figwidth(12)
+        if axis_off:
+            ax.set_axis_off()
+            bx.set_axis_off()
+            cx.set_axis_off()
+            dx.set_axis_off()
+
+        create_sub_plot(ax, domain_left,  "Algo IN",    norm=norm_left)
+        create_sub_plot(bx, domain_right,    "NatExt IN",  norm=norm_right)
+        create_sub_plot(cx, image_left, "Algo OUT",   norm=norm_left)
+        create_sub_plot(dx, image_right,   "NatExt OUT", norm=norm_right)
+
+        title = "Algo=%s, nbiter=%s" % (self.name(), n_iterations)
+        fig.suptitle(title)
+        if savefig:
+            filename = 'nat_ext_%s_iter%s.png' % (self.name(), n_iterations)
+            fig.savefig(filename)
+            #plt.subplots_adjust(left=0.02, bottom=0.06, right=0.95, top=0.94, wspace=0.05)
+            print "Creation du fichier %s" % filename 
+        return fig
+
+    def natural_extension_tikz(self, n_iterations, norm_left='1',
+            norm_right='1', marksize=0.2, legend_marksize=2):
+        r"""
+
+        INPUT:
+
+        - ``n_iterations`` -- integer, number of iterations
+        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``marksize`` -- tikz marksize (default:``0.2``)
+        - ``legend_marksize`` -- tikz legend marksize (default:``2``)
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: s = Brun().natural_extension_tikz(1000)
+            sage: view(s, tightpage=True)   # not tested
+        """
+
+        t = self.natural_extention_dict(n_iterations, norm_left=norm_left,
+                norm_right=norm_right)
+        domain_left, image_left, domain_right, image_right = t
+        sqrt3 = 1.73205080756888
+        r = 1.08
+        color_dict = dict(zip(domain_left.keys(), PGF_COLORS))
+
+        s = ''
+        s += "\\begin{tikzpicture}[scale=.7]\n"
+        s += ("\\begin{groupplot}[group style={group size=4 by 1},"
+               "height=7cm,width=8cm,"
+               "xmin=-1.1,xmax=1.1,ymin=-.6,ymax=1.20,"
+               "hide axis]\n")
+        for data in [domain_left, domain_right, image_left, image_right]:
+            s += "\\nextgroupplot\n"
+            s += ("\\draw[dashed] "
+                  "(axis cs:%s, %s)" % (-r*sqrt3/2,r*-.5) +
+                  " node[left] {$\\mathbf{e}_1$} -- \n"
+                  "(axis cs:%s, %s)" % (r*sqrt3/2,r*-.5)  +
+                  " node[right] {$\\mathbf{e}_2$} -- \n"
+                  "(axis cs:%s, %s)" % (0, r)             +
+                  " node[above] {$\\mathbf{e}_3$} -- cycle;\n")
+            for key,value in data.iteritems():
+                s += "\\addplot+["
+                s += "legend image post style={mark size=%s}," % legend_marksize
+                s += "only marks,mark=*,"
+                s += "mark size=%s," % marksize
+                s += "mark options={color=%s}] " % color_dict[key]
+                s += "coordinates {%s};\n" % '\n'.join(map(str, value))
+                s += "\\addlegendentry{%s}\n " % key
+        s += "\\end{groupplot}\n"
+        s += "\\draw[draw=none] (group c1r1.center) -- node {$\\times$} (group c2r1.center);\n"
+        s += "\\draw[draw=none] (group c2r1.center) -- node {$\\to$} (group c3r1.center);\n"
+        s += "\\draw[draw=none] (group c3r1.center) -- node {$\\times$} (group c4r1.center);\n"
+        s += "\\end{tikzpicture}\n"
+        from sage.misc.latex import LatexExpr
+        return LatexExpr(s)
+
+    def natural_extension_part_tikz(self, n_iterations, part=3, 
+                                    norm_left='1', norm_right='1',
+                                    marksize='1pt', limit_nb_points=None,
+                                    verbose=False):
+        r"""
+        Return a pgfplots or some part of an orbit in the natural
+        extension.
+
+        INPUT:
+
+        - ``n_iterations`` - integer, number of iterations
+        - ``part`` - integer, taking value 0, 1, 2 or 3
+        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``marksize`` -- string (default: ``'1pt'``), pgfplots mark size value
+        - ``limit_nb_points`` -- None or integer (default: ``None``), limit
+          number of points per patch
+        - ``verbose`` -- string (default: ``False``)
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import ARP
+            sage: s = ARP().natural_extension_part_tikz(1000, part=3)
+            sage: view(s, tightpage=True)    # not tested
+
+        also ::
+
+            sage: s = ARP().natural_extension_part_tikz(1000, part=3, marksize='.2pt', limit_nb_points=1200, verbose=True)
+            Taking ... points for key 32
+            Taking ... points for key 1
+            Taking ... points for key 2
+            Taking ... points for key 3
+            Taking ... points for key 12
+            Taking ... points for key 13
+            Taking ... points for key 21
+            Taking ... points for key 23
+            Taking ... points for key 31
+        """
+        t = self.natural_extention_dict(n_iterations, norm_left=norm_left,
+                norm_right=norm_right)
+        domain_left, image_left, domain_right, image_right = t
+        sqrt3 = 1.73205080756888
+        r = 1.08
+        color_dict = dict(zip(domain_left.keys(), PGF_COLORS))
+        data = t[part]
+
+        s = ''
+        s += "\\begin{tikzpicture}[scale=.7]\n"
+        s += ("\\begin{axis}[height=7cm,width=8cm,\n"
+               "xmin=-1.1,xmax=1.1,ymin=-.6,ymax=1.20,\n"
+               "hide axis]\n")
+        s += ("\\draw[dashed] \n"
+              "(axis cs:%s, %s)" % (-r*sqrt3/2,r*-.5) +
+              " node[left] {$\\mathbf{e}_1$} -- \n"
+              "(axis cs:%s, %s)" % (r*sqrt3/2,r*-.5)  +
+              " node[right] {$\\mathbf{e}_2$} -- \n"
+              "(axis cs:%s, %s)" % (0, r)             +
+              " node[above] {$\\mathbf{e}_3$} -- cycle;\n")
+        for key,value in data.iteritems():
+            if limit_nb_points and len(value) > limit_nb_points:
+                if verbose:
+                    print "Taking only {} points instead of {} for key {}".format(
+                            limit_nb_points, len(value), key)
+                value = value[:limit_nb_points]
+            elif verbose:
+                print "Taking {} points for key {}".format(len(value), key)
+
+            s += "\\addplot+[only marks,mark=*,mark options={color=%s}," % color_dict[key]
+            s += "mark size=%s]\n" % marksize
+            s += "coordinates {\n"
+            s += '\n'.join(map(str, value))
+            s += "};\n" 
+            s += "\\addlegendentry{%s}\n " % key
+        s += "\\end{axis}\n"
+        s += "\\end{tikzpicture}\n"
+        from sage.misc.latex import LatexExpr
+        return LatexExpr(s)
+
+    def natural_extension_part_png(self, n_iterations, draw,
+                                    norm_left='1', norm_right='1',
+                                    xrange=(-.866, .866),
+                                    yrange=(-.5, 1.),
+                                    urange=(-.866, .866),
+                                    vrange=(-.5, 1.),
+                                    color_dict=None,
+                                    branch_order=None,
+                                    ndivs=1024,
+                                    verbose=False):
+        r"""
+        Return a png or some part of an orbit in the natural extension.
+
+        INPUT:
+
+        - ``n_iterations`` - integer, number of iterations
+        - ``draw`` -- string (default: ``'image_right'``), possible values
+          are:
+
+          - ``'domain_left'`` - use x and y ranges
+          - ``'domain_right'`` - use u and v ranges
+          - ``'image_left'`` - use x and y ranges
+          - ``'image_right'`` - use u and v ranges
+
+        - ``norm_left`` -- string (default: ``'1'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``norm_right`` -- string (default: ``'1'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``xrange`` -- tuple (default: ``(-.866, .866)``), interval of
+          values for x
+        - ``yrange`` -- tuple (default: ``(-.5, 1.)``), interval of
+          values for y
+        - ``urange`` -- tuple (default: ``(-.866, .866)``), interval of
+          values for u
+        - ``vrange`` -- tuple (default: ``(-.5, 1.)``), interval of
+          values for v
+        - ``color_dict`` -- dict (default: ``None``), dict from branches
+          int to color (as RGB tuples)
+        - ``branch_order`` -- list (default: ``None``), list of branches int
+        - ``ndivs`` -- int (default: ``1024``), number of pixels
+        - ``verbose`` -- string (default: ``False``)
+
+        BENCHMARK:
+
+        A minute (1min 13s) for a picture with 10^7 points::
+
+            sage: from slabbe.mult_cont_frac import ARP
+            sage: c = {}
+            sage: c[1] = c[2] = c[3] = [0,0,0]
+            sage: c[12] = c[13] = c[23] = c[21] = c[31] = c[32] = [255,0,0]
+            sage: b = [1,2,3,12,13,21,23,31,32]
+            sage: P = ARP().natural_extension_part_png(10^7, draw='image_right',  # not tested
+            ....:   branch_order=b, color_dict=c, urange=(-.6,.6), vrange=(-.6,.6))  # not tested
+
+        Half a minute (27s) for a picture zoomed in the orbit of 10^8
+        points::
+
+            sage: P = ARP().natural_extension_part_png(10^8, draw='image_right', # not tested
+            ....:   branch_order=b, color_dict=c, urange=(.2,.3), vrange=(.2,.3))   # not tested
+
+        EXAMPLES::
+
+            sage: c = {}
+            sage: c[1] = c[2] = c[3] = [0,0,0]
+            sage: c[12] = c[13] = c[23] = c[21] = c[31] = c[32] = [255,0,0]
+            sage: b = [1,2,3,12,13,21,23,31,32]
+            sage: opt = dict(urange=(-.6,.6), vrange=(-.6,.6), color_dict=c, branch_order=b)
+            sage: P = ARP().natural_extension_part_png(10^5, draw='domain_left', **opt)
+            sage: P = ARP().natural_extension_part_png(10^5, draw='domain_right', **opt)
+            sage: P = ARP().natural_extension_part_png(10^5, draw='image_left', **opt)
+            sage: P = ARP().natural_extension_part_png(10^5, draw='image_right', **opt)
+            sage: P.show() # not tested
+
+        """
+        L = self.orbit_filtered_list(n_iterations,
+            norm_left=norm_left, norm_right=norm_right,
+            xmin=xrange[0], xmax=xrange[1],
+            ymin=yrange[0], ymax=yrange[1],
+            umin=urange[0], umax=urange[1],
+            vmin=vrange[0], vmax=vrange[1],
+            ndivs=ndivs)
+        if branch_order is None:
+            raise NotImplementedError
+            branch_order = []
+        if color_dict is None:
+            from random import randint
+            color_dict = {}
+            for key in branch_order:
+                color_dict[key] = [randint(0,255),randint(0,255),randint(0,255)]
+
+        #http://stackoverflow.com/questions/434583/what-is-the-fastest-way-to-draw-an-image-from-discrete-pixel-values-in-python
+        import numpy as np
+        import scipy.misc as smp
+
+        # Create a 1024x1024x3 array of 8 bit unsigned integers
+        data = np.zeros( (ndivs,ndivs,3), dtype=np.uint8 )
+        data += 255   # white as default color
+
+        if draw.startswith('domain'):
+            L.sort(key=lambda a:branch_order.index(a[5]))
+        elif draw.startswith('image'):
+            L.sort(key=lambda a:branch_order.index(a[4]))
+        else:
+            raise ValueError("Unkown value for draw(={})".format(draw))
+
+        if draw == 'domain_left':
+            for x,y,u,v,prev_br,next_br in L:
+                data[y,x] = color_dict[next_br]
+        elif draw == 'domain_right':
+            for x,y,u,v,prev_br,next_br in L:
+                data[v,u] = color_dict[next_br]
+        elif draw == 'image_left':
+            for x,y,u,v,prev_br,next_br in L:
+                data[y,x] = color_dict[prev_br]
+        elif draw == 'image_right':
+            for x,y,u,v,prev_br,next_br in L:
+                data[v,u] = color_dict[prev_br]
+        else:
+            raise ValueError("Unkown value for draw(={})".format(draw))
+
+        img = smp.toimage( data )       # Create a PIL image
+        #img.show()                      # View in default viewer
+        return img
+
+    def measure_evaluation(self, n_iterations, draw,
+                                norm_left='1', norm_right='1',
+                                xrange=(-.866, .866),
+                                yrange=(-.5, 1.),
+                                urange=(-.866, .866),
+                                vrange=(-.5, 1.),
+                                ndivs=1024,
+                                verbose=False):
+        r"""
+
+        INPUT:
+
+        - ``n_iterations`` - integer, number of iterations
+        - ``draw`` -- string (default: ``'image_right'``), possible values
+          are:
+
+          - ``'domain_left'`` - use x and y ranges
+          - ``'domain_right'`` - use u and v ranges
+          - ``'image_left'`` - use x and y ranges
+          - ``'image_right'`` - use u and v ranges
+
+        - ``norm_left`` -- string (default: ``'1'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``norm_right`` -- string (default: ``'1'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit points
+        - ``xrange`` -- tuple (default: ``(-.866, .866)``), interval of
+          values for x
+        - ``yrange`` -- tuple (default: ``(-.5, 1.)``), interval of
+          values for y
+        - ``urange`` -- tuple (default: ``(-.866, .866)``), interval of
+          values for u
+        - ``vrange`` -- tuple (default: ``(-.5, 1.)``), interval of
+          values for v
+        - ``ndivs`` -- int (default: ``1024``), number of pixels
+        - ``verbose`` -- string (default: ``False``)
+
+        BENCHMARK::
+
+            sage: from slabbe.mult_cont_frac import ARP
+            sage: opt = dict(urange=(-.15,.25), vrange=(-.05,.05))
+            sage: ARP().measure_evaluation(10^8, draw='right', ndivs=100, **opt) # optional long
+            0.435...
+            sage: ARP().measure_evaluation(10^8, draw='right', ndivs=1000, **opt) # optional long
+            0.357...
+            sage: ARP().measure_evaluation(10^8, draw='right', ndivs=2000, **opt) # optional long
+            0.293...
+            sage: ARP().measure_evaluation(10^8, draw='right', ndivs=4000, **opt) # optional long
+            0.177...
+
+        """
+        L = self.orbit_filtered_list(n_iterations,
+            norm_left=norm_left, norm_right=norm_right,
+            xmin=xrange[0], xmax=xrange[1],
+            ymin=yrange[0], ymax=yrange[1],
+            umin=urange[0], umax=urange[1],
+            vmin=vrange[0], vmax=vrange[1],
+            ndivs=ndivs)
+
+        if draw.endswith('left'):
+            S = set((p[0],p[1]) for p in L)
+        elif draw.endswith('right'):
+            S = set((p[2],p[3]) for p in L)
+        else:
+            raise ValueError("Unkown value for draw(={})".format(draw))
+
+        if verbose:
+            print "nombre diterations dans la fenetre : ", len(L)
+            print "{} pixels touchés parmi limage {}^2 ".format(len(S), ndivs)
+
+        print float(len(S) / ndivs**2)
+
+    def lyapounov_exponents_sample(self, ntimes, n_iterations=1000):
+        r"""
+        Return two lists of values for theta1 and theta2
+
+        INPUT:
+
+        - ``ntimes`` -- integer, number of orbits
+        - ``n_iterations`` -- integer, length of each orbit
+
+        OUTPUT:
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: T1, T2, U = Brun().lyapounov_exponents_sample(10, 100000)
+            sage: T1[0]
+            0.303680940345907
+            sage: T2[0]
+            -0.1119022164698561 
+            sage: U[0]
+            1.3684861366090153
+
+        """
+        Theta1 = []
+        Theta2 = []
+        Uniform = []
+        for _ in range(ntimes):
+            l1,l2,l2surl1 = self.lyapounov_exponents(n_iterations)
+            Theta1.append(l1)
+            Theta2.append(l2)
+            Uniform.append(1-l2surl1)
+        return Theta1, Theta2, Uniform
+
+    def lyapounov_exponents_table(self, ntimes, n_iterations=1000):
+        r"""
+        Return a table of values of 1 - theta2/theta1.
+
+        INPUT:
+
+        - ``ntimes`` -- integer, number of orbits
+        - ``n_iterations`` -- integer, length of each orbit
+
+        OUTPUT:
+
+        liapounov exponents
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Sorted_Brun
+            sage: Sorted_Brun().lyapounov_exponents_table(10, 100000) # abs tol 0.005
+            n          | 10
+            iterations | 100000
+            min        | 1.364250082762
+            mean       | 1.367620100939
+            max        | 1.369748622574
+            std        | 0.00155230985651
+
+        """
+        T1, T2, U = self.lyapounov_exponents_sample(ntimes, n_iterations)
+        import numpy as np
+        a = np.array(U)
+        header = ['n', 'iterations', 'min','mean','max','std']
+        cols = (ntimes, n_iterations, a.min(), a.mean(), a.max(), a.std()),
+        from sage.misc.table import table
+        t = table(columns=cols,header_column=header)
+        return t
 
 cdef class Brun(MCFAlgorithm_pyx):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Brun
+            sage: from slabbe.mult_cont_frac import Brun
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Brun()(D)
             sage: sorted(E.iteritems())
@@ -936,7 +1549,7 @@ cdef class Brun(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Brun
+            sage: from slabbe.mult_cont_frac import Brun
             sage: Brun().substitutions()
             {12: WordMorphism: 1->12, 2->2, 3->3,
              13: WordMorphism: 1->13, 2->2, 3->3,
@@ -958,7 +1571,7 @@ cdef class ARrevert(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import ARrevert
+            sage: from slabbe.mult_cont_frac import ARrevert
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = ARrevert()(D)
             sage: sorted(E.iteritems())
@@ -1006,7 +1619,7 @@ cdef class ARP(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import ARP
+            sage: from slabbe.mult_cont_frac import ARP
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = ARP()(D)
             sage: sorted(E.iteritems())
@@ -1043,7 +1656,7 @@ cdef class ARP(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import ARP
+            sage: from slabbe.mult_cont_frac import ARP
             sage: ARP().substitutions()
             {1: WordMorphism: 1->1, 2->21, 3->31,
              2: WordMorphism: 1->12, 2->2, 3->32,
@@ -1072,7 +1685,7 @@ cdef class ArnouxRauzy(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import ArnouxRauzy
+            sage: from slabbe.mult_cont_frac import ArnouxRauzy
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = ArnouxRauzy()(D)
             Error: arnoux rauzy not defined on input:
@@ -1115,7 +1728,7 @@ cdef class ArnouxRauzy(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import ArnouxRauzy
+            sage: from slabbe.mult_cont_frac import ArnouxRauzy
             sage: ArnouxRauzy().substitutions()
             {1: WordMorphism: 1->1, 2->21, 3->31,
              2: WordMorphism: 1->12, 2->2, 3->32,
@@ -1131,7 +1744,7 @@ cdef class Poincare(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Poincare
+            sage: from slabbe.mult_cont_frac import Poincare
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Poincare()(D)
             sage: sorted(E.iteritems())
@@ -1199,7 +1812,7 @@ cdef class Poincare(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Poincare
+            sage: from slabbe.mult_cont_frac import Poincare
             sage: Poincare().substitutions()
             {12: WordMorphism: 1->12, 2->2, 3->312,
              13: WordMorphism: 1->13, 2->213, 3->3,
@@ -1221,7 +1834,7 @@ cdef class Selmer(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Selmer
+            sage: from slabbe.mult_cont_frac import Selmer
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Selmer()(D)
             sage: sorted(E.iteritems())
@@ -1266,7 +1879,7 @@ cdef class Meester(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Meester
+            sage: from slabbe.mult_cont_frac import Meester
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Meester()(D)
             sage: sorted(E.iteritems())
@@ -1302,7 +1915,7 @@ cdef class Sorted_Brun(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Sorted_Brun
+            sage: from slabbe.mult_cont_frac import Sorted_Brun
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Sorted_Brun()(D)
             sage: sorted(E.iteritems())
@@ -1345,7 +1958,7 @@ cdef class Sorted_BrunMulti(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Sorted_BrunMulti
+            sage: from slabbe.mult_cont_frac import Sorted_BrunMulti
             sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Sorted_BrunMulti()(D)
             sage: sorted(E.iteritems())
@@ -1368,7 +1981,7 @@ cdef class Sorted_Selmer(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Sorted_Selmer
+            sage: from slabbe.mult_cont_frac import Sorted_Selmer
             sage: D = {'x':.2,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Sorted_Selmer()(D)
             sage: sorted(E.iteritems())
@@ -1390,7 +2003,7 @@ cdef class Sorted_Meester(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Sorted_Meester
+            sage: from slabbe.mult_cont_frac import Sorted_Meester
             sage: D = {'x':.5,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Sorted_Meester()(D)
             sage: sorted(E.iteritems())
@@ -1414,7 +2027,7 @@ cdef class Sorted_ArnouxRauzy(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Sorted_ArnouxRauzy
+            sage: from slabbe.mult_cont_frac import Sorted_ArnouxRauzy
             sage: D = dict(x=.3,y=.4,z=.8,u=.2,v=.3,w=.4,branch=999)
             sage: E = Sorted_ArnouxRauzy()(D)
             sage: sorted(E.iteritems())
@@ -1471,7 +2084,7 @@ cdef class Sorted_ARP(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Sorted_ARP
+            sage: from slabbe.mult_cont_frac import Sorted_ARP
             sage: D = dict(x=.3,y=.4,z=.8,u=.2,v=.3,w=.4,branch=999)
             sage: E = Sorted_ARP()(D)
             sage: sorted(E.iteritems())
@@ -1507,7 +2120,7 @@ cdef class Sorted_ARPMulti(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Sorted_ARPMulti
+            sage: from slabbe.mult_cont_frac import Sorted_ARPMulti
             sage: D = {'x':.3,'y':.5,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Sorted_ARPMulti()(D)
             sage: sorted(E.iteritems())
@@ -1530,7 +2143,7 @@ cdef class Sorted_Poincare(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Sorted_Poincare
+            sage: from slabbe.mult_cont_frac import Sorted_Poincare
             sage: D = dict(x=.3,y=.7,z=.8,u=.2,v=.3,w=.4,branch=999)
             sage: E = Sorted_Poincare()(D)
             sage: sorted(E.iteritems())
@@ -1571,7 +2184,7 @@ cdef class Sorted_ARrevert(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Sorted_ARrevert
+            sage: from slabbe.mult_cont_frac import Sorted_ARrevert
             sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Sorted_ARrevert()(D)
             sage: sorted(E.iteritems())
@@ -1625,7 +2238,7 @@ cdef class Sorted_ARrevertMulti(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Sorted_ARrevertMulti
+            sage: from slabbe.mult_cont_frac import Sorted_ARrevertMulti
             sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Sorted_ARrevertMulti()(D)
             sage: sorted(E.iteritems())
@@ -1680,7 +2293,7 @@ cdef class Sorted_ARMonteil(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Sorted_ARMonteil
+            sage: from slabbe.mult_cont_frac import Sorted_ARMonteil
             sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Sorted_ARMonteil()(D)
             sage: sorted(E.iteritems())
@@ -1722,7 +2335,7 @@ cdef class Sorted_Delaunay(MCFAlgorithm_pyx):
 
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import Sorted_Delaunay
+            sage: from slabbe.mult_cont_frac import Sorted_Delaunay
             sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Sorted_Delaunay()(D)
             sage: sorted(E.iteritems())
@@ -1753,7 +2366,7 @@ cdef class JacobiPerron(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import JacobiPerron
+            sage: from slabbe.mult_cont_frac import JacobiPerron
             sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = JacobiPerron()(D)
             sage: sorted(E.iteritems())
@@ -1796,7 +2409,7 @@ cdef class JacobiPerronAdditif(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import JacobiPerronAdditif
+            sage: from slabbe.mult_cont_frac import JacobiPerronAdditif
             sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = JacobiPerronAdditif()(D)
             sage: sorted(E.iteritems())
@@ -1842,7 +2455,7 @@ cdef class JacobiPerronAdditifv2(MCFAlgorithm_pyx):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mcf_pyx import JacobiPerronAdditifv2
+            sage: from slabbe.mult_cont_frac import JacobiPerronAdditifv2
             sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = JacobiPerronAdditifv2()(D)
             sage: sorted(E.iteritems())
