@@ -82,7 +82,7 @@ PGF_COLORS = ["red", "green", "blue", "cyan", "brown", "gray", "orange", "pink",
 "yellow", "black", "white", "darkgray", "lightgray",
 "lime", "olive", "magenta", "purple", "teal", "violet"]
 
-cdef class MCFAlgorithm_pyx(object):
+cdef class MCFAlgorithm(object):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         This method must be implemented in the inherited classes.
@@ -1321,8 +1321,8 @@ cdef class MCFAlgorithm_pyx(object):
             vmin=vrange[0], vmax=vrange[1],
             ndivs=ndivs)
         if branch_order is None:
-            raise NotImplementedError
             branch_order = []
+            raise NotImplementedError
         if color_dict is None:
             from random import randint
             color_dict = {}
@@ -1501,7 +1501,7 @@ cdef class MCFAlgorithm_pyx(object):
         t = table(columns=cols,header_column=header)
         return t
 
-cdef class Brun(MCFAlgorithm_pyx):
+cdef class Brun(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -1566,7 +1566,7 @@ cdef class Brun(MCFAlgorithm_pyx):
                 23: WordMorphism({1: [1], 2: [2, 3], 3: [3]}),
                 32: WordMorphism({1: [1], 2: [2], 3: [3, 2]})}
 
-cdef class ARrevert(MCFAlgorithm_pyx):
+cdef class ARrevert(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -1614,7 +1614,7 @@ cdef class ARrevert(MCFAlgorithm_pyx):
             R.branch = 4
             return R
 
-cdef class ARP(MCFAlgorithm_pyx):
+cdef class ARP(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -1680,7 +1680,7 @@ cdef class ARP(MCFAlgorithm_pyx):
                 23: WordMorphism({1: [1, 2, 3], 2: [2, 3], 3: [3]}),
                 32: WordMorphism({1: [1, 3, 2], 2: [2], 3: [3, 2]})}
 
-cdef class ArnouxRauzy(MCFAlgorithm_pyx):
+cdef class ArnouxRauzy(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -1739,7 +1739,7 @@ cdef class ArnouxRauzy(MCFAlgorithm_pyx):
                 2:  WordMorphism({1: [1, 2], 2: [2], 3: [3, 2]}),
                 3:  WordMorphism({1: [1, 3], 2: [2, 3], 3: [3]})}
 
-cdef class Poincare(MCFAlgorithm_pyx):
+cdef class Poincare(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -1829,7 +1829,7 @@ cdef class Poincare(MCFAlgorithm_pyx):
                 23: WordMorphism({1: [1, 2, 3], 2: [2, 3], 3: [3]}),
                 32: WordMorphism({1: [1, 3, 2], 2: [2], 3: [3, 2]})}
 
-cdef class Selmer(MCFAlgorithm_pyx):
+cdef class Selmer(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -1874,7 +1874,7 @@ cdef class Selmer(MCFAlgorithm_pyx):
             raise ValueError('limit case of Selmer algo: reach set of measure zero')
         return P
 
-cdef class Meester(MCFAlgorithm_pyx):
+cdef class Meester(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -1910,7 +1910,7 @@ cdef class Meester(MCFAlgorithm_pyx):
             raise ValueError('limit case of meester algo: reach set of measure zero')
         return P
 
-cdef class Sorted_Brun(MCFAlgorithm_pyx):
+cdef class Sorted_Brun(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -1953,7 +1953,7 @@ cdef class Sorted_Brun(MCFAlgorithm_pyx):
         P.branch = 100
         return Sort(P)
 
-cdef class Sorted_BrunMulti(MCFAlgorithm_pyx):
+cdef class Sorted_BrunMulti(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -1976,7 +1976,7 @@ cdef class Sorted_BrunMulti(MCFAlgorithm_pyx):
         P.branch = 100
         return Sort(P)
 
-cdef class Sorted_Selmer(MCFAlgorithm_pyx):
+cdef class Sorted_Selmer(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -1998,7 +1998,7 @@ cdef class Sorted_Selmer(MCFAlgorithm_pyx):
         P.branch = 100
         return Sort(P)
 
-cdef class Sorted_Meester(MCFAlgorithm_pyx):
+cdef class Sorted_Meester(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -2022,7 +2022,7 @@ cdef class Sorted_Meester(MCFAlgorithm_pyx):
         P.branch = 100
         return Sort(P)
 
-cdef class Sorted_ArnouxRauzy(MCFAlgorithm_pyx):
+cdef class Sorted_ArnouxRauzy(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -2064,7 +2064,7 @@ cdef class Sorted_ArnouxRauzy(MCFAlgorithm_pyx):
         R.branch = 100
         return Sort(R)
 
-cdef class Sorted_ArnouxRauzyMulti(MCFAlgorithm_pyx):
+cdef class Sorted_ArnouxRauzyMulti(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -2079,7 +2079,7 @@ cdef class Sorted_ArnouxRauzyMulti(MCFAlgorithm_pyx):
         P.branch = 100
         return Sort(P)
 
-cdef class Sorted_ARP(MCFAlgorithm_pyx):
+cdef class Sorted_ARP(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -2115,7 +2115,7 @@ cdef class Sorted_ARP(MCFAlgorithm_pyx):
         else:
             return _Sorted_Poincare(P)
 
-cdef class Sorted_ARPMulti(MCFAlgorithm_pyx):
+cdef class Sorted_ARPMulti(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -2138,7 +2138,7 @@ cdef class Sorted_ARPMulti(MCFAlgorithm_pyx):
         else:
             return _Sorted_Poincare(P)
 
-cdef class Sorted_Poincare(MCFAlgorithm_pyx):
+cdef class Sorted_Poincare(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -2179,7 +2179,7 @@ cdef class Sorted_Poincare(MCFAlgorithm_pyx):
         R.branch = 200
         return Sort(R)
 
-cdef class Sorted_ARrevert(MCFAlgorithm_pyx):
+cdef class Sorted_ARrevert(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -2233,7 +2233,7 @@ cdef class Sorted_ARrevert(MCFAlgorithm_pyx):
             R.branch = 400
         return R
 
-cdef class Sorted_ARrevertMulti(MCFAlgorithm_pyx):
+cdef class Sorted_ARrevertMulti(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -2288,7 +2288,7 @@ cdef class Sorted_ARrevertMulti(MCFAlgorithm_pyx):
             R.branch = 400
         return R
 
-cdef class Sorted_ARMonteil(MCFAlgorithm_pyx):
+cdef class Sorted_ARMonteil(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -2328,7 +2328,7 @@ cdef class Sorted_ARMonteil(MCFAlgorithm_pyx):
             R.branch = 200
 
         return Sort(R)
-cdef class Sorted_Delaunay(MCFAlgorithm_pyx):
+cdef class Sorted_Delaunay(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         Donné par Xavier Provençal (inspiré de en fait) le 3 février 2014.
@@ -2361,7 +2361,7 @@ cdef class Sorted_Delaunay(MCFAlgorithm_pyx):
             return Sort(R)
         else:
             return _Sorted_Meester(P)
-cdef class JacobiPerron(MCFAlgorithm_pyx):
+cdef class JacobiPerron(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -2404,7 +2404,7 @@ cdef class JacobiPerron(MCFAlgorithm_pyx):
         R.u = s
 
         return R
-cdef class JacobiPerronAdditif(MCFAlgorithm_pyx):
+cdef class JacobiPerronAdditif(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -2450,7 +2450,7 @@ cdef class JacobiPerronAdditif(MCFAlgorithm_pyx):
         else:
             raise ValueError("jacobi not defined for (x,y,z)=(%s,%s,%s)"%(P.x,P.y,P.z))
         return R
-cdef class JacobiPerronAdditifv2(MCFAlgorithm_pyx):
+cdef class JacobiPerronAdditifv2(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
