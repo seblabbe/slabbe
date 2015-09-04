@@ -135,13 +135,42 @@ def RankingScale_CQU4_2014(R=1, base=e):
     L1000 = [0] + discrete_curve(100, 1000, K=1, R=R, base=base)
     L666 = [0] + discrete_curve(50, 666, K=1, R=R, base=base)
     L333 = [0] + discrete_curve(24, 333, K=1, R=R, base=base)
-    #L700 = [0] + discrete_curve(50, 700, K=1, R=R, base=base)
-    #L300 = [0] + discrete_curve(24, 300, K=1, R=R, base=base)
 
     scales = L1000, L666, L333
-    names = [u'Série 1000', u'Série 666', u'Série 333']
+    names = ['Serie 1000', 'Serie 666', 'Serie 333']
     return RankingScale(names, scales)
 
+
+def RankingScale_CQU4_2015():
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.ranking_scale import RankingScale_CQU4_2015
+        sage: R = RankingScale_CQU4_2015()
+    """
+    L1000 = [0] + discrete_curve_2(100, 1000)
+    L666 = [0] + discrete_curve_2(40, 666)
+    L333 = [0] + discrete_curve_2(12, 333)
+
+    scales = L1000, L666, L333
+    names = ['Serie 1000', 'Serie 666', 'Serie 333']
+    return RankingScale(names, scales)
+
+
+def RankingScale_CQU4_2015_v2():
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.ranking_scale import RankingScale_CQU4_2015
+        sage: R = RankingScale_CQU4_2015()
+    """
+    L1000 = [0] + discrete_curve_2(100, 1000)
+    L500 = [0] + discrete_curve_2(40, 500)
+    L250 = [0] + discrete_curve_2(12, 250)
+
+    scales = L1000, L500, L250
+    names = ['Serie 1000', 'Serie 500', 'Serie 250']
+    return RankingScale(names, scales)
 class RankingScale(object):
     def __init__(self, scale_names, scales):
         r"""
@@ -361,6 +390,13 @@ def discrete_curve(nb_equipes, max_points=100, K=1, R=2, base=2, verbose=False):
     if verbose: 
         print "First difference sequence is"
         print list(Word(L).reversal().finite_differences())
+    return L
+
+def discrete_curve_2(nb_equipes, max_points=100):
+    r"""
+    """
+    f = lambda p:(max_points-1)*(1-log(p)/log(nb_equipes))+1
+    L = [ZZ(round(f(p=i))) for i in range(1,nb_equipes+1)]
     return L
 
 ######################
