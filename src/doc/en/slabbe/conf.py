@@ -29,13 +29,13 @@ for doc in os.listdir(ref_src):
 # General information about the project.
 project = u"Sébastien Labbé Research Code Reference Manual"
 name = 'slabbe_ref'
-release = "0.1"
+release = "0.2"
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
 html_title = project + " v" + release
 html_short_title = u'slabbe v' + release
-copyright = u"2014, Sébastien Labbé"
+copyright = u"2015, Sébastien Labbé"
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = name

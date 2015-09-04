@@ -1,5 +1,7 @@
 from sage.misc.latex import latex
-latex.add_to_preamble("\\usepackage{tikz}")
+latex.add_to_preamble('\\usepackage{tikz}')
+latex.add_to_preamble('\\usepackage{pgfplots}')
+latex.add_to_preamble('\\usetikzlibrary{pgfplots.groupplots}')
 
 from discrete_subset import DiscreteSubset, DiscreteBox, DiscreteTube, Intersection
 from billiard import BilliardCube

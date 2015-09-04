@@ -12,19 +12,14 @@ words and symbolic dynamical systems simulation code in Sage, via a set of new
 Python classes. 
 Many of the modules corresponds to research code written for published articles
 (double square tiles, Christoffel graphs, factor complexity).
-It is meant to be reused and reusable (full documentation including doctests)
-but still has not be used for other purposes. Comments are welcome.
+It is meant to be reused and reusable (full documentation including doctests).
+Comments are welcome.
 
 .. [BBL2012]_, [BBGL2011]_, [BGL2012]_
 
 To use this module, you need to import it:: 
 
     from slabbe import *
-
-.. WARNING:: 
-
-    The above line is **mandatory** for any doctest of this reference
-    manual to work.
 
 This reference manual contains many examples that illustrate the usage of
 slabbe spkg. The examples are all tested with each release of slabbe spkg, and
@@ -64,13 +59,23 @@ Combinatorics
 
    joyal_bijection
    bond_percolation
+   dyck_3d
 
-Python class inheritance
-========================
+Dynamical systems
+=================
+
+.. .. toctree::
+   :maxdepth: 1
+
+.. mult_cont_frac
+
+Miscellaneous
+=============
 
 .. toctree::
    :maxdepth: 1
 
+   ranking_scale
    fruit
 
 Indices and Tables
