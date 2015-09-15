@@ -141,12 +141,40 @@ def RankingScale_CQU4_2014(R=1, base=e):
     return RankingScale(names, scales)
 
 
-def RankingScale_CQU4_2015():
+def RankingScale_CQU4_2015_v1():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.ranking_scale import RankingScale_CQU4_2015
-        sage: R = RankingScale_CQU4_2015()
+        sage: from slabbe.ranking_scale import RankingScale_CQU4_2015_v1
+        sage: R = RankingScale_CQU4_2015_v1()
+    """
+    L1000 = [0] + discrete_curve_2(64, 1000)
+    L500 = [0] + discrete_curve_2(32, 500)
+    L250 = [0] + discrete_curve_2(16, 250)
+
+    scales = L1000, L500, L250
+    names = ['Serie 1000', 'Serie 500', 'Serie 250']
+    return RankingScale(names, scales)
+def RankingScale_CQU4_2015_v2():
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.ranking_scale import RankingScale_CQU4_2015_v2
+        sage: R = RankingScale_CQU4_2015_v2()
+    """
+    L1000 = [0] + discrete_curve_2(100, 1000)
+    L500 = [0] + discrete_curve_2(40, 500)
+    L250 = [0] + discrete_curve_2(12, 250)
+
+    scales = L1000, L500, L250
+    names = ['Serie 1000', 'Serie 500', 'Serie 250']
+    return RankingScale(names, scales)
+def RankingScale_CQU4_2015_v3():
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.ranking_scale import RankingScale_CQU4_2015_v3
+        sage: R = RankingScale_CQU4_2015_v3()
     """
     L1000 = [0] + discrete_curve_2(100, 1000)
     L666 = [0] + discrete_curve_2(40, 666)
@@ -157,20 +185,42 @@ def RankingScale_CQU4_2015():
     return RankingScale(names, scales)
 
 
-def RankingScale_CQU4_2015_v2():
+def RankingScale_CQU4_2015_v4():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.ranking_scale import RankingScale_CQU4_2015
-        sage: R = RankingScale_CQU4_2015()
+        sage: from slabbe.ranking_scale import RankingScale_CQU4_2014_v4
+        sage: R = RankingScale_CQU4_2014_v4()
     """
-    L1000 = [0] + discrete_curve_2(100, 1000)
-    L500 = [0] + discrete_curve_2(40, 500)
-    L250 = [0] + discrete_curve_2(12, 250)
+    R=1
+    base=e
+    L1000 = [0] + discrete_curve(64, 1000, K=1, R=R, base=base)
+    L666 = [0] + discrete_curve(32, 666, K=1, R=R, base=base)
+    L333 = [0] + discrete_curve(16, 333, K=1, R=R, base=base)
+
+    scales = L1000, L666, L333
+    names = ['Serie 1000', 'Serie 666', 'Serie 333']
+    return RankingScale(names, scales)
+
+
+def RankingScale_CQU4_2015_v5():
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.ranking_scale import RankingScale_CQU4_2014_v5
+        sage: R = RankingScale_CQU4_2014_v5()
+    """
+    R=1
+    base=e
+    L1000 = [0] + discrete_curve(64, 1000, K=1, R=R, base=base)
+    L500 = [0] + discrete_curve(32, 500, K=1, R=R, base=base)
+    L250 = [0] + discrete_curve(16, 250, K=1, R=R, base=base)
 
     scales = L1000, L500, L250
     names = ['Serie 1000', 'Serie 500', 'Serie 250']
     return RankingScale(names, scales)
+
+
 class RankingScale(object):
     def __init__(self, scale_names, scales):
         r"""
