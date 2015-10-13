@@ -66,6 +66,7 @@ AUTHORS:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 from sage.misc.prandom import random
+include "sage/ext/interrupt.pxi"
 
 cdef struct PairPoint3d:
     double x
@@ -124,6 +125,18 @@ cdef class MCFAlgorithm(object):
             'Brun'
         """
         return self.__class__.__name__
+    def __repr__(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import ARrevert, Brun
+            sage: ARrevert()
+            ARrevert 3-dimensional continued fraction algorithm
+            sage: Brun()
+            Brun 3-dimensional continued fraction algorithm
+        """
+        return "{} 3-dimensional continued fraction algorithm".format(self.name())
+
     def __call__(self, PairPoint3d P):
         r"""
         Wrapper for the cdef call method.
@@ -168,6 +181,9 @@ cdef class MCFAlgorithm(object):
 
         # Loop
         for i from 0 <= i < n_iterations:
+
+            # Check for Keyboard interupt
+            sig_check()
 
             # random initial values
             P.x = random(); P.y = random(); P.z = random();
@@ -385,6 +401,9 @@ cdef class MCFAlgorithm(object):
         # Loop
         for i from 0 <= i < n_iterations:
 
+            # Check for Keyboard interupt
+            sig_check()
+
             # Apply Algo
             P = self.call(P)
 
@@ -534,6 +553,9 @@ cdef class MCFAlgorithm(object):
         # Loop
         for i from 0 <= i < n_iterations:
 
+            # Check for Keyboard interupt
+            sig_check()
+
             # Normalize (xnew,ynew,znew)
             if norm_left == '1':
                 s = P.x + P.y + P.z # norm 1
@@ -672,6 +694,10 @@ cdef class MCFAlgorithm(object):
         P.x /= s; P.y /= s; P.z /= s
 
         for i from 0 <= i < n_iterations:
+
+            # Check for Keyboard interupt
+            sig_check()
+
             # Apply Algo
             P = self.call(P)
 
@@ -765,6 +791,9 @@ cdef class MCFAlgorithm(object):
 
         # Loop
         for i from 0 <= i < n_iterations:
+
+            # Check for Keyboard interupt
+            sig_check()
 
             # Apply Algo
             R = self.call(P)
@@ -907,6 +936,9 @@ cdef class MCFAlgorithm(object):
         # Loop
         for i from 0 <= i < n_iterations:
 
+            # Check for Keyboard interupt
+            sig_check()
+
             # Apply Algo
             P = self.call(P)
 
@@ -957,7 +989,7 @@ cdef class MCFAlgorithm(object):
         - ``ndvis`` - integer, number of divisions per dimension
         - ``norm`` -- string (default: ``'sup'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
-        - ``savefig`` - boolean (defautl: ``True``)
+        - ``savefig`` - boolean (default: ``True``)
 
         EXAMPLES::
 
@@ -997,7 +1029,7 @@ cdef class MCFAlgorithm(object):
         - ``ndvis`` - integer, number of divisions per dimension
         - ``norm`` -- string (default: ``'sup'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
-        - ``savefig`` - boolean (defautl: ``True``)
+        - ``savefig`` - boolean (default: ``True``)
 
         EXAMPLES::
 
@@ -1053,8 +1085,8 @@ cdef class MCFAlgorithm(object):
           ``'1'``, the norm used for the orbit points
         - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
-        - ``axis_off`` - boolean (defautl: ``False``), 
-        - ``savefig`` - boolean (defautl: ``True``)
+        - ``axis_off`` - boolean (default: ``False``), 
+        - ``savefig`` - boolean (default: ``True``)
 
         EXAMPLES::
 
@@ -1906,6 +1938,51 @@ cdef class Meester(MCFAlgorithm):
             P.y -= P.z
             P.w += P.u + P.v
             P.branch = 3
+        else:
+            raise ValueError('limit case of meester algo: reach set of measure zero')
+        return P
+
+cdef class Cassaigne(MCFAlgorithm):
+    cdef PairPoint3d call(self, PairPoint3d P) except *:
+        r"""
+        This algorithm was provided by Julien Cassaigne during a meeting of
+        the ANR DynA3S on October 12, 2015 held in Paris. It is inspired
+        from a method to generate words of complexity 2n+1 on a three
+        letter alphabet of arbitrary letter frequencies.
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Cassaigne
+            sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
+            sage: E = Cassaigne()(D)
+            sage: sorted(E.iteritems())
+            [('branch', 2),
+             ('u', 0.3),
+             ('v', 0.5),
+             ('w', 0.3),
+             ('x', 0.6),
+             ('y', 0.3),
+             ('z', 0.5)]
+        """
+        cdef double tmp
+        if P.x > P.z :
+            P.x -= P.z
+            tmp = P.y
+            P.y = P.z
+            P.z = tmp
+            tmp = P.v
+            P.v = P.u + P.w
+            P.w = tmp
+            P.branch = 1
+        elif P.x < P.z :
+            P.z -= P.x
+            tmp = P.y
+            P.y = P.x
+            P.x = tmp
+            tmp = P.v
+            P.v = P.u + P.w
+            P.u = tmp
+            P.branch = 2
         else:
             raise ValueError('limit case of meester algo: reach set of measure zero')
         return P
