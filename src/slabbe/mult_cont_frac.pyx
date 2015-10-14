@@ -66,7 +66,7 @@ AUTHORS:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 from sage.misc.prandom import random
-include "sage/ext/interrupt.pxi"
+#include "sage/ext/interrupt.pxi"
 
 cdef struct PairPoint3d:
     double x
@@ -111,6 +111,29 @@ cdef class MCFAlgorithm(object):
         """
         raise NotImplementedError
 
+    def branches(self, int n_iterations):
+        cdef unsigned int i         # loop counter
+
+        cdef PairPoint3d P
+
+        S = set()
+
+        # Loop
+        for i from 0 <= i < n_iterations:
+
+            # Check for Keyboard interupt
+            #sig_check()
+
+            # random initial values
+            P.x = random(); P.y = random(); P.z = random();
+            P.u = random(); P.v = random(); P.w = random();
+
+            # Apply Algo
+            P = self.call(P)
+
+            s.add(P.branch)
+
+         return s
     ######################
     # METHODS FOR THE USER:
     ######################
@@ -183,7 +206,7 @@ cdef class MCFAlgorithm(object):
         for i from 0 <= i < n_iterations:
 
             # Check for Keyboard interupt
-            sig_check()
+            #sig_check()
 
             # random initial values
             P.x = random(); P.y = random(); P.z = random();
@@ -402,7 +425,7 @@ cdef class MCFAlgorithm(object):
         for i from 0 <= i < n_iterations:
 
             # Check for Keyboard interupt
-            sig_check()
+            #sig_check()
 
             # Apply Algo
             P = self.call(P)
@@ -554,7 +577,7 @@ cdef class MCFAlgorithm(object):
         for i from 0 <= i < n_iterations:
 
             # Check for Keyboard interupt
-            sig_check()
+            #sig_check()
 
             # Normalize (xnew,ynew,znew)
             if norm_left == '1':
@@ -696,7 +719,7 @@ cdef class MCFAlgorithm(object):
         for i from 0 <= i < n_iterations:
 
             # Check for Keyboard interupt
-            sig_check()
+            #sig_check()
 
             # Apply Algo
             P = self.call(P)
@@ -793,7 +816,7 @@ cdef class MCFAlgorithm(object):
         for i from 0 <= i < n_iterations:
 
             # Check for Keyboard interupt
-            sig_check()
+            #sig_check()
 
             # Apply Algo
             R = self.call(P)
@@ -937,7 +960,7 @@ cdef class MCFAlgorithm(object):
         for i from 0 <= i < n_iterations:
 
             # Check for Keyboard interupt
-            sig_check()
+            #sig_check()
 
             # Apply Algo
             P = self.call(P)
@@ -974,7 +997,7 @@ cdef class MCFAlgorithm(object):
                 s = abs(P.u) + abs(P.v) + abs(P.w)
                 P.u /= s; P.v /= s; P.w /= s
 
-        return theta1/n_iterations, theta2/n_iterations, theta2/theta1
+        return theta1/n_iterations, theta2/n_iterations, 1-theta2/theta1
     ######################
     # DRAWINGS METHODS (python):
     ######################
@@ -1133,18 +1156,20 @@ cdef class MCFAlgorithm(object):
         return fig
 
     def natural_extension_tikz(self, n_iterations, norm_left='1',
-            norm_right='1', marksize=0.2, legend_marksize=2):
+            norm_right='1', marksize=0.2, legend_marksize=2, 
+            group_size="4 by 1"):
         r"""
 
         INPUT:
 
         - ``n_iterations`` -- integer, number of iterations
-        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
+        - ``norm_left`` -- string (default: ``'1'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
-        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
+        - ``norm_right`` -- string (default: ``'1'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
         - ``marksize`` -- tikz marksize (default:``0.2``)
         - ``legend_marksize`` -- tikz legend marksize (default:``2``)
+        - ``group_size`` -- string (default:``"4 by 1"``)
 
         EXAMPLES::
 
@@ -1160,36 +1185,41 @@ cdef class MCFAlgorithm(object):
         r = 1.08
         color_dict = dict(zip(domain_left.keys(), PGF_COLORS))
 
-        s = ''
-        s += "\\begin{tikzpicture}[scale=.7]\n"
-        s += ("\\begin{groupplot}[group style={group size=4 by 1},"
-               "height=7cm,width=8cm,"
-               "xmin=-1.1,xmax=1.1,ymin=-.6,ymax=1.20,"
-               "hide axis]\n")
+        lines = []
+        lines.append(r"\begin{tikzpicture}[scale=.7]")
+        lines.append(r"\begin{groupplot}")
+        lines.append(r"[group style={group size=%s}," % group_size)
+        lines.append(r"height=7cm,width=8cm,")
+        lines.append(r"xmin=-1.1,xmax=1.1,ymin=-.6,ymax=1.20,")
+        lines.append(r"hide axis]")
         for data in [domain_left, domain_right, image_left, image_right]:
-            s += "\\nextgroupplot\n"
-            s += ("\\draw[dashed] "
-                  "(axis cs:%s, %s)" % (-r*sqrt3/2,r*-.5) +
-                  " node[left] {$\\mathbf{e}_1$} -- \n"
-                  "(axis cs:%s, %s)" % (r*sqrt3/2,r*-.5)  +
-                  " node[right] {$\\mathbf{e}_2$} -- \n"
-                  "(axis cs:%s, %s)" % (0, r)             +
-                  " node[above] {$\\mathbf{e}_3$} -- cycle;\n")
+            lines.append(r"\nextgroupplot")
+            lines.append(r"\draw[dashed] ")
+            lines.append(r"(axis cs:%s, %s)" % (-r*sqrt3/2,r*-.5))
+            lines.append(r" node[left] {$\mathbf{e}_1$} -- ")
+            lines.append("(axis cs:%s, %s)" % (r*sqrt3/2,r*-.5))
+            lines.append(r" node[right] {$\mathbf{e}_2$} -- ")
+            lines.append("(axis cs:%s, %s)" % (0, r))
+            lines.append(r" node[above] {$\mathbf{e}_3$} -- cycle;")
             for key,value in data.iteritems():
-                s += "\\addplot+["
-                s += "legend image post style={mark size=%s}," % legend_marksize
-                s += "only marks,mark=*,"
-                s += "mark size=%s," % marksize
-                s += "mark options={color=%s}] " % color_dict[key]
-                s += "coordinates {%s};\n" % '\n'.join(map(str, value))
-                s += "\\addlegendentry{%s}\n " % key
-        s += "\\end{groupplot}\n"
-        s += "\\draw[draw=none] (group c1r1.center) -- node {$\\times$} (group c2r1.center);\n"
-        s += "\\draw[draw=none] (group c2r1.center) -- node {$\\to$} (group c3r1.center);\n"
-        s += "\\draw[draw=none] (group c3r1.center) -- node {$\\times$} (group c4r1.center);\n"
-        s += "\\end{tikzpicture}\n"
+                lines.append(r"\addplot+[")
+                lines.append(r"legend image post style={mark size=%s}," % legend_marksize)
+                lines.append(r"only marks,mark=*,")
+                lines.append(r"mark size=%s," % marksize)
+                lines.append(r"mark options={color=%s}] " % color_dict[key])
+                lines.append(r"coordinates {%s};" % '\n'.join(map(str, value)))
+                lines.append(r"\addlegendentry{%s}" % key)
+        lines.append(r"\end{groupplot}")
+        if group_size == "4 by 1":
+            lines.append(r"\draw[draw=none] (group c1r1.center) -- ")
+            lines.append(r"node {$\times$}  (group c2r1.center);")
+            lines.append(r"\draw[draw=none] (group c2r1.center) -- ")
+            lines.append(r"node {$\to$}     (group c3r1.center);")
+            lines.append(r"\draw[draw=none] (group c3r1.center) -- ")
+            lines.append(r"node {$\times$}  (group c4r1.center);")
+        lines.append(r"\end{tikzpicture}")
         from sage.misc.latex import LatexExpr
-        return LatexExpr(s)
+        return LatexExpr('\n'.join(lines))
 
     def natural_extension_part_tikz(self, n_iterations, part=3, 
                                     norm_left='1', norm_right='1',
