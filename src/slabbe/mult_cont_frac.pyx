@@ -66,7 +66,10 @@ AUTHORS:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 from sage.misc.prandom import random
-#include "sage/ext/interrupt.pxi"
+
+#include "sage/ext/cdefs.pxi"
+#include "sage/ext/stdsage.pxi"
+include "sage/ext/interrupt.pxi"  # ctrl-c interrupt block support
 
 cdef struct PairPoint3d:
     double x
@@ -111,18 +114,29 @@ cdef class MCFAlgorithm(object):
         """
         raise NotImplementedError
 
-    def branches(self, int n_iterations):
+    def branches(self, int n_iterations=1000):
+        r"""
+        Returns the branches labels of the algorithm.
+
+        This method is an heuristic and should be implemented in the
+        inherited classes.
+
+        EXAMPLES::
+
+            sage: import slabbe.mult_cont_frac as mcf
+            sage: mcf.Brun().branches()
+            {123, 132, 213, 231, 312, 321}
+            sage: mcf.ARP().branches()
+            {1, 2, 3, 12, 13, 21, 23, 31, 32}
+        """
         cdef unsigned int i         # loop counter
-
         cdef PairPoint3d P
-
         S = set()
-
         # Loop
         for i from 0 <= i < n_iterations:
 
             # Check for Keyboard interupt
-            #sig_check()
+            sig_check()
 
             # random initial values
             P.x = random(); P.y = random(); P.z = random();
@@ -131,9 +145,8 @@ cdef class MCFAlgorithm(object):
             # Apply Algo
             P = self.call(P)
 
-            s.add(P.branch)
-
-         return s
+            S.add(P.branch)
+        return S
     ######################
     # METHODS FOR THE USER:
     ######################
@@ -206,7 +219,7 @@ cdef class MCFAlgorithm(object):
         for i from 0 <= i < n_iterations:
 
             # Check for Keyboard interupt
-            #sig_check()
+            sig_check()
 
             # random initial values
             P.x = random(); P.y = random(); P.z = random();
@@ -425,7 +438,7 @@ cdef class MCFAlgorithm(object):
         for i from 0 <= i < n_iterations:
 
             # Check for Keyboard interupt
-            #sig_check()
+            sig_check()
 
             # Apply Algo
             P = self.call(P)
@@ -577,7 +590,7 @@ cdef class MCFAlgorithm(object):
         for i from 0 <= i < n_iterations:
 
             # Check for Keyboard interupt
-            #sig_check()
+            sig_check()
 
             # Normalize (xnew,ynew,znew)
             if norm_left == '1':
@@ -719,7 +732,7 @@ cdef class MCFAlgorithm(object):
         for i from 0 <= i < n_iterations:
 
             # Check for Keyboard interupt
-            #sig_check()
+            sig_check()
 
             # Apply Algo
             P = self.call(P)
@@ -816,7 +829,7 @@ cdef class MCFAlgorithm(object):
         for i from 0 <= i < n_iterations:
 
             # Check for Keyboard interupt
-            #sig_check()
+            sig_check()
 
             # Apply Algo
             R = self.call(P)
@@ -960,7 +973,7 @@ cdef class MCFAlgorithm(object):
         for i from 0 <= i < n_iterations:
 
             # Check for Keyboard interupt
-            #sig_check()
+            sig_check()
 
             # Apply Algo
             P = self.call(P)

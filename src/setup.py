@@ -3,6 +3,7 @@ from distutils.extension import Extension
 from Cython.Distutils import build_ext
 import Cython.Compiler.Options
 import os
+from sage.env import sage_include_directories
 
 Cython.Compiler.Options.old_style_globals = True
 
@@ -19,7 +20,8 @@ setup(name='slabbe',
             sources = [os.path.join('slabbe','kolakoski_word_pyx.pyx')],
             ),
         Extension('slabbe.mult_cont_frac',
-            sources = [os.path.join('slabbe','mult_cont_frac.pyx')]),
+            sources = [os.path.join('slabbe','mult_cont_frac.pyx')],
+            include_dirs=sage_include_directories())
     ], 
     cmdclass = {'build_ext': build_ext}
 )
