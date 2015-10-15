@@ -8,7 +8,7 @@ test:
 
 install:
 	cd .. && sage -pkg slabbe-$(VERSION)
-	cd .. && sage -f slabbe-$(VERSION).spkg
+	cd .. && sage -p slabbe-$(VERSION).spkg
 	echo "Effectuer une commande sage pour mettre a jour les path..."
 	sage -c "a=randint(1,1000);print 'factor(%s) = %s'%(a,factor(a))"
 
