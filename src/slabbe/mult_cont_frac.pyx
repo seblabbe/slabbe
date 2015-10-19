@@ -1618,7 +1618,7 @@ cdef class Brun(MCFAlgorithm):
             P.v += P.u
             P.branch = 321
         else:
-            raise ValueError('limit case of Brun algo: reach set of measure zero')
+            raise ValueError('limit case: reach set of measure zero')
         return P
     def substitutions(self):
         r"""
@@ -1881,7 +1881,7 @@ cdef class Poincare(MCFAlgorithm):
             R.w = P.u + P.v + P.w
             R.branch = 21
         else:
-            raise ValueError('limit case of Poincare algo: reach set of measure zero')
+            raise ValueError('limit case: reach set of measure zero')
         return R
     def substitutions(self):
         r"""
@@ -1946,7 +1946,7 @@ cdef class Selmer(MCFAlgorithm):
             P.w += P.u
             P.branch = 321
         else:
-            raise ValueError('limit case of Selmer algo: reach set of measure zero')
+            raise ValueError('limit case: reach set of measure zero')
         return P
 
 cdef class Meester(MCFAlgorithm):
@@ -1982,7 +1982,7 @@ cdef class Meester(MCFAlgorithm):
             P.w += P.u + P.v
             P.branch = 3
         else:
-            raise ValueError('limit case of meester algo: reach set of measure zero')
+            raise ValueError('limit case: reach set of measure zero')
         return P
 
 cdef class Cassaigne(MCFAlgorithm):
@@ -2027,8 +2027,21 @@ cdef class Cassaigne(MCFAlgorithm):
             P.u = tmp
             P.branch = 2
         else:
-            raise ValueError('limit case of meester algo: reach set of measure zero')
+            raise ValueError('limit case: reach set of measure zero')
         return P
+
+    def substitutions(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Cassaigne
+            sage: Cassaigne().substitutions()
+            {1: WordMorphism: 1->1, 2->13, 3->2, 
+             2: WordMorphism: 1->2, 2->13, 3->3}
+        """
+        from sage.combinat.words.morphism import WordMorphism
+        return {1:  WordMorphism({1: [1], 2: [1, 3], 3: [2]}),
+                2:  WordMorphism({1: [2], 2: [1, 3], 3: [3]})}
 
 cdef class Sorted_Brun(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
@@ -2673,7 +2686,7 @@ cdef inline PairPoint3d _Poincare(PairPoint3d P):
         R.w = P.u + P.v + P.w
         R.branch = 21
     else:
-        raise ValueError('limit case of Poincare algo: reach set of measure zero')
+        raise ValueError('limit case: reach set of measure zero')
     return R
 
 cdef inline PairPoint3d _Sorted_ArnouxRauzy(PairPoint3d P):
