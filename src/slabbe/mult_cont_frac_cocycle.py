@@ -22,7 +22,7 @@ The 1-cylinders of ARP transformation as matrices::
     [1 1 1]  [1 0 0]  [1 0 0]  [1 1 1]  [1 1 1]  [2 1 1]  [1 0 1]  [2 1 1]
     [0 1 0]  [1 1 1]  [0 1 0]  [1 2 1]  [0 1 1]  [1 1 1]  [1 1 1]  [1 1 0]
     [0 0 1], [0 0 1], [1 1 1], [0 1 1], [1 1 2], [1 0 1], [1 1 2], [1 1 1],
-
+    <BLANKLINE>
     [1 1 0]
     [1 2 1]
     [1 1 1]
@@ -32,34 +32,26 @@ Ces calculs illustrent le bounded distorsion de ratio=4 pour ARP
 multiplicatif (2 avril 2014)::
 
     sage: T = mcf_cocycles.Sorted_ARPMulti(2)
-    sage: T.distorsion_max(1)
-    3
-    sage: T.distorsion_max(2)
-    10/3
-    sage: T.distorsion_max(3)
-    25/7
-    sage: n(_)
-    3.57142857142857
-    sage: T.distorsion_max(4)    # long time (4s)
+    sage: T.distorsion_max(1, p=oo)
+    5
+    sage: T.distorsion_max(2, p=oo)
+    7
+    sage: T.distorsion_max(3, p=oo)
+    22/3
+    sage: T.distorsion_max(4, p=oo)    # long time (4s)
     62/17
-    sage: n(_)                   # long time
-    3.64705882352941
 
 ::
 
     sage: T = mcf_cocycles.Sorted_ARPMulti(3)
-    sage: T.distorsion_max(1)
-    3
-    sage: T.distorsion_max(2)
-    7/2
-    sage: T.distorsion_max(3)
-    48/13
-    sage: n(_)
-    3.69230769230769
-    sage: T.distorsion_max(4)  # long time (47s)
+    sage: T.distorsion_max(1, p=oo)
+    7
+    sage: T.distorsion_max(2, p=oo)
+    9
+    sage: T.distorsion_max(3, p=oo)
+    19/2
+    sage: T.distorsion_max(4, p=oo)  # long time (47s)
     161/43
-    sage: n(_)                 # long time
-    3.74418604651163
 
 """
 import itertools
@@ -68,223 +60,6 @@ from sage.matrix.constructor import matrix
 from sage.misc.cachefunc import cached_method
 from sage.misc.misc_c import prod
 from language import Language, FiniteLanguage
-
-#####################
-# Helper functions
-#####################
-def projection_matrix(dim_from=3, dim_to=2):
-    r"""
-    Return a projection matrix from R^d to R^l.
-
-    INPUT:
-
-    - ``dim_from` -- integer (default: ``3``)
-    - ``dim_to` -- integer (default: ``2``)
-
-    OUTPUT:
-
-        matrix
-
-    EXAMPLES::
-
-        sage: from slabbe.mult_cont_frac_cocycle import projection_matrix
-        sage: projection_matrix(3,2)
-        [-0.866025403784439  0.866025403784439  0.000000000000000]
-        [-0.500000000000000 -0.500000000000000   1.00000000000000]
-        sage: projection_matrix(2,3)
-        [-0.577350269189626 -0.333333333333333]
-        [ 0.577350269189626 -0.333333333333333]
-        [ 0.000000000000000  0.666666666666667]
-    """
-    from math import sqrt
-    from sage.rings.real_mpfr import RR
-    sqrt3 = sqrt(3)
-    if dim_from == 3 and dim_to == 2:
-        return matrix(2,[-sqrt3,sqrt3,0,-1,-1,2],ring=RR)/2
-    elif dim_from == 2 and dim_to == 3:
-        return matrix(3,[-sqrt3,-1,sqrt3,-1,0,2],ring=RR)/3
-    else:
-        s = "for input dim_from={} and dim_to={}"
-        raise NotImplementedError(s.format(dim_from, dim_to))
-
-def distorsion(M, p=1):
-    r"""
-    1 Avril 2014. L'ancien ratio n'était pas le bon. Je n'utilisais pas les
-    bonnes normes.
-
-    EXAMPLES::
-
-        sage: from slabbe.mult_cont_frac_cocycle import distorsion
-        sage: M = matrix(3, (1,2,3,4,5,6,7,8,9))
-        sage: M
-        [1 2 3]
-        [4 5 6]
-        [7 8 9]
-        sage: distorsion(M)
-        3/2
-        sage: (3+6+9) / (1+4+7)
-        3/2
-        sage: distorsion(M, p=oo)
-        9/7
-    """
-    norms = [c.norm(p=p) for c in M.columns()]
-    return max(norms) / min(norms)
-
-def is_pisot(m):
-    r"""
-    EXAMPLES::
-
-        sage: from slabbe.mult_cont_frac_cocycle import is_pisot
-        sage: M = matrix(3, (1,2,3,4,5,6,7,8,9))
-        sage: is_pisot(M)
-        False
-    """
-    S = sorted((abs(e) for e in m.eigenvalues()), reverse=True)
-    return S[0] > 1 and S[1] < 1
-
-def perron_right_eigenvector(M):
-    r"""
-    EXAMPLES::
-
-        sage: from slabbe.mult_cont_frac_cocycle import perron_right_eigenvector
-        sage: m = matrix(2,[-11,14,-26,29])
-        sage: perron_right_eigenvector(m)
-        (15.0000000000000, (0.35, 0.6499999999999999))
-    """
-    from sage.modules.free_module_element import vector
-    from sage.rings.real_mpfr import RR
-    from sage.rings.all import CC
-    import numpy
-    eig, vec = numpy.linalg.eig(M)
-    index = abs(eig).argmax()
-    rightv = vec.transpose()[index]
-    if eig[index].imag == 0:
-        eig_sage = RR(eig[index].real)
-        vec_sage = vector(a.real for a in rightv)
-    else:
-        eig_sage = CC(eig[index])
-        vec_sage = vector(CC, rightv)
-    return eig_sage, vec_sage/sum(vec_sage)
-
-def semi_norm_v(M, v,  p=2, verbose=False):
-    r"""
-    Return the semi norm on the hyperplane orthogonal to v.
-
-    EXAMPLES::
-
-        sage: from slabbe.mult_cont_frac_cocycle import semi_norm_v
-        sage: A1 = matrix(3, [1,-1,-1, 0,1,0, 0,0,1]).inverse()
-        sage: semi_norm_v(A1, vector( (1,1,1)))      # tolerance 0.0001
-        0.9999999999890247
-        sage: semi_norm_v(A1, vector( (1,1,1)), p=1)   # tolerance 0.0001
-        0.9999394820959548
-        sage: semi_norm_v(A1, vector( (1,1,1)), p=oo)   # tolerance 0.0001
-        1.0
-
-    """
-    from sage.modules.free_module_element import vector
-    from sage.numerical.optimize import minimize_constrained
-    def func(z):
-        vz = vector(z)
-        return - (M*vz).norm(p) / vz.norm(p)
-    cons = [lambda z: v * vector(z),
-            lambda z: - v * vector(z)]
-    x0 = range(len(v))
-    x0[0] = v[1]
-    x0[1] = -v[0]
-    rep = minimize_constrained(func, cons, x0)
-    if verbose:
-        print rep, rep.norm(), rep*v
-    return -func(rep)
-
-def semi_norm_cone(M, cone,  p=2, verbose=False):
-    r"""
-    Return the semi norm on the hyperplane orthogonal to v where v lives in
-    the cone.
-
-    EXAMPLES:
-
-    For Arnoux-Rauzy, only the 1-norm works::
-
-        sage: from slabbe.mult_cont_frac_cocycle import semi_norm_cone
-        sage: A1 = matrix(3, [1,1,1, 0,1,0, 0,0,1])
-        sage: cone = A1
-        sage: semi_norm_cone(A1.transpose(), cone, p=1)    # tolerance 0.00001
-        0.9999999999999998
-        sage: semi_norm_cone(A1.transpose(), cone, p=oo)   # tolerance 0.00001
-        1.9999757223144654
-        sage: semi_norm_cone(A1.transpose(), cone, p=2)   # tolerance 0.00001
-        1.3065629648763757
-
-    For Poincaré, all norms work::
-
-        sage: P21 = matrix(3, [1,1,1, 0,1,1, 0,0,1])
-        sage: H21 = matrix(3, [1,0,0, 0,1,0, 1,0,1])
-        sage: cone = P21 * H21
-        sage: semi_norm_cone(P21.transpose(), cone, p=1)   # tolerance 0.00001
-        0.9999957276014074
-        sage: semi_norm_cone(P21.transpose(), cone, p=oo)   # tolerance 0.00001
-        1.0
-        sage: semi_norm_cone(P21.transpose(), cone, p=2)   # tolerance 0.00001
-        0.9999999999670175
-
-    For Poincaré on the whole cone, it works for some norms::
-
-        sage: P21 = matrix(3, [1,1,1, 0,1,1, 0,0,1])
-        sage: cone = P21
-        sage: semi_norm_cone(P21.transpose(), cone, p=1)   # tolerance 0.00001
-        1.9999675644077723
-        sage: semi_norm_cone(P21.transpose(), cone, p=2)   # tolerance 0.00001
-        1.6180339887021953
-        sage: semi_norm_cone(P21.transpose(), cone, p=oo)   # tolerance 0.00001
-        1.0
-
-    For a product, all norms work::
-
-        sage: A1 = matrix(3, [1,1,1, 0,1,0, 0,0,1])
-        sage: P21 = matrix(3, [1,1,1, 0,1,1, 0,0,1])
-        sage: H21 = matrix(3, [1,0,0, 0,1,0, 1,0,1])
-        sage: M = A1 * P21
-        sage: cone = A1 * P21 * H21
-        sage: semi_norm_cone(M.transpose(), cone, p=1)   # tolerance 0.00001
-        0.999993244882415
-        sage: semi_norm_cone(M.transpose(), cone, p=oo)   # tolerance 0.00001
-        0.9999935206958908
-        sage: semi_norm_cone(M.transpose(), cone, p=2)   # tolerance 0.00001
-        0.7529377601317161
-    """
-    from sage.modules.free_module_element import vector
-    from sage.numerical.optimize import minimize_constrained
-    a,b,c = cone.columns()
-    ab = vector(matrix((a,b)).right_kernel_matrix().row(0))
-    ac = vector(matrix((a,c)).right_kernel_matrix().row(0))
-    bc = vector(matrix((b,c)).right_kernel_matrix().row(0))
-    middle = a+b+c
-    cons = []
-    if ab * middle < 0:
-        cons.append(lambda z: -ab * vector(z))
-    else:
-        cons.append(lambda z: ab * vector(z))
-    if ac * middle < 0:
-        cons.append(lambda z: -ac * vector(z))
-    else:
-        cons.append(lambda z: ac * vector(z))
-    if bc * middle < 0:
-        cons.append(lambda z: -bc * vector(z))
-    else:
-        cons.append(lambda z: bc * vector(z))
-    if not all(con(middle) > 0 for con in cons):
-        raise ValueError("the middle should be in the cone")
-    func = lambda v : - semi_norm_v(M,vector(v),p)
-    x0 = middle
-    rep = minimize_constrained(func, cons, x0)
-    if not all((con(rep) >= 0 or abs(con(rep)) < 1e-7) for con in cons):
-        raise ValueError("the answer (={}) should be in the cone".format(rep))
-    if not all(r >= 0 or abs(r) < 1e-7 for r in rep):
-        raise ValueError("the answer (={}) should be positive".format(rep))
-    if verbose:
-        print "optimal found at ", rep / rep.norm(p)
-    return -func(rep)
 
 ######################
 # class MCF_Cocycle
@@ -408,6 +183,200 @@ class MCF_Cocycle(object):
         for w in self.n_words_iterator(n):
             yield w, self.word_to_matrix(w)
 
+    def n_matrices_eigenvalues_iterator(self,n):
+        r"""
+        Return the eigenvalues of the matrices of level n.
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
+            sage: ARP = mcf_cocycles.ARP()
+            sage: list(ARP.n_matrices_eigenvalues_iterator(1))
+            [(word: A1, [1, 1, 1]),
+             (word: A2, [1, 1, 1]),
+             (word: A3, [1, 1, 1]),
+             (word: P12, [1, 1, 1]),
+             (word: P13, [1, 1, 1]),
+             (word: P21, [1, 1, 1]),
+             (word: P23, [1, 1, 1]),
+             (word: P31, [1, 1, 1]),
+             (word: P32, [1, 1, 1])]
+
+        ::
+
+            sage: B = mcf_cocycles.Sorted_Brun()
+            sage: list(B.n_matrices_eigenvalues_iterator(1))
+            [(word: B1, [1, 1, 1]),
+             (word: B2, [1, -0.618033988749895?, 1.618033988749895?]),
+             (word: B3, [1.465571231876768?, -0.2327856159383841? -
+                         0.7925519925154479?*I, -0.2327856159383841? +
+                         0.7925519925154479?*I])]
+        """
+        for w,m in self.n_matrices_iterator(n):
+            yield w, m.eigenvalues()
+
+    def n_matrices_eigenvectors(self,n, verbose=False):
+        r"""
+        Return the left and right eigenvectors of the matrices of level n.
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
+            sage: C = mcf_cocycles.ARP()
+            sage: C.n_matrices_eigenvectors(1)
+            [(word: A1, (1.0, 0.0, 0.0), (0.0, 0.0, 1.0)),
+             (word: A2, (0.0, 1.0, 0.0), (1.0, 0.0, 0.0)),
+             (word: A3, (0.0, 0.0, 1.0), (1.0, 0.0, 0.0)),
+             (word: P12, (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)),
+             (word: P13, (0.0, 0.0, 1.0), (0.0, 1.0, 0.0)),
+             (word: P21, (1.0, 0.0, 0.0), (0.0, 0.0, 1.0)),
+             (word: P23, (0.0, 0.0, 1.0), (1.0, 0.0, 0.0)),
+             (word: P31, (1.0, 0.0, 0.0), (0.0, 1.0, 0.0)),
+             (word: P32, (0.0, 1.0, 0.0), (1.0, 0.0, 0.0))]
+        """
+        R = []
+        for w,m in self.n_matrices_iterator(n):
+            try:
+                a,v_right = perron_right_eigenvector(m)
+                b,v_left = perron_right_eigenvector(m.transpose())
+            except ValueError:
+                print "problem with :\n",m
+            else:
+                R.append((w, v_right,v_left))
+                if verbose:
+                    print "indices of matrices:", w
+                    print m
+                    print "eigenvectors:", v_right, v_left
+        return R
+    @cached_method
+    def n_matrices_non_pisot(self,n, verbose=False):
+        r"""
+        Return the list of non pisot matrices (as list of indices of base
+        matrices).
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
+            sage: ARP = mcf_cocycles.Sorted_ARP()
+            sage: ARP.n_matrices_non_pisot(1)
+            [word: A1, word: A2]
+            sage: ARP.n_matrices_non_pisot(2)   # long time (1s)
+            [word: A1,A1, word: A1,A2, word: A2,A1, word: A2,A2]
+            sage: ARP.n_matrices_non_pisot(3)   # long time (11s)
+            [word: A1,A1,A1,
+             word: A1,A1,A2,
+             word: A1,A2,A1,
+             word: A1,A2,A2,
+             word: A2,A1,A1,
+             word: A2,A1,A2,
+             word: A2,A2,A1,
+             word: A2,A2,A2]
+            sage: len(ARP.n_matrices_non_pisot(4))  # long time
+            16
+
+        ::
+
+            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
+            sage: B = mcf_cocycles.Sorted_Brun()
+            sage: B.n_matrices_non_pisot(2)
+            [word: B1,B1, word: B1,B2, word: B2,B1, word: B2,B2]
+            sage: B.n_matrices_non_pisot(3)
+            [word: B1,B1,B1,
+             word: B1,B1,B2,
+             word: B1,B2,B1,
+             word: B1,B2,B2,
+             word: B2,B1,B1,
+             word: B2,B1,B2,
+             word: B2,B2,B1,
+             word: B2,B2,B2]
+        """
+        return [w for w in self.n_words_iterator(n) if not self.is_pisot(w)]
+
+    def n_matrices_semi_norm_iterator(self, n, p=2):
+        r"""
+        EXAMPLES:
+
+        For the 1-norm, all matrices contracts the hyperplane::
+            
+            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
+            sage: C = mcf_cocycles.ARP()
+            sage: it = C.n_matrices_semi_norm_iterator(1, p=1)
+            sage: for _ in range(5): print next(it) # tolerance 0.00001
+            (word: A1, 1.0, False)
+            (word: A2, 1.0, False)
+            (word: A3, 1.0, False)
+            (word: P12, 0.9999943584528624, False)
+            (word: P13, 0.9999937410436893, False)
+
+        For the 2-norm, AR matrices do not contract::
+
+            sage: it = C.n_matrices_semi_norm_iterator(1, p=2)
+            sage: for w,s,b in it: print w,s,b   # long time (6s)
+            A1 1.30656296488 False
+            A2 1.30656296486 False
+            A3 1.30656296475 False
+            P12 0.99999999996 False
+            P13 0.999999999967 False
+            P21 0.999999999967 False
+            P23 0.999999999997 False
+            P31 0.999999999769 False
+            P32 0.999999999839 False
+
+        When, the 1-norm is < 1, the product is pisot::
+
+            sage: it = C.n_matrices_semi_norm_iterator(2, p=1)
+            sage: for w,s,b in it: print w,s,b   # long time
+            A1,A1 1.0 False
+            A1,A2 1.0 False
+            A1,A3 1.0 False
+            A1,P12 0.999998922557 False
+            A1,P13 0.999997464905 False
+            A1,P21 0.999993244882 False
+            A1,P23 0.999999150973 True
+            A1,P31 0.999994030522 False
+            A1,P32 0.999998046513 True
+            A2,A1 1.0 False
+            A2,A2 1.0 False
+            A2,A3 1.0 False
+            A2,P12 0.99999375291 False
+            A2,P13 0.999995591588 True
+            ...
+            P31,A3 0.999988326888 False
+            P31,P12 0.749998931902 True
+            P31,P23 0.799999157344 True
+            P31,P32 0.749993104833 True
+            P32,A1 0.999997170005 True
+            P32,A3 0.99999420509 False
+            P32,P13 0.666665046248 True
+            P32,P21 0.666665629351 True
+            P32,P31 0.666664488371 True
+        """
+        if n == 0:
+            raise NotImplementedError
+        for w,m in self.n_matrices_iterator(n):
+            cone = m*self.cone(w[-1])
+            yield w, semi_norm_cone(m.transpose(), cone, p=p), self.is_pisot(w)
+
+    def n_matrices_distorsion_iterator(self, n, p=1):
+        r"""
+        Return the the distorsion of the n-cylinders.
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
+            sage: T = mcf_cocycles.Sorted_ARP()
+            sage: it =T.n_matrices_distorsion_iterator(1)
+            sage: list(it)
+            [(word: A1, 2),
+             (word: A2, 2),
+             (word: A3, 2),
+             (word: P1, 3),
+             (word: P2, 3),
+             (word: P3, 3)]
+        """
+        for w,m in self.n_matrices_iterator(n):
+            yield w, distorsion(m, p=p)
+
     def n_cylinders_iterator(self, n):
         r"""
         EXAMPLES::
@@ -455,8 +424,47 @@ class MCF_Cocycle(object):
         """
         if n == 0:
             raise NotImplementedError
-        for w in self.n_words_iterator(n):
-            yield w, self.word_to_matrix(w)*self.cone(w[-1])
+        for w,m in self.n_matrices_iterator(n):
+            yield w, m*self.cone(w[-1])
+
+    def n_cylinders_edges(self, n):
+        r"""
+        Return the set of edges of the n-cylinders.
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
+            sage: ARP = mcf_cocycles.ARP()
+            sage: ARP.n_cylinders_edges(1)
+            {frozenset({(1, 1, 0), (1, 1, 1)}),
+             frozenset({(0, 1, 0), (1, 1, 0)}),
+             frozenset({(1, 1, 1), (2, 1, 1)}),
+             frozenset({(0, 0, 1), (1, 0, 1)}),
+             frozenset({(0, 1, 0), (0, 1, 1)}),
+             frozenset({(0, 1, 1), (1, 0, 1)}),
+             frozenset({(1, 0, 0), (1, 1, 0)}),
+             frozenset({(0, 1, 1), (1, 2, 1)}),
+             frozenset({(0, 1, 1), (1, 1, 2)}),
+             frozenset({(1, 1, 1), (1, 1, 2)}),
+             frozenset({(1, 0, 1), (1, 1, 2)}),
+             frozenset({(1, 0, 1), (2, 1, 1)}),
+             frozenset({(0, 0, 1), (0, 1, 1)}),
+             frozenset({(1, 1, 0), (1, 2, 1)}),
+             frozenset({(1, 1, 0), (2, 1, 1)}),
+             frozenset({(1, 0, 0), (1, 0, 1)}),
+             frozenset({(1, 1, 1), (1, 2, 1)}),
+             frozenset({(1, 0, 1), (1, 1, 0)}),
+             frozenset({(0, 1, 1), (1, 1, 1)}),
+             frozenset({(0, 1, 1), (1, 1, 0)}),
+             frozenset({(1, 0, 1), (1, 1, 1)})}
+        """
+        from sage.rings.finite_rings.integer_mod_ring import Integers
+        edges = set()
+        for w,cyl in self.n_cylinders_iterator(n):
+            cols = cyl.columns()
+            indices = Integers(len(cols))
+            edges.update(frozenset((cols[i], cols[i+1])) for i in indices)
+        return edges
 
     def is_pisot(self, w):
         r"""
@@ -464,82 +472,6 @@ class MCF_Cocycle(object):
         m = self.word_to_matrix(w)
         S = sorted((abs(e) for e in m.eigenvalues()), reverse=True)
         return S[0] > 1 and S[1] < 1
-
-    @cached_method
-    def n_matrices_non_pisot(self,n, verbose=False):
-        r"""
-        Return the list of non pisot matrices (as list of indices of base
-        matrices).
-
-        EXAMPLES::
-
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: ARP = mcf_cocycles.Sorted_ARP()
-            sage: ARP.n_matrices_non_pisot(1)
-            [word: A1, word: A2]
-            sage: ARP.n_matrices_non_pisot(2)   # long time (1s)
-            [word: A1,A1, word: A1,A2, word: A2,A1, word: A2,A2]
-            sage: ARP.n_matrices_non_pisot(3)   # long time (11s)
-            [word: A1,A1,A1,
-             word: A1,A1,A2,
-             word: A1,A2,A1,
-             word: A1,A2,A2,
-             word: A2,A1,A1,
-             word: A2,A1,A2,
-             word: A2,A2,A1,
-             word: A2,A2,A2]
-            sage: len(ARP.n_matrices_non_pisot(4))  # long time
-            16
-
-        ::
-
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: B = mcf_cocycles.Sorted_Brun()
-            sage: B.n_matrices_non_pisot(2)
-            [word: B1,B1, word: B1,B2, word: B2,B1, word: B2,B2]
-            sage: B.n_matrices_non_pisot(3)
-            [word: B1,B1,B1,
-             word: B1,B1,B2,
-             word: B1,B2,B1,
-             word: B1,B2,B2,
-             word: B2,B1,B1,
-             word: B2,B1,B2,
-             word: B2,B2,B1,
-             word: B2,B2,B2]
-        """
-        return [w for w in self.n_words_iterator(n) if not self.is_pisot(w)]
-
-    def n_matrices_eigenvalues_iterator(self,n):
-        r"""
-        Return the eigenvalues of the matrices of level n.
-
-        EXAMPLES::
-
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: ARP = mcf_cocycles.ARP()
-            sage: list(ARP.n_matrices_eigenvalues_iterator(1))
-            [(word: A1, [1, 1, 1]),
-             (word: A2, [1, 1, 1]),
-             (word: A3, [1, 1, 1]),
-             (word: P12, [1, 1, 1]),
-             (word: P13, [1, 1, 1]),
-             (word: P21, [1, 1, 1]),
-             (word: P23, [1, 1, 1]),
-             (word: P31, [1, 1, 1]),
-             (word: P32, [1, 1, 1])]
-
-        ::
-
-            sage: B = mcf_cocycles.Sorted_Brun()
-            sage: list(B.n_matrices_eigenvalues_iterator(1))
-            [(word: B1, [1, 1, 1]),
-             (word: B2, [1, -0.618033988749895?, 1.618033988749895?]),
-             (word: B3, [1.465571231876768?, -0.2327856159383841? -
-                         0.7925519925154479?*I, -0.2327856159383841? +
-                         0.7925519925154479?*I])]
-        """
-        for w,m in self.n_matrices_iterator(n):
-            yield w, m.eigenvalues()
 
     def non_pisot_automaton(self, n):
         r"""
@@ -564,46 +496,49 @@ class MCF_Cocycle(object):
         #G.delete_vertices(to_remove)
         #return G
 
-    def n_matrices_eigenvectors(self,n, verbose=False):
+    def distorsion_max(self, n, p=1):
         r"""
-        Return the left and right eigenvectors of the matrices of level n.
+        EXAMPLES:
 
+        Non borné::
+
+            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
+            sage: T = mcf_cocycles.Sorted_ARP()
+            sage: T.distorsion_max(1, p=oo)
+            1
+            sage: T.distorsion_max(2, p=oo)
+            3
+            sage: T.distorsion_max(3, p=oo)
+            5
+            sage: T.distorsion_max(4, p=oo)
+            7
+        """
+        return max(d for (w,d) in self.n_matrices_distorsion_iterator(n, p=p))
+
+    def distorsion_argmax(self, n, p=1):
+        r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: C = mcf_cocycles.ARP()
-            sage: C.n_matrices_eigenvectors(1)
-            [(word: A1, (1.0, 0.0, 0.0), (0.0, 0.0, 1.0)),
-             (word: A2, (0.0, 1.0, 0.0), (1.0, 0.0, 0.0)),
-             (word: A3, (0.0, 0.0, 1.0), (1.0, 0.0, 0.0)),
-             (word: P12, (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)),
-             (word: P13, (0.0, 0.0, 1.0), (0.0, 1.0, 0.0)),
-             (word: P21, (1.0, 0.0, 0.0), (0.0, 0.0, 1.0)),
-             (word: P23, (0.0, 0.0, 1.0), (1.0, 0.0, 0.0)),
-             (word: P31, (1.0, 0.0, 0.0), (0.0, 1.0, 0.0)),
-             (word: P32, (0.0, 1.0, 0.0), (1.0, 0.0, 0.0))]
+            sage: ARP = mcf_cocycles.Sorted_ARP()
+            sage: ARP.distorsion_argmax(1)
+            (
+                      [1 0 0]
+                      [1 1 0]
+            word: A1, [3 2 1]
+            )
         """
-        R = []
-        for w,m in self.n_matrices_iterator(n):
-            try:
-                a,v_right = perron_right_eigenvector(m)
-                b,v_left = perron_right_eigenvector(m.transpose())
-            except ValueError:
-                print "problem with :\n",m
-            else:
-                R.append((w, v_right,v_left))
-                if verbose:
-                    print "indices of matrices:", w
-                    print m
-                    print "eigenvectors:", v_right, v_left
-        return R
-    def plot_partition(self, n, labels=True):
+        it = self.n_cylinders_iterator(n)
+        key = lambda (w,m):distorsion(m, p=p)
+        return max(it, key=key)
+
+    def plot_n_cylinders(self, n, labels=True):
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
             sage: C = mcf_cocycles.Sorted_ARP()
-            sage: G = C.plot_partition(3)
+            sage: G = C.plot_n_cylinders(3)
         """
         from sage.plot.graphics import Graphics
         from sage.plot.polygon import polygon
@@ -618,7 +553,7 @@ class MCF_Cocycle(object):
                 G += text("{}".format(w), M3to2*sum_cols/sum_cols.norm(1))
         return G
 
-    def plot_eigenvectors_n_matrices(self, n, side='right', color_index=0, draw_line=False):
+    def plot_n_matrices_eigenvectors(self, n, side='right', color_index=0, draw_line=False):
         r"""
         INPUT:
 
@@ -632,7 +567,7 @@ class MCF_Cocycle(object):
 
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
             sage: ARP = mcf_cocycles.ARP()
-            sage: G = ARP.plot_eigenvectors_n_matrices(2)
+            sage: G = ARP.plot_n_matrices_eigenvectors(2)
         """
         from sage.plot.graphics import Graphics
         from sage.plot.point import point
@@ -690,128 +625,31 @@ class MCF_Cocycle(object):
                 Limag.append((b.real(),b.imag()))
         return points(Lreal) + points(Limag, color='red')
 
-
-    def n_semi_norm_iterator(self, n, p=2):
-        r"""
-        EXAMPLES:
-
-        For the 1-norm, all matrices contracts the hyperplane::
-            
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: C = mcf_cocycles.ARP()
-            sage: it = C.n_semi_norm_iterator(1, p=1) # tolerance 0.00001 # long time (4s)
-            sage: for w,s,b in it: print a,s,b
-            A1 1.0 False
-            A2 1.0 False
-            A3 1.0 False
-            P12 0.999990663839 False
-            P13 0.999987801801 False
-            P21 0.999995727601 False
-            P23 0.999983738803 False
-            P31 0.999994171082 False
-            P32 0.999996491473 False
-
-        For the 2-norm, AR matrices do not contract::
-
-            sage: it = C.n_semi_norm_iterator(1, p=2)   # long time (6s)
-            sage: for w,s,b in it: print a,s,b
-            A1 1.30656296488 False
-            A2 1.30656296486 False
-            A3 1.30656296475 False
-            P12 0.99999999996 False
-            P13 0.999999999967 False
-            P21 0.999999999967 False
-            P23 0.999999999997 False
-            P31 0.999999999769 False
-            P32 0.999999999839 False
-
-        When, the 1-norm is < 1, the product is pisot::
-
-            sage: it = C.n_semi_norm_iterator(2, p=1)   # long time
-            sage: for w,s,b in it: print a,s,b
-            A1,A1 1.0 False
-            A1,A2 1.0 False
-            A1,A3 1.0 False
-            A1,P12 0.999998922557 False
-            A1,P13 0.999997464905 False
-            A1,P21 0.999993244882 False
-            A1,P23 0.999999150973 True
-            A1,P31 0.999994030522 False
-            A1,P32 0.999998046513 True
-            A2,A1 1.0 False
-            A2,A2 1.0 False
-            A2,A3 1.0 False
-            A2,P12 0.99999375291 False
-            A2,P13 0.999995591588 True
-            ...
-            P31,A3 0.999988326888 False
-            P31,P12 0.749998931902 True
-            P31,P23 0.799999157344 True
-            P31,P32 0.749993104833 True
-            P32,A1 0.999997170005 True
-            P32,A3 0.99999420509 False
-            P32,P13 0.666665046248 True
-            P32,P21 0.666665629351 True
-            P32,P31 0.666664488371 True
-        """
-        if n == 0:
-            raise NotImplementedError
-        for w in self.n_words_iterator(n):
-            m = self.word_to_matrix(w)
-            cone = m*self.cone(w[-1])
-            yield w, semi_norm_cone(m.transpose(), cone, p=p), self.is_pisot(w)
-
-    def distorsion_iterator(self, n, p=1):
-        r"""
-        returns an iterator of the ratio max/min of the norm of the columns
-        of the n-cylinders.
-        """
-        for w,m in self.n_cylinders_iterator(n):
-            yield distorsion(m, p=p)
-    def distorsion_max(self, n, p=1):
-        r"""
-        EXAMPLES:
-
-        Non borné::
-
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: T = mcf_cocycles.Sorted_ARP()
-            sage: T.distorsion_max(1)
-            3
-            sage: T.distorsion_max(2)
-            5
-            sage: T.distorsion_max(3)
-            7
-            sage: T.distorsion_max(4)
-            9
-        """
-        return max(self.distorsion_iterator(n, p=p))
-
-    def distorsion_argmax(self, n, p=1):
+    def tikz_n_cylinders(self, n, labels=False, scale=1):
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: ARP = mcf_cocycles.Sorted_ARP()
-            sage: ARP.distorsion_argmax(1)
-            (
-                      [1 0 0]
-                      [1 1 0]
-            word: A1, [3 2 1]
-            )
+            sage: ARP = mcf_cocycles.ARP()
+            sage: s = ARP.tikz_n_cylinders(1, labels=True, scale=4)
+            sage: view(s, tightpage=True)
         """
-        it = self.n_cylinders_iterator(n)
-        key = lambda (w,m):distorsion(m, p=p)
-        return max(it, key=key)
-
-    def triangle_partition(self,n):
-        r"""
-        EXAMPLES::
-
-            sage: print "check this"
-        """
-        L = [Triangle(*m.columns()) for w,m in self.n_cylinders_iterator(n)]
-        return EnsembleDeTriangles(L)
+        from sage.misc.latex import LatexExpr
+        lines = []
+        lines.append(r"\begin{tikzpicture}")
+        lines.append("[scale={}]".format(scale))
+        M3to2 = projection_matrix(3, 2)
+        for (u,v) in self.n_cylinders_edges(n):
+            u = rounded_string_vector(M3to2 * u / u.norm(1), digits=4)
+            v = rounded_string_vector(M3to2 * v / v.norm(1), digits=4)
+            lines.append(r"\draw {} -- {};".format(u,v))
+        if labels:
+            for w,cyl in self.n_cylinders_iterator(n):
+                u = sum(c / c.norm(1) for c in cyl.columns())
+                u = rounded_string_vector(M3to2 * u / u.norm(1), digits=4)
+                lines.append(r"\node at {} {{${}$}};".format(u, w))
+        lines.append(r"\end{tikzpicture}")
+        return LatexExpr("\n".join(lines))
 
 ####################
 # quick construction
@@ -924,6 +762,238 @@ class MCFCocycleGenerator(object):
         return MCF_Cocycle(gens, cone)
 
 mcf_cocycles = MCFCocycleGenerator()
+
+#####################
+# Helper functions
+#####################
+def rounded_string_vector(v, digits=4):
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.mult_cont_frac_cocycle import rounded_string_vector
+        sage: v = (-0.144337567297406, 0.166666666666667)
+        sage: rounded_string_vector(v)
+        '(-0.1443, 0.1667)'
+        sage: rounded_string_vector(v, digits=6)
+        '(-0.144338, 0.166667)'
+    """
+    s = "{{:.{}f}}".format(digits)
+    content = ", ".join(s.format(float(a)) for a in v)
+    return "({})".format(content)
+
+def projection_matrix(dim_from=3, dim_to=2):
+    r"""
+    Return a projection matrix from R^d to R^l.
+
+    INPUT:
+
+    - ``dim_from` -- integer (default: ``3``)
+    - ``dim_to` -- integer (default: ``2``)
+
+    OUTPUT:
+
+        matrix
+
+    EXAMPLES::
+
+        sage: from slabbe.mult_cont_frac_cocycle import projection_matrix
+        sage: projection_matrix(3,2)
+        [-0.866025403784439  0.866025403784439  0.000000000000000]
+        [-0.500000000000000 -0.500000000000000   1.00000000000000]
+        sage: projection_matrix(2,3)
+        [-0.577350269189626 -0.333333333333333]
+        [ 0.577350269189626 -0.333333333333333]
+        [ 0.000000000000000  0.666666666666667]
+    """
+    from math import sqrt
+    from sage.rings.real_mpfr import RR
+    sqrt3 = sqrt(3)
+    if dim_from == 3 and dim_to == 2:
+        return matrix(2,[-sqrt3,sqrt3,0,-1,-1,2],ring=RR)/2
+    elif dim_from == 2 and dim_to == 3:
+        return matrix(3,[-sqrt3,-1,sqrt3,-1,0,2],ring=RR)/3
+    else:
+        s = "for input dim_from={} and dim_to={}"
+        raise NotImplementedError(s.format(dim_from, dim_to))
+
+def distorsion(M, p=1):
+    r"""
+    1 Avril 2014. L'ancien ratio n'était pas le bon. Je n'utilisais pas les
+    bonnes normes.
+
+    EXAMPLES::
+
+        sage: from slabbe.mult_cont_frac_cocycle import distorsion
+        sage: M = matrix(3, (1,2,3,4,5,6,7,8,9))
+        sage: M
+        [1 2 3]
+        [4 5 6]
+        [7 8 9]
+        sage: distorsion(M)
+        3/2
+        sage: (3+6+9) / (1+4+7)
+        3/2
+        sage: distorsion(M, p=oo)
+        9/7
+    """
+    norms = [c.norm(p=p) for c in M.columns()]
+    return max(norms) / min(norms)
+
+def is_pisot(m):
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.mult_cont_frac_cocycle import is_pisot
+        sage: M = matrix(3, (1,2,3,4,5,6,7,8,9))
+        sage: is_pisot(M)
+        False
+    """
+    S = sorted((abs(e) for e in m.eigenvalues()), reverse=True)
+    return S[0] > 1 and S[1] < 1
+
+def perron_right_eigenvector(M):
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.mult_cont_frac_cocycle import perron_right_eigenvector
+        sage: m = matrix(2,[-11,14,-26,29])
+        sage: perron_right_eigenvector(m)           # tolerance 0.00001
+        (15.0000000000000, (0.35, 0.6499999999999999))
+    """
+    from sage.modules.free_module_element import vector
+    from sage.rings.real_mpfr import RR
+    from sage.rings.all import CC
+    import numpy
+    eig, vec = numpy.linalg.eig(M)
+    index = abs(eig).argmax()
+    rightv = vec.transpose()[index]
+    if eig[index].imag == 0:
+        eig_sage = RR(eig[index].real)
+        vec_sage = vector(a.real for a in rightv)
+    else:
+        eig_sage = CC(eig[index])
+        vec_sage = vector(CC, rightv)
+    return eig_sage, vec_sage/sum(vec_sage)
+
+def semi_norm_v(M, v,  p=2, verbose=False):
+    r"""
+    Return the semi norm on the hyperplane orthogonal to v.
+
+    EXAMPLES::
+
+        sage: from slabbe.mult_cont_frac_cocycle import semi_norm_v
+        sage: A1 = matrix(3, [1,-1,-1, 0,1,0, 0,0,1]).inverse()
+        sage: semi_norm_v(A1, vector( (1,1,1)))      # tolerance 0.0001
+        0.9999999999890247
+        sage: semi_norm_v(A1, vector( (1,1,1)), p=1)   # tolerance 0.0001
+        0.9999394820959548
+        sage: semi_norm_v(A1, vector( (1,1,1)), p=oo)   # tolerance 0.0001
+        1.0
+
+    """
+    from sage.modules.free_module_element import vector
+    from sage.numerical.optimize import minimize_constrained
+    def func(z):
+        vz = vector(z)
+        return - (M*vz).norm(p) / vz.norm(p)
+    cons = [lambda z: v * vector(z),
+            lambda z: - v * vector(z)]
+    x0 = range(len(v))
+    x0[0] = v[1]
+    x0[1] = -v[0]
+    rep = minimize_constrained(func, cons, x0)
+    if verbose:
+        print rep, rep.norm(), rep*v
+    return -func(rep)
+
+def semi_norm_cone(M, cone,  p=2, verbose=False):
+    r"""
+    Return the semi norm on the hyperplane orthogonal to v where v lives in
+    the cone.
+
+    EXAMPLES:
+
+    For Arnoux-Rauzy, only the 1-norm works::
+
+        sage: from slabbe.mult_cont_frac_cocycle import semi_norm_cone
+        sage: A1 = matrix(3, [1,1,1, 0,1,0, 0,0,1])
+        sage: cone = A1
+        sage: semi_norm_cone(A1.transpose(), cone, p=1)    # tolerance 0.00001
+        0.9999999999999998
+        sage: semi_norm_cone(A1.transpose(), cone, p=oo)   # tolerance 0.0001
+        1.9999757223144654
+        sage: semi_norm_cone(A1.transpose(), cone, p=2)   # tolerance 0.00001
+        1.3065629648763757
+
+    For Poincaré, all norms work::
+
+        sage: P21 = matrix(3, [1,1,1, 0,1,1, 0,0,1])
+        sage: H21 = matrix(3, [1,0,0, 0,1,0, 1,0,1])
+        sage: cone = P21 * H21
+        sage: semi_norm_cone(P21.transpose(), cone, p=1)   # tolerance 0.00001
+        0.9999957276014074
+        sage: semi_norm_cone(P21.transpose(), cone, p=oo)   # tolerance 0.00001
+        1.0
+        sage: semi_norm_cone(P21.transpose(), cone, p=2)   # tolerance 0.00001
+        0.9999999999670175
+
+    For Poincaré on the whole cone, it works for some norms::
+
+        sage: P21 = matrix(3, [1,1,1, 0,1,1, 0,0,1])
+        sage: cone = P21
+        sage: semi_norm_cone(P21.transpose(), cone, p=1)   # tolerance 0.0001
+        1.9999675644077723
+        sage: semi_norm_cone(P21.transpose(), cone, p=2)   # tolerance 0.00001
+        1.6180339887021953
+        sage: semi_norm_cone(P21.transpose(), cone, p=oo)   # tolerance 0.00001
+        1.0
+
+    For a product, all norms work::
+
+        sage: A1 = matrix(3, [1,1,1, 0,1,0, 0,0,1])
+        sage: P21 = matrix(3, [1,1,1, 0,1,1, 0,0,1])
+        sage: H21 = matrix(3, [1,0,0, 0,1,0, 1,0,1])
+        sage: M = A1 * P21
+        sage: cone = A1 * P21 * H21
+        sage: semi_norm_cone(M.transpose(), cone, p=1)   # tolerance 0.00001
+        0.999993244882415
+        sage: semi_norm_cone(M.transpose(), cone, p=oo)   # tolerance 0.00001
+        0.9999935206958908
+        sage: semi_norm_cone(M.transpose(), cone, p=2)   # tolerance 0.00001
+        0.7529377601317161
+    """
+    from sage.modules.free_module_element import vector
+    from sage.numerical.optimize import minimize_constrained
+    a,b,c = cone.columns()
+    ab = vector(matrix((a,b)).right_kernel_matrix().row(0))
+    ac = vector(matrix((a,c)).right_kernel_matrix().row(0))
+    bc = vector(matrix((b,c)).right_kernel_matrix().row(0))
+    middle = a+b+c
+    cons = []
+    if ab * middle < 0:
+        cons.append(lambda z: -ab * vector(z))
+    else:
+        cons.append(lambda z: ab * vector(z))
+    if ac * middle < 0:
+        cons.append(lambda z: -ac * vector(z))
+    else:
+        cons.append(lambda z: ac * vector(z))
+    if bc * middle < 0:
+        cons.append(lambda z: -bc * vector(z))
+    else:
+        cons.append(lambda z: bc * vector(z))
+    if not all(con(middle) > 0 for con in cons):
+        raise ValueError("the middle should be in the cone")
+    func = lambda v : - semi_norm_v(M,vector(v),p)
+    x0 = middle
+    rep = minimize_constrained(func, cons, x0)
+    if not all((con(rep) >= 0 or abs(con(rep)) < 1e-7) for con in cons):
+        raise ValueError("the answer (={}) should be in the cone".format(rep))
+    if not all(r >= 0 or abs(r) < 1e-7 for r in rep):
+        raise ValueError("the answer (={}) should be positive".format(rep))
+    if verbose:
+        print "optimal found at ", rep / rep.norm(p)
+    return -func(rep)
 
 ####################
 # Polyhedron Partition
