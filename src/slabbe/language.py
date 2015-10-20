@@ -31,7 +31,7 @@ Predefined languages::
 
     sage: from slabbe.language import languages
     sage: languages.ARP()
-    Regular language over ['A1', 'A2', 'A3', 'P31', 'P21', 'P32', 'P12', 'P23', 'P13']
+    Regular language over ['A1', 'A2', 'A3', 'P12', 'P13', 'P21', 'P23', 'P31', 'P32']
     defined by: Automaton with 7 states
 
 AUTHORS:
@@ -297,12 +297,12 @@ class LanguageGenerator(object):
             sage: from slabbe.language import languages
             sage: L = languages.ARP()
             sage: L
-            Regular language over ['A1', 'A2', 'A3', 'P31', 'P21', 'P32', 'P12', 'P23', 'P13']
+            Regular language over ['A1', 'A2', 'A3', 'P12', 'P13', 'P21', 'P23', 'P31', 'P32']
             defined by: Automaton with 7 states
             sage: map(L.complexity, range(4))
             [1, 9, 57, 345]
         """
-        alphabet = ['A1', 'A2', 'A3', 'P31', 'P21', 'P32', 'P12', 'P23', 'P13']
+        alphabet = ['A1', 'A2', 'A3', 'P12', 'P13', 'P21', 'P23', 'P31', 'P32']
         automaton = self._ARP_automaton()
         return RegularLanguage(alphabet, automaton)
 

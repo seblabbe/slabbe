@@ -28,9 +28,9 @@ multiplicatif (2 avril 2014)::
     25/7
     sage: n(_)
     3.57142857142857
-    sage: T.norm_ratio_max(4)
+    sage: T.norm_ratio_max(4)    # long time (4s)
     62/17
-    sage: n(_)
+    sage: n(_)                   # long time
     3.64705882352941
 
 ::
@@ -44,35 +44,10 @@ multiplicatif (2 avril 2014)::
     48/13
     sage: n(_)
     3.69230769230769
-    sage: T.norm_ratio_max(4)
+    sage: T.norm_ratio_max(4)  # long time (47s)
     161/43
-    sage: n(_)
+    sage: n(_)                 # long time
     3.74418604651163
-
-The limit 4 is achievable (when m->oo, not much when the level increases) ::
-
-    sage: sup = (vector((0,0,1)) * A2m^10 * P1 * vector((1,1,1))).expand()
-    sage: inf = (vector((0,0,1)) * A2m^10 * P1 * vector((0,0,1))).expand()
-    sage: sup
-    4*m^10 + 3*m^9 + 36*m^8 + 24*m^7 + 112*m^6 + 63*m^5 + 140*m^4 + 60*m^3
-    + 60*m^2 + 15*m + 3
-    sage: inf
-    m^10 + m^9 + 9*m^8 + 8*m^7 + 28*m^6 + 21*m^5 + 35*m^4 + 20*m^3 + 15*m^2
-    + 5*m + 1
-    sage: lim(sup/inf, m=oo)
-    4
-
-::
-
-    sage: sup = (vector((0,0,1)) * A2m^3 * P1 * vector((1,1,1))).expand()
-    sage: inf = (vector((0,0,1)) * A2m^3 * P1 * vector((0,0,1))).expand()
-    10:47:45 ###
-    sage: sup
-    4*m^3 + 3*m^2 + 8*m + 2
-    sage: inf
-    m^3 + m^2 + 2*m + 1
-    sage: lim(sup/inf, m=oo)
-    4
 
 """
 import itertools
@@ -134,7 +109,7 @@ def norm_ratio(m):
         [4 5 6]
         [7 8 9]
         sage: norm_ratio(M)
-        2.66666666667
+        9/7
         sage: (7+8+9) / 9.
         2.66666666666667
     """
@@ -160,7 +135,7 @@ def perron_right_eigenvector(M):
 
         sage: from slabbe.mult_cont_frac_cocycle import perron_right_eigenvector
         sage: m = matrix(2,[-11,14,-26,29])
-        sage: a,v = perron_right_eigenvector(m)
+        sage: perron_right_eigenvector(m)
         (15.0000000000000, (0.35, 0.6499999999999999))
     """
     from sage.modules.free_module_element import vector
@@ -186,11 +161,11 @@ def semi_norm_v(M, v,  p=2, verbose=False):
 
         sage: from slabbe.mult_cont_frac_cocycle import semi_norm_v
         sage: A1 = matrix(3, [1,-1,-1, 0,1,0, 0,0,1]).inverse()
-        sage: semi_norm_v(A1, vector( (1,1,1)))
+        sage: semi_norm_v(A1, vector( (1,1,1)))      # tolerance 0.0001
         0.9999999999890247
-        sage: semi_norm_v(A1, vector( (1,1,1)), p=1)
+        sage: semi_norm_v(A1, vector( (1,1,1)), p=1)   # tolerance 0.0001
         0.9999394820959548
-        sage: semi_norm_v(A1, vector( (1,1,1)), p=oo)
+        sage: semi_norm_v(A1, vector( (1,1,1)), p=oo)   # tolerance 0.0001
         1.0
 
     """
@@ -221,11 +196,11 @@ def semi_norm_cone(M, cone,  p=2, verbose=False):
         sage: from slabbe.mult_cont_frac_cocycle import semi_norm_cone
         sage: A1 = matrix(3, [1,1,1, 0,1,0, 0,0,1])
         sage: cone = A1
-        sage: semi_norm_cone(A1.transpose(), cone, p=1)
+        sage: semi_norm_cone(A1.transpose(), cone, p=1)    # tolerance 0.00001
         0.9999999999999998
-        sage: semi_norm_cone(A1.transpose(), cone, p=oo)
+        sage: semi_norm_cone(A1.transpose(), cone, p=oo)   # tolerance 0.00001
         1.9999757223144654
-        sage: semi_norm_cone(A1.transpose(), cone, p=2)
+        sage: semi_norm_cone(A1.transpose(), cone, p=2)   # tolerance 0.00001
         1.3065629648763757
 
     For Poincaré, all norms work::
@@ -233,22 +208,22 @@ def semi_norm_cone(M, cone,  p=2, verbose=False):
         sage: P21 = matrix(3, [1,1,1, 0,1,1, 0,0,1])
         sage: H21 = matrix(3, [1,0,0, 0,1,0, 1,0,1])
         sage: cone = P21 * H21
-        sage: semi_norm_cone(P21.transpose(), cone, p=1)
+        sage: semi_norm_cone(P21.transpose(), cone, p=1)   # tolerance 0.00001
         0.9999957276014074
-        sage: semi_norm_cone(P21.transpose(), cone, p=oo)
+        sage: semi_norm_cone(P21.transpose(), cone, p=oo)   # tolerance 0.00001
         1.0
-        sage: semi_norm_cone(P21.transpose(), cone, p=2)
+        sage: semi_norm_cone(P21.transpose(), cone, p=2)   # tolerance 0.00001
         0.9999999999670175
 
     For Poincaré on the whole cone, it works for some norms::
 
         sage: P21 = matrix(3, [1,1,1, 0,1,1, 0,0,1])
         sage: cone = P21
-        sage: semi_norm_cone(P21.transpose(), cone, p=1)
-        0.9999944176794844
-        sage: semi_norm_cone(P21.transpose(), cone, p=2)
+        sage: semi_norm_cone(P21.transpose(), cone, p=1)   # tolerance 0.00001
+        1.9999675644077723
+        sage: semi_norm_cone(P21.transpose(), cone, p=2)   # tolerance 0.00001
         1.6180339887021953
-        sage: semi_norm_cone(P21.transpose(), cone, p=oo)
+        sage: semi_norm_cone(P21.transpose(), cone, p=oo)   # tolerance 0.00001
         1.0
 
     For a product, all norms work::
@@ -258,11 +233,11 @@ def semi_norm_cone(M, cone,  p=2, verbose=False):
         sage: H21 = matrix(3, [1,0,0, 0,1,0, 1,0,1])
         sage: M = A1 * P21
         sage: cone = A1 * P21 * H21
-        sage: semi_norm_cone(M.transpose(), cone, p=1)
+        sage: semi_norm_cone(M.transpose(), cone, p=1)   # tolerance 0.00001
         0.999993244882415
-        sage: semi_norm_cone(M.transpose(), cone, p=oo)
+        sage: semi_norm_cone(M.transpose(), cone, p=oo)   # tolerance 0.00001
         0.9999935206958908
-        sage: semi_norm_cone(M.transpose(), cone, p=2)
+        sage: semi_norm_cone(M.transpose(), cone, p=2)   # tolerance 0.00001
         0.7529377601317161
     """
     from sage.modules.free_module_element import vector
@@ -317,18 +292,20 @@ class MCF_Cocycle(object):
 
     EXAMPLES::
 
+        sage: from slabbe.mult_cont_frac_cocycle import MCF_Cocycle
         sage: B1 = matrix(3, [1,0,0, 0,1,0, 0,1,1])
         sage: B2 = matrix(3, [1,0,0, 0,0,1, 0,1,1])
         sage: B3 = matrix(3, [0,1,0, 0,0,1, 1,0,1])
         sage: gens = {'B1':B1, 'B2':B2, 'B3':B3}
         sage: cone = matrix(3, [1,1,1,0,1,1,0,0,1])
         sage: MCF_Cocycle(gens, cone)
-        Cocycle with 3 matrices over Language of finite words over alphabet ['B1', 'B2', 'B3']
+        Cocycle with 3 gens over Language of finite words over alphabet ['B1', 'B2', 'B3']
     """
     def __init__(self, gens, cone, language=None):
         r"""
         EXAMPLES::
 
+            sage: from slabbe.mult_cont_frac_cocycle import MCF_Cocycle
             sage: gens = {'A':matrix(3, [1,0,0, 0,1,0, 0,1,1])}
             sage: cone = identity_matrix(3)
             sage: MCF_Cocycle(gens, cone)
@@ -353,6 +330,7 @@ class MCF_Cocycle(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe.mult_cont_frac_cocycle import MCF_Cocycle
             sage: gens = {'A':matrix(3, [1,0,0, 0,1,0, 0,1,1])}
             sage: cone = identity_matrix(3)
             sage: MCF_Cocycle(gens, cone)
@@ -394,7 +372,7 @@ class MCF_Cocycle(object):
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
             sage: ARP = mcf_cocycles.Sorted_ARP()
             sage: list(ARP.n_words_iterator(1))
-            [word: 0, word: 1, word: 2, word: 3, word: 4, word: 5]
+            [word: A1, word: A2, word: A3, word: P1, word: P2, word: P3]
         """
         return self._language.words_of_length_iterator(n)
 
@@ -406,11 +384,11 @@ class MCF_Cocycle(object):
             sage: ARP = mcf_cocycles.Sorted_ARP()
             sage: A,B = zip(*list(ARP.n_matrices_iterator(1)))
             sage: A
-            (word: P2, word: P3, word: P1, word: A1, word: A3, word: A2)
+            (word: A1, word: A2, word: A3, word: P1, word: P2, word: P3)
             sage: B
             (
-            [0 0 1]  [0 0 1]  [0 1 0]  [1 0 0]  [0 1 0]  [1 0 0]
-            [1 0 1]  [0 1 1]  [0 1 1]  [0 1 0]  [0 0 1]  [0 0 1]
+            [1 0 0]  [1 0 0]  [0 1 0]  [0 1 0]  [0 0 1]  [0 0 1]
+            [0 1 0]  [0 0 1]  [0 0 1]  [0 1 1]  [1 0 1]  [0 1 1]
             [1 1 1], [1 1 1], [1 1 1], [1 1 1], [1 1 1], [1 1 1]
             )
         """
@@ -422,7 +400,7 @@ class MCF_Cocycle(object):
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: C = mcf_cocycles.Sorted_ARP()
+            sage: C = mcf_cocycles.ARP()
             sage: it = C.n_cylinders_iterator(1)
             sage: for w,cyl in it: print "{}\n{}".format(w,cyl)
             A1
@@ -445,14 +423,14 @@ class MCF_Cocycle(object):
             [1 1 1]
             [0 1 1]
             [1 1 2]
-            P23
-            [1 0 1]
-            [1 1 1]
-            [1 1 2]
             P21
             [2 1 1]
             [1 1 1]
             [1 0 1]
+            P23
+            [1 0 1]
+            [1 1 1]
+            [1 1 2]
             P31
             [2 1 1]
             [1 1 0]
@@ -461,26 +439,18 @@ class MCF_Cocycle(object):
             [1 1 0]
             [1 2 1]
             [1 1 1]
-            
         """
         if n == 0:
             raise NotImplementedError
         for w in self.n_words_iterator(n):
             yield w, self.word_to_matrix(w)*self.cone(w[-1])
 
-    def is_pisot(self, w, verbose=False):
+    def is_pisot(self, w):
         r"""
         """
         m = self.word_to_matrix(w)
         S = sorted((abs(e) for e in m.eigenvalues()), reverse=True)
-        if S[0] > 1 and S[1] < 1:
-            return True
-        else:
-            if verbose:
-                print "not pisot:", S[0], S[1]
-                print "indices of matrices:", w
-                print m
-            return False
+        return S[0] > 1 and S[1] < 1
 
     @cached_method
     def n_matrices_non_pisot(self,n, verbose=False):
@@ -494,9 +464,9 @@ class MCF_Cocycle(object):
             sage: ARP = mcf_cocycles.Sorted_ARP()
             sage: ARP.n_matrices_non_pisot(1)
             [word: A1, word: A2]
-            sage: ARP.n_matrices_non_pisot(2)
+            sage: ARP.n_matrices_non_pisot(2)   # long time (1s)
             [word: A1,A1, word: A1,A2, word: A2,A1, word: A2,A2]
-            sage: ARP.n_matrices_non_pisot(3)
+            sage: ARP.n_matrices_non_pisot(3)   # long time (11s)
             [word: A1,A1,A1,
              word: A1,A1,A2,
              word: A1,A2,A1,
@@ -524,67 +494,49 @@ class MCF_Cocycle(object):
              word: B2,B2,B1,
              word: B2,B2,B2]
         """
-        return [w for w in self.n_words_iterator(n) if not self.is_pisot(w, verbose=verbose)]
+        return [w for w in self.n_words_iterator(n) if not self.is_pisot(w)]
 
-    def n_matrices_eigenvalues(self,n, verbose=False):
+    def n_matrices_eigenvalues_iterator(self,n):
         r"""
         Return the eigenvalues of the matrices of level n.
 
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: ARP = mcf_cocycles.Sorted_ARP()
-            sage: ARP.n_matrices_eigenvalues(1)
-            [(0,), (1,)]
-            sage: ARP.n_matrices_eigenvalues(2)
-            [(0, 0), (0, 1), (1, 0), (1, 1)]
-            sage: ARP.n_matrices_eigenvalues(3)       # long time
-            [(0, 0, 0),
-             (0, 0, 1),
-             (0, 1, 0),
-             (0, 1, 1),
-             (1, 0, 0),
-             (1, 0, 1),
-             (1, 1, 0),
-             (1, 1, 1)]
-            sage: len(ARP.n_matrices_eigenvalues(4))  # long time
-            16
+            sage: ARP = mcf_cocycles.ARP()
+            sage: list(ARP.n_matrices_eigenvalues_iterator(1))
+            [(word: A1, [1, 1, 1]),
+             (word: A2, [1, 1, 1]),
+             (word: A3, [1, 1, 1]),
+             (word: P12, [1, 1, 1]),
+             (word: P13, [1, 1, 1]),
+             (word: P21, [1, 1, 1]),
+             (word: P23, [1, 1, 1]),
+             (word: P31, [1, 1, 1]),
+             (word: P32, [1, 1, 1])]
 
         ::
 
             sage: B = mcf_cocycles.Sorted_Brun()
-            sage: B.n_matrices_eigenvalues(2)
-            [(0, 0), (0, 1), (1, 0), (1, 1)]
-            sage: B.n_matrices_eigenvalues(3)
-            [(0, 0, 0),
-             (0, 0, 1),
-             (0, 1, 0),
-             (0, 1, 1),
-             (1, 0, 0),
-             (1, 0, 1),
-             (1, 1, 0),
-             (1, 1, 1)]
+            sage: list(B.n_matrices_eigenvalues_iterator(1))
+            [(word: B1, [1, 1, 1]),
+             (word: B2, [1, -0.618033988749895?, 1.618033988749895?]),
+             (word: B3, [1.465571231876768?, -0.2327856159383841? -
+                         0.7925519925154479?*I, -0.2327856159383841? +
+                         0.7925519925154479?*I])]
         """
-        R = []
-        for w in self.n_words_iterator(n):
-            m = self.word_to_matrix(w)
-            S = m.eigenvalues()
-            R.append((m,S))
-            if verbose:
-                print "indices of matrices:", w
-                print m
-                print "eigenvalues:", S
-        return R
+        for w,m in self.n_matrices_iterator(n):
+            yield w, m.eigenvalues()
 
     def non_pisot_automaton(self, n):
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: C = mcf_cocycles.Sorted_ARP()
+            sage: C = mcf_cocycles.ARP()
             sage: A = C.non_pisot_automaton(2)
             sage: A
-            Automaton with 9 states
+            Automaton with 2 states
             sage: A.graph().plot(edge_labels=True)   # not tested
         """
         L = []
@@ -592,13 +544,12 @@ class MCF_Cocycle(object):
             L.extend(self.n_matrices_non_pisot(i))
         alphabet = self._language._alphabet
         F = FiniteLanguage(alphabet, L)
-        A = F.automaton()
-        A = A.minimization().relabeled()
-        #return A
-        G = A.graph()
-        to_remove = set(A.states()) - set(A.final_states())
-        G.delete_vertices(to_remove)
-        return G
+        A = F.minimal_automaton()  
+        return A
+        #G = A.graph()
+        #to_remove = set(A.states()) - set(A.final_states())
+        #G.delete_vertices(to_remove)
+        #return G
 
     def left_right_eigenvectors_n_matrices(self,n, verbose=False):
         r"""
@@ -607,15 +558,17 @@ class MCF_Cocycle(object):
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: C = mcf_cocycles.Sorted_ARP()
+            sage: C = mcf_cocycles.ARP()
             sage: C.left_right_eigenvectors_n_matrices(1)
-            [(word: P12, (0, 1, 0), (0, 0, 1)),
-             (word: P13, (0, 0, 1), (0, 1, 0)),
-             (word: P23, (0, 0, 1), (1, 0, 0)),
-             (word: P21, (1, 0, 0), (0, 0, 1)),
-             (word: P31, (1, 0, 0), (0, 1, 0)),
-             (word: P32, (0, 1, 0), (1, 0, 0))]
-
+            [(word: A1, (1.0, 0.0, 0.0), (0.0, 0.0, 1.0)),
+             (word: A2, (0.0, 1.0, 0.0), (1.0, 0.0, 0.0)),
+             (word: A3, (0.0, 0.0, 1.0), (1.0, 0.0, 0.0)),
+             (word: P12, (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)),
+             (word: P13, (0.0, 0.0, 1.0), (0.0, 1.0, 0.0)),
+             (word: P21, (1.0, 0.0, 0.0), (0.0, 0.0, 1.0)),
+             (word: P23, (0.0, 0.0, 1.0), (1.0, 0.0, 0.0)),
+             (word: P31, (1.0, 0.0, 0.0), (0.0, 1.0, 0.0)),
+             (word: P32, (0.0, 1.0, 0.0), (1.0, 0.0, 0.0))]
         """
         R = []
         for w in self.n_words_iterator(n):
@@ -638,8 +591,7 @@ class MCF_Cocycle(object):
 
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
             sage: C = mcf_cocycles.Sorted_ARP()
-            sage: C.plot_partition(3)
-
+            sage: G = C.plot_partition(3)
         """
         from sage.plot.graphics import Graphics
         from sage.plot.polygon import polygon
@@ -664,12 +616,14 @@ class MCF_Cocycle(object):
 
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
             sage: ARP = mcf_cocycles.Sorted_ARP()
-            sage: ARP.plot_left_right_eigenvectors_n_matrices(2)
+            sage: G = ARP.plot_eigenvectors_n_matrices(2)
         """
         from sage.plot.graphics import Graphics
         from sage.plot.point import point
         from sage.plot.line import line
         from sage.plot.text import text
+        from sage.plot.colors import hue
+        from sage.modules.free_module_element import vector
         M3to2 = projection_matrix(3, 2)
         R = self.left_right_eigenvectors_n_matrices(n)
         L = [(w, M3to2*(a/sum(a)), M3to2*(b/sum(b))) for (w,a,b) in R]
@@ -702,11 +656,11 @@ class MCF_Cocycle(object):
 
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
             sage: B = mcf_cocycles.Sorted_Brun()
-            sage: B.plot_pisot_conjugates(5)
+            sage: G = B.plot_pisot_conjugates(5)   # long time (8s)
 
         Image envoyee a Timo (6 mai 2014)::
 
-            sage: sum(B.plot_pisot_conjugates(i) for i in [1..6])  #not tested
+            sage: G = sum(B.plot_pisot_conjugates(i) for i in [1..6])  #not tested
         """
         from sage.plot.point import points
         Lreal = []
@@ -727,11 +681,11 @@ class MCF_Cocycle(object):
 
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
             sage: B = mcf_cocycles.Sorted_Brun()
-            sage: B.plot_pisot_conjugates(5)
+            sage: G = B.plot_pisot_conjugates(5)   # long time (8s)
 
         Image envoyee a Timo (6 mai 2014)::
 
-            sage: sum(B.plot_pisot_conjugates(i) for i in [1..6])  #not tested
+            sage: G = sum(B.plot_pisot_conjugates(i) for i in [1..6])  #not tested
         """
         T = [('a','a',0), ('a','b',1), ('a','d',2)]
         T += [('b','b',0), ('b','a',1)]
@@ -758,8 +712,6 @@ class MCF_Cocycle(object):
             + points(LrealIN, color='blue') 
             + points(Limag, color='red'))
 
-
-
     def position_of_last_column(self, n):
         r"""
         EXAMPLES:
@@ -773,7 +725,7 @@ class MCF_Cocycle(object):
             Counter({1: 13, 2: 10})
             sage: T.position_of_last_column(2)
             Counter({2: 342, 1: 187})
-            sage: T.position_of_last_column(3)
+            sage: T.position_of_last_column(3)   # long time (1s)
             Counter({2: 7866, 1: 4301})
 
         ::
@@ -783,12 +735,12 @@ class MCF_Cocycle(object):
             Counter({1: 19, 2: 14})
             sage: T.position_of_last_column(2)
             Counter({2: 702, 1: 387})
-            sage: T.position_of_last_column(3)
+            sage: T.position_of_last_column(3)  # long time (3s)
             Counter({2: 23166, 1: 12771})
         """
         from collections import Counter
         c = Counter()
-        for m in self.m_matrices(n):
+        for w,m in self.n_matrices_iterator(n):
             norms = tuple(col.norm(1) for col in m.columns())
             index = sorted(norms).index(norms[-1])
             c[index] += 1
@@ -802,40 +754,40 @@ class MCF_Cocycle(object):
             
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
             sage: C = mcf_cocycles.ARP()
-            sage: C.semi_norm_study(1, p=1)
+            sage: C.semi_norm_study(1, p=1) # tolerance 0.00001 # long time (4s)
             A1 1.0 False
             A2 1.0 False
             A3 1.0 False
             P12 0.999990663839 False
             P13 0.999987801801 False
-            P23 0.999983738803 False
             P21 0.999995727601 False
+            P23 0.999983738803 False
             P31 0.999994171082 False
             P32 0.999996491473 False
 
         For the 2-norm, AR matrices do not contract::
 
-            sage: C.semi_norm_study(1, p=2)
+            sage: C.semi_norm_study(1, p=2)   # long time (6s)
             A1 1.30656296488 False
             A2 1.30656296486 False
             A3 1.30656296475 False
             P12 0.99999999996 False
             P13 0.999999999967 False
-            P23 0.999999999997 False
             P21 0.999999999967 False
+            P23 0.999999999997 False
             P31 0.999999999769 False
             P32 0.999999999839 False
 
         When, the 1-norm is < 1, the product is pisot::
 
-            sage: C.semi_norm_study(2, p=1)
+            sage: C.semi_norm_study(2, p=1)   # long time
             A1,A1 1.0 False
             A1,A2 1.0 False
             A1,A3 1.0 False
             A1,P12 0.999998922557 False
             A1,P13 0.999997464905 False
-            A1,P23 0.999999150973 True
             A1,P21 0.999993244882 False
+            A1,P23 0.999999150973 True
             A1,P31 0.999994030522 False
             A1,P32 0.999998046513 True
             A2,A1 1.0 False
@@ -877,19 +829,15 @@ class MCF_Cocycle(object):
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
             sage: T = mcf_cocycles.Sorted_ARP()
             sage: T.norm_ratio_max(1)
-            6.0
+            3
             sage: T.norm_ratio_max(2)
-            9.0
+            5
             sage: T.norm_ratio_max(3)
-            12.0
+            7
             sage: T.norm_ratio_max(4)
-            15.0
-            sage: T.norm_ratio_max(5)
-            18.0
-
+            9
         """
         return max(self.norm_ratio_iterator(n))
-
 
     def cylinder_with_max_ratio(self,n):
         r"""
@@ -902,16 +850,12 @@ class MCF_Cocycle(object):
         L = [Triangle(*m.columns()) for w,m in self.n_cylinders_iterator(n)]
         return EnsembleDeTriangles(L)
 
-
-
-
-
-
 ####################
 # quick construction
 ####################
 class MCFCocycleGenerator(object):
     def ARP(self):
+        from sage.matrix.constructor import identity_matrix
         A1 = matrix(3, [1,-1,-1, 0,1,0, 0,0,1]).inverse()
         A2 = matrix(3, [1,0,0, -1,1,-1, 0,0,1]).inverse()
         A3 = matrix(3, [1,0,0, 0,1,0, -1,-1,1]).inverse()
@@ -931,7 +875,8 @@ class MCFCocycleGenerator(object):
 
         from language import languages
         return MCF_Cocycle(gens, cone, language=languages.ARP())
-    def _ARP_H_matrices(j,k, normalize=False):
+
+    def _ARP_H_matrices(self, j,k, normalize=False):
         r"""
         EXAMPLES::
 
@@ -1026,7 +971,8 @@ def arp_polyhedron(d=3):
 
     EXAMPLES::
 
-        sage: A,P = arp_polyhedron(3)
+        sage: from slabbe.mult_cont_frac_cocycle import arp_polyhedron
+        sage: A,P,L = arp_polyhedron(3)
         sage: A.vertices_list()
         [[0, 0, 0], [1/2, 1/2, 0], [1/2, 1/4, 1/4], [1, 0, 0]]
         sage: P.vertices_list()
@@ -1034,7 +980,7 @@ def arp_polyhedron(d=3):
 
     ::
 
-        sage: A,P = arp_polyhedron(4)
+        sage: A,P,L = arp_polyhedron(4)
         sage: A.vertices_list()
         [[0, 0, 0, 0],
          [1/2, 1/2, 0, 0],
@@ -1051,7 +997,7 @@ def arp_polyhedron(d=3):
 
     ::
 
-        sage: A,P = arp_polyhedron(5)
+        sage: A,P,L = arp_polyhedron(5)
         sage: A.vertices_list()
         [[0, 0, 0, 0, 0],
          [1/2, 1/2, 0, 0, 0],
@@ -1069,6 +1015,7 @@ def arp_polyhedron(d=3):
          [1/5, 1/5, 1/5, 1/5, 1/5],
          [1/4, 1/4, 1/4, 1/4, 0]]
     """
+    from sage.geometry.polyhedron.constructor import Polyhedron
     positive = [ [0]*i + [1] + [0]*(d-i) for i in range(1, d+1)]
     atmostone = [[1] + [-1]*d]
     ieq_arnoux = [[0]+[1]+[-1]*(d-1)]
@@ -1087,6 +1034,7 @@ def cassaigne_polyhedron(d=3):
 
     EXAMPLES::
 
+        sage: from slabbe.mult_cont_frac_cocycle import cassaigne_polyhedron
         sage: L,La,Lb = cassaigne_polyhedron(3)
         sage: L.vertices_list()
         [[0, 0, 0], [0, 1/2, 1/2], [1/3, 1/3, 1/3], [1/2, 1/2, 0]]
@@ -1121,6 +1069,7 @@ def cassaigne_polyhedron(d=3):
          [1/7, 1/7, 2/7, 2/7, 1/7],
          [1/6, 1/6, 1/6, 1/3, 1/6]]
     """
+    from sage.geometry.polyhedron.constructor import Polyhedron
     # [-1,7,3,4] represents the inequality 7x_1+3x_2+4x_3>= 1.
     positive = [ [0]*i + [1] + [0]*(d-i) for i in range(1, d+1)]
     atmostone = [[1] + [-1]*d]

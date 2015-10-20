@@ -911,17 +911,17 @@ cdef class MCFAlgorithm(object):
 
             sage: from slabbe.mult_cont_frac import Brun
             sage: Brun().lyapounov_exponents(1000000)  # 68.6 ms # tolerance 0.003
-            (0.3049429393152174, -0.1120652699014143, -0.367495867105725)
+            (0.3049429393152174, -0.1120652699014143, 1.367495867105725)
 
         Cython code on liafa is as fast as C on my machine::
 
             sage: Brun().lyapounov_exponents(67000000)    # 3.71s # tolerance 0.001
-            (0.30452120021265766, -0.11212586210856369, -0.36820379674801734)
+            (0.30452120021265766, -0.11212586210856369, 1.36820379674801734)
 
         Cython code on my machine is almost as fast as C on my machine::
 
             sage: Brun().lyapounov_exponents(67000000) # 4.58 s # tolerance 0.001
-            (0.30456433843239084, -0.1121770192467067, -0.36831961293987303)
+            (0.30456433843239084, -0.1121770192467067, 1.36831961293987303)
 
         """
         from math import log
@@ -1536,10 +1536,10 @@ cdef class MCFAlgorithm(object):
         Theta2 = []
         Uniform = []
         for _ in range(ntimes):
-            l1,l2,l2surl1 = self.lyapounov_exponents(n_iterations)
+            l1,l2,approx = self.lyapounov_exponents(n_iterations)
             Theta1.append(l1)
             Theta2.append(l2)
-            Uniform.append(1-l2surl1)
+            Uniform.append(approx)
         return Theta1, Theta2, Uniform
 
     def lyapounov_exponents_table(self, ntimes, n_iterations=1000):
