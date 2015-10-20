@@ -632,7 +632,7 @@ class MCF_Cocycle(object):
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
             sage: ARP = mcf_cocycles.ARP()
             sage: s = ARP.tikz_n_cylinders(1, labels=True, scale=4)
-            sage: view(s, tightpage=True)
+            sage: view(s, tightpage=True)   # not tested
         """
         from sage.misc.latex import LatexExpr
         lines = []
