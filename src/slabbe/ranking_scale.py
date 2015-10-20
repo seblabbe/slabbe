@@ -189,8 +189,8 @@ def RankingScale_CQU4_2015_v4():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.ranking_scale import RankingScale_CQU4_2014_v4
-        sage: R = RankingScale_CQU4_2014_v4()
+        sage: from slabbe.ranking_scale import RankingScale_CQU4_2015_v4
+        sage: R = RankingScale_CQU4_2015_v4()
     """
     R=1
     base=e
@@ -207,8 +207,8 @@ def RankingScale_CQU4_2015_v5():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.ranking_scale import RankingScale_CQU4_2014_v5
-        sage: R = RankingScale_CQU4_2014_v5()
+        sage: from slabbe.ranking_scale import RankingScale_CQU4_2015_v5
+        sage: R = RankingScale_CQU4_2015_v5()
     """
     R=1
     base=e
@@ -445,6 +445,8 @@ def discrete_curve(nb_equipes, max_points=100, K=1, R=2, base=2, verbose=False):
 def discrete_curve_2(nb_equipes, max_points=100):
     r"""
     """
+    from sage.misc.functional import round, log
+    from sage.rings.integer_ring import ZZ
     f = lambda p:(max_points-1)*(1-log(p)/log(nb_equipes))+1
     L = [ZZ(round(f(p=i))) for i in range(1,nb_equipes+1)]
     return L

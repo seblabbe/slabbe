@@ -14,7 +14,7 @@ EXAMPLES::
 ::
 
     sage: L = [1, 2, 9, 96, 2498, 161422]
-    sage: oeis.find_by_subsequence(L)                        # internet   
+    sage: oeis.find_by_subsequence(L)                        # not tested internet   
     0: A115965: Number of planar subpartitions of size n pyramidal planar partition.
 
 AUTHOR:
