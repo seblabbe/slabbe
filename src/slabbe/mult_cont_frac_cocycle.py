@@ -7,28 +7,40 @@ EXAMPLES:
 The 1-cylinders of ARP transformation as matrices::
 
     sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-    sage: ARP = mcf_cocycles.Sorted_ARP()
+    sage: ARP = mcf_cocycles.ARP()
     sage: zip(*ARP.n_cylinders_iterator(1))
-    [(word: A1, word: A2, word: A3, word: P1, word: P2, word: P3),
+    [(word: A1,
+      word: A2,
+      word: A3,
+      word: P12,
+      word: P13,
+      word: P21,
+      word: P23,
+      word: P31,
+      word: P32),
      (
-     [1 0 0]  [1 0 0]  [1 1 0]  [1 1 0]  [1 1 1]  [1 1 1]
-     [1 1 0]  [1 1 1]  [1 1 1]  [2 2 1]  [2 1 1]  [2 2 1]
-     [3 2 1], [3 2 1], [3 2 1], [3 2 1], [3 2 1], [3 2 1]
-     )]
+    [1 1 1]  [1 0 0]  [1 0 0]  [1 1 1]  [1 1 1]  [2 1 1]  [1 0 1]  [2 1 1]
+    [0 1 0]  [1 1 1]  [0 1 0]  [1 2 1]  [0 1 1]  [1 1 1]  [1 1 1]  [1 1 0]
+    [0 0 1], [0 0 1], [1 1 1], [0 1 1], [1 1 2], [1 0 1], [1 1 2], [1 1 1],
+
+    [1 1 0]
+    [1 2 1]
+    [1 1 1]
+    )]
 
 Ces calculs illustrent le bounded distorsion de ratio=4 pour ARP
 multiplicatif (2 avril 2014)::
 
     sage: T = mcf_cocycles.Sorted_ARPMulti(2)
-    sage: T.norm_ratio_max(1)
+    sage: T.distorsion_max(1)
     3
-    sage: T.norm_ratio_max(2)
+    sage: T.distorsion_max(2)
     10/3
-    sage: T.norm_ratio_max(3)
+    sage: T.distorsion_max(3)
     25/7
     sage: n(_)
     3.57142857142857
-    sage: T.norm_ratio_max(4)    # long time (4s)
+    sage: T.distorsion_max(4)    # long time (4s)
     62/17
     sage: n(_)                   # long time
     3.64705882352941
@@ -36,15 +48,15 @@ multiplicatif (2 avril 2014)::
 ::
 
     sage: T = mcf_cocycles.Sorted_ARPMulti(3)
-    sage: T.norm_ratio_max(1)
+    sage: T.distorsion_max(1)
     3
-    sage: T.norm_ratio_max(2)
+    sage: T.distorsion_max(2)
     7/2
-    sage: T.norm_ratio_max(3)
+    sage: T.distorsion_max(3)
     48/13
     sage: n(_)
     3.69230769230769
-    sage: T.norm_ratio_max(4)  # long time (47s)
+    sage: T.distorsion_max(4)  # long time (47s)
     161/43
     sage: n(_)                 # long time
     3.74418604651163
@@ -95,27 +107,28 @@ def projection_matrix(dim_from=3, dim_to=2):
         s = "for input dim_from={} and dim_to={}"
         raise NotImplementedError(s.format(dim_from, dim_to))
 
-def norm_ratio(m):
+def distorsion(M, p=1):
     r"""
     1 Avril 2014. L'ancien ratio n'était pas le bon. Je n'utilisais pas les
     bonnes normes.
 
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_cocycle import norm_ratio
+        sage: from slabbe.mult_cont_frac_cocycle import distorsion
         sage: M = matrix(3, (1,2,3,4,5,6,7,8,9))
         sage: M
         [1 2 3]
         [4 5 6]
         [7 8 9]
-        sage: norm_ratio(M)
+        sage: distorsion(M)
+        3/2
+        sage: (3+6+9) / (1+4+7)
+        3/2
+        sage: distorsion(M, p=oo)
         9/7
-        sage: (7+8+9) / 9.
-        2.66666666666667
     """
-    from sage.modules.free_module_element import vector
-    last_row = vector((0,0,1)) * m
-    return max(last_row) / min(last_row)
+    norms = [c.norm(p=p) for c in M.columns()]
+    return max(norms) / min(norms)
 
 def is_pisot(m):
     r"""
@@ -551,7 +564,7 @@ class MCF_Cocycle(object):
         #G.delete_vertices(to_remove)
         #return G
 
-    def left_right_eigenvectors_n_matrices(self,n, verbose=False):
+    def n_matrices_eigenvectors(self,n, verbose=False):
         r"""
         Return the left and right eigenvectors of the matrices of level n.
 
@@ -559,7 +572,7 @@ class MCF_Cocycle(object):
 
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
             sage: C = mcf_cocycles.ARP()
-            sage: C.left_right_eigenvectors_n_matrices(1)
+            sage: C.n_matrices_eigenvectors(1)
             [(word: A1, (1.0, 0.0, 0.0), (0.0, 0.0, 1.0)),
              (word: A2, (0.0, 1.0, 0.0), (1.0, 0.0, 0.0)),
              (word: A3, (0.0, 0.0, 1.0), (1.0, 0.0, 0.0)),
@@ -571,8 +584,7 @@ class MCF_Cocycle(object):
              (word: P32, (0.0, 1.0, 0.0), (1.0, 0.0, 0.0))]
         """
         R = []
-        for w in self.n_words_iterator(n):
-            m = prod(self._gens[i] for i in w)
+        for w,m in self.n_matrices_iterator(n):
             try:
                 a,v_right = perron_right_eigenvector(m)
                 b,v_left = perron_right_eigenvector(m.transpose())
@@ -610,12 +622,16 @@ class MCF_Cocycle(object):
         r"""
         INPUT:
 
-        - color_index -- 0 for first letter, -1 for last letter
+        - ``n` -- integer, length
+        - ``side`` -- ``'left'`` or ``'right'``, drawing left or right
+          eigenvectors
+        - ``color_index`` -- 0 for first letter, -1 for last letter
+        - ``draw_line`` -- boolean
 
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: ARP = mcf_cocycles.Sorted_ARP()
+            sage: ARP = mcf_cocycles.ARP()
             sage: G = ARP.plot_eigenvectors_n_matrices(2)
         """
         from sage.plot.graphics import Graphics
@@ -625,7 +641,7 @@ class MCF_Cocycle(object):
         from sage.plot.colors import hue
         from sage.modules.free_module_element import vector
         M3to2 = projection_matrix(3, 2)
-        R = self.left_right_eigenvectors_n_matrices(n)
+        R = self.n_matrices_eigenvectors(n)
         L = [(w, M3to2*(a/sum(a)), M3to2*(b/sum(b))) for (w,a,b) in R]
         G = Graphics()
         alphabet = self._language._alphabet
@@ -665,8 +681,8 @@ class MCF_Cocycle(object):
         from sage.plot.point import points
         Lreal = []
         Limag = []
-        for w,m in self.n_matrices_iterator(n):
-            a,b,c = sorted(m.eigenvalues(), key=abs)
+        for w,s in self.n_matrices_eigenvalues_iterator(n):
+            a,b,c = sorted(s, key=abs)
             if a.imag() == 0 and b.imag() == 0:
                 Lreal.append((a,b))
             else:
@@ -674,79 +690,8 @@ class MCF_Cocycle(object):
                 Limag.append((b.real(),b.imag()))
         return points(Lreal) + points(Limag, color='red')
 
-    @cached_method
-    def plot_pisot_conjugates_brun(self, n):
-        r"""
-        EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: B = mcf_cocycles.Sorted_Brun()
-            sage: G = B.plot_pisot_conjugates(5)   # long time (8s)
-
-        Image envoyee a Timo (6 mai 2014)::
-
-            sage: G = sum(B.plot_pisot_conjugates(i) for i in [1..6])  #not tested
-        """
-        T = [('a','a',0), ('a','b',1), ('a','d',2)]
-        T += [('b','b',0), ('b','a',1)]
-        T += [('c','c',0), ('c','b',2)]
-        T += [('d','c',1), ('d','c',2)]
-        A = Automaton(T, initial_states=['a','b','c','d'],
-                      final_states=['a','b','c','d'])
-        B = A.determinisation()
-        LrealIN = []
-        LrealNO = []
-        Limag = []
-        for w in self.n_words_iterator(n):
-            m = prod(self._gens[i] for i in w)
-            a,b,c = sorted(m.eigenvalues(), key=abs)
-            if a.imag() == 0 and b.imag() == 0:
-                if B(w*100)[0]:
-                    LrealIN.append((a,b))
-                else:
-                    LrealNO.append((a,b))
-            else:
-                Limag.append((a.real(),a.imag()))
-                Limag.append((b.real(),b.imag()))
-        return (points(LrealNO, color='green') 
-            + points(LrealIN, color='blue') 
-            + points(Limag, color='red'))
-
-    def position_of_last_column(self, n):
-        r"""
-        EXAMPLES:
-
-        On dirait que la troisieme colonne n'est jamais la plus petite.
-        Soit la plus grande (pos=2) soit la milieu (pos=1).
-
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: T = mcf_cocycles.Sorted_ARPMulti(4)
-            sage: T.position_of_last_column(1)
-            Counter({1: 13, 2: 10})
-            sage: T.position_of_last_column(2)
-            Counter({2: 342, 1: 187})
-            sage: T.position_of_last_column(3)   # long time (1s)
-            Counter({2: 7866, 1: 4301})
-
-        ::
-
-            sage: T = mcf_cocycles.Sorted_ARPMulti(6)
-            sage: T.position_of_last_column(1)
-            Counter({1: 19, 2: 14})
-            sage: T.position_of_last_column(2)
-            Counter({2: 702, 1: 387})
-            sage: T.position_of_last_column(3)  # long time (3s)
-            Counter({2: 23166, 1: 12771})
-        """
-        from collections import Counter
-        c = Counter()
-        for w,m in self.n_matrices_iterator(n):
-            norms = tuple(col.norm(1) for col in m.columns())
-            index = sorted(norms).index(norms[-1])
-            c[index] += 1
-        return c
-
-    def semi_norm_study(self, n, p=2):
+    def n_semi_norm_iterator(self, n, p=2):
         r"""
         EXAMPLES:
 
@@ -754,7 +699,8 @@ class MCF_Cocycle(object):
             
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
             sage: C = mcf_cocycles.ARP()
-            sage: C.semi_norm_study(1, p=1) # tolerance 0.00001 # long time (4s)
+            sage: it = C.n_semi_norm_iterator(1, p=1) # tolerance 0.00001 # long time (4s)
+            sage: for w,s,b in it: print a,s,b
             A1 1.0 False
             A2 1.0 False
             A3 1.0 False
@@ -767,7 +713,8 @@ class MCF_Cocycle(object):
 
         For the 2-norm, AR matrices do not contract::
 
-            sage: C.semi_norm_study(1, p=2)   # long time (6s)
+            sage: it = C.n_semi_norm_iterator(1, p=2)   # long time (6s)
+            sage: for w,s,b in it: print a,s,b
             A1 1.30656296488 False
             A2 1.30656296486 False
             A3 1.30656296475 False
@@ -780,7 +727,8 @@ class MCF_Cocycle(object):
 
         When, the 1-norm is < 1, the product is pisot::
 
-            sage: C.semi_norm_study(2, p=1)   # long time
+            sage: it = C.n_semi_norm_iterator(2, p=1)   # long time
+            sage: for w,s,b in it: print a,s,b
             A1,A1 1.0 False
             A1,A2 1.0 False
             A1,A3 1.0 False
@@ -811,16 +759,16 @@ class MCF_Cocycle(object):
         for w in self.n_words_iterator(n):
             m = self.word_to_matrix(w)
             cone = m*self.cone(w[-1])
-            print w, semi_norm_cone(m.transpose(), cone, p=p), self.is_pisot(w)
+            yield w, semi_norm_cone(m.transpose(), cone, p=p), self.is_pisot(w)
 
-    def norm_ratio_iterator(self,n):
+    def distorsion_iterator(self, n, p=1):
         r"""
         returns an iterator of the ratio max/min of the norm of the columns
         of the n-cylinders.
         """
         for w,m in self.n_cylinders_iterator(n):
-            yield norm_ratio(m)
-    def norm_ratio_max(self, n):
+            yield distorsion(m, p=p)
+    def distorsion_max(self, n, p=1):
         r"""
         EXAMPLES:
 
@@ -828,25 +776,40 @@ class MCF_Cocycle(object):
 
             sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
             sage: T = mcf_cocycles.Sorted_ARP()
-            sage: T.norm_ratio_max(1)
+            sage: T.distorsion_max(1)
             3
-            sage: T.norm_ratio_max(2)
+            sage: T.distorsion_max(2)
             5
-            sage: T.norm_ratio_max(3)
+            sage: T.distorsion_max(3)
             7
-            sage: T.norm_ratio_max(4)
+            sage: T.distorsion_max(4)
             9
         """
-        return max(self.norm_ratio_iterator(n))
+        return max(self.distorsion_iterator(n, p=p))
 
-    def cylinder_with_max_ratio(self,n):
+    def distorsion_argmax(self, n, p=1):
         r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
+            sage: ARP = mcf_cocycles.Sorted_ARP()
+            sage: ARP.distorsion_argmax(1)
+            (
+                      [1 0 0]
+                      [1 1 0]
+            word: A1, [3 2 1]
+            )
         """
-        it = self.n_words_iterator(n)
-        key = lambda w:norm_ratio(prod(self._gens[a] for a in w)*self._cone_dict)
+        it = self.n_cylinders_iterator(n)
+        key = lambda (w,m):distorsion(m, p=p)
         return max(it, key=key)
 
     def triangle_partition(self,n):
+        r"""
+        EXAMPLES::
+
+            sage: print "check this"
+        """
         L = [Triangle(*m.columns()) for w,m in self.n_cylinders_iterator(n)]
         return EnsembleDeTriangles(L)
 
