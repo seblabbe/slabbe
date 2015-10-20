@@ -3,8 +3,7 @@ VERSION = 0.2
 all: install test
 
 test: 
-	# sage -t --force-lib -i src/slabbe/*
-	sage -t --force-lib src/slabbe/*
+	sage -tp --force-lib src/slabbe/*
 
 install:
 	cd .. && sage -pkg slabbe-$(VERSION)
