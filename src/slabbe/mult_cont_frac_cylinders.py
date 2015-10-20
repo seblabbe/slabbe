@@ -1,22 +1,25 @@
+# -*- coding: utf-8 -*-
 r"""
-Multidimensional Continued Fraction Algorithm's Cylinders
+Multidimensional Continued Fraction Algorithm's cocyles
 
 EXAMPLES:
 
 The 1-cylinders of ARP transformation as matrices::
 
-    sage: ARP = TransformationARP()
-    sage: list(ARP.n_cylinders_iterator(1))
-    [
-    [1 0 0]  [1 0 0]  [1 1 0]  [1 1 0]  [1 1 1]  [1 1 1]
-    [1 1 0]  [1 1 1]  [1 1 1]  [2 2 1]  [2 1 1]  [2 2 1]
-    [3 2 1], [3 2 1], [3 2 1], [3 2 1], [3 2 1], [3 2 1]
-    ]
+    sage: from slabbe.mult_cont_frac_cylinders import mcf_cocycles
+    sage: ARP = mcf_cocycles.Sorted_ARP()
+    sage: zip(*ARP.n_cylinders_iterator(1))
+    [(word: A1, word: A2, word: A3, word: P1, word: P2, word: P3),
+     (
+     [1 0 0]  [1 0 0]  [1 1 0]  [1 1 0]  [1 1 1]  [1 1 1]
+     [1 1 0]  [1 1 1]  [1 1 1]  [2 2 1]  [2 1 1]  [2 2 1]
+     [3 2 1], [3 2 1], [3 2 1], [3 2 1], [3 2 1], [3 2 1]
+     )]
 
 Ces calculs illustrent le bounded distorsion de ratio=4 pour ARP
 multiplicatif (2 avril 2014)::
 
-    sage: T = TransformationARP_multi(2)
+    sage: T = mcf_cocycles.Sorted_ARPMulti(2)
     sage: T.norm_ratio_max(1)
     3
     sage: T.norm_ratio_max(2)
@@ -32,7 +35,7 @@ multiplicatif (2 avril 2014)::
 
 ::
 
-    sage: T = TransformationARP_multi(3)
+    sage: T = mcf_cocycles.Sorted_ARPMulti(3)
     sage: T.norm_ratio_max(1)
     3
     sage: T.norm_ratio_max(2)
@@ -71,123 +74,52 @@ The limit 4 is achievable (when m->oo, not much when the level increases) ::
     sage: lim(sup/inf, m=oo)
     4
 
-
-
 """
-
 import itertools
 from collections import Counter
+from sage.matrix.constructor import matrix
+from sage.misc.cachefunc import cached_method
+from sage.misc.misc_c import prod
+from language import Language, FiniteLanguage
 
-sqrt3 = sqrt(3)
-M2to3 = matrix(3,[-sqrt3,-1,sqrt3,-1,0,2],ring=RR)/3
-M3to2 = matrix(2,[-sqrt3,sqrt3,0,-1,-1,2],ring=RR)/2
-
-##################
-# matrices
-##################
-A1 = matrix(3, [1,0,0,0,1,0,-1,-1,1]).inverse()
-A2 = matrix(3, [1,0,0,-1,-1,1,0,1,0]).inverse()
-A3 = matrix(3, [-1,-1,1,1,0,0,0,1,0]).inverse()
-P1 = matrix(3, [0,-1,1,1,0,0,-1,1,0]).inverse()
-P2 = matrix(3, [-1,1,0,0,-1,1,1,0,0]).inverse()
-P3 = matrix(3, [0,-1,1,-1,1,0,1,0,0]).inverse()
-
-m = var('m')
-
-A1m = matrix(3, [1,0,0,0,1,0,m,m,1])
-A2m = matrix(3, [1,0,0,0,0,1,m,1,m])
-A3m = matrix(3, [0,1,0,0,0,1,1,m,m])
-
-Delta = matrix(3, [1,0,1,0,1,1])
-
-B1 = matrix(3, [1,0,0, 0,1,0, 0,-1,1]).inverse()
-B2 = matrix(3, [1,0,0, 0,-1,1, 0,1,0]).inverse()
-B3 = matrix(3, [0,-1,1, 1,0,0, 0,1,0]).inverse()
-
-def H(j,k, normalize=False):
+#####################
+# Helper functions
+#####################
+def projection_matrix(dim_from=3, dim_to=2):
     r"""
-    EXAMPLES:
+    Return a projection matrix from R^d to R^l.
 
-    These are the six inside triangles::
+    INPUT:
 
-        sage: possible = [(3,1), (2,1), (3,2), (1,2), (2,3), (1,3)]
-        sage: for (j,k) in possible: print (j,k);print P_mat(j,k) * H(j,k)
-        (3, 1)
-        [  1   1   1]
-        [1/2   1   0]
-        [1/2   1   1]
-        (2, 1)
-        [  1   1   1]
-        [1/2   1   1]
-        [1/2   0   1]
-        (3, 2)
-        [  1 1/2   0]
-        [  1   1   1]
-        [  1 1/2   1]
-        (1, 2)
-        [  1 1/2   1]
-        [  1   1   1]
-        [  0 1/2   1]
-        (2, 3)
-        [  1   0 1/2]
-        [  1   1 1/2]
-        [  1   1   1]
-        (1, 3)
-        [  1   1 1/2]
-        [  0   1 1/2]
-        [  1   1   1]
+    - ``dim_from` -- integer (default: ``3``)
+    - ``dim_to` -- integer (default: ``2``)
 
-    These are the six outside triangles::
+    OUTPUT:
 
-        sage: possible = [(3,1), (2,1), (3,2), (1,2), (2,3), (1,3)]
-        sage: for (j,k) in possible: print (j,k);print AR_mat(j) * H(j,k)
-        (3, 1)
-        [1/2   0   0]
-        [1/2   1   0]
-        [  1   1   1]
-        (2, 1)
-        [1/2   0   0]
-        [  1   1   1]
-        [1/2   0   1]
-        (3, 2)
-        [  1 1/2   0]
-        [  0 1/2   0]
-        [  1   1   1]
-        (1, 2)
-        [  1   1   1]
-        [  0 1/2   0]
-        [  0 1/2   1]
-        (2, 3)
-        [  1   0 1/2]
-        [  1   1   1]
-        [  0   0 1/2]
-        (1, 3)
-        [  1   1   1]
-        [  0   1 1/2]
-        [  0   0 1/2]
+        matrix
+
+    EXAMPLES::
+
+        sage: from slabbe.mult_cont_frac_cylinders import projection_matrix
+        sage: projection_matrix(3,2)
+        [-0.866025403784439  0.866025403784439  0.000000000000000]
+        [-0.500000000000000 -0.500000000000000   1.00000000000000]
+        sage: projection_matrix(2,3)
+        [-0.577350269189626 -0.333333333333333]
+        [ 0.577350269189626 -0.333333333333333]
+        [ 0.000000000000000  0.666666666666667]
     """
-    if normalize:
-        a = 1/2
+    from math import sqrt
+    from sage.rings.real_mpfr import RR
+    sqrt3 = sqrt(3)
+    if dim_from == 3 and dim_to == 2:
+        return matrix(2,[-sqrt3,sqrt3,0,-1,-1,2],ring=RR)/2
+    elif dim_from == 2 and dim_to == 3:
+        return matrix(3,[-sqrt3,-1,sqrt3,-1,0,2],ring=RR)/3
     else:
-        a = 1
-    if j==3 and k==1:
-        return matrix([(a,a,0), (0,1,0), (0,0,1)]).transpose()
-    elif j==2 and k==1:
-        return matrix([(a,0,a), (0,1,0), (0,0,1)]).transpose()
-    elif j==3 and k==2:
-        return matrix([(1,0,0), (a,a,0), (0,0,1)]).transpose()
-    elif j==1 and k==2:
-        return matrix([(1,0,0), (0,a,a), (0,0,1)]).transpose()
-    elif j==2 and k==3:
-        return matrix([(1,0,0), (0,1,0), (a,0,a)]).transpose()
-    elif j==1 and k==3:
-        return matrix([(1,0,0), (0,1,0), (0,a,a)]).transpose()
-    else:
-        raise ValueError("invalid j(=%s) and k(=%s)" % (j,k))
+        s = "for input dim_from={} and dim_to={}"
+        raise NotImplementedError(s.format(dim_from, dim_to))
 
-##################
-# helper functions
-##################
 def norm_ratio(m):
     r"""
     1 Avril 2014. L'ancien ratio n'était pas le bon. Je n'utilisais pas les
@@ -195,6 +127,7 @@ def norm_ratio(m):
 
     EXAMPLES::
 
+        sage: from slabbe.mult_cont_frac_cylinders import norm_ratio
         sage: M = matrix(3, (1,2,3,4,5,6,7,8,9))
         sage: M
         [1 2 3]
@@ -205,50 +138,45 @@ def norm_ratio(m):
         sage: (7+8+9) / 9.
         2.66666666666667
     """
+    from sage.modules.free_module_element import vector
     last_row = vector((0,0,1)) * m
     return max(last_row) / min(last_row)
 
 def is_pisot(m):
     r"""
+    EXAMPLES::
+
+        sage: from slabbe.mult_cont_frac_cylinders import is_pisot
+        sage: M = matrix(3, (1,2,3,4,5,6,7,8,9))
+        sage: is_pisot(M)
+        False
     """
     S = sorted((abs(e) for e in m.eigenvalues()), reverse=True)
     return S[0] > 1 and S[1] < 1
 
-def perron_eigenvector(M):
+def perron_right_eigenvector(M):
     r"""
     EXAMPLES::
 
-        sage: L = [-13, 14, -14, -26, 12, -12, -18, 13, -21]
-        sage: MI = matrix(3, L)
-        sage: perron_eigenvector(MI)
-        (-19.55058680967682?, (1, 1.617076203480530?, 2.084975261314588?))
-
-    ::
-
-        sage: perron_eigenvector(stochastisize(MI))
-        Using numpy instead of Sage for finding eigenvectors...
-        ((1.0000000000000004+0j), (0.57735026919, 0.57735026919, 0.57735026919))
-
+        sage: from slabbe.mult_cont_frac_cylinders import perron_right_eigenvector
+        sage: m = matrix(2,[-11,14,-26,29])
+        sage: a,v = perron_right_eigenvector(m)
+        (15.0000000000000, (0.35, 0.6499999999999999))
     """
-    try:
-        #raise NotImplementedError
-        vec = M.eigenvectors_right()
-    except NotImplementedError:
-        #print "Using numpy instead of Sage for finding eigenvectors..."
-        eig, vec = numpy.linalg.eig(M)
-        index = abs(eig).argmax()
-        rightv = vec.transpose()[index]
-        if eig[index].imag == 0:
-            eig_sage = RR(eig[index].real)
-            vec_sage = vector(a.real for a in rightv)
-        else:
-            eig_sage = CC(eig[index])
-            vec_sage = vector(CC, rightv)
-        return eig_sage, vec_sage
+    from sage.modules.free_module_element import vector
+    from sage.rings.real_mpfr import RR
+    from sage.rings.all import CC
+    import numpy
+    eig, vec = numpy.linalg.eig(M)
+    index = abs(eig).argmax()
+    rightv = vec.transpose()[index]
+    if eig[index].imag == 0:
+        eig_sage = RR(eig[index].real)
+        vec_sage = vector(a.real for a in rightv)
     else:
-        rep = max(vec, key=lambda a:abs(a[0].n()))
-        a,[perronvec],mul = rep
-        return a, perronvec
+        eig_sage = CC(eig[index])
+        vec_sage = vector(CC, rightv)
+    return eig_sage, vec_sage/sum(vec_sage)
 
 def semi_norm_v(M, v,  p=2, verbose=False):
     r"""
@@ -256,6 +184,7 @@ def semi_norm_v(M, v,  p=2, verbose=False):
 
     EXAMPLES::
 
+        sage: from slabbe.mult_cont_frac_cylinders import semi_norm_v
         sage: A1 = matrix(3, [1,-1,-1, 0,1,0, 0,0,1]).inverse()
         sage: semi_norm_v(A1, vector( (1,1,1)))
         0.9999999999890247
@@ -265,6 +194,8 @@ def semi_norm_v(M, v,  p=2, verbose=False):
         1.0
 
     """
+    from sage.modules.free_module_element import vector
+    from sage.numerical.optimize import minimize_constrained
     def func(z):
         vz = vector(z)
         return - (M*vz).norm(p) / vz.norm(p)
@@ -287,6 +218,7 @@ def semi_norm_cone(M, cone,  p=2, verbose=False):
 
     For Arnoux-Rauzy, only the 1-norm works::
 
+        sage: from slabbe.mult_cont_frac_cylinders import semi_norm_cone
         sage: A1 = matrix(3, [1,1,1, 0,1,0, 0,0,1])
         sage: cone = A1
         sage: semi_norm_cone(A1.transpose(), cone, p=1)
@@ -299,7 +231,8 @@ def semi_norm_cone(M, cone,  p=2, verbose=False):
     For Poincaré, all norms work::
 
         sage: P21 = matrix(3, [1,1,1, 0,1,1, 0,0,1])
-        sage: cone = P21 * H(2,1)
+        sage: H21 = matrix(3, [1,0,0, 0,1,0, 1,0,1])
+        sage: cone = P21 * H21
         sage: semi_norm_cone(P21.transpose(), cone, p=1)
         0.9999957276014074
         sage: semi_norm_cone(P21.transpose(), cone, p=oo)
@@ -307,7 +240,7 @@ def semi_norm_cone(M, cone,  p=2, verbose=False):
         sage: semi_norm_cone(P21.transpose(), cone, p=2)
         0.9999999999670175
 
-    For Poincaré on the whole domain, it works for some norms::
+    For Poincaré on the whole cone, it works for some norms::
 
         sage: P21 = matrix(3, [1,1,1, 0,1,1, 0,0,1])
         sage: cone = P21
@@ -322,8 +255,9 @@ def semi_norm_cone(M, cone,  p=2, verbose=False):
 
         sage: A1 = matrix(3, [1,1,1, 0,1,0, 0,0,1])
         sage: P21 = matrix(3, [1,1,1, 0,1,1, 0,0,1])
+        sage: H21 = matrix(3, [1,0,0, 0,1,0, 1,0,1])
         sage: M = A1 * P21
-        sage: cone = A1 * P21 * H(2,1)
+        sage: cone = A1 * P21 * H21
         sage: semi_norm_cone(M.transpose(), cone, p=1)
         0.999993244882415
         sage: semi_norm_cone(M.transpose(), cone, p=oo)
@@ -331,6 +265,8 @@ def semi_norm_cone(M, cone,  p=2, verbose=False):
         sage: semi_norm_cone(M.transpose(), cone, p=2)
         0.7529377601317161
     """
+    from sage.modules.free_module_element import vector
+    from sage.numerical.optimize import minimize_constrained
     a,b,c = cone.columns()
     ab = vector(matrix((a,b)).right_kernel_matrix().row(0))
     ac = vector(matrix((a,c)).right_kernel_matrix().row(0))
@@ -363,17 +299,19 @@ def semi_norm_cone(M, cone,  p=2, verbose=False):
     return -func(rep)
 
 ######################
-# class Transformation
+# class MCF_Cocycle
 ######################
-class Transformation:
+class MCF_Cocycle(object):
     r"""
-    (What is the good name for this class?)
+    Multidimensional continued fraction algorithm cocycle
 
     INPUT:
 
-    - ``M`` -- list, tuple or dict; the matrices. Keys 0,...,n-1 are used
-      for list and tuple.
-    - ``domain`` -- dict or matrix; the domain
+    - ``gens`` -- list, tuple or dict; the matrices. Keys 0,...,n-1 are
+      used for list and tuple.
+    - ``cone`` -- dict or matrix; the cone for each matrix generators.
+      If it is a matrix, then it serves as the cone for all matrices. The
+      cone is defined by the columns of the matrix.
     - ``language`` -- regular language or None; if None, the language is
       the full shift.
 
@@ -382,68 +320,90 @@ class Transformation:
         sage: B1 = matrix(3, [1,0,0, 0,1,0, 0,1,1])
         sage: B2 = matrix(3, [1,0,0, 0,0,1, 0,1,1])
         sage: B3 = matrix(3, [0,1,0, 0,0,1, 1,0,1])
-        sage: M = {'B1':B1, 'B2':B2, 'B3':B3}
-        sage: domain = matrix(3, [1,1,1,0,1,1,0,0,1])
-        sage: T = Transformation(M, domain)
+        sage: gens = {'B1':B1, 'B2':B2, 'B3':B3}
+        sage: cone = matrix(3, [1,1,1,0,1,1,0,0,1])
+        sage: MCF_Cocycle(gens, cone)
+        Cocycle with 3 matrices over Language of finite words over alphabet ['B1', 'B2', 'B3']
     """
-    def __init__(self, M, domain, language=None):
-        if isinstance(M, dict):
-            self._M = M
-        elif isinstance(M, (list, tuple)):
-            self._M = dict(enumerate(M))
+    def __init__(self, gens, cone, language=None):
+        r"""
+        EXAMPLES::
+
+            sage: gens = {'A':matrix(3, [1,0,0, 0,1,0, 0,1,1])}
+            sage: cone = identity_matrix(3)
+            sage: MCF_Cocycle(gens, cone)
+            Cocycle with 1 gens over Language of finite words over alphabet ['A']
+        """
+        if isinstance(gens, dict):
+            self._gens = gens
+        elif isinstance(gens, (list, tuple)):
+            self._gens = dict(enumerate(gens))
         else:
-            raise ValueError("M must be a list, tuple or a dict")
-        if isinstance(domain, dict):
-            self._domain = domain
+            raise ValueError("gens must be a list, tuple or a dict")
+        if isinstance(cone, dict):
+            self._cone_dict = cone
         else:
-            self._domain = {letter:domain for letter in self._M.keys()}
+            self._cone_dict = {letter:cone for letter in self._gens.keys()}
         if language is None:
-            self._language = Language(self._M.keys())
+            self._language = Language(sorted(self._gens.keys()))
         else:
             self._language = language
 
+    def __repr__(self):
+        r"""
+        EXAMPLES::
+
+            sage: gens = {'A':matrix(3, [1,0,0, 0,1,0, 0,1,1])}
+            sage: cone = identity_matrix(3)
+            sage: MCF_Cocycle(gens, cone)
+            Cocycle with 1 gens over Language of finite words over alphabet ['A']
+        """
+        s = "Cocycle with {} gens over {}"
+        return s.format(len(self._gens), self._language)
+
+    def gens(self):
+        return self._gens
+    def cone_dict(self):
+        return self._cone_dict
+    def cone(self, key):
+        return self._cone_dict[key]
+    def language(self):
+        return self._language
+
     @cached_method
     def identity_matrix(self):
-        return self._M.values()[0].parent().one()
+        return self._gens.values()[0].parent().one()
 
     def word_to_matrix(self, w):
         r"""
         EXAMPLES::
 
-            sage: ARPunsorted.word_to_matrix(Word())
+            sage: from slabbe.mult_cont_frac_cylinders import mcf_cocycles
+            sage: C = mcf_cocycles.Sorted_ARP()
+            sage: C.word_to_matrix(Word())
             [1 0 0]
             [0 1 0]
             [0 0 1]
         """
-        return prod((self._M[a] for a in w), z=self.identity_matrix())
-    def word_last_letter_to_domain(self, w):
-        r"""
-        EXAMPLES::
-
-            sage: ARPunsorted.word_last_letter_to_domain(Word())
-            [1 0 0]
-            [0 1 0]
-            [0 0 1]
-        """
-        if w:
-            return self._domain[w[-1]]
-        else:
-            return self.identity_matrix()
+        return prod((self._gens[a] for a in w), z=self.identity_matrix())
 
     def n_words_iterator(self, n):
         r"""
         EXAMPLES::
             
+            sage: from slabbe.mult_cont_frac_cylinders import mcf_cocycles
+            sage: ARP = mcf_cocycles.Sorted_ARP()
             sage: list(ARP.n_words_iterator(1))
             [word: 0, word: 1, word: 2, word: 3, word: 4, word: 5]
         """
-        return self._language.iterate_by_length(n)
+        return self._language.words_of_length_iterator(n)
 
     def n_matrices_iterator(self, n):
         r"""
         EXAMPLES::
 
-            sage: ARP = TransformationARP()
+            sage: from slabbe.mult_cont_frac_cylinders import mcf_cocycles
+            sage: ARP = mcf_cocycles.Sorted_ARP()
             sage: A,B = zip(*list(ARP.n_matrices_iterator(1)))
             sage: A
             (word: P2, word: P3, word: P1, word: A1, word: A3, word: A2)
@@ -456,11 +416,14 @@ class Transformation:
         """
         for w in self.n_words_iterator(n):
             yield w, self.word_to_matrix(w)
+
     def n_cylinders_iterator(self, n):
         r"""
         EXAMPLES::
 
-            sage: it = ARPunsorted.n_cylinders_iterator(1)
+            sage: from slabbe.mult_cont_frac_cylinders import mcf_cocycles
+            sage: C = mcf_cocycles.Sorted_ARP()
+            sage: it = C.n_cylinders_iterator(1)
             sage: for w,cyl in it: print "{}\n{}".format(w,cyl)
             A1
             [1 1 1]
@@ -500,24 +463,10 @@ class Transformation:
             [1 1 1]
             
         """
+        if n == 0:
+            raise NotImplementedError
         for w in self.n_words_iterator(n):
-            yield w, self.word_to_matrix(w)*self.word_last_letter_to_domain(w)
-
-    def plot_partition(self, n, label=True):
-        r"""
-        EXAMPLES::
-
-            sage: ARPunsorted.plot_partition(3)
-
-        """
-        G = Graphics()
-        for w,cyl in self.n_cylinders_iterator(n):
-            columns = cyl.columns()
-            G += polygon((M3to2*col/col.norm(1) for col in columns), fill=False) 
-            if label:
-                sum_cols = sum(columns)
-                G += text("{}".format(w), M3to2*sum_cols/sum_cols.norm(1))
-        return G
+            yield w, self.word_to_matrix(w)*self.cone(w[-1])
 
     def is_pisot(self, w, verbose=False):
         r"""
@@ -534,18 +483,20 @@ class Transformation:
             return False
 
     @cached_method
-    def non_pisot_matrices(self,n, verbose=False):
+    def n_matrices_non_pisot(self,n, verbose=False):
         r"""
         Return the list of non pisot matrices (as list of indices of base
         matrices).
 
         EXAMPLES::
 
-            sage: ARP.non_pisot_matrices(1)
+            sage: from slabbe.mult_cont_frac_cylinders import mcf_cocycles
+            sage: ARP = mcf_cocycles.Sorted_ARP()
+            sage: ARP.n_matrices_non_pisot(1)
             [word: A1, word: A2]
-            sage: ARP.non_pisot_matrices(2)
+            sage: ARP.n_matrices_non_pisot(2)
             [word: A1,A1, word: A1,A2, word: A2,A1, word: A2,A2]
-            sage: ARP.non_pisot_matrices(3)
+            sage: ARP.n_matrices_non_pisot(3)
             [word: A1,A1,A1,
              word: A1,A1,A2,
              word: A1,A2,A1,
@@ -554,14 +505,16 @@ class Transformation:
              word: A2,A1,A2,
              word: A2,A2,A1,
              word: A2,A2,A2]
-            sage: len(ARP.non_pisot_matrices(4))  # long time
+            sage: len(ARP.n_matrices_non_pisot(4))  # long time
             16
 
         ::
 
-            sage: Brun.non_pisot_matrices(2)
+            sage: from slabbe.mult_cont_frac_cylinders import mcf_cocycles
+            sage: B = mcf_cocycles.Sorted_Brun()
+            sage: B.n_matrices_non_pisot(2)
             [word: B1,B1, word: B1,B2, word: B2,B1, word: B2,B2]
-            sage: Brun.non_pisot_matrices(3)
+            sage: B.n_matrices_non_pisot(3)
             [word: B1,B1,B1,
              word: B1,B1,B2,
              word: B1,B2,B1,
@@ -573,39 +526,19 @@ class Transformation:
         """
         return [w for w in self.n_words_iterator(n) if not self.is_pisot(w, verbose=verbose)]
 
-    def non_pisot_automaton(self, n):
-        r"""
-        EXAMPLES::
-
-            sage: A = ARPunsorted.non_pisot_automaton(2)
-            sage: A
-            Automaton with 9 states
-            sage: A.graph().plot(edge_labels=True)   # not tested
-        """
-        L = []
-        for i in range(n):
-            L.extend(self.non_pisot_matrices(i))
-        alphabet = self._language._alphabet
-        F = FiniteLanguage(alphabet, L)
-        A = F.automaton()
-        A = A.minimization().relabeled()
-        #return A
-        G = A.graph()
-        to_remove = set(A5.states()) - set(A5.final_states())
-        G.delete_vertices(to_remove)
-        return G
-
-    def eigenvalues_n_matrices(self,n, verbose=False):
+    def n_matrices_eigenvalues(self,n, verbose=False):
         r"""
         Return the eigenvalues of the matrices of level n.
 
         EXAMPLES::
 
-            sage: ARP.non_pisot_matrices(1)
+            sage: from slabbe.mult_cont_frac_cylinders import mcf_cocycles
+            sage: ARP = mcf_cocycles.Sorted_ARP()
+            sage: ARP.n_matrices_eigenvalues(1)
             [(0,), (1,)]
-            sage: ARP.non_pisot_matrices(2)
+            sage: ARP.n_matrices_eigenvalues(2)
             [(0, 0), (0, 1), (1, 0), (1, 1)]
-            sage: ARP.non_pisot_matrices(3)       # long time
+            sage: ARP.n_matrices_eigenvalues(3)       # long time
             [(0, 0, 0),
              (0, 0, 1),
              (0, 1, 0),
@@ -614,14 +547,15 @@ class Transformation:
              (1, 0, 1),
              (1, 1, 0),
              (1, 1, 1)]
-            sage: len(ARP.non_pisot_matrices(4))  # long time
+            sage: len(ARP.n_matrices_eigenvalues(4))  # long time
             16
 
         ::
 
-            sage: Brun.non_pisot_matrices(2)
+            sage: B = mcf_cocycles.Sorted_Brun()
+            sage: B.n_matrices_eigenvalues(2)
             [(0, 0), (0, 1), (1, 0), (1, 1)]
-            sage: Brun.non_pisot_matrices(3)
+            sage: B.n_matrices_eigenvalues(3)
             [(0, 0, 0),
              (0, 0, 1),
              (0, 1, 0),
@@ -642,13 +576,39 @@ class Transformation:
                 print "eigenvalues:", S
         return R
 
+    def non_pisot_automaton(self, n):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac_cylinders import mcf_cocycles
+            sage: C = mcf_cocycles.Sorted_ARP()
+            sage: A = C.non_pisot_automaton(2)
+            sage: A
+            Automaton with 9 states
+            sage: A.graph().plot(edge_labels=True)   # not tested
+        """
+        L = []
+        for i in range(n):
+            L.extend(self.n_matrices_non_pisot(i))
+        alphabet = self._language._alphabet
+        F = FiniteLanguage(alphabet, L)
+        A = F.automaton()
+        A = A.minimization().relabeled()
+        #return A
+        G = A.graph()
+        to_remove = set(A.states()) - set(A.final_states())
+        G.delete_vertices(to_remove)
+        return G
+
     def left_right_eigenvectors_n_matrices(self,n, verbose=False):
         r"""
         Return the left and right eigenvectors of the matrices of level n.
 
         EXAMPLES::
 
-            sage: ARPunsorted.left_right_eigenvectors_n_matrices(1)
+            sage: from slabbe.mult_cont_frac_cylinders import mcf_cocycles
+            sage: C = mcf_cocycles.Sorted_ARP()
+            sage: C.left_right_eigenvectors_n_matrices(1)
             [(word: P12, (0, 1, 0), (0, 0, 1)),
              (word: P13, (0, 0, 1), (0, 1, 0)),
              (word: P23, (0, 0, 1), (1, 0, 0)),
@@ -659,10 +619,10 @@ class Transformation:
         """
         R = []
         for w in self.n_words_iterator(n):
-            m = prod(self._M[i] for i in w)
+            m = prod(self._gens[i] for i in w)
             try:
-                a,v_right = perron_eigenvector(m)
-                b,v_left = perron_eigenvector(m.transpose())
+                a,v_right = perron_right_eigenvector(m)
+                b,v_left = perron_right_eigenvector(m.transpose())
             except ValueError:
                 print "problem with :\n",m
             else:
@@ -672,6 +632,28 @@ class Transformation:
                     print m
                     print "eigenvectors:", v_right, v_left
         return R
+    def plot_partition(self, n, labels=True):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac_cylinders import mcf_cocycles
+            sage: C = mcf_cocycles.Sorted_ARP()
+            sage: C.plot_partition(3)
+
+        """
+        from sage.plot.graphics import Graphics
+        from sage.plot.polygon import polygon
+        from sage.plot.text import text
+        M3to2 = projection_matrix(3, 2)
+        G = Graphics()
+        for w,cyl in self.n_cylinders_iterator(n):
+            columns = cyl.columns()
+            G += polygon((M3to2*col/col.norm(1) for col in columns), fill=False) 
+            if labels:
+                sum_cols = sum(columns)
+                G += text("{}".format(w), M3to2*sum_cols/sum_cols.norm(1))
+        return G
+
     def plot_eigenvectors_n_matrices(self, n, side='right', color_index=0, draw_line=False):
         r"""
         INPUT:
@@ -680,8 +662,15 @@ class Transformation:
 
         EXAMPLES::
 
+            sage: from slabbe.mult_cont_frac_cylinders import mcf_cocycles
+            sage: ARP = mcf_cocycles.Sorted_ARP()
             sage: ARP.plot_left_right_eigenvectors_n_matrices(2)
         """
+        from sage.plot.graphics import Graphics
+        from sage.plot.point import point
+        from sage.plot.line import line
+        from sage.plot.text import text
+        M3to2 = projection_matrix(3, 2)
         R = self.left_right_eigenvectors_n_matrices(n)
         L = [(w, M3to2*(a/sum(a)), M3to2*(b/sum(b))) for (w,a,b) in R]
         G = Graphics()
@@ -711,12 +700,15 @@ class Transformation:
         r"""
         EXAMPLES::
 
-            sage: Brun.plot_pisot_conjugates(5)
+            sage: from slabbe.mult_cont_frac_cylinders import mcf_cocycles
+            sage: B = mcf_cocycles.Sorted_Brun()
+            sage: B.plot_pisot_conjugates(5)
 
         Image envoyee a Timo (6 mai 2014)::
 
-            sage: sum(Brun.plot_pisot_conjugates(i) for i in [1..6])  #not tested
+            sage: sum(B.plot_pisot_conjugates(i) for i in [1..6])  #not tested
         """
+        from sage.plot.point import points
         Lreal = []
         Limag = []
         for w,m in self.n_matrices_iterator(n):
@@ -733,11 +725,13 @@ class Transformation:
         r"""
         EXAMPLES::
 
-            sage: Brun.plot_pisot_conjugates(5)
+            sage: from slabbe.mult_cont_frac_cylinders import mcf_cocycles
+            sage: B = mcf_cocycles.Sorted_Brun()
+            sage: B.plot_pisot_conjugates(5)
 
         Image envoyee a Timo (6 mai 2014)::
 
-            sage: sum(Brun.plot_pisot_conjugates(i) for i in [1..6])  #not tested
+            sage: sum(B.plot_pisot_conjugates(i) for i in [1..6])  #not tested
         """
         T = [('a','a',0), ('a','b',1), ('a','d',2)]
         T += [('b','b',0), ('b','a',1)]
@@ -750,7 +744,7 @@ class Transformation:
         LrealNO = []
         Limag = []
         for w in self.n_words_iterator(n):
-            m = prod(self._M[i] for i in w)
+            m = prod(self._gens[i] for i in w)
             a,b,c = sorted(m.eigenvalues(), key=abs)
             if a.imag() == 0 and b.imag() == 0:
                 if B(w*100)[0]:
@@ -773,7 +767,8 @@ class Transformation:
         On dirait que la troisieme colonne n'est jamais la plus petite.
         Soit la plus grande (pos=2) soit la milieu (pos=1).
 
-            sage: T = TransformationARP_multi(4)
+            sage: from slabbe.mult_cont_frac_cylinders import mcf_cocycles
+            sage: T = mcf_cocycles.Sorted_ARPMulti(4)
             sage: T.position_of_last_column(1)
             Counter({1: 13, 2: 10})
             sage: T.position_of_last_column(2)
@@ -783,7 +778,7 @@ class Transformation:
 
         ::
 
-            sage: T = TransformationARP_multi(6)
+            sage: T = mcf_cocycles.Sorted_ARPMulti(6)
             sage: T.position_of_last_column(1)
             Counter({1: 19, 2: 14})
             sage: T.position_of_last_column(2)
@@ -791,6 +786,7 @@ class Transformation:
             sage: T.position_of_last_column(3)
             Counter({2: 23166, 1: 12771})
         """
+        from collections import Counter
         c = Counter()
         for m in self.m_matrices(n):
             norms = tuple(col.norm(1) for col in m.columns())
@@ -798,20 +794,15 @@ class Transformation:
             c[index] += 1
         return c
 
-    def norm_ratio_iterator(self,n):
-        r"""
-        returns an iterator of the ratio max/min of the norm of the columns
-        of the n-cylinders.
-        """
-        for w,m in self.n_cylinders_iterator(n):
-            yield norm_ratio(m)
     def semi_norm_study(self, n, p=2):
         r"""
         EXAMPLES:
 
         For the 1-norm, all matrices contracts the hyperplane::
             
-            sage: ARPunsorted.semi_norm_study(1, p=1)
+            sage: from slabbe.mult_cont_frac_cylinders import mcf_cocycles
+            sage: C = mcf_cocycles.ARP()
+            sage: C.semi_norm_study(1, p=1)
             A1 1.0 False
             A2 1.0 False
             A3 1.0 False
@@ -824,7 +815,7 @@ class Transformation:
 
         For the 2-norm, AR matrices do not contract::
 
-            sage: ARPunsorted.semi_norm_study(1, p=2)
+            sage: C.semi_norm_study(1, p=2)
             A1 1.30656296488 False
             A2 1.30656296486 False
             A3 1.30656296475 False
@@ -837,7 +828,7 @@ class Transformation:
 
         When, the 1-norm is < 1, the product is pisot::
 
-            sage: ARPunsorted.semi_norm_study(2, p=1)
+            sage: C.semi_norm_study(2, p=1)
             A1,A1 1.0 False
             A1,A2 1.0 False
             A1,A3 1.0 False
@@ -863,18 +854,28 @@ class Transformation:
             P32,P21 0.666665629351 True
             P32,P31 0.666664488371 True
         """
+        if n == 0:
+            raise NotImplementedError
         for w in self.n_words_iterator(n):
             m = self.word_to_matrix(w)
-            cone = m*self.word_last_letter_to_domain(w)
+            cone = m*self.cone(w[-1])
             print w, semi_norm_cone(m.transpose(), cone, p=p), self.is_pisot(w)
 
+    def norm_ratio_iterator(self,n):
+        r"""
+        returns an iterator of the ratio max/min of the norm of the columns
+        of the n-cylinders.
+        """
+        for w,m in self.n_cylinders_iterator(n):
+            yield norm_ratio(m)
     def norm_ratio_max(self, n):
         r"""
         EXAMPLES:
 
         Non borné::
 
-            sage: T = TransformationARP()
+            sage: from slabbe.mult_cont_frac_cylinders import mcf_cocycles
+            sage: T = mcf_cocycles.Sorted_ARP()
             sage: T.norm_ratio_max(1)
             6.0
             sage: T.norm_ratio_max(2)
@@ -894,7 +895,7 @@ class Transformation:
         r"""
         """
         it = self.n_words_iterator(n)
-        key = lambda w:norm_ratio(prod(self._M[a] for a in w)*self._domain)
+        key = lambda w:norm_ratio(prod(self._gens[a] for a in w)*self._cone_dict)
         return max(it, key=key)
 
     def triangle_partition(self,n):
@@ -905,209 +906,116 @@ class Transformation:
 
 
 
-####################
-# ARP Language
-####################
-def ARP_automaton():
-    r"""
-    EXAMPLES::
-
-        sage: A = ARP_automaton(None)
-        sage: A.process(['A1', 'P12', 'A1', 'P13'])
-        (True, 'H13')
-        sage: A(['A1', 'P12', 'A1', 'P13'])
-        True
-    """
-    import sage.combinat.finite_state_machine
-    sage.combinat.finite_state_machine.FSMOldProcessOutput = False
-    def H(j,k):
-        return 'H%s%s' % (j,k)
-    def P(j,k):
-        return 'P%s%s' % (j,k)
-    def A(k):
-        return 'A%s' % (k)
-    jk = [(3,1), (2,1), (3,2), (1,2), (2,3), (1,3)]
-    D = 'Delta'
-    states = [H(j,k) for (j,k) in jk] + [D]
-    autom = Automaton(initial_states=[D], final_states=states)
-    for (j,k) in jk:
-        i = 6 - j - k
-        v = H(j,k)
-        autom.add_transition(v, H(i,j), P(i,j))
-        autom.add_transition(v, H(k,i), P(k,i))
-        autom.add_transition(v, H(j,i), P(j,i))
-        autom.add_transition(v, D, A(i))
-        autom.add_transition(v, v, A(j))
-        autom.add_transition(D, v, P(j,k))
-    for k in [1,2,3]:
-        autom.add_transition(D, D, A(k))
-    return autom
-
-class Language(object):
-    def __init__(self, alphabet):
-        self._alphabet = alphabet
-
-    def iterate_by_length(self, length):
-        W = Words(self._alphabet)
-        it = W.iterate_by_length(length)
-        return it
-
-class RegularLanguage(Language):
-    r"""
-    EXAMPLES::
-
-        sage: alphabet = ['A1', 'A2', 'A3', 'P31', 'P21', 'P32', 'P12', 'P23', 'P13']
-        sage: automaton = ARP_automaton()
-        sage: L = RegularLanguage(alphabet, automaton)
-        sage: len(list(L.iterate_by_length(0)))
-        1
-        sage: len(list(L.iterate_by_length(1)))
-        9
-        sage: len(list(L.iterate_by_length(2)))
-        57
-        sage: len(list(L.iterate_by_length(3)))
-        345
-
-    """
-    def __init__(self, alphabet, automaton):
-        Language.__init__(self, alphabet)
-        self._automaton = automaton
-
-    def iterate_by_length(self, length):
-        W = Words(self._alphabet)
-        it = W.iterate_by_length(length)
-        return itertools.ifilter(self._automaton, it)
-class FiniteLanguage(Language):
-    r"""
-    EXAMPLES::
-
-        sage: L = ['a', 'aa', 'aaa']
-        sage: F = FiniteLanguage(alphabet=['a'], words=L)
-    """
-    def __init__(self, alphabet, words):
-        Language.__init__(self, alphabet)
-        self._words = words
-    def automaton(self):
-        r"""
-        EXAMPLES::
-
-            sage: L = ['a', 'aa', 'aaa']
-            sage: F = FiniteLanguage(alphabet=['a'], words=L)
-            sage: F.automaton()
-            Automaton with 7 states
-        """
-        transitions = []
-        final_states = []
-        end = 1
-        for w in self._words:
-            start = 0
-            for a in w:
-                transitions.append((start, end, a))
-                start, end = end, end+1
-            final_states.append(start)
-        return Automaton(transitions, initial_states=[0], final_states=final_states)
-    def minimal_automaton(self):
-        r"""
-        .. NOTE:: 
-        
-            One of the state is not final. You may want to remove it...
-
-        EXAMPLES::
-
-            sage: L = ['a', 'aa', 'aaa']
-            sage: F = FiniteLanguage(alphabet=['a'], words=L)
-            sage: F.minimal_automaton()
-            Automaton with 5 states
-        """
-        A = self.automaton()
-        A = A.minimization().relabeled()
-        return A
-    def number_of_states(self):
-        r"""
-        EXAMPLES::
-
-            sage: L = ['a', 'aa', 'aaa']
-            sage: F = FiniteLanguage(alphabet=['a'], words=L)
-            sage: F.number_of_states()
-            5
-        """
-        return len(self.minimal_automaton().states())
 
 ####################
 # quick construction
 ####################
-def TransformationARPunsorted():
-    A1 = matrix(3, [1,-1,-1, 0,1,0, 0,0,1]).inverse()
-    A2 = matrix(3, [1,0,0, -1,1,-1, 0,0,1]).inverse()
-    A3 = matrix(3, [1,0,0, 0,1,0, -1,-1,1]).inverse()
-    P12 = matrix(3, [1, 0, 1, 1, 1, 1, 0, 0, 1])
-    P13 = matrix(3, [1, 1, 0, 0, 1, 0, 1, 1, 1])
-    P23 = matrix(3, [1, 0, 0, 1, 1, 0, 1, 1, 1])
-    P21 = matrix(3, [1, 1, 1, 0, 1, 1, 0, 0, 1])
-    P31 = matrix(3, [1, 1, 1, 0, 1, 0, 0, 1, 1])
-    P32 = matrix(3, [1, 0, 0, 1, 1, 1, 1, 0, 1])
-    M = (A1, A2, A3, P12, P13, P23, P21, P31, P32)
-    alphabet = ['A1', 'A2', 'A3', 'P12', 'P13', 'P23', 'P21', 'P31', 'P32']
-    M = dict(zip(alphabet, M))
-    automaton = ARP_automaton()
-    L = RegularLanguage(alphabet, automaton)
-    pairs = [(1,2), (1,3), (2,3), (2,1), (3,2), (3,1)]
-    domain = {"P{}{}".format(j,k):H(j,k) for (j,k) in pairs}
-    domain.update({"A{}".format(k):identity_matrix(3) for k in [1,2,3]})
-    return Transformation(M, domain, language=L)
+class MCFCocycleGenerator(object):
+    def ARP(self):
+        A1 = matrix(3, [1,-1,-1, 0,1,0, 0,0,1]).inverse()
+        A2 = matrix(3, [1,0,0, -1,1,-1, 0,0,1]).inverse()
+        A3 = matrix(3, [1,0,0, 0,1,0, -1,-1,1]).inverse()
+        P12 = matrix(3, [1, 0, 1, 1, 1, 1, 0, 0, 1])
+        P13 = matrix(3, [1, 1, 0, 0, 1, 0, 1, 1, 1])
+        P23 = matrix(3, [1, 0, 0, 1, 1, 0, 1, 1, 1])
+        P21 = matrix(3, [1, 1, 1, 0, 1, 1, 0, 0, 1])
+        P31 = matrix(3, [1, 1, 1, 0, 1, 0, 0, 1, 1])
+        P32 = matrix(3, [1, 0, 0, 1, 1, 1, 1, 0, 1])
+        gens = (A1, A2, A3, P12, P13, P23, P21, P31, P32)
+        alphabet = ['A1', 'A2', 'A3', 'P12', 'P13', 'P23', 'P21', 'P31', 'P32']
+        gens = dict(zip(alphabet, gens))
 
-def TransformationArnouxRauzy():
-    A1 = matrix(3, [1,-1,-1, 0,1,0, 0,0,1]).inverse()
-    A2 = matrix(3, [1,0,0, -1,1,-1, 0,0,1]).inverse()
-    A3 = matrix(3, [1,0,0, 0,1,0, -1,-1,1]).inverse()
-    M = (A1, A2, A3)
-    alphabet = ['A1', 'A2', 'A3']
-    M = dict(zip(alphabet, M))
-    domain = matrix(3, [1,0,0,0,1,0,0,0,1])
-    return Transformation(M, domain)
+        pairs = [(1,2), (1,3), (2,3), (2,1), (3,2), (3,1)]
+        cone = {"P{}{}".format(j,k):self._ARP_H_matrices(j,k) for (j,k) in pairs}
+        cone.update({"A{}".format(k):identity_matrix(3) for k in [1,2,3]})
 
-def TransformationBrun():
-    B1 = matrix(3, [1,0,0, 0,1,0, 0,-1,1]).inverse()
-    B2 = matrix(3, [1,0,0, 0,-1,1, 0,1,0]).inverse()
-    B3 = matrix(3, [0,-1,1, 1,0,0, 0,1,0]).inverse()
-    M = (B1, B2, B3)
-    alphabet = ['B1', 'B2', 'B3']
-    M = dict(zip(alphabet, M))
-    domain = matrix(3, [1,1,1,0,1,1,0,0,1])
-    return Transformation(M, domain)
+        from language import languages
+        return MCF_Cocycle(gens, cone, language=languages.ARP())
+    def _ARP_H_matrices(j,k, normalize=False):
+        r"""
+        EXAMPLES::
 
-def TransformationARP():
-    A1 = matrix(3, [1,0,0,0,1,0,-1,-1,1]).inverse()
-    A2 = matrix(3, [1,0,0,-1,-1,1,0,1,0]).inverse()
-    A3 = matrix(3, [-1,-1,1,1,0,0,0,1,0]).inverse()
-    P1 = matrix(3, [0,-1,1,1,0,0,-1,1,0]).inverse()
-    P2 = matrix(3, [-1,1,0,0,-1,1,1,0,0]).inverse()
-    P3 = matrix(3, [0,-1,1,-1,1,0,1,0,0]).inverse()
-    M = (A1, A2, A3, P1, P2, P3)
-    alphabet = ['A1', 'A2', 'A3', 'P1', 'P2', 'P3']
-    M = dict(zip(alphabet, M))
-    domain = matrix(3, [1,0,0,1,1,0,1,1,1])
-    return Transformation(M, domain)
+            sage: from slabbe.mult_cont_frac_cylinders import mcf_cocycles
+            sage: possible = [(3,1), (2,1), (3,2), (1,2), (2,3), (1,3)]
+            sage: [mcf_cocycles._ARP_H_matrices(j,k) for (j,k) in possible]
+            [
+            [1 0 0]  [1 0 0]  [1 1 0]  [1 0 0]  [1 0 1]  [1 0 0]
+            [1 1 0]  [0 1 0]  [0 1 0]  [0 1 0]  [0 1 0]  [0 1 1]
+            [0 0 1], [1 0 1], [0 0 1], [0 1 1], [0 0 1], [0 0 1]
+            ]
+        """
+        if normalize:
+            a = 1/2
+        else:
+            a = 1
+        if j==3 and k==1:
+            return matrix([(a,a,0), (0,1,0), (0,0,1)]).transpose()
+        elif j==2 and k==1:
+            return matrix([(a,0,a), (0,1,0), (0,0,1)]).transpose()
+        elif j==3 and k==2:
+            return matrix([(1,0,0), (a,a,0), (0,0,1)]).transpose()
+        elif j==1 and k==2:
+            return matrix([(1,0,0), (0,a,a), (0,0,1)]).transpose()
+        elif j==2 and k==3:
+            return matrix([(1,0,0), (0,1,0), (a,0,a)]).transpose()
+        elif j==1 and k==3:
+            return matrix([(1,0,0), (0,1,0), (0,a,a)]).transpose()
+        else:
+            raise ValueError("invalid j(=%s) and k(=%s)" % (j,k))
 
-def TransformationARP_multi(order):
-    domain = matrix(3, [1,0,0,1,1,0,1,1,1])
-    M = [P1,P2,P3]
-    t12 = matrix(3, [1,0,0,0,0,1,0,1,0])
-    t132 = matrix(3, [0,1,0,0,0,1,1,0,0])
-    for i in range(1, order+1):
-        A1_i = A1**i
-        M.append(A1_i * P1)
-        M.append(A1_i * P2)
-        M.append(A1_i * P3)
-        M.append(A1_i * t12)
-        M.append(A1_i * t132)
-    return Transformation(M, domain)
 
-AR = TransformationArnouxRauzy()
-Brun = TransformationBrun()
-ARP = TransformationARP()
-ARPunsorted = TransformationARPunsorted()
-ARPm = TransformationARP_multi(4)
+    def ArnouxRauzy(self):
+        A1 = matrix(3, [1,-1,-1, 0,1,0, 0,0,1]).inverse()
+        A2 = matrix(3, [1,0,0, -1,1,-1, 0,0,1]).inverse()
+        A3 = matrix(3, [1,0,0, 0,1,0, -1,-1,1]).inverse()
+        gens = (A1, A2, A3)
+        alphabet = ['A1', 'A2', 'A3']
+        gens = dict(zip(alphabet, gens))
+        cone = matrix(3, [1,0,0,0,1,0,0,0,1])
+        return MCF_Cocycle(gens, cone)
+
+    def Sorted_Brun(self):
+        B1 = matrix(3, [1,0,0, 0,1,0, 0,-1,1]).inverse()
+        B2 = matrix(3, [1,0,0, 0,-1,1, 0,1,0]).inverse()
+        B3 = matrix(3, [0,-1,1, 1,0,0, 0,1,0]).inverse()
+        gens = (B1, B2, B3)
+        alphabet = ['B1', 'B2', 'B3']
+        gens = dict(zip(alphabet, gens))
+        cone = matrix(3, [1,1,1,0,1,1,0,0,1])
+        return MCF_Cocycle(gens, cone)
+
+    def Sorted_ARP(self):
+        A1 = matrix(3, [1,0,0,0,1,0,-1,-1,1]).inverse()
+        A2 = matrix(3, [1,0,0,-1,-1,1,0,1,0]).inverse()
+        A3 = matrix(3, [-1,-1,1,1,0,0,0,1,0]).inverse()
+        P1 = matrix(3, [0,-1,1,1,0,0,-1,1,0]).inverse()
+        P2 = matrix(3, [-1,1,0,0,-1,1,1,0,0]).inverse()
+        P3 = matrix(3, [0,-1,1,-1,1,0,1,0,0]).inverse()
+        gens = (A1, A2, A3, P1, P2, P3)
+        alphabet = ['A1', 'A2', 'A3', 'P1', 'P2', 'P3']
+        gens = dict(zip(alphabet, gens))
+        cone = matrix(3, [1,0,0,1,1,0,1,1,1])
+        return MCF_Cocycle(gens, cone)
+
+    def Sorted_ARPMulti(self, order):
+        A1 = matrix(3, [1,0,0,0,1,0,-1,-1,1]).inverse()
+        P1 = matrix(3, [0,-1,1,1,0,0,-1,1,0]).inverse()
+        P2 = matrix(3, [-1,1,0,0,-1,1,1,0,0]).inverse()
+        P3 = matrix(3, [0,-1,1,-1,1,0,1,0,0]).inverse()
+        cone = matrix(3, [1,0,0,1,1,0,1,1,1])
+        gens = [P1,P2,P3]
+        t12 = matrix(3, [1,0,0,0,0,1,0,1,0])
+        t132 = matrix(3, [0,1,0,0,0,1,1,0,0])
+        for i in range(1, order+1):
+            A1_i = A1**i
+            gens.append(A1_i * P1)
+            gens.append(A1_i * P2)
+            gens.append(A1_i * P3)
+            gens.append(A1_i * t12)
+            gens.append(A1_i * t132)
+        return MCF_Cocycle(gens, cone)
+
+mcf_cocycles = MCFCocycleGenerator()
 
 ####################
 # Polyhedron Partition
