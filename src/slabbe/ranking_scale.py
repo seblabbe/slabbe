@@ -373,13 +373,14 @@ def curve(nb_equipes, max_points=100, K=1, R=2, base=2, verbose=False):
         
     """
     from sage.symbolic.assumptions import forget, assume
-    from sage.misc.functional import integrate, log, n
+    from sage.misc.functional import integrate, n
+    from sage.functions.log import log
     from sage.calculus.var import var
     x,p = var('x,p')
     forget()
     assume(p - 1 > 0)
     assume(p-nb_equipes < 0)
-    fn = integrate(log(R*nb_equipes, b=base) - log(x, b=base), x, p, nb_equipes)
+    fn = integrate(log(R*nb_equipes, base=base) - log(x, base=base), x, p, nb_equipes)
     if verbose: print "fn = %s" % fn
     aire = fn(p=1)
     if verbose: print "aire = %s" % n(aire)
@@ -445,7 +446,8 @@ def discrete_curve(nb_equipes, max_points=100, K=1, R=2, base=2, verbose=False):
 def discrete_curve_2(nb_equipes, max_points=100):
     r"""
     """
-    from sage.misc.functional import round, log
+    from sage.misc.functional import round
+    from sage.functions.log import log
     from sage.rings.integer_ring import ZZ
     f = lambda p:(max_points-1)*(1-log(p)/log(nb_equipes))+1
     L = [ZZ(round(f(p=i))) for i in range(1,nb_equipes+1)]
