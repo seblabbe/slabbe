@@ -719,9 +719,9 @@ class MatrixCocycleGenerator(object):
 
 
     def ArnouxRauzy(self):
-        A1 = matrix(3, [1,-1,-1, 0,1,0, 0,0,1]).inverse()
-        A2 = matrix(3, [1,0,0, -1,1,-1, 0,0,1]).inverse()
-        A3 = matrix(3, [1,0,0, 0,1,0, -1,-1,1]).inverse()
+        A1 = matrix(3, [1,1,1, 0,1,0, 0,0,1])
+        A2 = matrix(3, [1,0,0, 1,1,1, 0,0,1])
+        A3 = matrix(3, [1,0,0, 0,1,0, 1,1,1])
         gens = (A1, A2, A3)
         alphabet = ['A1', 'A2', 'A3']
         gens = dict(zip(alphabet, gens))
@@ -768,6 +768,21 @@ class MatrixCocycleGenerator(object):
             gens.append(A1_i * t12)
             gens.append(A1_i * t132)
         return MatrixCocycle(gens, cone)
+
+    def Cassaigne(self):
+        T1 = matrix(3, [1,1,0, 0,0,1, 0,1,0])
+        T2 = matrix(3, [0,1,0, 1,0,0, 0,1,1])
+        gens = {1:T1, 2:T2}
+        return MatrixCocycle(gens)
+
+    def ARrevert(self):
+        A1 = matrix(3, [1,1,1, 0,1,0, 0,0,1])
+        A2 = matrix(3, [1,0,0, 1,1,1, 0,0,1])
+        A3 = matrix(3, [1,0,0, 0,1,0, 1,1,1])
+        R = matrix(3, [0,1,1, 1,0,1, 1,1,0])
+        gens = {1:A1, 2:A2, 3:A3, 4:R}
+        return MatrixCocycle(gens)
+
 
 cocycles = MatrixCocycleGenerator()
 
