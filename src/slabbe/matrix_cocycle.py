@@ -751,7 +751,7 @@ class MatrixCocycleGenerator(object):
         cone = matrix(3, [1,0,0,1,1,0,1,1,1])
         return MatrixCocycle(gens, cone)
 
-    def Sorted_ARPMulti(self, order):
+    def Sorted_ARPMulti(self, order=3):
         A1 = matrix(3, [1,0,0,0,1,0,-1,-1,1]).inverse()
         P1 = matrix(3, [0,-1,1,1,0,0,-1,1,0]).inverse()
         P2 = matrix(3, [-1,1,0,0,-1,1,1,0,0]).inverse()

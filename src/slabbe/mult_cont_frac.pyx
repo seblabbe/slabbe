@@ -87,6 +87,9 @@ PGF_COLORS = ["red", "green", "blue", "cyan", "brown", "gray", "orange", "pink",
 "lime", "olive", "magenta", "purple", "teal", "violet"]
 
 cdef class MCFAlgorithm(object):
+    ########################################
+    # METHODS IMPLEMENTED IN HERITED CLASSES
+    ########################################
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         This method must be implemented in the inherited classes.
@@ -239,6 +242,40 @@ cdef class MCFAlgorithm(object):
                 raise Exception(m)
 
         return True
+
+    def matrix_cocycle(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import ARP
+            sage: ARP().matrix_cocycle()
+            Cocycle with 9 gens over Regular language over ['A1', 'A2', 'A3',
+            'P12', 'P13', 'P21', 'P23', 'P31', 'P32']
+            defined by: Automaton with 7 states
+
+        ::
+
+            sage: from slabbe.mult_cont_frac import Sorted_Brun
+            sage: Sorted_Brun().matrix_cocycle()
+            Cocycle with 3 gens over Language of finite words over alphabet
+            ['B1', 'B2', 'B3']
+
+        ::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: Brun().matrix_cocycle()
+            Traceback (most recent call last):
+            ...
+            NotImplementedError: Matrix cocyle not implemented for Brun
+        """
+        from matrix_cocycle import cocycles
+        try:
+            f = getattr(cocycles, self.name())
+        except AttributeError:
+            msg = "Matrix cocyle not implemented for {}"
+            msg = msg.format(self.name())
+            raise NotImplementedError(msg)
+        return f()
 
     def coding_iterator(self, pt):
         r"""
