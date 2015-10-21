@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 r"""
-Multidimensional Continued Fraction Algorithm's cocyles
+Matrix cocyles
 
 EXAMPLES:
 
 The 1-cylinders of ARP transformation as matrices::
 
-    sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-    sage: ARP = mcf_cocycles.ARP()
+    sage: from slabbe.matrix_cocycle import cocycles
+    sage: ARP = cocycles.ARP()
     sage: zip(*ARP.n_cylinders_iterator(1))
     [(word: A1,
       word: A2,
@@ -31,7 +31,7 @@ The 1-cylinders of ARP transformation as matrices::
 Ces calculs illustrent le bounded distorsion de ratio=4 pour ARP
 multiplicatif (2 avril 2014)::
 
-    sage: T = mcf_cocycles.Sorted_ARPMulti(2)
+    sage: T = cocycles.Sorted_ARPMulti(2)
     sage: T.distorsion_max(1, p=oo)
     5
     sage: T.distorsion_max(2, p=oo)
@@ -43,7 +43,7 @@ multiplicatif (2 avril 2014)::
 
 ::
 
-    sage: T = mcf_cocycles.Sorted_ARPMulti(3)
+    sage: T = cocycles.Sorted_ARPMulti(3)
     sage: T.distorsion_max(1, p=oo)
     7
     sage: T.distorsion_max(2, p=oo)
@@ -52,6 +52,10 @@ multiplicatif (2 avril 2014)::
     19/2
     sage: T.distorsion_max(4, p=oo)  # long time (47s)
     161/43
+
+.. TODO::
+
+    - Fix the semi_norm_v bug using linear programming.
 
 """
 import itertools
@@ -62,41 +66,42 @@ from sage.misc.misc_c import prod
 from language import Language, FiniteLanguage
 
 ######################
-# class MCF_Cocycle
+# Matrix Cocycle
 ######################
-class MCF_Cocycle(object):
+class MatrixCocycle(object):
     r"""
-    Multidimensional continued fraction algorithm cocycle
+    Matrix cocycle
 
     INPUT:
 
     - ``gens`` -- list, tuple or dict; the matrices. Keys 0,...,n-1 are
       used for list and tuple.
-    - ``cone`` -- dict or matrix; the cone for each matrix generators.
-      If it is a matrix, then it serves as the cone for all matrices. The
-      cone is defined by the columns of the matrix.
-    - ``language`` -- regular language or None; if None, the language is
-      the full shift.
+    - ``cone`` -- dict or matrix or None (default: None); the cone for each
+      matrix generators.  If it is a matrix, then it serves as the cone for
+      all matrices. The cone is defined by the columns of the matrix. If
+      None, then the cone is the identity matrix.
+    - ``language`` -- regular language or None (default: None); if None,
+      the language is the full shift.
 
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_cocycle import MCF_Cocycle
+        sage: from slabbe.matrix_cocycle import MatrixCocycle
         sage: B1 = matrix(3, [1,0,0, 0,1,0, 0,1,1])
         sage: B2 = matrix(3, [1,0,0, 0,0,1, 0,1,1])
         sage: B3 = matrix(3, [0,1,0, 0,0,1, 1,0,1])
         sage: gens = {'B1':B1, 'B2':B2, 'B3':B3}
         sage: cone = matrix(3, [1,1,1,0,1,1,0,0,1])
-        sage: MCF_Cocycle(gens, cone)
+        sage: MatrixCocycle(gens, cone)
         Cocycle with 3 gens over Language of finite words over alphabet ['B1', 'B2', 'B3']
     """
-    def __init__(self, gens, cone, language=None):
+    def __init__(self, gens, cone=None, language=None):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_cocycle import MCF_Cocycle
+            sage: from slabbe.matrix_cocycle import MatrixCocycle
             sage: gens = {'A':matrix(3, [1,0,0, 0,1,0, 0,1,1])}
             sage: cone = identity_matrix(3)
-            sage: MCF_Cocycle(gens, cone)
+            sage: MatrixCocycle(gens, cone)
             Cocycle with 1 gens over Language of finite words over alphabet ['A']
         """
         if isinstance(gens, dict):
@@ -105,7 +110,10 @@ class MCF_Cocycle(object):
             self._gens = dict(enumerate(gens))
         else:
             raise ValueError("gens must be a list, tuple or a dict")
-        if isinstance(cone, dict):
+        if cone is None:
+            ID = self.identity_matrix()
+            self._cone_dict = {letter:ID for letter in self._gens.keys()}
+        elif isinstance(cone, dict):
             self._cone_dict = cone
         else:
             self._cone_dict = {letter:cone for letter in self._gens.keys()}
@@ -118,10 +126,10 @@ class MCF_Cocycle(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_cocycle import MCF_Cocycle
+            sage: from slabbe.matrix_cocycle import MatrixCocycle
             sage: gens = {'A':matrix(3, [1,0,0, 0,1,0, 0,1,1])}
             sage: cone = identity_matrix(3)
-            sage: MCF_Cocycle(gens, cone)
+            sage: MatrixCocycle(gens, cone)
             Cocycle with 1 gens over Language of finite words over alphabet ['A']
         """
         s = "Cocycle with {} gens over {}"
@@ -144,8 +152,8 @@ class MCF_Cocycle(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: C = mcf_cocycles.Sorted_ARP()
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: C = cocycles.Sorted_ARP()
             sage: C.word_to_matrix(Word())
             [1 0 0]
             [0 1 0]
@@ -157,8 +165,8 @@ class MCF_Cocycle(object):
         r"""
         EXAMPLES::
             
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: ARP = mcf_cocycles.Sorted_ARP()
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: ARP = cocycles.Sorted_ARP()
             sage: list(ARP.n_words_iterator(1))
             [word: A1, word: A2, word: A3, word: P1, word: P2, word: P3]
         """
@@ -168,8 +176,8 @@ class MCF_Cocycle(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: ARP = mcf_cocycles.Sorted_ARP()
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: ARP = cocycles.Sorted_ARP()
             sage: A,B = zip(*list(ARP.n_matrices_iterator(1)))
             sage: A
             (word: A1, word: A2, word: A3, word: P1, word: P2, word: P3)
@@ -189,8 +197,8 @@ class MCF_Cocycle(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: ARP = mcf_cocycles.ARP()
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: ARP = cocycles.ARP()
             sage: list(ARP.n_matrices_eigenvalues_iterator(1))
             [(word: A1, [1, 1, 1]),
              (word: A2, [1, 1, 1]),
@@ -204,7 +212,7 @@ class MCF_Cocycle(object):
 
         ::
 
-            sage: B = mcf_cocycles.Sorted_Brun()
+            sage: B = cocycles.Sorted_Brun()
             sage: list(B.n_matrices_eigenvalues_iterator(1))
             [(word: B1, [1, 1, 1]),
              (word: B2, [1, -0.618033988749895?, 1.618033988749895?]),
@@ -221,8 +229,8 @@ class MCF_Cocycle(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: C = mcf_cocycles.ARP()
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: C = cocycles.ARP()
             sage: C.n_matrices_eigenvectors(1)
             [(word: A1, (1.0, 0.0, 0.0), (0.0, 0.0, 1.0)),
              (word: A2, (0.0, 1.0, 0.0), (1.0, 0.0, 0.0)),
@@ -256,8 +264,8 @@ class MCF_Cocycle(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: ARP = mcf_cocycles.Sorted_ARP()
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: ARP = cocycles.Sorted_ARP()
             sage: ARP.n_matrices_non_pisot(1)
             [word: A1, word: A2]
             sage: ARP.n_matrices_non_pisot(2)   # long time (1s)
@@ -276,8 +284,8 @@ class MCF_Cocycle(object):
 
         ::
 
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: B = mcf_cocycles.Sorted_Brun()
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: B = cocycles.Sorted_Brun()
             sage: B.n_matrices_non_pisot(2)
             [word: B1,B1, word: B1,B2, word: B2,B1, word: B2,B2]
             sage: B.n_matrices_non_pisot(3)
@@ -298,8 +306,8 @@ class MCF_Cocycle(object):
 
         For the 1-norm, all matrices contracts the hyperplane::
             
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: C = mcf_cocycles.ARP()
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: C = cocycles.ARP()
             sage: it = C.n_matrices_semi_norm_iterator(1, p=1)
             sage: for _ in range(5): print next(it) # tolerance 0.00001
             (word: A1, 1.0, False)
@@ -363,8 +371,8 @@ class MCF_Cocycle(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: T = mcf_cocycles.Sorted_ARP()
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: T = cocycles.Sorted_ARP()
             sage: it =T.n_matrices_distorsion_iterator(1)
             sage: list(it)
             [(word: A1, 2),
@@ -381,8 +389,8 @@ class MCF_Cocycle(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: C = mcf_cocycles.ARP()
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: C = cocycles.ARP()
             sage: it = C.n_cylinders_iterator(1)
             sage: for w,cyl in it: print "{}\n{}".format(w,cyl)
             A1
@@ -433,8 +441,8 @@ class MCF_Cocycle(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: ARP = mcf_cocycles.ARP()
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: ARP = cocycles.ARP()
             sage: ARP.n_cylinders_edges(1)
             {frozenset({(1, 1, 0), (1, 1, 1)}),
              frozenset({(0, 1, 0), (1, 1, 0)}),
@@ -477,8 +485,8 @@ class MCF_Cocycle(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: C = mcf_cocycles.ARP()
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: C = cocycles.ARP()
             sage: A = C.non_pisot_automaton(2)
             sage: A
             Automaton with 2 states
@@ -502,8 +510,8 @@ class MCF_Cocycle(object):
 
         Non borné::
 
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: T = mcf_cocycles.Sorted_ARP()
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: T = cocycles.Sorted_ARP()
             sage: T.distorsion_max(1, p=oo)
             1
             sage: T.distorsion_max(2, p=oo)
@@ -519,8 +527,8 @@ class MCF_Cocycle(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: ARP = mcf_cocycles.Sorted_ARP()
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: ARP = cocycles.Sorted_ARP()
             sage: ARP.distorsion_argmax(1)
             (
                       [1 0 0]
@@ -536,8 +544,8 @@ class MCF_Cocycle(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: C = mcf_cocycles.Sorted_ARP()
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: C = cocycles.Sorted_ARP()
             sage: G = C.plot_n_cylinders(3)
         """
         from sage.plot.graphics import Graphics
@@ -565,8 +573,8 @@ class MCF_Cocycle(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: ARP = mcf_cocycles.ARP()
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: ARP = cocycles.ARP()
             sage: G = ARP.plot_n_matrices_eigenvectors(2)
         """
         from sage.plot.graphics import Graphics
@@ -605,8 +613,8 @@ class MCF_Cocycle(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: B = mcf_cocycles.Sorted_Brun()
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: B = cocycles.Sorted_Brun()
             sage: G = B.plot_pisot_conjugates(5)   # long time (8s)
 
         Image envoyee a Timo (6 mai 2014)::
@@ -629,8 +637,8 @@ class MCF_Cocycle(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
-            sage: ARP = mcf_cocycles.ARP()
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: ARP = cocycles.ARP()
             sage: s = ARP.tikz_n_cylinders(1, labels=True, scale=4)
             sage: view(s, tightpage=True)   # not tested
         """
@@ -651,10 +659,10 @@ class MCF_Cocycle(object):
         lines.append(r"\end{tikzpicture}")
         return LatexExpr("\n".join(lines))
 
-####################
-# quick construction
-####################
-class MCFCocycleGenerator(object):
+#####################
+# Predefined Cocycles
+#####################
+class MatrixCocycleGenerator(object):
     def ARP(self):
         from sage.matrix.constructor import identity_matrix
         A1 = matrix(3, [1,-1,-1, 0,1,0, 0,0,1]).inverse()
@@ -675,15 +683,15 @@ class MCFCocycleGenerator(object):
         cone.update({"A{}".format(k):identity_matrix(3) for k in [1,2,3]})
 
         from language import languages
-        return MCF_Cocycle(gens, cone, language=languages.ARP())
+        return MatrixCocycle(gens, cone, language=languages.ARP())
 
     def _ARP_H_matrices(self, j,k, normalize=False):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_cocycle import mcf_cocycles
+            sage: from slabbe.matrix_cocycle import cocycles
             sage: possible = [(3,1), (2,1), (3,2), (1,2), (2,3), (1,3)]
-            sage: [mcf_cocycles._ARP_H_matrices(j,k) for (j,k) in possible]
+            sage: [cocycles._ARP_H_matrices(j,k) for (j,k) in possible]
             [
             [1 0 0]  [1 0 0]  [1 1 0]  [1 0 0]  [1 0 1]  [1 0 0]
             [1 1 0]  [0 1 0]  [0 1 0]  [0 1 0]  [0 1 0]  [0 1 1]
@@ -718,7 +726,7 @@ class MCFCocycleGenerator(object):
         alphabet = ['A1', 'A2', 'A3']
         gens = dict(zip(alphabet, gens))
         cone = matrix(3, [1,0,0,0,1,0,0,0,1])
-        return MCF_Cocycle(gens, cone)
+        return MatrixCocycle(gens, cone)
 
     def Sorted_Brun(self):
         B1 = matrix(3, [1,0,0, 0,1,0, 0,-1,1]).inverse()
@@ -728,7 +736,7 @@ class MCFCocycleGenerator(object):
         alphabet = ['B1', 'B2', 'B3']
         gens = dict(zip(alphabet, gens))
         cone = matrix(3, [1,1,1,0,1,1,0,0,1])
-        return MCF_Cocycle(gens, cone)
+        return MatrixCocycle(gens, cone)
 
     def Sorted_ARP(self):
         A1 = matrix(3, [1,0,0,0,1,0,-1,-1,1]).inverse()
@@ -741,7 +749,7 @@ class MCFCocycleGenerator(object):
         alphabet = ['A1', 'A2', 'A3', 'P1', 'P2', 'P3']
         gens = dict(zip(alphabet, gens))
         cone = matrix(3, [1,0,0,1,1,0,1,1,1])
-        return MCF_Cocycle(gens, cone)
+        return MatrixCocycle(gens, cone)
 
     def Sorted_ARPMulti(self, order):
         A1 = matrix(3, [1,0,0,0,1,0,-1,-1,1]).inverse()
@@ -759,9 +767,9 @@ class MCFCocycleGenerator(object):
             gens.append(A1_i * P3)
             gens.append(A1_i * t12)
             gens.append(A1_i * t132)
-        return MCF_Cocycle(gens, cone)
+        return MatrixCocycle(gens, cone)
 
-mcf_cocycles = MCFCocycleGenerator()
+cocycles = MatrixCocycleGenerator()
 
 #####################
 # Helper functions
@@ -770,7 +778,7 @@ def rounded_string_vector(v, digits=4):
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_cocycle import rounded_string_vector
+        sage: from slabbe.matrix_cocycle import rounded_string_vector
         sage: v = (-0.144337567297406, 0.166666666666667)
         sage: rounded_string_vector(v)
         '(-0.1443, 0.1667)'
@@ -796,7 +804,7 @@ def projection_matrix(dim_from=3, dim_to=2):
 
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_cocycle import projection_matrix
+        sage: from slabbe.matrix_cocycle import projection_matrix
         sage: projection_matrix(3,2)
         [-0.866025403784439  0.866025403784439  0.000000000000000]
         [-0.500000000000000 -0.500000000000000   1.00000000000000]
@@ -823,7 +831,7 @@ def distorsion(M, p=1):
 
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_cocycle import distorsion
+        sage: from slabbe.matrix_cocycle import distorsion
         sage: M = matrix(3, (1,2,3,4,5,6,7,8,9))
         sage: M
         [1 2 3]
@@ -843,7 +851,7 @@ def is_pisot(m):
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_cocycle import is_pisot
+        sage: from slabbe.matrix_cocycle import is_pisot
         sage: M = matrix(3, (1,2,3,4,5,6,7,8,9))
         sage: is_pisot(M)
         False
@@ -855,7 +863,7 @@ def perron_right_eigenvector(M):
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_cocycle import perron_right_eigenvector
+        sage: from slabbe.matrix_cocycle import perron_right_eigenvector
         sage: m = matrix(2,[-11,14,-26,29])
         sage: perron_right_eigenvector(m)           # tolerance 0.00001
         (15.0000000000000, (0.35, 0.6499999999999999))
@@ -881,7 +889,7 @@ def semi_norm_v(M, v,  p=2, verbose=False):
 
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_cocycle import semi_norm_v
+        sage: from slabbe.matrix_cocycle import semi_norm_v
         sage: A1 = matrix(3, [1,-1,-1, 0,1,0, 0,0,1]).inverse()
         sage: semi_norm_v(A1, vector( (1,1,1)))      # tolerance 0.0001
         0.9999999999890247
@@ -915,7 +923,7 @@ def semi_norm_cone(M, cone,  p=2, verbose=False):
 
     For Arnoux-Rauzy, only the 1-norm works::
 
-        sage: from slabbe.mult_cont_frac_cocycle import semi_norm_cone
+        sage: from slabbe.matrix_cocycle import semi_norm_cone
         sage: A1 = matrix(3, [1,1,1, 0,1,0, 0,0,1])
         sage: cone = A1
         sage: semi_norm_cone(A1.transpose(), cone, p=1)    # tolerance 0.00001
@@ -1004,7 +1012,7 @@ def arp_polyhedron(d=3):
 
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_cocycle import arp_polyhedron
+        sage: from slabbe.matrix_cocycle import arp_polyhedron
         sage: A,P,L = arp_polyhedron(3)
         sage: A.vertices_list()
         [[0, 0, 0], [1/2, 1/2, 0], [1/2, 1/4, 1/4], [1, 0, 0]]
@@ -1067,7 +1075,7 @@ def cassaigne_polyhedron(d=3):
 
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_cocycle import cassaigne_polyhedron
+        sage: from slabbe.matrix_cocycle import cassaigne_polyhedron
         sage: L,La,Lb = cassaigne_polyhedron(3)
         sage: L.vertices_list()
         [[0, 0, 0], [0, 1/2, 1/2], [1/3, 1/3, 1/3], [1/2, 1/2, 0]]
