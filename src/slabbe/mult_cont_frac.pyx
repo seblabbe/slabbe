@@ -35,6 +35,8 @@ TODO:
       method on an instance variable.
       https://groups.google.com/d/topic/sage-support/DRI_s31D8ks/discussion
 
+    - invariant_measure_dict ne fonctionne pas bien avec norm 1
+
 Question:
 
     - Comment factoriser le code sans utiliser les yield?
