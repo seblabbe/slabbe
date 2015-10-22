@@ -264,9 +264,9 @@ cdef class MCFAlgorithm(object):
 
             sage: from slabbe.mult_cont_frac import Brun
             sage: Brun().matrix_cocycle()
-            Traceback (most recent call last):
-            ...
-            NotImplementedError: Matrix cocyle not implemented for Brun
+            Cocycle with 6 gens over Regular language over 
+            ['B12', 'B13', 'B21', 'B23', 'B31', 'B32']
+            defined by: Automaton with 6 states
         """
         from matrix_cocycle import cocycles
         try:

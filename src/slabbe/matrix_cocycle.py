@@ -4,7 +4,7 @@ Matrix cocyles
 
 EXAMPLES:
 
-The 1-cylinders of ARP transformation as matrices::
+The 1-cylinders of ARP transformation given as matrices::
 
     sage: from slabbe.matrix_cocycle import cocycles
     sage: ARP = cocycles.ARP()
@@ -665,58 +665,30 @@ class MatrixCocycle(object):
 class MatrixCocycleGenerator(object):
     def ARP(self):
         from sage.matrix.constructor import identity_matrix
-        A1 = matrix(3, [1,-1,-1, 0,1,0, 0,0,1]).inverse()
-        A2 = matrix(3, [1,0,0, -1,1,-1, 0,0,1]).inverse()
-        A3 = matrix(3, [1,0,0, 0,1,0, -1,-1,1]).inverse()
-        P12 = matrix(3, [1, 0, 1, 1, 1, 1, 0, 0, 1])
-        P13 = matrix(3, [1, 1, 0, 0, 1, 0, 1, 1, 1])
-        P23 = matrix(3, [1, 0, 0, 1, 1, 0, 1, 1, 1])
-        P21 = matrix(3, [1, 1, 1, 0, 1, 1, 0, 0, 1])
-        P31 = matrix(3, [1, 1, 1, 0, 1, 0, 0, 1, 1])
-        P32 = matrix(3, [1, 0, 0, 1, 1, 1, 1, 0, 1])
-        gens = (A1, A2, A3, P12, P13, P23, P21, P31, P32)
-        alphabet = ['A1', 'A2', 'A3', 'P12', 'P13', 'P23', 'P21', 'P31', 'P32']
+        A1 = matrix(3, [1,1,1, 0,1,0, 0,0,1])
+        A2 = matrix(3, [1,0,0, 1,1,1, 0,0,1])
+        A3 = matrix(3, [1,0,0, 0,1,0, 1,1,1])
+        P12 = matrix(3, [1,0,1, 1,1,1, 0,0,1])
+        P13 = matrix(3, [1,1,0, 0,1,0, 1,1,1])
+        P23 = matrix(3, [1,0,0, 1,1,0, 1,1,1])
+        P21 = matrix(3, [1,1,1, 0,1,1, 0,0,1])
+        P31 = matrix(3, [1,1,1, 0,1,0, 0,1,1])
+        P32 = matrix(3, [1,0,0, 1,1,1, 1,0,1])
+        gens = (A1, A2, A3, P12, P13, P21, P23, P31, P32)
+        alphabet = ['A1', 'A2', 'A3', 'P12', 'P13', 'P21', 'P23', 'P31', 'P32']
         gens = dict(zip(alphabet, gens))
 
-        pairs = [(1,2), (1,3), (2,3), (2,1), (3,2), (3,1)]
-        cone = {"P{}{}".format(j,k):self._ARP_H_matrices(j,k) for (j,k) in pairs}
+        cone = {}
+        cone['P12'] = H12 = matrix(3, [1,0,0, 0,1,0, 0,1,1])
+        cone['P13'] = H13 = matrix(3, [1,0,0, 0,1,1, 0,0,1])
+        cone['P21'] = H21 = matrix(3, [1,0,0, 0,1,0, 1,0,1])
+        cone['P23'] = H23 = matrix(3, [1,0,1, 0,1,0, 0,0,1])
+        cone['P31'] = H31 = matrix(3, [1,0,0, 1,1,0, 0,0,1])
+        cone['P32'] = H32 = matrix(3, [1,1,0, 0,1,0, 0,0,1])
         cone.update({"A{}".format(k):identity_matrix(3) for k in [1,2,3]})
 
         from language import languages
         return MatrixCocycle(gens, cone, language=languages.ARP())
-
-    def _ARP_H_matrices(self, j,k, normalize=False):
-        r"""
-        EXAMPLES::
-
-            sage: from slabbe.matrix_cocycle import cocycles
-            sage: possible = [(3,1), (2,1), (3,2), (1,2), (2,3), (1,3)]
-            sage: [cocycles._ARP_H_matrices(j,k) for (j,k) in possible]
-            [
-            [1 0 0]  [1 0 0]  [1 1 0]  [1 0 0]  [1 0 1]  [1 0 0]
-            [1 1 0]  [0 1 0]  [0 1 0]  [0 1 0]  [0 1 0]  [0 1 1]
-            [0 0 1], [1 0 1], [0 0 1], [0 1 1], [0 0 1], [0 0 1]
-            ]
-        """
-        if normalize:
-            a = 1/2
-        else:
-            a = 1
-        if j==3 and k==1:
-            return matrix([(a,a,0), (0,1,0), (0,0,1)]).transpose()
-        elif j==2 and k==1:
-            return matrix([(a,0,a), (0,1,0), (0,0,1)]).transpose()
-        elif j==3 and k==2:
-            return matrix([(1,0,0), (a,a,0), (0,0,1)]).transpose()
-        elif j==1 and k==2:
-            return matrix([(1,0,0), (0,a,a), (0,0,1)]).transpose()
-        elif j==2 and k==3:
-            return matrix([(1,0,0), (0,1,0), (a,0,a)]).transpose()
-        elif j==1 and k==3:
-            return matrix([(1,0,0), (0,1,0), (0,a,a)]).transpose()
-        else:
-            raise ValueError("invalid j(=%s) and k(=%s)" % (j,k))
-
 
     def ArnouxRauzy(self):
         A1 = matrix(3, [1,1,1, 0,1,0, 0,0,1])
@@ -725,13 +697,12 @@ class MatrixCocycleGenerator(object):
         gens = (A1, A2, A3)
         alphabet = ['A1', 'A2', 'A3']
         gens = dict(zip(alphabet, gens))
-        cone = matrix(3, [1,0,0,0,1,0,0,0,1])
-        return MatrixCocycle(gens, cone)
+        return MatrixCocycle(gens)
 
     def Sorted_Brun(self):
-        B1 = matrix(3, [1,0,0, 0,1,0, 0,-1,1]).inverse()
-        B2 = matrix(3, [1,0,0, 0,-1,1, 0,1,0]).inverse()
-        B3 = matrix(3, [0,-1,1, 1,0,0, 0,1,0]).inverse()
+        B1 = matrix(3, [1,0,0, 0,1,0, 0,1,1])
+        B2 = matrix(3, [1,0,0, 0,0,1, 0,1,1])
+        B3 = matrix(3, [0,1,0, 0,0,1, 1,0,1])
         gens = (B1, B2, B3)
         alphabet = ['B1', 'B2', 'B3']
         gens = dict(zip(alphabet, gens))
@@ -783,6 +754,29 @@ class MatrixCocycleGenerator(object):
         gens = {1:A1, 2:A2, 3:A3, 4:R}
         return MatrixCocycle(gens)
 
+
+    def Brun(self):
+        from sage.matrix.constructor import identity_matrix
+        B12 = matrix(3, [1,0,0, 1,1,0, 0,0,1])
+        B13 = matrix(3, [1,0,0, 0,1,0, 1,0,1])
+        B21 = matrix(3, [1,1,0, 0,1,0, 0,0,1])
+        B23 = matrix(3, [1,0,0, 0,1,0, 0,1,1])
+        B31 = matrix(3, [1,0,1, 0,1,0, 0,0,1])
+        B32 = matrix(3, [1,0,0, 0,1,1, 0,0,1])
+        gens = (B12, B13, B21, B23, B31, B32)
+        alphabet = ['B12', 'B13', 'B21', 'B23', 'B31', 'B32']
+        gens = dict(zip(alphabet, gens))
+
+        cone = {}
+        cone['B12'] = B31
+        cone['B13'] = B21
+        cone['B21'] = B32
+        cone['B23'] = B12
+        cone['B31'] = B23
+        cone['B32'] = B13
+
+        from language import languages
+        return MatrixCocycle(gens, cone, language=languages.Brun())
 
 cocycles = MatrixCocycleGenerator()
 

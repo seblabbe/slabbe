@@ -103,8 +103,7 @@ class Language(object):
             [word: aa, word: ab, word: ba, word: bb]
         """
         W = Words(self._alphabet)
-        it = W.iterate_by_length(length)
-        return it
+        return W.iterate_by_length(length)
 
     def complexity(self, length):
         r"""
@@ -283,7 +282,7 @@ class RegularLanguage(Language):
             sage: [list(R.words_of_length_iterator(i)) for i in range(6)]
             [[], [], [], [], [word: abba], []]
         """
-        it = Language.words_of_length_iterator(self, length)
+        it = super(RegularLanguage, self).words_of_length_iterator(length)
         return itertools.ifilter(self._automaton, it)
 
 #####################
@@ -345,6 +344,72 @@ class LanguageGenerator(object):
             autom.add_transition(D, v, P(j,k))
         for k in [1,2,3]:
             autom.add_transition(D, D, A(k))
+        return autom
+
+    def Brun(self):
+        r"""
+        Return the Brun regular language.
+
+            sage: from slabbe.language import languages
+            sage: L = languages.Brun()
+            sage: L
+            Regular language over ['B12', 'B13', 'B21', 'B23', 'B31', 'B32']
+            defined by: Automaton with 6 states
+            sage: map(L.complexity, range(4))
+            [1, 6, 18, 54]
+            sage: list(L.words_of_length_iterator(2))
+            [word: B12,B12,
+             word: B12,B21,
+             word: B12,B31,
+             word: B13,B13,
+             word: B13,B21,
+             word: B13,B31,
+             word: B21,B12,
+             word: B21,B21,
+             word: B21,B32,
+             word: B23,B12,
+             word: B23,B23,
+             word: B23,B32,
+             word: B31,B13,
+             word: B31,B23,
+             word: B31,B31,
+             word: B32,B13,
+             word: B32,B23,
+             word: B32,B32]
+        """
+        alphabet = ['B12', 'B13', 'B21', 'B23', 'B31', 'B32']
+        automaton = self._Brun_automaton()
+        return RegularLanguage(alphabet, automaton)
+
+    def _Brun_automaton(self):
+        r"""
+        Return the automaton for the Brun language.
+
+        EXAMPLES::
+
+            sage: from slabbe.language import languages
+            sage: A = languages._Brun_automaton()
+            sage: A
+            Automaton with 6 states
+
+        TESTS::
+
+            sage: A(['B23', 'B23', 'B32', 'B13'])
+            True
+            sage: A(['B23', 'B23', 'B32', 'B13', 'B23'])
+            False
+        """
+        def B(j,k):
+            return 'B%s%s' % (j,k)
+        jk = [(3,1), (2,1), (3,2), (1,2), (2,3), (1,3)]
+        states = [B(j,k) for (j,k) in jk]
+        autom = Automaton(initial_states=states, final_states=states)
+        for (j,k) in jk:
+            i = 6 - j - k
+            v = B(j,k)
+            autom.add_transition(v, B(j,k), B(j,k))
+            autom.add_transition(v, B(k,j), B(k,j))
+            autom.add_transition(v, B(i,j), B(i,j))
         return autom
 
 languages = LanguageGenerator()
