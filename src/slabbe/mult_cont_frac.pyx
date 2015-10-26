@@ -1871,7 +1871,7 @@ cdef class Poincare(MCFAlgorithm):
              ('z', 0.20000000000000007)]
         """
         cdef PairPoint3d R
-        if P.x < P.y < P.z:
+        if P.x <= P.y <= P.z:
             R.x = P.x
             R.y = P.y - P.x
             R.z = P.z - P.y
@@ -1879,7 +1879,7 @@ cdef class Poincare(MCFAlgorithm):
             R.v = P.v + P.w
             R.w = P.w
             R.branch = 23
-        elif P.x < P.z < P.y:
+        elif P.x <= P.z <= P.y:
             R.x = P.x
             R.y = P.y - P.z
             R.z = P.z - P.x
@@ -1887,7 +1887,7 @@ cdef class Poincare(MCFAlgorithm):
             R.v = P.v
             R.w = P.v + P.w
             R.branch = 32
-        elif P.y < P.x < P.z:
+        elif P.y <= P.x <= P.z:
             R.x = P.x - P.y
             R.y = P.y
             R.z = P.z - P.x
@@ -1895,7 +1895,7 @@ cdef class Poincare(MCFAlgorithm):
             R.v = P.u + P.v + P.w
             R.w = P.w
             R.branch = 13
-        elif P.z < P.x < P.y:
+        elif P.z <= P.x <= P.y:
             R.x = P.x - P.z
             R.y = P.y - P.x
             R.z = P.z
@@ -1903,7 +1903,7 @@ cdef class Poincare(MCFAlgorithm):
             R.v = P.v
             R.w = P.u + P.v + P.w
             R.branch = 12
-        elif P.y < P.z < P.x:
+        elif P.y <= P.z <= P.x:
             R.x = P.x - P.z
             R.y = P.y
             R.z = P.z - P.y
@@ -1911,7 +1911,7 @@ cdef class Poincare(MCFAlgorithm):
             R.v = P.u + P.v + P.w
             R.w = P.u + P.w
             R.branch = 31
-        elif P.z < P.y < P.x:
+        elif P.z <= P.y <= P.x:
             R.x = P.x - P.y
             R.y = P.y - P.z
             R.z = P.z
@@ -2005,17 +2005,17 @@ cdef class Meester(MCFAlgorithm):
              ('y', 0.3),
              ('z', 0.5)]
         """
-        if P.x < P.y and P.x < P.z:
+        if P.x <= P.y and P.x <= P.z:
             P.y -= P.x
             P.z -= P.x
             P.u += P.v + P.w
             P.branch = 1
-        elif P.y < P.x and P.x < P.z:
+        elif P.y <= P.x and P.x <= P.z:
             P.x -= P.y
             P.z -= P.y
             P.v += P.u + P.w
             P.branch = 2
-        elif P.z < P.x and P.z < P.y:
+        elif P.z <= P.x and P.z <= P.y:
             P.x -= P.z
             P.y -= P.z
             P.w += P.u + P.v

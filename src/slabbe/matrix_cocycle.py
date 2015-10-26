@@ -778,6 +778,27 @@ class MatrixCocycleGenerator(object):
         from language import languages
         return MatrixCocycle(gens, cone, language=languages.Brun())
 
+    def Poincare(self):
+        P12 = matrix(3, [1,0,1, 1,1,1, 0,0,1])
+        P13 = matrix(3, [1,1,0, 0,1,0, 1,1,1])
+        P23 = matrix(3, [1,0,0, 1,1,0, 1,1,1])
+        P21 = matrix(3, [1,1,1, 0,1,1, 0,0,1])
+        P31 = matrix(3, [1,1,1, 0,1,0, 0,1,1])
+        P32 = matrix(3, [1,0,0, 1,1,1, 1,0,1])
+        gens = (P12, P13, P21, P23, P31, P32)
+        alphabet = ['P12', 'P13', 'P21', 'P23', 'P31', 'P32']
+        gens = dict(zip(alphabet, gens))
+        return MatrixCocycle(gens)
+
+    def Meester(self):
+        F1 = matrix(3, [1,0,0, 1,1,0, 1,0,1])
+        F2 = matrix(3, [1,1,0, 0,1,0, 0,1,1])
+        F3 = matrix(3, [1,0,1, 0,1,1, 0,0,1])
+        gens = (F1, F2, F3)
+        alphabet = [1, 2, 3]
+        gens = dict(zip(alphabet, gens))
+        return MatrixCocycle(gens)
+
 cocycles = MatrixCocycleGenerator()
 
 #####################
