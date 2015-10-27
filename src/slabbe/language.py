@@ -412,4 +412,61 @@ class LanguageGenerator(object):
             autom.add_transition(v, B(i,j), B(i,j))
         return autom
 
+    def Selmer(self):
+        r"""
+        Return the Selmer regular language.
+
+            sage: from slabbe.language import languages
+            sage: L = languages.Selmer()
+            sage: L
+            Regular language over ['123', '132', '213', '231', '312', '321']
+            defined by: Automaton with 6 states
+            sage: map(L.complexity, range(4))
+            [1, 6, 12, 24]
+            sage: list(L.words_of_length_iterator(2))
+            [word: 123,132,
+             word: 123,312,
+             word: 132,123,
+             word: 132,213,
+             word: 213,231,
+             word: 213,321,
+             word: 231,123,
+             word: 231,213,
+             word: 312,231,
+             word: 312,321,
+             word: 321,132,
+             word: 321,312]
+        """
+        alphabet = ['123', '132', '213', '231', '312', '321']
+        automaton = self._Selmer_automaton()
+        return RegularLanguage(alphabet, automaton)
+
+    def _Selmer_automaton(self):
+        r"""
+        Return the automaton for the Selmer language.
+
+        EXAMPLES::
+
+            sage: from slabbe.language import languages
+            sage: A = languages._Selmer_automaton()
+            sage: A
+            Automaton with 6 states
+
+        TESTS::
+
+            sage: A(['123', '132', '213'])
+            True
+            sage: A(['123', '132', '213', '123'])
+            False
+        """
+        def S(i,j,k):
+            return '{}{}{}'.format(i,j,k)
+        states = [S(*p) for p in itertools.permutations((1,2,3))]
+        autom = Automaton(initial_states=states, final_states=states)
+        for p in itertools.permutations((1,2,3)):
+            i,j,k = p
+            autom.add_transition(S(*p), S(i,k,j), S(i,k,j))
+            autom.add_transition(S(*p), S(k,i,j), S(k,i,j))
+        return autom
+
 languages = LanguageGenerator()

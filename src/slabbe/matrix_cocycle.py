@@ -685,7 +685,7 @@ class MatrixCocycleGenerator(object):
         cone['P23'] = H23 = matrix(3, [1,0,1, 0,1,0, 0,0,1])
         cone['P31'] = H31 = matrix(3, [1,0,0, 1,1,0, 0,0,1])
         cone['P32'] = H32 = matrix(3, [1,1,0, 0,1,0, 0,0,1])
-        cone.update({"A{}".format(k):identity_matrix(3) for k in [1,2,3]})
+        cone['A1'] = cone['A2'] = cone['A3'] = identity_matrix(3) 
 
         from language import languages
         return MatrixCocycle(gens, cone, language=languages.ARP())
@@ -755,7 +755,6 @@ class MatrixCocycleGenerator(object):
         return MatrixCocycle(gens)
 
     def Brun(self):
-        from sage.matrix.constructor import identity_matrix
         B12 = matrix(3, [1,0,0, 1,1,0, 0,0,1])
         B13 = matrix(3, [1,0,0, 0,1,0, 1,0,1])
         B21 = matrix(3, [1,1,0, 0,1,0, 0,0,1])
@@ -776,6 +775,25 @@ class MatrixCocycleGenerator(object):
 
         from language import languages
         return MatrixCocycle(gens, cone, language=languages.Brun())
+
+    def Selmer(self):
+        S123 = matrix(3, [1,0,0, 0,1,0, 1,0,1])
+        S132 = matrix(3, [1,0,0, 1,1,0, 0,0,1])
+        S213 = matrix(3, [1,0,0, 0,1,0, 0,1,1])
+        S231 = matrix(3, [1,1,0, 0,1,0, 0,0,1])
+        S312 = matrix(3, [1,0,0, 0,1,1, 0,0,1])
+        S321 = matrix(3, [1,0,1, 0,1,0, 0,0,1])
+        gens = (S123, S132, S213, S231, S312, S321)
+        alphabet = ['123', '132', '213', '231', '312', '321']
+        gens = dict(zip(alphabet, gens))
+
+        cone = {}
+        cone['213'] = cone['312'] = matrix.column(3, [1,1,1, 1,1,0, 1,0,1])
+        cone['123'] = cone['321'] = matrix.column(3, [1,1,1, 0,1,1, 1,1,0])
+        cone['132'] = cone['231'] = matrix.column(3, [1,1,1, 1,0,1, 0,1,1])
+
+        from language import languages
+        return MatrixCocycle(gens, cone, language=languages.Selmer())
 
     def Poincare(self):
         P12 = matrix(3, [1,0,1, 1,1,1, 0,0,1])
