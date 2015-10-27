@@ -107,14 +107,14 @@ cdef class MCFAlgorithm(object):
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac import Brun
-            sage: b = Brun()
-            sage: b.substitutions()
-            {12: WordMorphism: 1->12, 2->2, 3->3,
-             13: WordMorphism: 1->13, 2->2, 3->3,
-             21: WordMorphism: 1->1, 2->21, 3->3,
-             23: WordMorphism: 1->1, 2->23, 3->3,
-             31: WordMorphism: 1->1, 2->2, 3->31,
-             32: WordMorphism: 1->1, 2->2, 3->32}
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: Brun().substitutions()
+            {123: WordMorphism: 1->1, 2->23, 3->3,
+             132: WordMorphism: 1->1, 2->2, 3->32,
+             213: WordMorphism: 1->13, 2->2, 3->3,
+             231: WordMorphism: 1->1, 2->2, 3->31,
+             312: WordMorphism: 1->12, 2->2, 3->3,
+             321: WordMorphism: 1->1, 2->21, 3->3}
 
         """
         raise NotImplementedError
@@ -132,7 +132,7 @@ cdef class MCFAlgorithm(object):
             sage: mcf.Brun().branches()
             {123, 132, 213, 231, 312, 321}
             sage: mcf.ARP().branches()
-            {1, 2, 3, 12, 13, 21, 23, 31, 32}
+            {1, 2, 3, 123, 132, 213, 231, 312, 321}
         """
         cdef unsigned int i         # loop counter
         cdef PairPoint3d P
@@ -294,7 +294,7 @@ cdef class MCFAlgorithm(object):
             sage: from slabbe.mult_cont_frac import ARP
             sage: it = ARP().coding_iterator((1,e,pi))
             sage: [next(it) for _ in range(20)]
-            [23, 2, 1, 23, 1, 31, 3, 3, 3, 3, 23, 1, 1, 1, 31, 2, 21, 2, 3, 12]
+            [123, 2, 1, 123, 1, 231, 3, 3, 3, 3, 123, 1, 1, 1, 231, 2, 321, 2, 3, 312]
 
         """
         cdef double s             # temporary variables
@@ -1303,15 +1303,15 @@ cdef class MCFAlgorithm(object):
         also ::
 
             sage: s = ARP().natural_extension_part_tikz(1000, part=3, marksize='.2pt', limit_nb_points=1200, verbose=True)
-            Taking ... points for key 32
             Taking ... points for key 1
             Taking ... points for key 2
             Taking ... points for key 3
-            Taking ... points for key 12
-            Taking ... points for key 13
-            Taking ... points for key 21
-            Taking ... points for key 23
-            Taking ... points for key 31
+            Taking ... points for key 132
+            Taking ... points for key 321
+            Taking ... points for key 231
+            Taking ... points for key 213
+            Taking ... points for key 312
+            Taking ... points for key 123
         """
         t = self.natural_extention_dict(n_iterations, norm_left=norm_left,
                 norm_right=norm_right)
@@ -1417,8 +1417,8 @@ cdef class MCFAlgorithm(object):
 
             sage: c = {}
             sage: c[1] = c[2] = c[3] = [0,0,0]
-            sage: c[12] = c[13] = c[23] = c[21] = c[31] = c[32] = [255,0,0]
-            sage: b = [1,2,3,12,13,21,23,31,32]
+            sage: c[123] = c[132] = c[231] = c[213] = c[312] = c[321] = [255,0,0]
+            sage: b = [1,2,3,123,132,213,231,312,321]
             sage: opt = dict(urange=(-.6,.6), vrange=(-.6,.6), color_dict=c, branch_order=b)
             sage: P = ARP().natural_extension_part_png(10^5, draw='domain_left', **opt)
             sage: P = ARP().natural_extension_part_png(10^5, draw='domain_right', **opt)
@@ -1659,26 +1659,27 @@ cdef class Brun(MCFAlgorithm):
         else:
             raise ValueError('limit case: reach set of measure zero')
         return P
+
     def substitutions(self):
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac import Brun
             sage: Brun().substitutions()
-            {12: WordMorphism: 1->12, 2->2, 3->3,
-             13: WordMorphism: 1->13, 2->2, 3->3,
-             21: WordMorphism: 1->1, 2->21, 3->3,
-             23: WordMorphism: 1->1, 2->23, 3->3,
-             31: WordMorphism: 1->1, 2->2, 3->31,
-             32: WordMorphism: 1->1, 2->2, 3->32}
+            {123: WordMorphism: 1->1, 2->23, 3->3,
+             132: WordMorphism: 1->1, 2->2, 3->32,
+             213: WordMorphism: 1->13, 2->2, 3->3,
+             231: WordMorphism: 1->1, 2->2, 3->31,
+             312: WordMorphism: 1->12, 2->2, 3->3,
+             321: WordMorphism: 1->1, 2->21, 3->3}
         """
         from sage.combinat.words.morphism import WordMorphism
-        return {12: WordMorphism({1: [1, 2], 2: [2], 3: [3]}),
-                21: WordMorphism({1: [1], 2: [2, 1], 3: [3]}),
-                13: WordMorphism({1: [1, 3], 2: [2], 3: [3]}),
-                31: WordMorphism({1: [1], 2: [2], 3: [3, 1]}),
-                23: WordMorphism({1: [1], 2: [2, 3], 3: [3]}),
-                32: WordMorphism({1: [1], 2: [2], 3: [3, 2]})}
+        return {312: WordMorphism({1: [1, 2], 2: [2], 3: [3]}),
+                321: WordMorphism({1: [1], 2: [2, 1], 3: [3]}),
+                213: WordMorphism({1: [1, 3], 2: [2], 3: [3]}),
+                231: WordMorphism({1: [1], 2: [2], 3: [3, 1]}),
+                123: WordMorphism({1: [1], 2: [2, 3], 3: [3]}),
+                132: WordMorphism({1: [1], 2: [2], 3: [3, 2]})}
 
 cdef class Reverse(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
@@ -1728,6 +1729,23 @@ cdef class Reverse(MCFAlgorithm):
             R.branch = 4
             return R
 
+    def substitutions(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Reverse
+            sage: Reverse().substitutions()
+            {1: WordMorphism: 1->1, 2->21, 3->31,
+             2: WordMorphism: 1->12, 2->2, 3->32,
+             3: WordMorphism: 1->13, 2->23, 3->3,
+             4: WordMorphism: 1->23, 2->13, 3->12}
+        """
+        from sage.combinat.words.morphism import WordMorphism
+        return {1:  WordMorphism({1: [1], 2: [2, 1], 3: [3, 1]}),
+                2:  WordMorphism({1: [1, 2], 2: [2], 3: [3, 2]}),
+                3:  WordMorphism({1: [1, 3], 2: [2, 3], 3: [3]}),
+                4:  WordMorphism({1: [2,3], 2: [1,3], 3: [1,2]})}
+
 cdef class ARP(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
@@ -1737,7 +1755,7 @@ cdef class ARP(MCFAlgorithm):
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = ARP()(D)
             sage: sorted(E.iteritems())
-            [('branch', 23),
+            [('branch', 123),
              ('u', 0.8),
              ('v', 0.6),
              ('w', 0.3),
@@ -1775,24 +1793,24 @@ cdef class ARP(MCFAlgorithm):
             {1: WordMorphism: 1->1, 2->21, 3->31,
              2: WordMorphism: 1->12, 2->2, 3->32,
              3: WordMorphism: 1->13, 2->23, 3->3,
-             12: WordMorphism: 1->12, 2->2, 3->312,
-             13: WordMorphism: 1->13, 2->213, 3->3,
-             21: WordMorphism: 1->1, 2->21, 3->321,
-             23: WordMorphism: 1->123, 2->23, 3->3,
-             31: WordMorphism: 1->1, 2->231, 3->31,
-             32: WordMorphism: 1->132, 2->2, 3->32}
+             123: WordMorphism: 1->123, 2->23, 3->3,
+             132: WordMorphism: 1->132, 2->2, 3->32,
+             213: WordMorphism: 1->13, 2->213, 3->3,
+             231: WordMorphism: 1->1, 2->231, 3->31,
+             312: WordMorphism: 1->12, 2->2, 3->312,
+             321: WordMorphism: 1->1, 2->21, 3->321}
 
         """
         from sage.combinat.words.morphism import WordMorphism
         return {1:  WordMorphism({1: [1], 2: [2, 1], 3: [3, 1]}),
                 2:  WordMorphism({1: [1, 2], 2: [2], 3: [3, 2]}),
                 3:  WordMorphism({1: [1, 3], 2: [2, 3], 3: [3]}),
-                12: WordMorphism({1: [1, 2], 2: [2], 3: [3, 1, 2]}),
-                21: WordMorphism({1: [1], 2: [2, 1], 3: [3, 2, 1]}),
-                13: WordMorphism({1: [1, 3], 2: [2, 1, 3], 3: [3]}),
-                31: WordMorphism({1: [1], 2: [2, 3, 1], 3: [3, 1]}),
-                23: WordMorphism({1: [1, 2, 3], 2: [2, 3], 3: [3]}),
-                32: WordMorphism({1: [1, 3, 2], 2: [2], 3: [3, 2]})}
+                312: WordMorphism({1: [1, 2], 2: [2], 3: [3, 1, 2]}),
+                321: WordMorphism({1: [1], 2: [2, 1], 3: [3, 2, 1]}),
+                213: WordMorphism({1: [1, 3], 2: [2, 1, 3], 3: [3]}),
+                231: WordMorphism({1: [1], 2: [2, 3, 1], 3: [3, 1]}),
+                123: WordMorphism({1: [1, 2, 3], 2: [2, 3], 3: [3]}),
+                132: WordMorphism({1: [1, 3, 2], 2: [2], 3: [3, 2]})}
 
 cdef class ArnouxRauzy(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
@@ -1862,7 +1880,7 @@ cdef class Poincare(MCFAlgorithm):
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Poincare()(D)
             sage: sorted(E.iteritems())
-            [('branch', 23),
+            [('branch', 123),
              ('u', 0.8),
              ('v', 0.6),
              ('w', 0.3),
@@ -1870,58 +1888,8 @@ cdef class Poincare(MCFAlgorithm):
              ('y', 0.3),
              ('z', 0.20000000000000007)]
         """
-        cdef PairPoint3d R
-        if P.x <= P.y <= P.z:
-            R.x = P.x
-            R.y = P.y - P.x
-            R.z = P.z - P.y
-            R.u = P.u + P.v + P.w
-            R.v = P.v + P.w
-            R.w = P.w
-            R.branch = 23
-        elif P.x <= P.z <= P.y:
-            R.x = P.x
-            R.y = P.y - P.z
-            R.z = P.z - P.x
-            R.u = P.u + P.v + P.w
-            R.v = P.v
-            R.w = P.v + P.w
-            R.branch = 32
-        elif P.y <= P.x <= P.z:
-            R.x = P.x - P.y
-            R.y = P.y
-            R.z = P.z - P.x
-            R.u = P.u       + P.w
-            R.v = P.u + P.v + P.w
-            R.w = P.w
-            R.branch = 13
-        elif P.z <= P.x <= P.y:
-            R.x = P.x - P.z
-            R.y = P.y - P.x
-            R.z = P.z
-            R.u = P.u + P.v
-            R.v = P.v
-            R.w = P.u + P.v + P.w
-            R.branch = 12
-        elif P.y <= P.z <= P.x:
-            R.x = P.x - P.z
-            R.y = P.y
-            R.z = P.z - P.y
-            R.u = P.u
-            R.v = P.u + P.v + P.w
-            R.w = P.u + P.w
-            R.branch = 31
-        elif P.z <= P.y <= P.x:
-            R.x = P.x - P.y
-            R.y = P.y - P.z
-            R.z = P.z
-            R.u = P.u
-            R.v = P.u + P.v
-            R.w = P.u + P.v + P.w
-            R.branch = 21
-        else:
-            raise ValueError('limit case: reach set of measure zero')
-        return R
+        return _Poincare(P)
+
     def substitutions(self):
         r"""
         EXAMPLES::
@@ -1988,6 +1956,27 @@ cdef class Selmer(MCFAlgorithm):
             raise ValueError('limit case: reach set of measure zero')
         return P
 
+    def substitutions(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Selmer
+            sage: Selmer().substitutions()
+            {123: WordMorphism: 1->13, 2->2, 3->3,
+             132: WordMorphism: 1->12, 2->2, 3->3,
+             213: WordMorphism: 1->1, 2->23, 3->3,
+             231: WordMorphism: 1->1, 2->21, 3->3,
+             312: WordMorphism: 1->1, 2->2, 3->32,
+             321: WordMorphism: 1->1, 2->2, 3->31}
+        """
+        from sage.combinat.words.morphism import WordMorphism
+        return {132: WordMorphism({1: [1, 2], 2: [2], 3: [3]}),
+                231: WordMorphism({1: [1], 2: [2, 1], 3: [3]}),
+                123: WordMorphism({1: [1, 3], 2: [2], 3: [3]}),
+                321: WordMorphism({1: [1], 2: [2], 3: [3, 1]}),
+                213: WordMorphism({1: [1], 2: [2, 3], 3: [3]}),
+                312: WordMorphism({1: [1], 2: [2], 3: [3, 2]})}
+
 cdef class Meester(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
@@ -2023,6 +2012,21 @@ cdef class Meester(MCFAlgorithm):
         else:
             raise ValueError('limit case: reach set of measure zero')
         return P
+
+    def substitutions(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Meester
+            sage: Meester().substitutions()
+            {1: WordMorphism: 1->123, 2->2, 3->3,
+             2: WordMorphism: 1->1, 2->231, 3->3,
+             3: WordMorphism: 1->1, 2->2, 3->312}
+        """
+        from sage.combinat.words.morphism import WordMorphism
+        return {1: WordMorphism({1: [1,2,3], 2: [2], 3: [3]}),
+                2: WordMorphism({1: [1], 2: [2,3,1], 3: [3]}),
+                3: WordMorphism({1: [1], 2: [2], 3: [3,1,2]})}
 
 cdef class Cassaigne(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
@@ -2683,7 +2687,7 @@ cdef inline PairPoint3d _Poincare(PairPoint3d P):
         R.u = P.u + P.v + P.w
         R.v = P.v + P.w
         R.w = P.w
-        R.branch = 23
+        R.branch = 123
     elif P.x < P.z < P.y:
         R.x = P.x
         R.y = P.y - P.z
@@ -2691,7 +2695,7 @@ cdef inline PairPoint3d _Poincare(PairPoint3d P):
         R.u = P.u + P.v + P.w
         R.v = P.v
         R.w = P.v + P.w
-        R.branch = 32
+        R.branch = 132
     elif P.y < P.x < P.z:
         R.x = P.x - P.y
         R.y = P.y
@@ -2699,7 +2703,7 @@ cdef inline PairPoint3d _Poincare(PairPoint3d P):
         R.u = P.u       + P.w
         R.v = P.u + P.v + P.w
         R.w = P.w
-        R.branch = 13
+        R.branch = 213
     elif P.z < P.x < P.y:
         R.x = P.x - P.z
         R.y = P.y - P.x
@@ -2707,7 +2711,7 @@ cdef inline PairPoint3d _Poincare(PairPoint3d P):
         R.u = P.u + P.v
         R.v = P.v
         R.w = P.u + P.v + P.w
-        R.branch = 12
+        R.branch = 312
     elif P.y < P.z < P.x:
         R.x = P.x - P.z
         R.y = P.y
@@ -2715,7 +2719,7 @@ cdef inline PairPoint3d _Poincare(PairPoint3d P):
         R.u = P.u
         R.v = P.u + P.v + P.w
         R.w = P.u + P.w
-        R.branch = 31
+        R.branch = 231
     elif P.z < P.y < P.x:
         R.x = P.x - P.y
         R.y = P.y - P.z
@@ -2723,7 +2727,7 @@ cdef inline PairPoint3d _Poincare(PairPoint3d P):
         R.u = P.u
         R.v = P.u + P.v
         R.w = P.u + P.v + P.w
-        R.branch = 21
+        R.branch = 321
     else:
         raise ValueError('limit case: reach set of measure zero')
     return R
