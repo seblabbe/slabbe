@@ -1896,20 +1896,20 @@ cdef class Poincare(MCFAlgorithm):
 
             sage: from slabbe.mult_cont_frac import Poincare
             sage: Poincare().substitutions()
-            {12: WordMorphism: 1->12, 2->2, 3->312,
-             13: WordMorphism: 1->13, 2->213, 3->3,
-             21: WordMorphism: 1->1, 2->21, 3->321,
-             23: WordMorphism: 1->123, 2->23, 3->3,
-             31: WordMorphism: 1->1, 2->231, 3->31,
-             32: WordMorphism: 1->132, 2->2, 3->32}
+            {123: WordMorphism: 1->123, 2->23, 3->3,
+             132: WordMorphism: 1->132, 2->2, 3->32,
+             213: WordMorphism: 1->13, 2->213, 3->3,
+             231: WordMorphism: 1->1, 2->231, 3->31,
+             312: WordMorphism: 1->12, 2->2, 3->312,
+             321: WordMorphism: 1->1, 2->21, 3->321}
         """
         from sage.combinat.words.morphism import WordMorphism
-        return {12: WordMorphism({1: [1, 2], 2: [2], 3: [3, 1, 2]}),
-                21: WordMorphism({1: [1], 2: [2, 1], 3: [3, 2, 1]}),
-                13: WordMorphism({1: [1, 3], 2: [2, 1, 3], 3: [3]}),
-                31: WordMorphism({1: [1], 2: [2, 3, 1], 3: [3, 1]}),
-                23: WordMorphism({1: [1, 2, 3], 2: [2, 3], 3: [3]}),
-                32: WordMorphism({1: [1, 3, 2], 2: [2], 3: [3, 2]})}
+        return {312: WordMorphism({1: [1, 2], 2: [2], 3: [3, 1, 2]}),
+                321: WordMorphism({1: [1], 2: [2, 1], 3: [3, 2, 1]}),
+                213: WordMorphism({1: [1, 3], 2: [2, 1, 3], 3: [3]}),
+                231: WordMorphism({1: [1], 2: [2, 3, 1], 3: [3, 1]}),
+                123: WordMorphism({1: [1, 2, 3], 2: [2, 3], 3: [3]}),
+                132: WordMorphism({1: [1, 3, 2], 2: [2], 3: [3, 2]})}
 
 cdef class Selmer(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
