@@ -159,9 +159,9 @@ cdef class MCFAlgorithm(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import ARrevert, Brun
-            sage: ARrevert().name()
-            'ARrevert'
+            sage: from slabbe.mult_cont_frac import Reverse, Brun
+            sage: Reverse().name()
+            'Reverse'
             sage: Brun().name()
             'Brun'
         """
@@ -170,9 +170,9 @@ cdef class MCFAlgorithm(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import ARrevert, Brun
-            sage: ARrevert()
-            ARrevert 3-dimensional continued fraction algorithm
+            sage: from slabbe.mult_cont_frac import Reverse, Brun
+            sage: Reverse()
+            Reverse 3-dimensional continued fraction algorithm
             sage: Brun()
             Brun 3-dimensional continued fraction algorithm
         """
@@ -1068,8 +1068,8 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import ARrevert, Brun
-            sage: ARrevert().invariant_measure_plot(1000000, 80, savefig=False)
+            sage: from slabbe.mult_cont_frac import Reverse, Brun
+            sage: Reverse().invariant_measure_plot(1000000, 80, savefig=False)
             <matplotlib.figure.Figure object at ...>
             sage: Brun().invariant_measure_plot(1000000, 40, norm='sup',savefig=False)
             <matplotlib.figure.Figure object at ...>
@@ -1108,8 +1108,8 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import ARrevert
-            sage: ARrevert().invariant_measure_inverse_plot(1000000, 80, savefig=False)
+            sage: from slabbe.mult_cont_frac import Reverse
+            sage: Reverse().invariant_measure_inverse_plot(1000000, 80, savefig=False)
             <matplotlib.figure.Figure object at ...>
 
         """
@@ -1680,14 +1680,14 @@ cdef class Brun(MCFAlgorithm):
                 23: WordMorphism({1: [1], 2: [2, 3], 3: [3]}),
                 32: WordMorphism({1: [1], 2: [2], 3: [3, 2]})}
 
-cdef class ARrevert(MCFAlgorithm):
+cdef class Reverse(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import ARrevert
+            sage: from slabbe.mult_cont_frac import Reverse
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = ARrevert()(D)
+            sage: E = Reverse()(D)
             sage: sorted(E.iteritems())
             [('branch', 4),
              ('u', 0.47622031559045996),

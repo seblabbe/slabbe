@@ -746,14 +746,13 @@ class MatrixCocycleGenerator(object):
         gens = {1:T1, 2:T2}
         return MatrixCocycle(gens)
 
-    def ARrevert(self):
+    def Reverse(self):
         A1 = matrix(3, [1,1,1, 0,1,0, 0,0,1])
         A2 = matrix(3, [1,0,0, 1,1,1, 0,0,1])
         A3 = matrix(3, [1,0,0, 0,1,0, 1,1,1])
         R = matrix(3, [0,1,1, 1,0,1, 1,1,0])
         gens = {1:A1, 2:A2, 3:A3, 4:R}
         return MatrixCocycle(gens)
-
 
     def Brun(self):
         from sage.matrix.constructor import identity_matrix
