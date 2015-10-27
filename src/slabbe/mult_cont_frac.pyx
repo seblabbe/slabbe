@@ -2674,13 +2674,13 @@ cdef class JacobiPerronAdditifv2(MCFAlgorithm):
 
         return R
 
-cdef inline PairPoint3d _Poincare(PairPoint3d P):
+cdef inline PairPoint3d _Poincare(PairPoint3d P) except *:
     r"""
     EXAMPLES::
 
     """
     cdef PairPoint3d R
-    if P.x < P.y < P.z:
+    if P.x <= P.y <= P.z:
         R.x = P.x
         R.y = P.y - P.x
         R.z = P.z - P.y
@@ -2688,7 +2688,7 @@ cdef inline PairPoint3d _Poincare(PairPoint3d P):
         R.v = P.v + P.w
         R.w = P.w
         R.branch = 123
-    elif P.x < P.z < P.y:
+    elif P.x <= P.z <= P.y:
         R.x = P.x
         R.y = P.y - P.z
         R.z = P.z - P.x
@@ -2696,7 +2696,7 @@ cdef inline PairPoint3d _Poincare(PairPoint3d P):
         R.v = P.v
         R.w = P.v + P.w
         R.branch = 132
-    elif P.y < P.x < P.z:
+    elif P.y <= P.x <= P.z:
         R.x = P.x - P.y
         R.y = P.y
         R.z = P.z - P.x
@@ -2704,7 +2704,7 @@ cdef inline PairPoint3d _Poincare(PairPoint3d P):
         R.v = P.u + P.v + P.w
         R.w = P.w
         R.branch = 213
-    elif P.z < P.x < P.y:
+    elif P.z <= P.x <= P.y:
         R.x = P.x - P.z
         R.y = P.y - P.x
         R.z = P.z
@@ -2712,7 +2712,7 @@ cdef inline PairPoint3d _Poincare(PairPoint3d P):
         R.v = P.v
         R.w = P.u + P.v + P.w
         R.branch = 312
-    elif P.y < P.z < P.x:
+    elif P.y <= P.z <= P.x:
         R.x = P.x - P.z
         R.y = P.y
         R.z = P.z - P.y
@@ -2720,7 +2720,7 @@ cdef inline PairPoint3d _Poincare(PairPoint3d P):
         R.v = P.u + P.v + P.w
         R.w = P.u + P.w
         R.branch = 231
-    elif P.z < P.y < P.x:
+    elif P.z <= P.y <= P.x:
         R.x = P.x - P.y
         R.y = P.y - P.z
         R.z = P.z
