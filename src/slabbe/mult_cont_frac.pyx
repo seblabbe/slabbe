@@ -1139,7 +1139,7 @@ cdef class MCFAlgorithm(object):
         fig = self._plot_wideframe(X,Y,Z,title)
         if savefig:
             fig.savefig(filename)
-            print "Creation du fichier %s" % filename
+            print "Creation of the file %s" % filename
         return fig
 
     def invariant_measure_inverse_plot(self, n_iterations, ndivs,
@@ -1179,7 +1179,7 @@ cdef class MCFAlgorithm(object):
         fig = self._plot_wideframe(X,Y,Z,title)
         if savefig:
             fig.savefig(filename)
-            print "Creation du fichier %s" % filename
+            print "Creation of the file %s" % filename
         return fig
 
     def _plot_wideframe(self, X,Y,Z, title):
@@ -1253,7 +1253,7 @@ cdef class MCFAlgorithm(object):
             filename = 'nat_ext_%s_iter%s.png' % (self.name(), n_iterations)
             fig.savefig(filename)
             #plt.subplots_adjust(left=0.02, bottom=0.06, right=0.95, top=0.94, wspace=0.05)
-            print "Creation du fichier %s" % filename 
+            print "Creation of the file %s" % filename
         return fig
 
     def natural_extension_tikz(self, n_iterations, norm_left='1',
