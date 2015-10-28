@@ -8,13 +8,18 @@ EXAMPLES::
     sage: Brun().natural_extension_plot(3000, norm_left='1', axis_off=True, savefig=False)
     <matplotlib.figure.Figure object at ...>
 
-::
+Construction of an s-adic word::
 
     sage: from slabbe.mult_cont_frac import ARP
     sage: from itertools import repeat
     sage: D = ARP().substitutions()
     sage: it = ARP().coding_iterator((1,e,pi))
     sage: words.s_adic(it, repeat(1), D)
+    word: 1232323123233231232332312323123232312323...
+
+It can be done with one line::
+
+    sage: ARP().s_adic_word((1,e,pi))
     word: 1232323123233231232332312323123232312323...
 
 TODO:
@@ -279,11 +284,11 @@ cdef class MCFAlgorithm(object):
             raise NotImplementedError(msg)
         return f()
 
-    def coding_iterator(self, pt):
+    def coding_iterator(self, start):
         r"""
         INPUT:
 
-        - ``pt`` -- iterable of three real numbers
+        - ``start`` -- iterable of three real numbers
 
         OUTPUT:
 
@@ -301,7 +306,7 @@ cdef class MCFAlgorithm(object):
         cdef PairPoint3d P
 
         # initial values
-        P.x, P.y, P.z = pt
+        P.x, P.y, P.z = start
         P.u = random(); P.v = random(); P.w = random();
 
         # Normalize (x,y,z)
@@ -417,10 +422,54 @@ cdef class MCFAlgorithm(object):
 
             yield (P.x, P.y, P.z), (P.u, P.v, P.w), P.branch
 
+    def s_adic_word(self, start=None):
+        r"""
+        INPUT:
+
+        - ``start`` - initial vector (default: ``None``), if None, then
+          initial point is random
+
+        .. NOTE::
+
+            The code is currently based on ``coding_iterator`` method. It
+            could be made faster if based on ``orbit_list`` instead which
+            is not using ``yield`` statements.
+
+        OUTPUT:
+
+            word
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun, ARP
+            sage: Brun().s_adic_word((.414578,.571324,.65513))
+            word: 1232312312323123123312323123123312323123...
+            sage: Brun().s_adic_word((1,e,pi))
+            word: 1232323123233231232332312323123232312323...
+            sage: ARP().s_adic_word((1,e,pi))
+            word: 1232323123233231232332312323123232312323...
+
+        TESTS::
+
+            sage: v = ARP().s_adic_word((1,e,pi))
+            sage: w = Brun().s_adic_word((1,e,pi))
+            sage: v.longest_common_prefix(w, 'finite').length()
+            212
+
+        """
+        from sage.combinat.words.word_generators import words
+        import itertools
+        if start is None:
+            start = (random(), random(), random())
+        it = self.coding_iterator(start)
+        D = self.substitutions()
+        return words.s_adic(it, itertools.repeat(1), D)
+
     def orbit_list(self, int n_iterations, start=None, norm_left='sup', norm_right='1'):
         r"""
         INPUT:
 
+        - ``n_iterations`` - integer, number of iterations
         - ``start`` - initial vector (default: ``None``), if None, then
           initial point is random
         - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
