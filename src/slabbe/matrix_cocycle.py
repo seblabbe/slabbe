@@ -633,8 +633,13 @@ class MatrixCocycle(object):
                 Limag.append((b.real(),b.imag()))
         return points(Lreal) + points(Limag, color='red')
 
-    def tikz_n_cylinders(self, n, labels=False, scale=1):
+    def tikz_n_cylinders(self, n, labels=None, scale=1):
         r"""
+        INPUT:
+
+        - ``labels`` -- None, True or False (default: None), if None, it
+          takes value True if n is 1.
+
         EXAMPLES::
 
             sage: from slabbe.matrix_cocycle import cocycles
@@ -642,6 +647,8 @@ class MatrixCocycle(object):
             sage: s = ARP.tikz_n_cylinders(1, labels=True, scale=4)
             sage: view(s, tightpage=True)   # not tested
         """
+        if labels is None:
+            labels = True if n == 1 else False
         from sage.misc.latex import LatexExpr
         lines = []
         lines.append(r"\begin{tikzpicture}")
