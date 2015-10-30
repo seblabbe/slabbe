@@ -41,6 +41,9 @@ TODO:
       https://groups.google.com/d/topic/sage-support/DRI_s31D8ks/discussion
 
     - invariant_measure_dict ne fonctionne pas bien avec norm 1
+    - rapatrier w0_distance_tijdeman
+    - rapatrier plot2d_distance
+    - rapatrier save_latex_and_dat_tables
 
 Question:
 
@@ -112,8 +115,25 @@ cdef class MCFAlgorithm(object):
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac import Brun
-            sage: from slabbe.mult_cont_frac import Brun
             sage: Brun().substitutions()
+            {123: WordMorphism: 1->1, 2->23, 3->3,
+             132: WordMorphism: 1->1, 2->2, 3->32,
+             213: WordMorphism: 1->13, 2->2, 3->3,
+             231: WordMorphism: 1->1, 2->2, 3->31,
+             312: WordMorphism: 1->12, 2->2, 3->3,
+             321: WordMorphism: 1->1, 2->21, 3->3}
+
+        """
+        raise NotImplementedError
+
+    def dual_substitutions(self):
+        r"""
+        This method must be implemented in the inherited classes.
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: Brun().dual_substitutions()
             {123: WordMorphism: 1->1, 2->23, 3->3,
              132: WordMorphism: 1->1, 2->2, 3->32,
              213: WordMorphism: 1->13, 2->2, 3->3,
@@ -157,6 +177,81 @@ cdef class MCFAlgorithm(object):
 
             S.add(P.branch)
         return S
+    ######################
+    # TEST METHODS 
+    ######################
+    def _test_definition(self, int n_iterations=10000):
+        r"""
+        INPUT:
+
+        - ``n_iterations`` -- integer
+
+        OUTPUT:
+
+        bool
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import ARP, Brun
+            sage: t = ARP()._test_definition(10000)
+            sage: t = Brun()._test_definition(10000)
+
+        """
+        cdef double s,t             # temporary variables
+        cdef unsigned int i         # loop counter
+
+        cdef PairPoint3d P, R
+
+        # Loop
+        for i from 0 <= i < n_iterations:
+
+            # Check for Keyboard interupt
+            sig_check()
+
+            # random initial values
+            P.x = random(); P.y = random(); P.z = random();
+            P.u = random(); P.v = random(); P.w = random();
+            s = P.x*P.u + P.y*P.v + P.z*P.w
+
+            # Apply Algo
+            R = self.call(P)
+            t = R.x*R.u + R.y*R.v + R.z*R.w
+
+            if not abs(s - t) < 0.0000001:
+                m = 'This algo does not preserve the scalar product\n'
+                m += '{} != {}\n'.format(s,t)
+                m += 'The problem is on branch {}\n'.format(R.branch)
+                m += 'INPUT: ({}, {}, {}, {}, {}, {})\n'.format(P.x,P.y,P.z,P.u,P.v,P.w)
+                m += 'OUTPUT: ({}, {}, {}, {}, {}, {})\n'.format(R.x,R.y,R.z,R.u,R.v,R.w)
+                raise Exception(m)
+
+        return True
+
+    def _test_substitution_definition(self):
+        r"""
+        OUTPUT:
+
+        bool
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import ARP, Brun
+            sage: t = ARP()._test_substitution_definition()
+            sage: t = Brun()._test_substitution_definition()
+
+        """
+        A = self.substitutions()
+        B = self.dual_substitutions()
+        assert set(A.keys()) == set(B.keys())
+        for key in A:
+            a = A[key].incidence_matrix()
+            b = B[key].incidence_matrix()
+            if not a == b.transpose():
+                raise ValueError("Transpose of substitution {} do not "
+                        "match with dual substitution for algo "
+                        " {}".format(key, self.name()))
+        return True
+
     ######################
     # METHODS FOR THE USER:
     ######################
@@ -203,53 +298,6 @@ cdef class MCFAlgorithm(object):
 
         """
         return self.call(P)
-    def check_definition(self, int n_iterations):
-        r"""
-        INPUT:
-
-        - ``n_iterations`` -- integer
-
-        OUTPUT:
-
-        bool
-
-        EXAMPLES::
-
-            sage: from slabbe.mult_cont_frac import ARP, Brun
-            sage: t = ARP().check_definition(10000)
-            sage: t = Brun().check_definition(10000)
-
-        """
-        cdef double s,t             # temporary variables
-        cdef unsigned int i         # loop counter
-
-        cdef PairPoint3d P, R
-
-        # Loop
-        for i from 0 <= i < n_iterations:
-
-            # Check for Keyboard interupt
-            sig_check()
-
-            # random initial values
-            P.x = random(); P.y = random(); P.z = random();
-            P.u = random(); P.v = random(); P.w = random();
-            s = P.x*P.u + P.y*P.v + P.z*P.w
-
-            # Apply Algo
-            R = self.call(P)
-            t = R.x*R.u + R.y*R.v + R.z*R.w
-
-            if not abs(s - t) < 0.0000001:
-                m = 'This algo does not preserve the scalar product\n'
-                m += '{} != {}\n'.format(s,t)
-                m += 'The problem is on branch {}\n'.format(R.branch)
-                m += 'INPUT: ({}, {}, {}, {}, {}, {})\n'.format(P.x,P.y,P.z,P.u,P.v,P.w)
-                m += 'OUTPUT: ({}, {}, {}, {}, {}, {})\n'.format(R.x,R.y,R.z,R.u,R.v,R.w)
-                raise Exception(m)
-
-        return True
-
     def matrix_cocycle(self):
         r"""
         EXAMPLES::
@@ -555,6 +603,33 @@ cdef class MCFAlgorithm(object):
 
         return L
 
+    def e_one_star_patch(self, v, n):
+        r"""
+        Return the n-th iterated patch of normal vector v.
+
+        INPUT:
+
+        - ``v`` -- vector, the normal vector
+        - ``n`` -- integer
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Meester
+            sage: Meester().e_one_star_patch((1,e,pi), 4)
+            Patch of 21 faces
+        """
+        from sage.combinat.e_one_star import E1Star, Patch, Face
+        from sage.misc.misc_c import prod
+        import itertools
+        if v is None:
+            v = (random(), random(), random())
+        it = self.coding_iterator(v)
+        keys = [next(it) for _ in range(n)]
+        D = self.dual_substitutions()
+        L = prod(D[key] for key in reversed(keys))
+        dual_sub = E1Star(L)
+        cube = Patch([Face((1,0,0),1), Face((0,1,0),2), Face((0,0,1),3)])
+        return dual_sub(cube)
 
     def orbit_filtered_list(self, int n_iterations, start=None,
             norm_left='1', norm_right='1',
@@ -1099,6 +1174,7 @@ cdef class MCFAlgorithm(object):
                 P.u /= s; P.v /= s; P.w /= s
 
         return theta1/n_iterations, theta2/n_iterations, 1-theta2/theta1
+
     ######################
     # DRAWINGS METHODS (python):
     ######################
@@ -1665,6 +1741,13 @@ cdef class MCFAlgorithm(object):
         return t
 
 cdef class Brun(MCFAlgorithm):
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.mult_cont_frac import Brun
+        sage: algo = Brun()
+        sage: TestSuite(algo).run()
+    """
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -1730,6 +1813,27 @@ cdef class Brun(MCFAlgorithm):
                 123: WordMorphism({1: [1], 2: [2, 3], 3: [3]}),
                 132: WordMorphism({1: [1], 2: [2], 3: [3, 2]})}
 
+    def dual_substitutions(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: Brun().dual_substitutions()
+            {123: WordMorphism: 1->1, 2->2, 3->32,
+             132: WordMorphism: 1->1, 2->23, 3->3,
+             213: WordMorphism: 1->1, 2->2, 3->31,
+             231: WordMorphism: 1->13, 2->2, 3->3,
+             312: WordMorphism: 1->1, 2->21, 3->3,
+             321: WordMorphism: 1->12, 2->2, 3->3}
+        """
+        from sage.combinat.words.morphism import WordMorphism
+        return {321: WordMorphism({1: [1, 2], 2: [2], 3: [3]}),
+                312: WordMorphism({1: [1], 2: [2, 1], 3: [3]}),
+                231: WordMorphism({1: [1, 3], 2: [2], 3: [3]}),
+                213: WordMorphism({1: [1], 2: [2], 3: [3, 1]}),
+                132: WordMorphism({1: [1], 2: [2, 3], 3: [3]}),
+                123: WordMorphism({1: [1], 2: [2], 3: [3, 2]})}
+
 cdef class Reverse(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
@@ -1793,6 +1897,23 @@ cdef class Reverse(MCFAlgorithm):
         return {1:  WordMorphism({1: [1], 2: [2, 1], 3: [3, 1]}),
                 2:  WordMorphism({1: [1, 2], 2: [2], 3: [3, 2]}),
                 3:  WordMorphism({1: [1, 3], 2: [2, 3], 3: [3]}),
+                4:  WordMorphism({1: [2,3], 2: [1,3], 3: [1,2]})}
+
+    def dual_substitutions(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import ArnouxRauzy
+            sage: ArnouxRauzy().dual_substitutions()
+            {1: WordMorphism: 1->123, 2->2, 3->3,
+             2: WordMorphism: 1->1, 2->231, 3->3,
+             3: WordMorphism: 1->1, 2->2, 3->312,
+             4: WordMorphism: 1->23, 2->13, 3->12}
+        """
+        from sage.combinat.words.morphism import WordMorphism
+        return {1: WordMorphism({1: [1,2,3], 2: [2], 3: [3]}),
+                2: WordMorphism({1: [1], 2: [2,3,1], 3: [3]}),
+                3: WordMorphism({1: [1], 2: [2], 3: [3,1,2]}),
                 4:  WordMorphism({1: [2,3], 2: [1,3], 3: [1,2]})}
 
 cdef class ARP(MCFAlgorithm):
@@ -1861,6 +1982,33 @@ cdef class ARP(MCFAlgorithm):
                 123: WordMorphism({1: [1, 2, 3], 2: [2, 3], 3: [3]}),
                 132: WordMorphism({1: [1, 3, 2], 2: [2], 3: [3, 2]})}
 
+    def dual_substitutions(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import ARP
+            sage: ARP().dual_substitutions()
+            {1: WordMorphism: 1->123, 2->2, 3->3,
+             2: WordMorphism: 1->1, 2->231, 3->3,
+             3: WordMorphism: 1->1, 2->2, 3->312,
+             123: WordMorphism: 1->1, 2->21, 3->321,
+             132: WordMorphism: 1->1, 2->231, 3->31,
+             213: WordMorphism: 1->12, 2->2, 3->312,
+             231: WordMorphism: 1->132, 2->2, 3->32,
+             312: WordMorphism: 1->13, 2->213, 3->3,
+             321: WordMorphism: 1->123, 2->23, 3->3}
+        """
+        from sage.combinat.words.morphism import WordMorphism
+        return {1: WordMorphism({1: [1,2,3], 2: [2], 3: [3]}),
+                2: WordMorphism({1: [1], 2: [2,3,1], 3: [3]}),
+                3: WordMorphism({1: [1], 2: [2], 3: [3,1,2]}),
+                213: WordMorphism({1: [1, 2], 2: [2], 3: [3, 1, 2]}),
+                123: WordMorphism({1: [1], 2: [2, 1], 3: [3, 2, 1]}),
+                312: WordMorphism({1: [1, 3], 2: [2, 1, 3], 3: [3]}),
+                132: WordMorphism({1: [1], 2: [2, 3, 1], 3: [3, 1]}),
+                321: WordMorphism({1: [1, 2, 3], 2: [2, 3], 3: [3]}),
+                231: WordMorphism({1: [1, 3, 2], 2: [2], 3: [3, 2]})}
+
 cdef class ArnouxRauzy(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
@@ -1920,6 +2068,20 @@ cdef class ArnouxRauzy(MCFAlgorithm):
                 2:  WordMorphism({1: [1, 2], 2: [2], 3: [3, 2]}),
                 3:  WordMorphism({1: [1, 3], 2: [2, 3], 3: [3]})}
 
+    def dual_substitutions(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import ArnouxRauzy
+            sage: ArnouxRauzy().dual_substitutions()
+            {1: WordMorphism: 1->123, 2->2, 3->3,
+             2: WordMorphism: 1->1, 2->231, 3->3,
+             3: WordMorphism: 1->1, 2->2, 3->312}
+        """
+        from sage.combinat.words.morphism import WordMorphism
+        return {1: WordMorphism({1: [1,2,3], 2: [2], 3: [3]}),
+                2: WordMorphism({1: [1], 2: [2,3,1], 3: [3]}),
+                3: WordMorphism({1: [1], 2: [2], 3: [3,1,2]})}
 cdef class Poincare(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
@@ -1959,6 +2121,27 @@ cdef class Poincare(MCFAlgorithm):
                 231: WordMorphism({1: [1], 2: [2, 3, 1], 3: [3, 1]}),
                 123: WordMorphism({1: [1, 2, 3], 2: [2, 3], 3: [3]}),
                 132: WordMorphism({1: [1, 3, 2], 2: [2], 3: [3, 2]})}
+
+    def dual_substitutions(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Poincare
+            sage: Poincare().dual_substitutions()
+            {123: WordMorphism: 1->1, 2->21, 3->321,
+             132: WordMorphism: 1->1, 2->231, 3->31,
+             213: WordMorphism: 1->12, 2->2, 3->312,
+             231: WordMorphism: 1->132, 2->2, 3->32,
+             312: WordMorphism: 1->13, 2->213, 3->3,
+             321: WordMorphism: 1->123, 2->23, 3->3}
+        """
+        from sage.combinat.words.morphism import WordMorphism
+        return {213: WordMorphism({1: [1, 2], 2: [2], 3: [3, 1, 2]}),
+                123: WordMorphism({1: [1], 2: [2, 1], 3: [3, 2, 1]}),
+                312: WordMorphism({1: [1, 3], 2: [2, 1, 3], 3: [3]}),
+                132: WordMorphism({1: [1], 2: [2, 3, 1], 3: [3, 1]}),
+                321: WordMorphism({1: [1, 2, 3], 2: [2, 3], 3: [3]}),
+                231: WordMorphism({1: [1, 3, 2], 2: [2], 3: [3, 2]})}
 
 cdef class Selmer(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
@@ -2026,6 +2209,27 @@ cdef class Selmer(MCFAlgorithm):
                 213: WordMorphism({1: [1], 2: [2, 3], 3: [3]}),
                 312: WordMorphism({1: [1], 2: [2], 3: [3, 2]})}
 
+    def dual_substitutions(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Selmer
+            sage: Selmer().dual_substitutions()
+            {123: WordMorphism: 1->1, 2->2, 3->31,
+             132: WordMorphism: 1->1, 2->21, 3->3,
+             213: WordMorphism: 1->1, 2->2, 3->32,
+             231: WordMorphism: 1->12, 2->2, 3->3,
+             312: WordMorphism: 1->1, 2->23, 3->3,
+             321: WordMorphism: 1->13, 2->2, 3->3}
+        """
+        from sage.combinat.words.morphism import WordMorphism
+        return {231: WordMorphism({1: [1, 2], 2: [2], 3: [3]}),
+                132: WordMorphism({1: [1], 2: [2, 1], 3: [3]}),
+                321: WordMorphism({1: [1, 3], 2: [2], 3: [3]}),
+                123: WordMorphism({1: [1], 2: [2], 3: [3, 1]}),
+                312: WordMorphism({1: [1], 2: [2, 3], 3: [3]}),
+                213: WordMorphism({1: [1], 2: [2], 3: [3, 2]})}
+
 cdef class Meester(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
@@ -2076,6 +2280,21 @@ cdef class Meester(MCFAlgorithm):
         return {1: WordMorphism({1: [1,2,3], 2: [2], 3: [3]}),
                 2: WordMorphism({1: [1], 2: [2,3,1], 3: [3]}),
                 3: WordMorphism({1: [1], 2: [2], 3: [3,1,2]})}
+
+    def dual_substitutions(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Meester
+            sage: Meester().dual_substitutions()
+            {1: WordMorphism: 1->1, 2->21, 3->31,
+             2: WordMorphism: 1->12, 2->2, 3->32,
+             3: WordMorphism: 1->13, 2->23, 3->3}
+        """
+        from sage.combinat.words.morphism import WordMorphism
+        return {1:  WordMorphism({1: [1], 2: [2, 1], 3: [3, 1]}),
+                2:  WordMorphism({1: [1, 2], 2: [2], 3: [3, 2]}),
+                3:  WordMorphism({1: [1, 3], 2: [2, 3], 3: [3]})}
 
 cdef class Cassaigne(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
@@ -2134,6 +2353,19 @@ cdef class Cassaigne(MCFAlgorithm):
         from sage.combinat.words.morphism import WordMorphism
         return {1:  WordMorphism({1: [1], 2: [1, 3], 3: [2]}),
                 2:  WordMorphism({1: [2], 2: [1, 3], 3: [3]})}
+
+    def dual_substitutions(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Cassaigne
+            sage: Cassaigne().dual_substitutions()
+            {1: WordMorphism: 1->12, 2->3, 3->2, 
+             2: WordMorphism: 1->2, 2->1, 3->23}
+        """
+        from sage.combinat.words.morphism import WordMorphism
+        return {1:  WordMorphism({1: [1,2], 2: [3], 3: [2]}),
+                2:  WordMorphism({1: [2], 2: [1], 3: [2,3]})}
 
 cdef class Sorted_Brun(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
