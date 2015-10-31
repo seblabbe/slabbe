@@ -9,23 +9,23 @@ The 1-cylinders of ARP transformation given as matrices::
     sage: from slabbe.matrix_cocycle import cocycles
     sage: ARP = cocycles.ARP()
     sage: zip(*ARP.n_cylinders_iterator(1))
-    [(word: A1,
-      word: A2,
-      word: A3,
-      word: P12,
-      word: P13,
-      word: P21,
-      word: P23,
-      word: P31,
-      word: P32),
+    [(word: 1,
+      word: 2,
+      word: 3,
+      word: 123,
+      word: 132,
+      word: 213,
+      word: 231,
+      word: 312,
+      word: 321),
      (
-    [1 1 1]  [1 0 0]  [1 0 0]  [1 1 1]  [1 1 1]  [2 1 1]  [1 0 1]  [2 1 1]
-    [0 1 0]  [1 1 1]  [0 1 0]  [1 2 1]  [0 1 1]  [1 1 1]  [1 1 1]  [1 1 0]
-    [0 0 1], [0 0 1], [1 1 1], [0 1 1], [1 1 2], [1 0 1], [1 1 2], [1 1 1],
+    [1 1 1]  [1 0 0]  [1 0 0]  [1 0 1]  [1 1 0]  [1 1 1]  [2 1 1]  [1 1 1]
+    [0 1 0]  [1 1 1]  [0 1 0]  [1 1 1]  [1 2 1]  [0 1 1]  [1 1 0]  [1 2 1]
+    [0 0 1], [0 0 1], [1 1 1], [1 1 2], [1 1 1], [1 1 2], [1 1 1], [0 1 1],
     <BLANKLINE>
-    [1 1 0]
-    [1 2 1]
+    [2 1 1]
     [1 1 1]
+    [1 0 1]
     )]
 
 Ces calculs illustrent le bounded distorsion de ratio=4 pour ARP
@@ -58,6 +58,15 @@ multiplicatif (2 avril 2014)::
     - Fix the semi_norm_v bug using linear programming.
 
 """
+#*****************************************************************************
+#       Copyright (C) 2014-2015 Sébastien Labbé <slabqc@gmail.com>
+#
+#  Distributed under the terms of the GNU General Public License version 2 (GPLv2)
+#
+#  The full text of the GPLv2 is available at:
+#
+#                  http://www.gnu.org/licenses/
+#*****************************************************************************
 import itertools
 from collections import Counter
 from sage.matrix.constructor import matrix
@@ -89,10 +98,10 @@ class MatrixCocycle(object):
         sage: B1 = matrix(3, [1,0,0, 0,1,0, 0,1,1])
         sage: B2 = matrix(3, [1,0,0, 0,0,1, 0,1,1])
         sage: B3 = matrix(3, [0,1,0, 0,0,1, 1,0,1])
-        sage: gens = {'B1':B1, 'B2':B2, 'B3':B3}
+        sage: gens = {'1':B1, '2':B2, '3':B3}
         sage: cone = matrix(3, [1,1,1,0,1,1,0,0,1])
         sage: MatrixCocycle(gens, cone)
-        Cocycle with 3 gens over Language of finite words over alphabet ['B1', 'B2', 'B3']
+        Cocycle with 3 gens over Language of finite words over alphabet ['1', '2', '3']
     """
     def __init__(self, gens, cone=None, language=None):
         r"""
@@ -200,25 +209,25 @@ class MatrixCocycle(object):
             sage: from slabbe.matrix_cocycle import cocycles
             sage: ARP = cocycles.ARP()
             sage: list(ARP.n_matrices_eigenvalues_iterator(1))
-            [(word: A1, [1, 1, 1]),
-             (word: A2, [1, 1, 1]),
-             (word: A3, [1, 1, 1]),
-             (word: P12, [1, 1, 1]),
-             (word: P13, [1, 1, 1]),
-             (word: P21, [1, 1, 1]),
-             (word: P23, [1, 1, 1]),
-             (word: P31, [1, 1, 1]),
-             (word: P32, [1, 1, 1])]
+            [(word: 1, [1, 1, 1]),
+             (word: 2, [1, 1, 1]),
+             (word: 3, [1, 1, 1]),
+             (word: 123, [1, 1, 1]),
+             (word: 132, [1, 1, 1]),
+             (word: 213, [1, 1, 1]),
+             (word: 231, [1, 1, 1]),
+             (word: 312, [1, 1, 1]),
+             (word: 321, [1, 1, 1])]
 
         ::
 
             sage: B = cocycles.Sorted_Brun()
             sage: list(B.n_matrices_eigenvalues_iterator(1))
-            [(word: B1, [1, 1, 1]),
-             (word: B2, [1, -0.618033988749895?, 1.618033988749895?]),
-             (word: B3, [1.465571231876768?, -0.2327856159383841? -
-                         0.7925519925154479?*I, -0.2327856159383841? +
-                         0.7925519925154479?*I])]
+            [(word: 1, [1, 1, 1]),
+             (word: 2, [1, -0.618033988749895?, 1.618033988749895?]),
+             (word: 3, [1.465571231876768?, 
+                        -0.2327856159383841? - 0.7925519925154479?*I,
+                        -0.2327856159383841? + 0.7925519925154479?*I])]
         """
         for w,m in self.n_matrices_iterator(n):
             yield w, m.eigenvalues()
@@ -232,15 +241,15 @@ class MatrixCocycle(object):
             sage: from slabbe.matrix_cocycle import cocycles
             sage: C = cocycles.ARP()
             sage: C.n_matrices_eigenvectors(1)
-            [(word: A1, (1.0, 0.0, 0.0), (0.0, 0.0, 1.0)),
-             (word: A2, (0.0, 1.0, 0.0), (1.0, 0.0, 0.0)),
-             (word: A3, (0.0, 0.0, 1.0), (1.0, 0.0, 0.0)),
-             (word: P12, (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)),
-             (word: P13, (0.0, 0.0, 1.0), (0.0, 1.0, 0.0)),
-             (word: P21, (1.0, 0.0, 0.0), (0.0, 0.0, 1.0)),
-             (word: P23, (0.0, 0.0, 1.0), (1.0, 0.0, 0.0)),
-             (word: P31, (1.0, 0.0, 0.0), (0.0, 1.0, 0.0)),
-             (word: P32, (0.0, 1.0, 0.0), (1.0, 0.0, 0.0))]
+            [(word: 1, (1.0, 0.0, 0.0), (0.0, 0.0, 1.0)),
+             (word: 2, (0.0, 1.0, 0.0), (1.0, 0.0, 0.0)),
+             (word: 3, (0.0, 0.0, 1.0), (1.0, 0.0, 0.0)),
+             (word: 123, (0.0, 0.0, 1.0), (1.0, 0.0, 0.0)),
+             (word: 132, (0.0, 1.0, 0.0), (1.0, 0.0, 0.0)),
+             (word: 213, (0.0, 0.0, 1.0), (0.0, 1.0, 0.0)),
+             (word: 231, (1.0, 0.0, 0.0), (0.0, 1.0, 0.0)),
+             (word: 312, (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)),
+             (word: 321, (1.0, 0.0, 0.0), (0.0, 0.0, 1.0))]
         """
         R = []
         for w,m in self.n_matrices_iterator(n):
@@ -287,16 +296,17 @@ class MatrixCocycle(object):
             sage: from slabbe.matrix_cocycle import cocycles
             sage: B = cocycles.Sorted_Brun()
             sage: B.n_matrices_non_pisot(2)
-            [word: B1,B1, word: B1,B2, word: B2,B1, word: B2,B2]
+            [word: 11, word: 12, word: 21, word: 22]
             sage: B.n_matrices_non_pisot(3)
-            [word: B1,B1,B1,
-             word: B1,B1,B2,
-             word: B1,B2,B1,
-             word: B1,B2,B2,
-             word: B2,B1,B1,
-             word: B2,B1,B2,
-             word: B2,B2,B1,
-             word: B2,B2,B2]
+            [word: 111,
+             word: 112,
+             word: 121,
+             word: 122,
+             word: 211,
+             word: 212,
+             word: 221,
+             word: 222]
+
         """
         return [w for w in self.n_words_iterator(n) if not self.is_pisot(w)]
 
@@ -310,11 +320,11 @@ class MatrixCocycle(object):
             sage: C = cocycles.ARP()
             sage: it = C.n_matrices_semi_norm_iterator(1, p=1)
             sage: for _ in range(5): print next(it) # tolerance 0.00001
-            (word: A1, 1.0, False)
-            (word: A2, 1.0, False)
-            (word: A3, 1.0, False)
-            (word: P12, 0.9999943584528624, False)
-            (word: P13, 0.9999937410436893, False)
+            (word: 1, 1.0, False)
+            (word: 2, 1.0, False)
+            (word: 3, 1.0, False)
+            (word: 123, 0.9999885582839877, False)
+            (word: 132, 0.9999854006354785, False)
 
         For the 2-norm, AR matrices do not contract::
 
@@ -393,42 +403,42 @@ class MatrixCocycle(object):
             sage: C = cocycles.ARP()
             sage: it = C.n_cylinders_iterator(1)
             sage: for w,cyl in it: print "{}\n{}".format(w,cyl)
-            A1
+            1
             [1 1 1]
             [0 1 0]
             [0 0 1]
-            A2
+            2
             [1 0 0]
             [1 1 1]
             [0 0 1]
-            A3
+            3
             [1 0 0]
             [0 1 0]
             [1 1 1]
-            P12
-            [1 1 1]
-            [1 2 1]
-            [0 1 1]
-            P13
-            [1 1 1]
-            [0 1 1]
-            [1 1 2]
-            P21
-            [2 1 1]
-            [1 1 1]
-            [1 0 1]
-            P23
+            123
             [1 0 1]
             [1 1 1]
             [1 1 2]
-            P31
-            [2 1 1]
-            [1 1 0]
-            [1 1 1]
-            P32
+            132
             [1 1 0]
             [1 2 1]
             [1 1 1]
+            213
+            [1 1 1]
+            [0 1 1]
+            [1 1 2]
+            231
+            [2 1 1]
+            [1 1 0]
+            [1 1 1]
+            312
+            [1 1 1]
+            [1 2 1]
+            [0 1 1]
+            321
+            [2 1 1]
+            [1 1 1]
+            [1 0 1]
         """
         if n == 0:
             raise NotImplementedError
@@ -451,20 +461,20 @@ class MatrixCocycle(object):
              frozenset({(0, 1, 0), (0, 1, 1)}),
              frozenset({(0, 1, 1), (1, 0, 1)}),
              frozenset({(1, 0, 0), (1, 1, 0)}),
-             frozenset({(0, 1, 1), (1, 2, 1)}),
-             frozenset({(0, 1, 1), (1, 1, 2)}),
-             frozenset({(1, 1, 1), (1, 1, 2)}),
+             frozenset({(1, 1, 0), (2, 1, 1)}),
              frozenset({(1, 0, 1), (1, 1, 2)}),
+             frozenset({(1, 1, 0), (1, 2, 1)}),
              frozenset({(1, 0, 1), (2, 1, 1)}),
              frozenset({(0, 0, 1), (0, 1, 1)}),
-             frozenset({(1, 1, 0), (1, 2, 1)}),
-             frozenset({(1, 1, 0), (2, 1, 1)}),
+             frozenset({(1, 0, 1), (1, 1, 1)}),
+             frozenset({(0, 1, 1), (1, 2, 1)}),
+             frozenset({(0, 1, 1), (1, 1, 2)}),
              frozenset({(1, 0, 0), (1, 0, 1)}),
              frozenset({(1, 1, 1), (1, 2, 1)}),
              frozenset({(1, 0, 1), (1, 1, 0)}),
              frozenset({(0, 1, 1), (1, 1, 1)}),
              frozenset({(0, 1, 1), (1, 1, 0)}),
-             frozenset({(1, 0, 1), (1, 1, 1)})}
+             frozenset({(1, 1, 1), (1, 1, 2)})}
         """
         from sage.rings.finite_rings.integer_mod_ring import Integers
         edges = set()
@@ -681,18 +691,18 @@ class MatrixCocycleGenerator(object):
         P21 = matrix(3, [1,1,1, 0,1,1, 0,0,1])
         P31 = matrix(3, [1,1,1, 0,1,0, 0,1,1])
         P32 = matrix(3, [1,0,0, 1,1,1, 1,0,1])
-        gens = (A1, A2, A3, P12, P13, P21, P23, P31, P32)
-        alphabet = ['A1', 'A2', 'A3', 'P12', 'P13', 'P21', 'P23', 'P31', 'P32']
+        gens = (A1, A2, A3, P23, P32, P13, P31, P12, P21)
+        alphabet = ['1', '2', '3', '123', '132', '213', '231', '312', '321']
         gens = dict(zip(alphabet, gens))
 
         cone = {}
-        cone['P12'] = H12 = matrix(3, [1,0,0, 0,1,0, 0,1,1])
-        cone['P13'] = H13 = matrix(3, [1,0,0, 0,1,1, 0,0,1])
-        cone['P21'] = H21 = matrix(3, [1,0,0, 0,1,0, 1,0,1])
-        cone['P23'] = H23 = matrix(3, [1,0,1, 0,1,0, 0,0,1])
-        cone['P31'] = H31 = matrix(3, [1,0,0, 1,1,0, 0,0,1])
-        cone['P32'] = H32 = matrix(3, [1,1,0, 0,1,0, 0,0,1])
-        cone['A1'] = cone['A2'] = cone['A3'] = identity_matrix(3) 
+        cone['123'] = H23 = matrix(3, [1,0,1, 0,1,0, 0,0,1])
+        cone['132'] = H32 = matrix(3, [1,1,0, 0,1,0, 0,0,1])
+        cone['213'] = H13 = matrix(3, [1,0,0, 0,1,1, 0,0,1])
+        cone['231'] = H31 = matrix(3, [1,0,0, 1,1,0, 0,0,1])
+        cone['312'] = H12 = matrix(3, [1,0,0, 0,1,0, 0,1,1])
+        cone['321'] = H21 = matrix(3, [1,0,0, 0,1,0, 1,0,1])
+        cone['1'] = cone['2'] = cone['3'] = identity_matrix(3) 
 
         from language import languages
         return MatrixCocycle(gens, cone, language=languages.ARP())
@@ -702,7 +712,7 @@ class MatrixCocycleGenerator(object):
         A2 = matrix(3, [1,0,0, 1,1,1, 0,0,1])
         A3 = matrix(3, [1,0,0, 0,1,0, 1,1,1])
         gens = (A1, A2, A3)
-        alphabet = ['A1', 'A2', 'A3']
+        alphabet = ['1', '2', '3']
         gens = dict(zip(alphabet, gens))
         return MatrixCocycle(gens)
 
@@ -711,7 +721,7 @@ class MatrixCocycleGenerator(object):
         B2 = matrix(3, [1,0,0, 0,0,1, 0,1,1])
         B3 = matrix(3, [0,1,0, 0,0,1, 1,0,1])
         gens = (B1, B2, B3)
-        alphabet = ['B1', 'B2', 'B3']
+        alphabet = ['1', '2', '3']
         gens = dict(zip(alphabet, gens))
         cone = matrix(3, [1,1,1,0,1,1,0,0,1])
         return MatrixCocycle(gens, cone)
@@ -768,17 +778,17 @@ class MatrixCocycleGenerator(object):
         B23 = matrix(3, [1,0,0, 0,1,0, 0,1,1])
         B31 = matrix(3, [1,0,1, 0,1,0, 0,0,1])
         B32 = matrix(3, [1,0,0, 0,1,1, 0,0,1])
-        gens = (B12, B13, B21, B23, B31, B32)
-        alphabet = ['B12', 'B13', 'B21', 'B23', 'B31', 'B32']
+        gens = (B23, B32, B13, B31, B12, B21)
+        alphabet = ['123', '132', '213', '231', '312', '321']
         gens = dict(zip(alphabet, gens))
 
         cone = {}
-        cone['B12'] = B31
-        cone['B13'] = B21
-        cone['B21'] = B32
-        cone['B23'] = B12
-        cone['B31'] = B23
-        cone['B32'] = B13
+        cone['123'] = B12
+        cone['132'] = B13
+        cone['213'] = B21
+        cone['231'] = B23
+        cone['312'] = B31
+        cone['321'] = B32
 
         from language import languages
         return MatrixCocycle(gens, cone, language=languages.Brun())
@@ -809,8 +819,7 @@ class MatrixCocycleGenerator(object):
         P21 = matrix(3, [1,1,1, 0,1,1, 0,0,1])
         P31 = matrix(3, [1,1,1, 0,1,0, 0,1,1])
         P32 = matrix(3, [1,0,0, 1,1,1, 1,0,1])
-        gens = (P12, P13, P21, P23, P31, P32)
-        alphabet = ['P12', 'P13', 'P21', 'P23', 'P31', 'P32']
+        gens = (P23, P32, P13, P31, P12, P21)
         gens = dict(zip(alphabet, gens))
         return MatrixCocycle(gens)
 

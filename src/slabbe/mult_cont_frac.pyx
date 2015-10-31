@@ -134,13 +134,12 @@ cdef class MCFAlgorithm(object):
 
             sage: from slabbe.mult_cont_frac import Brun
             sage: Brun().dual_substitutions()
-            {123: WordMorphism: 1->1, 2->23, 3->3,
-             132: WordMorphism: 1->1, 2->2, 3->32,
-             213: WordMorphism: 1->13, 2->2, 3->3,
-             231: WordMorphism: 1->1, 2->2, 3->31,
-             312: WordMorphism: 1->12, 2->2, 3->3,
-             321: WordMorphism: 1->1, 2->21, 3->3}
-
+            {123: WordMorphism: 1->1, 2->2, 3->32,
+             132: WordMorphism: 1->1, 2->23, 3->3,
+             213: WordMorphism: 1->1, 2->2, 3->31,
+             231: WordMorphism: 1->13, 2->2, 3->3,
+             312: WordMorphism: 1->1, 2->21, 3->3,
+             321: WordMorphism: 1->12, 2->2, 3->3}
         """
         raise NotImplementedError
 
@@ -304,8 +303,8 @@ cdef class MCFAlgorithm(object):
 
             sage: from slabbe.mult_cont_frac import ARP
             sage: ARP().matrix_cocycle()
-            Cocycle with 9 gens over Regular language over ['A1', 'A2', 'A3',
-            'P12', 'P13', 'P21', 'P23', 'P31', 'P32']
+            Cocycle with 9 gens over Regular language over ['1', '2', '3', 
+            '123', '132', '213', '231', '312', '321']
             defined by: Automaton with 7 states
 
         ::
@@ -320,7 +319,7 @@ cdef class MCFAlgorithm(object):
             sage: from slabbe.mult_cont_frac import Brun
             sage: Brun().matrix_cocycle()
             Cocycle with 6 gens over Regular language over 
-            ['B12', 'B13', 'B21', 'B23', 'B31', 'B32']
+            ['123', '132', '213', '231', '312', '321']
             defined by: Automaton with 6 states
         """
         from matrix_cocycle import cocycles
@@ -500,10 +499,11 @@ cdef class MCFAlgorithm(object):
 
         Cassaigne substitutions do not allow an s-adic construction::
 
+            sage: from slabbe.mult_cont_frac import Cassaigne
             sage: Cassaigne().s_adic_word((1,e,pi))
             Traceback (most recent call last):
             ...
-            ValueError: impossible choice of letter for 6-th iteration in
+            ValueError: impossible choice of letter for ...-th iteration in
             the s-adic construction
 
         TESTS::
@@ -535,30 +535,33 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun, ARP
+            sage: from slabbe.mult_cont_frac import Brun
             sage: it = Brun()._s_adic_word_letter_iterator((.414578,.571324,.65513), 1)
             sage: [next(it) for _ in range(20)]
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
         ::
 
+            sage: from slabbe.mult_cont_frac import ARP
             sage: it = ARP()._s_adic_word_letter_iterator((.414578,.571324,.65513), 2)
             sage: [next(it) for _ in range(20)]
             [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 
         ::
 
+            sage: from slabbe.mult_cont_frac import Reverse
             sage: it = Reverse()._s_adic_word_letter_iterator((.414578,.571324,.65513), 2)
             sage: [next(it) for _ in range(20)]
             [1, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 
         ::
 
+            sage: from slabbe.mult_cont_frac import Cassaigne
             sage: it = Cassaigne()._s_adic_word_letter_iterator((.414578,.571324,.65513), 2)
             sage: [next(it) for _ in range(20)]
             Traceback (most recent call last):
             ...
-            ValueError: impossible choice of letter for 6-th iteration in
+            ValueError: impossible choice of letter for ...-th iteration in
             the s-adic construction
         """
         from collections import defaultdict
@@ -1966,8 +1969,8 @@ cdef class Reverse(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import ArnouxRauzy
-            sage: ArnouxRauzy().dual_substitutions()
+            sage: from slabbe.mult_cont_frac import Reverse
+            sage: Reverse().dual_substitutions()
             {1: WordMorphism: 1->123, 2->2, 3->3,
              2: WordMorphism: 1->1, 2->231, 3->3,
              3: WordMorphism: 1->1, 2->2, 3->312,

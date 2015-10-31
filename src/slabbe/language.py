@@ -31,7 +31,7 @@ Predefined languages::
 
     sage: from slabbe.language import languages
     sage: languages.ARP()
-    Regular language over ['A1', 'A2', 'A3', 'P12', 'P13', 'P21', 'P23', 'P31', 'P32']
+    Regular language over ['1', '2', '3', '123', '132', '213', '231', '312', '321']
     defined by: Automaton with 7 states
 
 AUTHORS:
@@ -296,12 +296,12 @@ class LanguageGenerator(object):
             sage: from slabbe.language import languages
             sage: L = languages.ARP()
             sage: L
-            Regular language over ['A1', 'A2', 'A3', 'P12', 'P13', 'P21', 'P23', 'P31', 'P32']
+            Regular language over ['1', '2', '3', '123', '132', '213', '231', '312', '321']
             defined by: Automaton with 7 states
             sage: map(L.complexity, range(4))
             [1, 9, 57, 345]
         """
-        alphabet = ['A1', 'A2', 'A3', 'P12', 'P13', 'P21', 'P23', 'P31', 'P32']
+        alphabet = ['1', '2', '3', '123', '132', '213', '231', '312', '321']
         automaton = self._ARP_automaton()
         return RegularLanguage(alphabet, automaton)
 
@@ -318,30 +318,29 @@ class LanguageGenerator(object):
 
         TESTS::
 
-            sage: A.process(['A1', 'P12', 'A1', 'P13'])
-            (True, 'H13')
-            sage: A(['A1', 'P12', 'A1', 'P13'])
+            sage: A.process(['1', '312', '1', '213'])
+            (True, 'H213')
+            sage: A(['1', '312', '1', '213'])
             True
         """
-        def H(j,k):
-            return 'H%s%s' % (j,k)
-        def P(j,k):
-            return 'P%s%s' % (j,k)
+        def H(i,j,k):
+            return 'H{}{}{}'.format(i,j,k)
+        def P(i,j,k):
+            return '{}{}{}'.format(i,j,k)
         def A(k):
-            return 'A%s' % (k)
-        jk = [(3,1), (2,1), (3,2), (1,2), (2,3), (1,3)]
+            return '{}'.format(k)
         D = 'Delta'
-        states = [H(j,k) for (j,k) in jk] + [D]
+        states = [H(*p) for p in itertools.permutations((1,2,3))] + [D]
         autom = Automaton(initial_states=[D], final_states=states)
-        for (j,k) in jk:
-            i = 6 - j - k
-            v = H(j,k)
-            autom.add_transition(v, H(i,j), P(i,j))
-            autom.add_transition(v, H(k,i), P(k,i))
-            autom.add_transition(v, H(j,i), P(j,i))
+        for p in itertools.permutations((1,2,3)):
+            i,j,k = p
+            v = H(*p)
+            autom.add_transition(v, H(k,i,j), P(k,i,j))
+            autom.add_transition(v, H(j,k,i), P(j,k,i))
+            autom.add_transition(v, H(k,j,i), P(k,j,i))
             autom.add_transition(v, D, A(i))
             autom.add_transition(v, v, A(j))
-            autom.add_transition(D, v, P(j,k))
+            autom.add_transition(D, v, P(i,j,k))
         for k in [1,2,3]:
             autom.add_transition(D, D, A(k))
         return autom
@@ -353,31 +352,31 @@ class LanguageGenerator(object):
             sage: from slabbe.language import languages
             sage: L = languages.Brun()
             sage: L
-            Regular language over ['B12', 'B13', 'B21', 'B23', 'B31', 'B32']
+            Regular language over ['123', '132', '213', '231', '312', '321']
             defined by: Automaton with 6 states
             sage: map(L.complexity, range(4))
             [1, 6, 18, 54]
             sage: list(L.words_of_length_iterator(2))
-            [word: B12,B12,
-             word: B12,B21,
-             word: B12,B31,
-             word: B13,B13,
-             word: B13,B21,
-             word: B13,B31,
-             word: B21,B12,
-             word: B21,B21,
-             word: B21,B32,
-             word: B23,B12,
-             word: B23,B23,
-             word: B23,B32,
-             word: B31,B13,
-             word: B31,B23,
-             word: B31,B31,
-             word: B32,B13,
-             word: B32,B23,
-             word: B32,B32]
+            [word: 123,123,
+             word: 123,132,
+             word: 123,312,
+             word: 132,123,
+             word: 132,132,
+             word: 132,213,
+             word: 213,213,
+             word: 213,231,
+             word: 213,321,
+             word: 231,123,
+             word: 231,213,
+             word: 231,231,
+             word: 312,231,
+             word: 312,312,
+             word: 312,321,
+             word: 321,132,
+             word: 321,312,
+             word: 321,321]
         """
-        alphabet = ['B12', 'B13', 'B21', 'B23', 'B31', 'B32']
+        alphabet = ['123', '132', '213', '231', '312', '321']
         automaton = self._Brun_automaton()
         return RegularLanguage(alphabet, automaton)
 
@@ -394,22 +393,20 @@ class LanguageGenerator(object):
 
         TESTS::
 
-            sage: A(['B23', 'B23', 'B32', 'B13'])
+            sage: A(['123', '123', '132', '213'])
             True
-            sage: A(['B23', 'B23', 'B32', 'B13', 'B23'])
+            sage: A(['123', '123', '132', '213', '123'])
             False
         """
-        def B(j,k):
-            return 'B%s%s' % (j,k)
-        jk = [(3,1), (2,1), (3,2), (1,2), (2,3), (1,3)]
-        states = [B(j,k) for (j,k) in jk]
+        def B(i,j,k):
+            return '{}{}{}'.format(i,j,k)
+        states = [B(*p) for p in itertools.permutations((1,2,3))]
         autom = Automaton(initial_states=states, final_states=states)
-        for (j,k) in jk:
-            i = 6 - j - k
-            v = B(j,k)
-            autom.add_transition(v, B(j,k), B(j,k))
-            autom.add_transition(v, B(k,j), B(k,j))
-            autom.add_transition(v, B(i,j), B(i,j))
+        for p in itertools.permutations((1,2,3)):
+            i,j,k = p
+            autom.add_transition(B(*p), B(i,j,k), B(i,j,k))
+            autom.add_transition(B(*p), B(i,k,j), B(i,k,j))
+            autom.add_transition(B(*p), B(k,i,j), B(k,i,j))
         return autom
 
     def Selmer(self):
