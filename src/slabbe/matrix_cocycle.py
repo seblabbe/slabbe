@@ -820,6 +820,7 @@ class MatrixCocycleGenerator(object):
         P31 = matrix(3, [1,1,1, 0,1,0, 0,1,1])
         P32 = matrix(3, [1,0,0, 1,1,1, 1,0,1])
         gens = (P23, P32, P13, P31, P12, P21)
+        alphabet = ['123', '132', '213', '231', '312', '321']
         gens = dict(zip(alphabet, gens))
         return MatrixCocycle(gens)
 
