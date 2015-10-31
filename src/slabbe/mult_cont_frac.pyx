@@ -470,22 +470,23 @@ cdef class MCFAlgorithm(object):
 
             yield (P.x, P.y, P.z), (P.u, P.v, P.w), P.branch
 
-    def s_adic_word(self, start=None):
+    def s_adic_word(self, v=None, first_letter=1):
         r"""
         INPUT:
 
-        - ``start`` - initial vector (default: ``None``), if None, then
+        - ``v`` - initial vector (default: ``None``), if None, then
           initial point is random
+        - ``first_letter`` - letter (default: ``1``)
+
+        OUTPUT:
+
+            word
 
         .. NOTE::
 
             The code is currently based on ``coding_iterator`` method. It
             could be made faster if based on ``orbit_list`` instead which
             is not using ``yield`` statements.
-
-        OUTPUT:
-
-            word
 
         EXAMPLES::
 
@@ -497,21 +498,84 @@ cdef class MCFAlgorithm(object):
             sage: ARP().s_adic_word((1,e,pi))
             word: 1232323123233231232332312323123232312323...
 
+        Cassaigne substitutions do not allow an s-adic construction::
+
+            sage: Cassaigne().s_adic_word((1,e,pi))
+            Traceback (most recent call last):
+            ...
+            ValueError: impossible choice of letter for 6-th iteration in
+            the s-adic construction
+
         TESTS::
 
             sage: v = ARP().s_adic_word((1,e,pi))
             sage: w = Brun().s_adic_word((1,e,pi))
             sage: v.longest_common_prefix(w, 'finite').length()
             212
-
         """
         from sage.combinat.words.word_generators import words
-        import itertools
-        if start is None:
-            start = (random(), random(), random())
-        it = self.coding_iterator(start)
+        if v is None:
+            v = (random(), random(), random())
+        it = self.coding_iterator(v)
+        letters_it = self._s_adic_word_letter_iterator(v, first_letter)
         D = self.substitutions()
-        return words.s_adic(it, itertools.repeat(1), D)
+        return words.s_adic(it, letters_it, D)
+
+    def _s_adic_word_letter_iterator(self, v, first_letter=1):
+        r"""
+        INPUT:
+
+        - ``v`` - initial vector (default: ``None``), if None, then
+          initial point is random
+        - ``first_letter`` - letter (default: ``1``)
+
+        OUTPUT:
+
+            iterator of letters
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun, ARP
+            sage: it = Brun()._s_adic_word_letter_iterator((.414578,.571324,.65513), 1)
+            sage: [next(it) for _ in range(20)]
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+        ::
+
+            sage: it = ARP()._s_adic_word_letter_iterator((.414578,.571324,.65513), 2)
+            sage: [next(it) for _ in range(20)]
+            [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+
+        ::
+
+            sage: it = Reverse()._s_adic_word_letter_iterator((.414578,.571324,.65513), 2)
+            sage: [next(it) for _ in range(20)]
+            [1, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+
+        ::
+
+            sage: it = Cassaigne()._s_adic_word_letter_iterator((.414578,.571324,.65513), 2)
+            sage: [next(it) for _ in range(20)]
+            Traceback (most recent call last):
+            ...
+            ValueError: impossible choice of letter for 6-th iteration in
+            the s-adic construction
+        """
+        from collections import defaultdict
+        from sage.misc.prandom import choice
+        from should_be_in_sage import image_first_letter_to_letter
+        D = self.substitutions()
+        # Construct the letter to letter function
+        F = {key:image_first_letter_to_letter(s) for key,s in D.iteritems()}
+        # Build the letters iterator
+        cur_letter = first_letter
+        for i,key in enumerate(self.coding_iterator(v)):
+            possible = F[key][cur_letter]
+            if not possible:
+                raise ValueError("impossible choice of letter for {}-th "
+                        "iteration in the s-adic construction".format(i))
+            cur_letter = choice(possible)
+            yield cur_letter
 
     def orbit_list(self, int n_iterations, start=None, norm_left='sup', norm_right='1'):
         r"""
@@ -620,7 +684,6 @@ cdef class MCFAlgorithm(object):
         """
         from sage.combinat.e_one_star import E1Star, Patch, Face
         from sage.misc.misc_c import prod
-        import itertools
         if v is None:
             v = (random(), random(), random())
         it = self.coding_iterator(v)
@@ -1891,13 +1954,13 @@ cdef class Reverse(MCFAlgorithm):
             {1: WordMorphism: 1->1, 2->21, 3->31,
              2: WordMorphism: 1->12, 2->2, 3->32,
              3: WordMorphism: 1->13, 2->23, 3->3,
-             4: WordMorphism: 1->23, 2->13, 3->12}
+             4: WordMorphism: 1->23, 2->31, 3->12}
         """
         from sage.combinat.words.morphism import WordMorphism
         return {1:  WordMorphism({1: [1], 2: [2, 1], 3: [3, 1]}),
                 2:  WordMorphism({1: [1, 2], 2: [2], 3: [3, 2]}),
                 3:  WordMorphism({1: [1, 3], 2: [2, 3], 3: [3]}),
-                4:  WordMorphism({1: [2,3], 2: [1,3], 3: [1,2]})}
+                4:  WordMorphism({1: [2,3], 2: [3,1], 3: [1,2]})}
 
     def dual_substitutions(self):
         r"""
