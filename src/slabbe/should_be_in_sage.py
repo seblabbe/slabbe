@@ -24,7 +24,7 @@ def image_first_letter_to_letter(self):
     r"""
     EXAMPLES::
 
-        
+        sage: from slabbe.should_be_in_sage import image_first_letter_to_letter
         sage: m = WordMorphism({1: [1, 2], 2: [2], 3: [3]})
         sage: image_first_letter_to_letter(m)
         defaultdict(<type 'list'>, {1: [1], 2: [2], 3: [3]})

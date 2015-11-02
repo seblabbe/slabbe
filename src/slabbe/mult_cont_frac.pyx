@@ -312,7 +312,7 @@ cdef class MCFAlgorithm(object):
             sage: from slabbe.mult_cont_frac import Sorted_Brun
             sage: Sorted_Brun().matrix_cocycle()
             Cocycle with 3 gens over Language of finite words over alphabet
-            ['B1', 'B2', 'B3']
+            ['1', '2', '3']
 
         ::
 

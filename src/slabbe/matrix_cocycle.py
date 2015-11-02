@@ -319,7 +319,7 @@ class MatrixCocycle(object):
             sage: from slabbe.matrix_cocycle import cocycles
             sage: C = cocycles.ARP()
             sage: it = C.n_matrices_semi_norm_iterator(1, p=1)
-            sage: for _ in range(5): print next(it) # tolerance 0.00001
+            sage: for _ in range(5): print next(it) # tolerance 0.0001
             (word: 1, 1.0, False)
             (word: 2, 1.0, False)
             (word: 3, 1.0, False)
