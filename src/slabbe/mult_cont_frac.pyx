@@ -797,6 +797,7 @@ cdef class MCFAlgorithm(object):
 
         # Loop
         while True:
+            sig_check() # Check for Keyboard interupt
             # Apply Algo
             P = self.call(P)
             yield (P.x, P.y, P.z), (P.u, P.v, P.w), P.branch
@@ -815,9 +816,13 @@ cdef class MCFAlgorithm(object):
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac import Brun
-            sage: L = Brun().cone_orbit_list((10,21, 37), 20)
+            sage: L = Brun().cone_orbit_list((10, 21, 37), 20)
             sage: L[-1]
-            (1.0, 0.0, 0.0, 68.0, 55.0, 46.0, 312)
+            (1.0, 0.0, 0.0, 68.0, 55.0, 658.0, 231)
+
+        .. TODO::
+
+            Check for a fixed point stop then.
 
         """
         cdef PairPoint3d P
@@ -837,9 +842,6 @@ cdef class MCFAlgorithm(object):
             sig_check() # Check for Keyboard interupt
             P = self.call(P)
             L.append( (P.x, P.y, P.z, P.u, P.v, P.w, P.branch))
-            if ((P.x == 0 and P.y == 0) or (P.y == 0 and P.z == 0) or 
-                (P.x == 0 and P.z == 0)):
-                break
         return L
 
     def invariant_measure_dict(self, int n_iterations, int ndivs, v=None,
@@ -1251,6 +1253,15 @@ cdef class MCFAlgorithm(object):
             sage: Brun().s_adic_word((2,4,10))
             word: 1233323312333233
 
+        ::
+
+            sage: from slabbe.mult_cont_frac import FullySubtractive
+            sage: FullySubtractive().s_adic_word((1,2,5))
+            Traceback (most recent call last):
+            ...
+            ValueError: On input=(1, 2, 5), algorithm FullySubtractive
+            loops on (1.0, 0.0, 3.0) without finding the gcd
+
         TESTS::
 
             sage: v = ARP().s_adic_word((1,e,pi))
@@ -1266,23 +1277,26 @@ cdef class MCFAlgorithm(object):
         if all(a in ZZ for a in v):
             S = []
             it = self.cone_orbit_iterator(v)
-            (x,y,z),B,b = next(it)
-            S.append(b)
-            while True:
-                if x == 0 == y: 
-                    letter = 3
-                    the_gcd = ZZ(z)
+            previousA = None
+            for A,B,b in it:
+                sig_check()
+                if A == previousA:
                     break
-                elif x == 0 == z:
-                    letter = 2
-                    the_gcd = ZZ(y)
-                    break
-                elif y == 0 == z:
-                    letter = 1
-                    the_gcd = ZZ(x)
-                    break
-                (x,y,z),B,b = next(it)
                 S.append(b)
+                previousA = A
+            (x,y,z) = A
+            if x == 0 == y: 
+                letter = 3
+                the_gcd = ZZ(z)
+            elif x == 0 == z:
+                letter = 2
+                the_gcd = ZZ(y)
+            elif y == 0 == z:
+                letter = 1
+                the_gcd = ZZ(x)
+            else:
+                raise ValueError("On input={}, algorithm {} loops on {} "
+                         "without finding the gcd".format(v, self.name(), A))
             return words.s_adic(S, [letter], D)**the_gcd
 
         else:
