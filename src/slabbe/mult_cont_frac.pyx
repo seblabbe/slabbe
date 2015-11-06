@@ -1246,6 +1246,11 @@ cdef class MCFAlgorithm(object):
             sage: w.abelian_vector()
             [3, 4, 5]
 
+        When the gcd is not one::
+
+            sage: Brun().s_adic_word((2,4,10))
+            word: 1233323312333233
+
         TESTS::
 
             sage: v = ARP().s_adic_word((1,e,pi))
@@ -1266,16 +1271,19 @@ cdef class MCFAlgorithm(object):
             while True:
                 if x == 0 == y: 
                     letter = 3
+                    the_gcd = ZZ(z)
                     break
                 elif x == 0 == z:
                     letter = 2
+                    the_gcd = ZZ(y)
                     break
                 elif y == 0 == z:
                     letter = 1
+                    the_gcd = ZZ(x)
                     break
                 (x,y,z),B,b = next(it)
                 S.append(b)
-            return words.s_adic(S, [letter], D)
+            return words.s_adic(S, [letter], D)**the_gcd
 
         else:
             it = self.coding_iterator(v)
