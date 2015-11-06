@@ -253,6 +253,11 @@ cdef class MCFAlgorithm(object):
                         " {}".format(key, self.name()))
         return True
 
+    def _test_coherence(self):
+        r"""
+        Check coherence between distinct functions.
+        """
+        raise NotImplementedError
     ######################
     # METHODS FOR THE USER:
     ######################
@@ -1952,7 +1957,7 @@ cdef class Brun(MCFAlgorithm):
             P.v += P.u
             P.branch = 321
         else:
-            raise ValueError('limit case: reach set of measure zero')
+            raise ValueError('limit case: reach set of measure zero: {}'.format(P))
         return P
 
     def substitutions(self):
@@ -2007,6 +2012,14 @@ cdef class Reverse(MCFAlgorithm):
             sage: E = Reverse()(D)
             sage: sorted(E.iteritems())
             [('branch', 4),
+             ('u', 0.6),
+             ('v', 0.5),
+             ('w', 0.5),
+             ('x', 1.1),
+             ('y', 0.5),
+             ('z', 0.09999999999999987)]
+            sage: 1 + 2  # other version for reverse algo
+            [('branch', 4),
              ('u', 0.47622031559045996),
              ('v', 0.39685026299205),
              ('w', 0.39685026299205),
@@ -2034,14 +2047,20 @@ cdef class Reverse(MCFAlgorithm):
             P.branch = 1
             return P
         else:
-            R.x = 0.629960524947437 * (-P.x + P.y + P.z)
-            R.y = 0.629960524947437 * ( P.x - P.y + P.z)
-            R.z = 0.629960524947437 * ( P.x + P.y - P.z)
-            # 0.793700525984100 = 1/2*4^(1/3)
-            # 0.629960524947437 = 1/4*4^(2/3)
-            R.u = 0.793700525984100 * (P.v + P.w)
-            R.v = 0.793700525984100 * (P.u + P.w)
-            R.w = 0.793700525984100 * (P.u + P.v)
+            # R.x = 0.629960524947437 * (-P.x + P.y + P.z)
+            # R.y = 0.629960524947437 * ( P.x - P.y + P.z)
+            # R.z = 0.629960524947437 * ( P.x + P.y - P.z)
+            # # 0.793700525984100 = 1/2*4^(1/3)
+            # # 0.629960524947437 = 1/4*4^(2/3)
+            # R.u = 0.793700525984100 * (P.v + P.w)
+            # R.v = 0.793700525984100 * (P.u + P.w)
+            # R.w = 0.793700525984100 * (P.u + P.v)
+            R.x = -P.x + P.y + P.z
+            R.y =  P.x - P.y + P.z
+            R.z =  P.x + P.y - P.z
+            R.u = P.v + P.w
+            R.v = P.u + P.w
+            R.w = P.u + P.v
             R.branch = 4
             return R
 
@@ -2323,32 +2342,32 @@ cdef class Selmer(MCFAlgorithm):
              ('y', 0.6),
              ('z', 0.5)]
         """
-        if P.x < P.y < P.z:
+        if P.x <= P.y <= P.z:
             P.z -= P.x
             P.u += P.w
             P.branch = 123
-        elif P.x < P.z < P.y:
+        elif P.x <= P.z <= P.y:
             P.y -= P.x
             P.u += P.v
             P.branch = 132
-        elif P.y < P.z < P.x:
+        elif P.y <= P.z <= P.x:
             P.x -= P.y
             P.v += P.u
             P.branch = 231
-        elif P.y < P.x < P.z:
+        elif P.y <= P.x <= P.z:
             P.z -= P.y
             P.v += P.w
             P.branch = 213
-        elif P.z < P.x < P.y:
+        elif P.z <= P.x <= P.y:
             P.y -= P.z
             P.w += P.v
             P.branch = 312
-        elif P.z < P.y < P.x:
+        elif P.z <= P.y <= P.x:
             P.x -= P.z
             P.w += P.u
             P.branch = 321
         else:
-            raise ValueError('limit case: reach set of measure zero')
+            raise ValueError('limit case: reach set of measure zero: {}'.format(P))
         return P
 
     def substitutions(self):
@@ -2482,7 +2501,7 @@ cdef class Cassaigne(MCFAlgorithm):
              ('z', 0.5)]
         """
         cdef double tmp
-        if P.x > P.z :
+        if P.x >= P.z :
             P.x -= P.z
             tmp = P.y
             P.y = P.z
@@ -2501,7 +2520,7 @@ cdef class Cassaigne(MCFAlgorithm):
             P.u = tmp
             P.branch = 2
         else:
-            raise ValueError('limit case: reach set of measure zero')
+            raise ValueError('limit case: reach set of measure zero: {}'.format(P))
         return P
 
     def substitutions(self):
@@ -3173,7 +3192,7 @@ cdef inline PairPoint3d _Poincare(PairPoint3d P) except *:
         R.w = P.u + P.v + P.w
         R.branch = 321
     else:
-        raise ValueError('limit case: reach set of measure zero')
+        raise ValueError('limit case: reach set of measure zero: {}'.format(P))
     return R
 
 cdef inline PairPoint3d _Sorted_ArnouxRauzy(PairPoint3d P):
