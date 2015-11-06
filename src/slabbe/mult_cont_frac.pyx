@@ -32,8 +32,8 @@ TODO:
       default
 
     - Read [1] and change cpdef int C[NDIVS][NDIVS][NDIVS]
-    - Replace method ``natural_extention_dict`` by ``orbit_filtered_list``
-    - Use ``orbit_filtered_list`` for ``invariant_measure`` ?
+    - Replace method ``natural_extention_dict`` by ``simplex_orbit_filtered_list``
+    - Use ``simplex_orbit_filtered_list`` for ``invariant_measure`` ?
 
     - Essayer d'utiliser @staticmethod pour call pour que ARP puisse
       apeler Poincare. Without the cython Error: Cannot call a static
@@ -44,6 +44,8 @@ TODO:
     - rapatrier w0_distance_tijdeman
     - rapatrier plot2d_distance
     - rapatrier save_latex_and_dat_tables
+
+    - Compute the orbit of a vector of integers
 
 Question:
 
@@ -295,8 +297,17 @@ cdef class MCFAlgorithm(object):
              ('y', 0.6),
              ('z', 0.20000000000000007)]
 
+        ::
+
+            sage: D = {'x':3,'y':6,'z':8,'u':.2,'v':.3,'w':.3,'branch':999}
+            sage: D = Brun()(D); D
+            {'branch': 123, 'u': 0.2, 'v': 0.6, 'w': 0.3, 'x': 3.0, 'y': 6.0, 'z': 2.0}
+
         """
         return self.call(P)
+    ######################
+    # DYNAMICS METHODS
+    ######################
     def matrix_cocycle(self):
         r"""
         EXAMPLES::
@@ -369,7 +380,7 @@ cdef class MCFAlgorithm(object):
             s = P.x + P.y + P.z
             P.x /= s; P.y /= s; P.z /= s
 
-    def orbit_iterator(self, start=None, norm_left='sup', norm_right='1'):
+    def simplex_orbit_iterator(self, start=None, norm_left='sup', norm_right='1'):
         r"""
         INPUT:
 
@@ -384,7 +395,7 @@ cdef class MCFAlgorithm(object):
 
             This iterator is 10x slower because of the yield statement. So
             avoid using this when writing fast code. Just copy paste the
-            loop or use orbit_list or orbit_filtered_list method.
+            loop or use simplex_orbit_list or simplex_orbit_filtered_list method.
 
         OUTPUT:
 
@@ -393,7 +404,7 @@ cdef class MCFAlgorithm(object):
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac import Brun
-            sage: it = Brun().orbit_iterator((.414578,.571324,.65513))
+            sage: it = Brun().simplex_orbit_iterator((.414578,.571324,.65513))
             sage: for _ in range(4): next(it)
             ((0.7256442929056017, 1.0, 0.14668734378391243), 
              (0.25, 0.5, 0.25), 
@@ -411,7 +422,7 @@ cdef class MCFAlgorithm(object):
         ::
 
             sage: from slabbe.mult_cont_frac import Brun
-            sage: it = Brun().orbit_iterator((.414578,.571324,.65513), norm_left='1')
+            sage: it = Brun().simplex_orbit_iterator((.414578,.571324,.65513), norm_left='1')
             sage: for _ in range(4): next(it)
             ((0.3875618393056797, 0.5340934161472103, 0.07834474454711005),
              (0.25, 0.5, 0.25),
@@ -469,64 +480,14 @@ cdef class MCFAlgorithm(object):
 
             yield (P.x, P.y, P.z), (P.u, P.v, P.w), P.branch
 
-    def s_adic_word(self, v=None, n_iterations=1000, nth_letter=1):
-        r"""
-        Return the s-adic word obtained from application of the MCF
-        algorithm on the vector v.
-
-        INPUT:
-
-        - ``v`` - initial vector (default: ``None``), if None, then
-          initial point is random
-        - ``n_iterations`` - integer (default: ``1000``), number of
-          iterations
-        - ``nth_letter`` - letter (default: ``1``)
-
-        OUTPUT:
-
-            word
-
-        EXAMPLES::
-
-            sage: from slabbe.mult_cont_frac import Brun, ARP, Cassaigne
-            sage: Brun().s_adic_word((.414578,.571324,.65513))
-            word: 1232312312323123123312323123123312323123...
-            sage: Brun().s_adic_word((1,e,pi))
-            word: 1232323123233231232332312323123232312323...
-            sage: ARP().s_adic_word((1,e,pi))
-            word: 1232323123233231232332312323123232312323...
-            sage: Cassaigne().s_adic_word((1,e,pi))
-            word: 2323213232323132323213232321323231323232...
-
-        TESTS::
-
-            sage: v = ARP().s_adic_word((1,e,pi))
-            sage: w = Brun().s_adic_word((1,e,pi))
-            sage: v.longest_common_prefix(w, 'finite').length()
-            212
-        """
-        from sage.combinat.words.word_generators import words
-        if v is None:
-            v = (random(), random(), random())
-        it = self.coding_iterator(v)
-        S = [next(it) for _ in range(n_iterations)]
-        D = self.substitutions()
-        letter = nth_letter
-        L = [letter]
-        for key in reversed(S):
-            letter = D[key](letter)[0]
-            L.append(letter)
-        L.pop()
-        L.reverse()
-        return words.s_adic(S, L, D)
-
-    def orbit_list(self, int n_iterations, start=None, norm_left='sup', norm_right='1'):
+    def simplex_orbit_list(self, start=None, int n_iterations=100, 
+                                 norm_left='sup', norm_right='1'):
         r"""
         INPUT:
 
-        - ``n_iterations`` - integer, number of iterations
         - ``start`` - initial vector (default: ``None``), if None, then
           initial point is random
+        - ``n_iterations`` - integer, number of iterations
         - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit of the algo
         - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
@@ -542,14 +503,14 @@ cdef class MCFAlgorithm(object):
         about 60ms on this machine. But for drawing images, it does not
         matter to be 10 times slower::
 
-            sage: %time L = Brun().orbit_list(10^6)   # not tested
+            sage: %time L = Brun().simplex_orbit_list(10^6)   # not tested
             CPU times: user 376 ms, sys: 267 ms, total: 643 ms
             Wall time: 660 ms
 
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac import Brun
-            sage: L = Brun().orbit_list(10^5)
+            sage: L = Brun().simplex_orbit_list(n_iterations=10^5)
             sage: L[-1]    # random
             (0.7307002153148079,
              1.0,
@@ -610,34 +571,7 @@ cdef class MCFAlgorithm(object):
 
         return L
 
-    def e_one_star_patch(self, v, n):
-        r"""
-        Return the n-th iterated patch of normal vector v.
-
-        INPUT:
-
-        - ``v`` -- vector, the normal vector
-        - ``n`` -- integer
-
-        EXAMPLES::
-
-            sage: from slabbe.mult_cont_frac import FullySubtractive
-            sage: FullySubtractive().e_one_star_patch((1,e,pi), 4)
-            Patch of 21 faces
-        """
-        from sage.combinat.e_one_star import E1Star, Patch, Face
-        from sage.misc.misc_c import prod
-        if v is None:
-            v = (random(), random(), random())
-        it = self.coding_iterator(v)
-        keys = [next(it) for _ in range(n)]
-        D = self.dual_substitutions()
-        L = prod(D[key] for key in reversed(keys))
-        dual_sub = E1Star(L)
-        cube = Patch([Face((1,0,0),1), Face((0,1,0),2), Face((0,0,1),3)])
-        return dual_sub(cube)
-
-    def orbit_filtered_list(self, int n_iterations, start=None,
+    def simplex_orbit_filtered_list(self, start=None, int n_iterations=100,
             norm_left='1', norm_right='1',
             double xmin=-float('inf'), double xmax=float('inf'),
             double ymin=-float('inf'), double ymax=float('inf'),
@@ -649,9 +583,9 @@ cdef class MCFAlgorithm(object):
 
         INPUT:
 
-        - ``n_iterations`` - integer, number of iterations
         - ``start`` - initial vector (default: ``None``), if None, then
           initial point is random
+        - ``n_iterations`` - integer, number of iterations
         - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit of the algo
         - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
@@ -673,14 +607,15 @@ cdef class MCFAlgorithm(object):
         BENCHMARK:
 
             sage: from slabbe.mult_cont_frac import Brun
-            sage: %time D = Brun().orbit_filtered_list(10^6) # not tested
+            sage: %time D = Brun().simplex_orbit_filtered_list(10^6) # not tested
             CPU times: user 366 ms, sys: 203 ms, total: 568 ms
             Wall time: 570 ms
 
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac import Brun
-            sage: D = Brun().orbit_filtered_list(3, start=(.414578,.571324,.65513))
+            sage: start=(.414578,.571324,.65513)
+            sage: D = Brun().simplex_orbit_filtered_list(start, 3)
             sage: D      # random
             [(0.3049590483124023,
               -0.36889249928767137,
@@ -703,7 +638,7 @@ cdef class MCFAlgorithm(object):
 
         ::
 
-            sage: Brun().orbit_filtered_list(3, norm_left='1',ndivs=1000)
+            sage: Brun().simplex_orbit_filtered_list(n_iterations=3, norm_left='1',ndivs=1000)
             Traceback (most recent call last):
             ...
             ValueError: when ndivs is specified, you must provide a value
@@ -711,7 +646,8 @@ cdef class MCFAlgorithm(object):
 
         ::
 
-            sage: Brun().orbit_filtered_list(7, norm_left='1', ndivs=100, # random
+            sage: Brun().simplex_orbit_filtered_list(n_iterations=7,  # random
+            ....:       norm_left='1', ndivs=100,
             ....:       xmin=-.866, xmax=.866, ymin=-.5, ymax=1.,
             ....:       umin=-.866, umax=.866, vmin=-.5, vmax=1.)
             [(30, 47, 50, 50, 132, 213),
@@ -815,6 +751,95 @@ cdef class MCFAlgorithm(object):
             else:
                 L.append( (x,y,u,v, previous_branch, P.branch))
 
+        return L
+
+    def cone_orbit_iterator(self, start=None):
+        r"""
+        INPUT:
+
+        - ``start`` - initial vector (default: ``None``), if None, then
+          initial point is random
+
+        NOTE:
+
+            This iterator is 10x slower because of the yield statement. So
+            avoid using this when writing fast code. Just copy paste the
+            loop or use simplex_orbit_list or simplex_orbit_filtered_list method.
+
+        OUTPUT:
+
+            iterator
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: it = Brun().cone_orbit_iterator((13,17,29))
+            sage: for _ in range(10): next(it)
+            ((13.0, 17.0, 12.0), (1.0, 2.0, 1.0), 123)
+            ((13.0, 4.0, 12.0), (3.0, 2.0, 1.0), 312)
+            ((1.0, 4.0, 12.0), (3.0, 2.0, 4.0), 231)
+            ((1.0, 4.0, 8.0), (3.0, 6.0, 4.0), 123)
+            ((1.0, 4.0, 4.0), (3.0, 10.0, 4.0), 123)
+            ((1.0, 4.0, 0.0), (3.0, 14.0, 4.0), 123)
+            ((1.0, 3.0, 0.0), (17.0, 14.0, 4.0), 312)
+            ((1.0, 2.0, 0.0), (31.0, 14.0, 4.0), 312)
+            ((1.0, 1.0, 0.0), (45.0, 14.0, 4.0), 312)
+            ((1.0, 0.0, 0.0), (59.0, 14.0, 4.0), 312)
+        """
+        cdef PairPoint3d P
+        if start is None:
+            P.x = random(); P.y = random(); P.z = random()
+        else:
+            P.x = start[0]; P.y = start[1]; P.z = start[2]
+        P.u = 1
+        P.v = 1
+        P.w = 1
+
+        # Loop
+        while True:
+            # Apply Algo
+            P = self.call(P)
+            yield (P.x, P.y, P.z), (P.u, P.v, P.w), P.branch
+    def cone_orbit_list(self, start=None, int n_iterations=100):
+        r"""
+        INPUT:
+
+        - ``start`` - initial vector (default: ``None``), if None, then
+          initial point is random
+        - ``n_iterations`` - integer, number of iterations
+
+        OUTPUT:
+
+            list
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: L = Brun().cone_orbit_list((10,21, 37), 20)
+            sage: L[-1]
+            (1.0, 0.0, 0.0, 68.0, 55.0, 46.0, 312)
+
+        """
+        cdef PairPoint3d P
+        cdef int i
+        if start is None:
+            P.x = random(); P.y = random(); P.z = random()
+        else:
+            P.x = start[0]; P.y = start[1]; P.z = start[2]
+        P.u = 1
+        P.v = 1
+        P.w = 1
+
+        L = []
+
+        # Loop
+        for i from 0 <= i < n_iterations:
+            sig_check() # Check for Keyboard interupt
+            P = self.call(P)
+            L.append( (P.x, P.y, P.z, P.u, P.v, P.w, P.branch))
+            if ((P.x == 0 and P.y == 0) or (P.y == 0 and P.z == 0) or 
+                (P.x == 0 and P.z == 0)):
+                break
         return L
 
     def invariant_measure_dict(self, int n_iterations, int ndivs, v=None,
@@ -1180,6 +1205,116 @@ cdef class MCFAlgorithm(object):
                 P.u /= s; P.v /= s; P.w /= s
 
         return theta1/n_iterations, theta2/n_iterations, 1-theta2/theta1
+
+    ######################
+    # COMBINATORICS METHODS
+    ######################
+    def s_adic_word(self, v=None, n_iterations=100, nth_letter=1):
+        r"""
+        Return the s-adic word obtained from application of the MCF
+        algorithm on the vector v.
+
+        INPUT:
+
+        - ``v`` - initial vector (default: ``None``), if None, then
+          initial point is random
+        - ``n_iterations`` - integer (default: ``100``), number of
+          iterations
+        - ``nth_letter`` - letter (default: ``1``)
+
+        OUTPUT:
+
+            word
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun, ARP, Cassaigne
+            sage: Brun().s_adic_word((.414578,.571324,.65513))
+            word: 1232312312323123123312323123123312323123...
+            sage: Brun().s_adic_word((1,e,pi))
+            word: 1232323123233231232332312323123232312323...
+            sage: ARP().s_adic_word((1,e,pi))
+            word: 1232323123233231232332312323123232312323...
+            sage: Cassaigne().s_adic_word((1,e,pi))
+            word: 2323213232323132323213232321323231323232...
+
+        On integer entries::
+
+            sage: w = Brun().s_adic_word((3,4,5))
+            sage: w
+            word: 123233123123
+            sage: w.abelian_vector()
+            [3, 4, 5]
+
+        TESTS::
+
+            sage: v = ARP().s_adic_word((1,e,pi))
+            sage: w = Brun().s_adic_word((1,e,pi))
+            sage: v.longest_common_prefix(w, 'finite').length()
+            212
+        """
+        from sage.combinat.words.word_generators import words
+        from sage.rings.integer_ring import ZZ
+        if v is None:
+            v = (random(), random(), random())
+        D = self.substitutions()
+        if all(a in ZZ for a in v):
+            S = []
+            it = self.cone_orbit_iterator(v)
+            (x,y,z),B,b = next(it)
+            S.append(b)
+            while True:
+                if x == 0 == y: 
+                    letter = 3
+                    break
+                elif x == 0 == z:
+                    letter = 2
+                    break
+                elif y == 0 == z:
+                    letter = 1
+                    break
+                (x,y,z),B,b = next(it)
+                S.append(b)
+            return words.s_adic(S, [letter], D)
+
+        else:
+            it = self.coding_iterator(v)
+            S = [next(it) for _ in range(n_iterations)]
+            letter = nth_letter
+            L = [letter]
+            for key in reversed(S):
+                letter = D[key](letter)[0]
+                L.append(letter)
+            L.pop()
+            L.reverse()
+            return words.s_adic(S, L, D)
+
+    def e_one_star_patch(self, v, n):
+        r"""
+        Return the n-th iterated patch of normal vector v.
+
+        INPUT:
+
+        - ``v`` -- vector, the normal vector
+        - ``n`` -- integer
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import FullySubtractive
+            sage: FullySubtractive().e_one_star_patch((1,e,pi), 4)
+            Patch of 21 faces
+        """
+        from sage.combinat.e_one_star import E1Star, Patch, Face
+        from sage.misc.misc_c import prod
+        if v is None:
+            v = (random(), random(), random())
+        it = self.coding_iterator(v)
+        keys = [next(it) for _ in range(n)]
+        D = self.dual_substitutions()
+        L = prod(D[key] for key in reversed(keys))
+        dual_sub = E1Star(L)
+        cube = Patch([Face((1,0,0),1), Face((0,1,0),2), Face((0,0,1),3)])
+        return dual_sub(cube)
 
     ######################
     # DRAWINGS METHODS (python):
@@ -1558,7 +1693,7 @@ cdef class MCFAlgorithm(object):
             sage: P.show() # not tested
 
         """
-        L = self.orbit_filtered_list(n_iterations,
+        L = self.simplex_orbit_filtered_list(n_iterations=n_iterations,
             norm_left=norm_left, norm_right=norm_right,
             xmin=xrange[0], xmax=xrange[1],
             ymin=yrange[0], ymax=yrange[1],
@@ -1658,7 +1793,7 @@ cdef class MCFAlgorithm(object):
             0.177...
 
         """
-        L = self.orbit_filtered_list(n_iterations,
+        L = self.simplex_orbit_filtered_list(n_iterations=n_iterations,
             norm_left=norm_left, norm_right=norm_right,
             xmin=xrange[0], xmax=xrange[1],
             ymin=yrange[0], ymax=yrange[1],
@@ -1770,27 +1905,27 @@ cdef class Brun(MCFAlgorithm):
              ('y', 0.6),
              ('z', 0.20000000000000007)]
         """
-        if P.x < P.y < P.z:
+        if P.x <= P.y <= P.z:
             P.z -= P.y
             P.v += P.w
             P.branch = 123
-        elif P.x < P.z < P.y:
+        elif P.x <= P.z <= P.y:
             P.y -= P.z
             P.w += P.v
             P.branch = 132
-        elif P.y < P.z < P.x:
+        elif P.y <= P.z <= P.x:
             P.x -= P.z
             P.w += P.u
             P.branch = 231
-        elif P.y < P.x < P.z:
+        elif P.y <= P.x <= P.z:
             P.z -= P.x
             P.u += P.w
             P.branch = 213
-        elif P.z < P.x < P.y:
+        elif P.z <= P.x <= P.y:
             P.y -= P.x
             P.u += P.v
             P.branch = 312
-        elif P.z < P.y < P.x:
+        elif P.z <= P.y <= P.x:
             P.x -= P.y
             P.v += P.u
             P.branch = 321
