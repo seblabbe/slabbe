@@ -469,42 +469,34 @@ cdef class MCFAlgorithm(object):
 
             yield (P.x, P.y, P.z), (P.u, P.v, P.w), P.branch
 
-    def s_adic_word(self, v=None, first_letter=1):
+    def s_adic_word(self, v=None, n_iterations=1000, nth_letter=1):
         r"""
+        Return the s-adic word obtained from application of the MCF
+        algorithm on the vector v.
+
         INPUT:
 
         - ``v`` - initial vector (default: ``None``), if None, then
           initial point is random
-        - ``first_letter`` - letter (default: ``1``)
+        - ``n_iterations`` - integer (default: ``1000``), number of
+          iterations
+        - ``nth_letter`` - letter (default: ``1``)
 
         OUTPUT:
 
             word
 
-        .. NOTE::
-
-            The code is currently based on ``coding_iterator`` method. It
-            could be made faster if based on ``orbit_list`` instead which
-            is not using ``yield`` statements.
-
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun, ARP
+            sage: from slabbe.mult_cont_frac import Brun, ARP, Cassaigne
             sage: Brun().s_adic_word((.414578,.571324,.65513))
             word: 1232312312323123123312323123123312323123...
             sage: Brun().s_adic_word((1,e,pi))
             word: 1232323123233231232332312323123232312323...
             sage: ARP().s_adic_word((1,e,pi))
             word: 1232323123233231232332312323123232312323...
-
-        Cassaigne substitutions do not allow an s-adic construction::
-
-            sage: from slabbe.mult_cont_frac import Cassaigne
             sage: Cassaigne().s_adic_word((1,e,pi))
-            Traceback (most recent call last):
-            ...
-            ValueError: impossible choice of letter for ...-th iteration in
-            the s-adic construction
+            word: 2323213232323132323213232321323231323232...
 
         TESTS::
 
@@ -517,68 +509,16 @@ cdef class MCFAlgorithm(object):
         if v is None:
             v = (random(), random(), random())
         it = self.coding_iterator(v)
-        letters_it = self._s_adic_word_letter_iterator(v, first_letter)
+        S = [next(it) for _ in range(n_iterations)]
         D = self.substitutions()
-        return words.s_adic(it, letters_it, D)
-
-    def _s_adic_word_letter_iterator(self, v, first_letter=1):
-        r"""
-        INPUT:
-
-        - ``v`` - initial vector (default: ``None``), if None, then
-          initial point is random
-        - ``first_letter`` - letter (default: ``1``)
-
-        OUTPUT:
-
-            iterator of letters
-
-        EXAMPLES::
-
-            sage: from slabbe.mult_cont_frac import Brun
-            sage: it = Brun()._s_adic_word_letter_iterator((.414578,.571324,.65513), 1)
-            sage: [next(it) for _ in range(20)]
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-
-        ::
-
-            sage: from slabbe.mult_cont_frac import ARP
-            sage: it = ARP()._s_adic_word_letter_iterator((.414578,.571324,.65513), 2)
-            sage: [next(it) for _ in range(20)]
-            [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
-
-        ::
-
-            sage: from slabbe.mult_cont_frac import Reverse
-            sage: it = Reverse()._s_adic_word_letter_iterator((.414578,.571324,.65513), 2)
-            sage: [next(it) for _ in range(20)]
-            [1, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
-
-        ::
-
-            sage: from slabbe.mult_cont_frac import Cassaigne
-            sage: it = Cassaigne()._s_adic_word_letter_iterator((.414578,.571324,.65513), 2)
-            sage: [next(it) for _ in range(20)]
-            Traceback (most recent call last):
-            ...
-            ValueError: impossible choice of letter for ...-th iteration in
-            the s-adic construction
-        """
-        from collections import defaultdict
-        from sage.misc.prandom import choice
-        from should_be_in_sage import image_first_letter_to_letter
-        D = self.substitutions()
-        # Construct the letter to letter function
-        F = {key:image_first_letter_to_letter(s) for key,s in D.iteritems()}
-        # Build the letters iterator
-        cur_letter = first_letter
-        for i,key in enumerate(self.coding_iterator(v)):
-            possible = F[key][cur_letter]
-            if not possible:
-                raise ValueError("impossible choice of letter for {}-th "
-                        "iteration in the s-adic construction".format(i))
-            cur_letter = choice(possible)
-            yield cur_letter
+        letter = nth_letter
+        L = [letter]
+        for key in reversed(S):
+            letter = D[key](letter)[0]
+            L.append(letter)
+        L.pop()
+        L.reverse()
+        return words.s_adic(S, L, D)
 
     def orbit_list(self, int n_iterations, start=None, norm_left='sup', norm_right='1'):
         r"""
