@@ -621,8 +621,8 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Meester
-            sage: Meester().e_one_star_patch((1,e,pi), 4)
+            sage: from slabbe.mult_cont_frac import FullySubtractive
+            sage: FullySubtractive().e_one_star_patch((1,e,pi), 4)
             Patch of 21 faces
         """
         from sage.combinat.e_one_star import E1Star, Patch, Face
@@ -2236,14 +2236,14 @@ cdef class Selmer(MCFAlgorithm):
                 312: WordMorphism({1: [1], 2: [2, 3], 3: [3]}),
                 213: WordMorphism({1: [1], 2: [2], 3: [3, 2]})}
 
-cdef class Meester(MCFAlgorithm):
+cdef class FullySubtractive(MCFAlgorithm):
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Meester
+            sage: from slabbe.mult_cont_frac import FullySubtractive
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = Meester()(D)
+            sage: E = FullySubtractive()(D)
             sage: sorted(E.iteritems())
             [('branch', 1),
              ('u', 0.8),
@@ -2258,7 +2258,7 @@ cdef class Meester(MCFAlgorithm):
             P.z -= P.x
             P.u += P.v + P.w
             P.branch = 1
-        elif P.y <= P.x and P.x <= P.z:
+        elif P.y <= P.x and P.y <= P.z:
             P.x -= P.y
             P.z -= P.y
             P.v += P.u + P.w
@@ -2269,15 +2269,15 @@ cdef class Meester(MCFAlgorithm):
             P.w += P.u + P.v
             P.branch = 3
         else:
-            raise ValueError('limit case: reach set of measure zero')
+            raise ValueError('limit case: reach set of measure zero: {}'.format(P))
         return P
 
     def substitutions(self):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Meester
-            sage: Meester().substitutions()
+            sage: from slabbe.mult_cont_frac import FullySubtractive
+            sage: FullySubtractive().substitutions()
             {1: WordMorphism: 1->123, 2->2, 3->3,
              2: WordMorphism: 1->1, 2->231, 3->3,
              3: WordMorphism: 1->1, 2->2, 3->312}
@@ -2291,8 +2291,8 @@ cdef class Meester(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Meester
-            sage: Meester().dual_substitutions()
+            sage: from slabbe.mult_cont_frac import FullySubtractive
+            sage: FullySubtractive().dual_substitutions()
             {1: WordMorphism: 1->1, 2->21, 3->31,
              2: WordMorphism: 1->12, 2->2, 3->32,
              3: WordMorphism: 1->13, 2->23, 3->3}

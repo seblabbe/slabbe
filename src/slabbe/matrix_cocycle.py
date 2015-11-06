@@ -824,7 +824,7 @@ class MatrixCocycleGenerator(object):
         gens = dict(zip(alphabet, gens))
         return MatrixCocycle(gens)
 
-    def Meester(self):
+    def FullySubtractive(self):
         F1 = matrix(3, [1,0,0, 1,1,0, 1,0,1])
         F2 = matrix(3, [1,1,0, 0,1,0, 0,1,1])
         F3 = matrix(3, [1,0,1, 0,1,1, 0,0,1])
