@@ -1842,13 +1842,13 @@ cdef class MCFAlgorithm(object):
 
         print float(len(S) / ndivs**2)
 
-    def lyapunov_exponents_sample(self, ntimes, n_iterations=1000):
+    def lyapunov_exponents_sample(self, n_orbits, n_iterations=1000):
         r"""
         Return lists of values for theta1, theta2 and 1-theta2/theta1.
 
         INPUT:
 
-        - ``ntimes`` -- integer, number of orbits
+        - ``n_orbits`` -- integer, number of orbits
         - ``n_iterations`` -- integer, length of each orbit
 
         OUTPUT:
@@ -1866,16 +1866,16 @@ cdef class MCFAlgorithm(object):
             sage: U[0]
             1.3684861366090153
         """
-        L = [self.lyapunov_exponents(n_iterations) for _ in range(ntimes)]
+        L = [self.lyapunov_exponents(n_iterations) for _ in range(n_orbits)]
         return zip(*L)
 
-    def lyapunov_exponents_table(self, ntimes, n_iterations=1000):
+    def lyapunov_exponents_table(self, n_orbits, n_iterations=1000):
         r"""
-        Return a table of values of Lyapunov exponents.
+        Return a table of values of Lyapunov exponents for this algorithm.
 
         INPUT:
 
-        - ``ntimes`` -- integer, number of orbits
+        - ``n_orbits`` -- integer, number of orbits
         - ``n_iterations`` -- integer, length of each orbit
 
         OUTPUT:
@@ -1897,7 +1897,7 @@ cdef class MCFAlgorithm(object):
         from sage.functions.other import abs, floor
         from sage.functions.log import log
         from sage.misc.table import table
-        rep = self.lyapunov_exponents_sample(ntimes, n_iterations)
+        rep = self.lyapunov_exponents_sample(n_orbits, n_iterations)
         def my_log(number):
             return floor(log(abs(number), 10.))
         def my_rounded(number, s):
@@ -1917,7 +1917,7 @@ cdef class MCFAlgorithm(object):
         header = ['', 'min','mean','max','std']
         return table(rows=rows,header_row=header)
 
-    def _lyapunov_exponents_row(self, ntimes, n_iterations=1000):
+    def _lyapunov_exponents_row(self, n_orbits, n_iterations=1000):
         r"""
         Return a row of values of Lyapunov exponents.
 
@@ -1926,7 +1926,7 @@ cdef class MCFAlgorithm(object):
 
         INPUT:
 
-        - ``ntimes`` -- integer, number of orbits
+        - ``n_orbits`` -- integer, number of orbits
         - ``n_iterations`` -- integer, length of each orbit
 
         OUTPUT:
@@ -1943,7 +1943,7 @@ cdef class MCFAlgorithm(object):
         from sage.misc.functional import numerical_approx
         from sage.functions.other import abs, floor
         from sage.functions.log import log
-        rep = self.lyapunov_exponents_sample(ntimes, n_iterations)
+        rep = self.lyapunov_exponents_sample(n_orbits, n_iterations)
         def my_log(number):
             return floor(log(abs(number), 10.))
         def my_rounded(number, s):
@@ -3340,3 +3340,4 @@ cdef inline (double, double) projection3to2(double x, double y, double z):
     cdef double s = -SQRT3SUR2 * x + SQRT3SUR2 * y
     cdef double t = -.5 * x -.5 * y + z
     return s,t
+
