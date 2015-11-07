@@ -1917,6 +1917,48 @@ cdef class MCFAlgorithm(object):
         header = ['', 'min','mean','max','std']
         return table(rows=rows,header_row=header)
 
+    def _lyapunov_exponents_row(self, ntimes, n_iterations=1000):
+        r"""
+        Return a row of values of Lyapunov exponents.
+
+        This method is used for making a larger table comparing many
+        algorithms.
+
+        INPUT:
+
+        - ``ntimes`` -- integer, number of orbits
+        - ``n_iterations`` -- integer, length of each orbit
+
+        OUTPUT:
+
+            row of liapounov exponents: theta1, theta2, 1-theta2/theta1
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: Brun()._lyapunov_exponents_row(10, 100000) # abs tol 0.005
+            ['Brun', '0.303 (0.0038)', '-0.112 (0.0019)', '1.368 (0.0026)']
+        """
+        import numpy as np
+        from sage.misc.functional import numerical_approx
+        from sage.functions.other import abs, floor
+        from sage.functions.log import log
+        rep = self.lyapunov_exponents_sample(ntimes, n_iterations)
+        def my_log(number):
+            return floor(log(abs(number), 10.))
+        def my_rounded(number, s):
+            m = my_log(number)
+            return numerical_approx(number, digits=m-s+1)
+        row = []
+        row.append(self.name())
+        for data in rep:
+            data = np.array(data)
+            s = my_log(data.std())
+            val = my_rounded(data.mean(), s)
+            std = my_rounded(data.std(), s)
+            row.append("{} ({})".format(val, std))
+        return row
+
 cdef class Brun(MCFAlgorithm):
     r"""
     EXAMPLES::
