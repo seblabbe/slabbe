@@ -12,6 +12,7 @@ Comparison of Multidimensional Continued Fraction Algorithms
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from sage.misc.table import table
 
 def lyapunov_exponents_table(L, n_orbits=100, n_iterations=10000):
     r"""
