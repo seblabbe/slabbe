@@ -31,11 +31,13 @@ def lyapunov_exponents_table(L, n_orbits=100, n_iterations=10000):
     EXAMPLES::
 
         sage: import slabbe.mult_cont_frac as mcf
+        sage: from slabbe.mcf_comparison import lyapunov_exponents_table
         sage: algos = [mcf.Brun(), mcf.ARP()]
-        sage: compare_algos_for_lyapunov(algos)
-          Algorithm   $\theta_1$ (std)   $\theta_2$ (std)   $1-\theta_2/\theta_1$
-          ARP         0.44 (0.013)       -0.172 (0.0057)    1.388 (0.0048)
-          Brun        0.30 (0.017)       -0.111 (0.0062)    1.368 (0.0068)
+        sage: lyapunov_exponents_table(algos)    # tolerance 0.01
+          Algorithm   $\theta_1$ (std)   $\theta_2$ (std)   $1-\theta_2/\theta_1$ (std)
+        +-----------+------------------+------------------+-----------------------------+
+          ARP         0.44 (0.013)       -0.172 (0.0060)    1.389 (0.0048)
+          Brun        0.305 (0.0089)     -0.113 (0.0042)    1.370 (0.0071)
     """
     rows = []
     for algo in L:
