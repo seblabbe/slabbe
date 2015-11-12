@@ -15,6 +15,7 @@ from bond_percolation import (BondPercolationSamples,
                              BondPercolationSample, 
                              PercolationProbability)
 from kolakoski_word import KolakoskiWord
+from tikz_picture import TikzPicture
 
 # for doctext to work, we import convex_boundary
 # from discrete_subset import convex_boundary
