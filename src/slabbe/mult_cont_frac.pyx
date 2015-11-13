@@ -1088,10 +1088,16 @@ cdef class MCFAlgorithm(object):
 
         return domain_left, image_left, domain_right, image_right
 
-    def lyapunov_exponents(self, int n_iterations=1000, verbose=False):
+    def lyapunov_exponents(self, start=None, int n_iterations=1000, verbose=False):
         r"""
+        Return the lyapunov exponents (theta1, theta2, 1-theta2/theta1)
+
+        See also the module ``slabbe.lyapunov`` for parallel computations.
+
         INPUT:
 
+        - ``start`` - initial vector (default: ``None``), if None, then
+          initial point is random
         - ``n_iterations`` -- integer
         - ``verbose`` -- bool (default: ``False``)
 
@@ -1112,17 +1118,17 @@ cdef class MCFAlgorithm(object):
         Some benchmarks (on my machine)::
 
             sage: from slabbe.mult_cont_frac import Brun
-            sage: Brun().lyapunov_exponents(1000000)  # 68.6 ms # tolerance 0.003
+            sage: Brun().lyapunov_exponents(n_iterations=1000000)  # 68.6 ms # tolerance 0.003
             (0.3049429393152174, -0.1120652699014143, 1.367495867105725)
 
         Cython code on liafa is as fast as C on my machine::
 
-            sage: Brun().lyapunov_exponents(67000000) # 3.71s # tolerance 0.001
+            sage: Brun().lyapunov_exponents(n_iterations=67000000) # 3.71s # tolerance 0.001
             (0.30452120021265766, -0.11212586210856369, 1.36820379674801734)
 
         Cython code on my machine is almost as fast as C on my machine::
 
-            sage: Brun().lyapunov_exponents(67000000) # 4.58 s # tolerance 0.001
+            sage: Brun().lyapunov_exponents(n_iterations=67000000) # 4.58 s # tolerance 0.001
             (0.30456433843239084, -0.1121770192467067, 1.36831961293987303)
 
         """
@@ -1135,8 +1141,11 @@ cdef class MCFAlgorithm(object):
         cdef unsigned int i         # loop counter
         cdef double critical_value=0.0001
 
-        # random initial values
-        x = random(); y = random(); z = random();
+        # initial values
+        if start is None:
+            x = random(); y = random(); z = random()
+        else:
+            x = start[0]; y = start[1]; z = start[2]
         u = random() - .5; v = random() - .5; w = random() - .5;
 
         # Order (x,y,z)
@@ -1841,123 +1850,6 @@ cdef class MCFAlgorithm(object):
             print "{} pixels touchés parmi limage {}^2 ".format(len(S), ndivs)
 
         print float(len(S) / ndivs**2)
-
-    def lyapunov_exponents_sample(self, n_orbits, n_iterations=1000):
-        r"""
-        Return lists of values for theta1, theta2 and 1-theta2/theta1.
-
-        INPUT:
-
-        - ``n_orbits`` -- integer, number of orbits
-        - ``n_iterations`` -- integer, length of each orbit
-
-        OUTPUT:
-
-            tuple of three lists
-
-        EXAMPLES::
-
-            sage: from slabbe.mult_cont_frac import Brun
-            sage: T1, T2, U = Brun().lyapunov_exponents_sample(10, 100000)
-            sage: T1[0]
-            0.303680940345907
-            sage: T2[0]
-            -0.1119022164698561 
-            sage: U[0]
-            1.3684861366090153
-        """
-        L = [self.lyapunov_exponents(n_iterations) for _ in range(n_orbits)]
-        return zip(*L)
-
-    def lyapunov_exponents_table(self, n_orbits, n_iterations=1000):
-        r"""
-        Return a table of values of Lyapunov exponents for this algorithm.
-
-        INPUT:
-
-        - ``n_orbits`` -- integer, number of orbits
-        - ``n_iterations`` -- integer, length of each orbit
-
-        OUTPUT:
-
-            table of liapounov exponents
-
-        EXAMPLES::
-
-            sage: from slabbe.mult_cont_frac import Brun
-            sage: Brun().lyapunov_exponents_table(10, 100000) # abs tol 0.005
-                                      min       mean      max       std
-            +-----------------------+---------+---------+---------+---------+
-              $\theta_1$              0.302     0.304     0.306     0.0011
-              $\theta_2$              -0.1129   -0.1119   -0.1106   0.00075
-              $1-\theta_2/\theta_1$   1.365     1.368     1.370     0.0018
-        """
-        import numpy as np
-        from sage.misc.functional import numerical_approx
-        from sage.functions.other import abs, floor
-        from sage.functions.log import log
-        from sage.misc.table import table
-        rep = self.lyapunov_exponents_sample(n_orbits, n_iterations)
-        def my_log(number):
-            return floor(log(abs(number), 10.))
-        def my_rounded(number, s):
-            m = my_log(number)
-            return numerical_approx(number, digits=m-s+1)
-        names = [r"$\theta_1$", r"$\theta_2$", r"$1-\theta_2/\theta_1$"]
-        rows = []
-        for i, data in enumerate(rep):
-            data = np.array(data)
-            s = my_log(data.std())
-            row = [names[i]]
-            row.append(my_rounded(data.min(),s))
-            row.append(my_rounded(data.mean(),s))
-            row.append(my_rounded(data.max(),s))
-            row.append(my_rounded(data.std(),s))
-            rows.append(row)
-        header = ['', 'min','mean','max','std']
-        return table(rows=rows,header_row=header)
-
-    def _lyapunov_exponents_row(self, n_orbits, n_iterations=1000):
-        r"""
-        Return a row of values of Lyapunov exponents.
-
-        This method is used for making a larger table comparing many
-        algorithms.
-
-        INPUT:
-
-        - ``n_orbits`` -- integer, number of orbits
-        - ``n_iterations`` -- integer, length of each orbit
-
-        OUTPUT:
-
-            row of liapounov exponents: theta1, theta2, 1-theta2/theta1
-
-        EXAMPLES::
-
-            sage: from slabbe.mult_cont_frac import Brun
-            sage: Brun()._lyapunov_exponents_row(10, 100000) # abs tol 0.005
-            ['Brun', '0.303 (0.0038)', '-0.112 (0.0019)', '1.368 (0.0026)']
-        """
-        import numpy as np
-        from sage.misc.functional import numerical_approx
-        from sage.functions.other import abs, floor
-        from sage.functions.log import log
-        rep = self.lyapunov_exponents_sample(n_orbits, n_iterations)
-        def my_log(number):
-            return floor(log(abs(number), 10.))
-        def my_rounded(number, s):
-            m = my_log(number)
-            return numerical_approx(number, digits=m-s+1)
-        row = []
-        row.append(self.name())
-        for data in rep:
-            data = np.array(data)
-            s = my_log(data.std())
-            val = my_rounded(data.mean(), s)
-            std = my_rounded(data.std(), s)
-            row.append("{} ({})".format(val, std))
-        return row
 
 cdef class Brun(MCFAlgorithm):
     r"""
