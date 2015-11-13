@@ -1530,9 +1530,32 @@ cdef class MCFAlgorithm(object):
 
             sage: from slabbe.mult_cont_frac import Brun
             sage: s = Brun().natural_extension_tikz(1000)
-            sage: view(s, tightpage=True)   # not tested
-        """
+            sage: s
+            \documentclass[tikz]{standalone}
+            \usepackage{pgfplots}
+            \usetikzlibrary{pgfplots.groupplots}
+            \begin{document}
+            \begin{tikzpicture}[scale=.7]
+            \begin{groupplot}
+            [group style={group size=4 by 1},
+            height=7cm,width=8cm,
+            xmin=-1.1,xmax=1.1,ymin=-.6,ymax=1.20,
+            ...
+            ... 4180 lines not printed (177620 characters in total) ...
+            ...
+            \draw[draw=none] (group c2r1.center) --
+            node {$\to$}     (group c3r1.center);
+            \draw[draw=none] (group c3r1.center) --
+            node {$\times$}  (group c4r1.center);
+            \end{tikzpicture}
+            \end{document}
 
+        ::
+
+            sage: from sage.misc.temporary_file import tmp_filename
+            sage: filename = tmp_filename('temp','.pdf')
+            sage: _ = s.pdf(filename)
+        """
         t = self.natural_extention_dict(n_iterations, norm_left=norm_left,
                 norm_right=norm_right)
         domain_left, image_left, domain_right, image_right = t
@@ -1573,8 +1596,9 @@ cdef class MCFAlgorithm(object):
             lines.append(r"\draw[draw=none] (group c3r1.center) -- ")
             lines.append(r"node {$\times$}  (group c4r1.center);")
         lines.append(r"\end{tikzpicture}")
-        from sage.misc.latex import LatexExpr
-        return LatexExpr('\n'.join(lines))
+        from slabbe import TikzPicture
+        return TikzPicture('\n'.join(lines), packages=['pgfplots'],
+                tikzlibraries=['pgfplots.groupplots'])
 
     def natural_extension_part_tikz(self, n_iterations, part=3, 
                                     norm_left='1', norm_right='1',
@@ -1653,8 +1677,8 @@ cdef class MCFAlgorithm(object):
             s += "\\addlegendentry{%s}\n " % key
         s += "\\end{axis}\n"
         s += "\\end{tikzpicture}\n"
-        from sage.misc.latex import LatexExpr
-        return LatexExpr(s)
+        from slabbe import TikzPicture
+        return TikzPicture(s, packages=['pgfplots'])
 
     def natural_extension_part_png(self, n_iterations, draw,
                                     norm_left='1', norm_right='1',

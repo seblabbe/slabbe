@@ -193,14 +193,14 @@ class TikzPicture(SageObject):
         INPUT:
 
         - ``filename`` -- string (default:``None``), the output filename. 
-          If ``None``, a temporary file is created.
+          If ``None``, it saves the file in a temporary directory.
 
         - ``view`` -- bool (default:``True``), whether to open the file in a
           pdf viewer. This option is ignored if ``filename`` is not ``None``.
 
         OUTPUT:
 
-            pdf file
+            string, path to pdf file
 
         EXAMPLES::
 
@@ -269,8 +269,7 @@ class TikzPicture(SageObject):
         INPUT:
 
         - ``filename`` -- string (default:``None``), the output filename. 
-          If ``None``, it opens the file in a viewer. Otherwise, it just
-          saves the file into location ``filename``.
+          If ``None``, it saves the file in a temporary directory.
 
         - ``density`` -- integer, (default: ``150``), horizontal and vertical
           density of the image
@@ -280,7 +279,7 @@ class TikzPicture(SageObject):
 
         OUTPUT:
 
-            png file
+            string, path to png file
 
         EXAMPLES::
 

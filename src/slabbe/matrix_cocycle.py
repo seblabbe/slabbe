@@ -654,12 +654,33 @@ class MatrixCocycle(object):
 
             sage: from slabbe.matrix_cocycle import cocycles
             sage: ARP = cocycles.ARP()
-            sage: s = ARP.tikz_n_cylinders(1, labels=True, scale=4)
-            sage: view(s, tightpage=True)   # not tested
+            sage: t = ARP.tikz_n_cylinders(1, labels=True, scale=4)
+            sage: t
+            \documentclass[tikz]{standalone}
+            \begin{document}
+            \begin{tikzpicture}
+            [scale=4]
+            \draw (0.0000, -0.5000) -- (0.0000, 0.0000);
+            \draw (0.0000, -0.5000) -- (0.8660, -0.5000);
+            \draw (0.0000, 0.0000) -- (-0.2165, -0.1250);
+            ...
+            ... 23 lines not printed (1317 characters in total) ...
+            ...
+            \node at (-0.1443, 0.1667) {$213$};
+            \node at (-0.2165, 0.0417) {$231$};
+            \node at (0.0722, -0.2083) {$312$};
+            \node at (-0.0722, -0.2083) {$321$};
+            \end{tikzpicture}
+            \end{document}
+
+        ::
+
+            sage: from sage.misc.temporary_file import tmp_filename
+            sage: filename = tmp_filename('temp','.pdf')
+            sage: _ = t.pdf(filename)
         """
         if labels is None:
             labels = True if n == 1 else False
-        from sage.misc.latex import LatexExpr
         lines = []
         lines.append(r"\begin{tikzpicture}")
         lines.append("[scale={}]".format(scale))
@@ -674,7 +695,8 @@ class MatrixCocycle(object):
                 u = rounded_string_vector(M3to2 * u / u.norm(1), digits=4)
                 lines.append(r"\node at {} {{${}$}};".format(u, w))
         lines.append(r"\end{tikzpicture}")
-        return LatexExpr("\n".join(lines))
+        from slabbe import TikzPicture
+        return TikzPicture("\n".join(lines))
 
 #####################
 # Predefined Cocycles

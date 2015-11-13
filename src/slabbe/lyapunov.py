@@ -59,7 +59,8 @@ def lyapunov_sample(algo, n_orbits, n_iterations=1000):
         start = S[i]
         return algo.lyapunov_exponents(start=start, 
                                        n_iterations=n_iterations) 
-    L = [v for _,v in compute_exponents(range(n_orbits))]
+    L = [v for _,v in compute_exponents(range(n_orbits)) 
+            if all(not isinstance(a, str) for a in v)]
     return zip(*L)
 
 def lyapunov_table(algo, n_orbits, n_iterations=1000):
@@ -108,7 +109,7 @@ def lyapunov_table(algo, n_orbits, n_iterations=1000):
         row.append(my_rounded(data.max(),s))
         row.append(my_rounded(data.std(),s))
         rows.append(row)
-    header = ['', 'min','mean','max','std']
+    header = ['{} succesfull orbits'.format(len(rep[0])), 'min','mean','max','std']
     return table(rows=rows,header_row=header)
 
 def _lyapunov_row(algo, n_orbits, n_iterations=1000):
@@ -132,7 +133,7 @@ def _lyapunov_row(algo, n_orbits, n_iterations=1000):
         sage: from slabbe.mult_cont_frac import Brun
         sage: from slabbe.lyapunov import _lyapunov_row
         sage: _lyapunov_row(Brun(), 10, 100000) # abs tol 0.01
-        ['Brun', '0.303 (0.0038)', '-0.112 (0.0019)', '1.368 (0.0026)']
+        ['Brun', 10, '0.303 (0.0038)', '-0.112 (0.0019)', '1.368 (0.0026)']
     """
     import numpy as np
     from sage.misc.functional import numerical_approx
@@ -143,9 +144,10 @@ def _lyapunov_row(algo, n_orbits, n_iterations=1000):
         return floor(log(abs(number), 10.))
     def my_rounded(number, s):
         m = my_log(number)
-        return numerical_approx(number, digits=m-s+1)
+        return numerical_approx(number, digits=m-2+1)
     row = []
     row.append(algo.name())
+    row.append(len(rep[0]))
     for data in rep:
         data = np.array(data)
         s = my_log(data.std())
@@ -175,10 +177,10 @@ def lyapunov_comparison_table(L, n_orbits=100, n_iterations=10000):
         sage: from slabbe.lyapunov import lyapunov_comparison_table
         sage: algos = [mcf.Brun(), mcf.ARP()]
         sage: lyapunov_comparison_table(algos)    # abs tol 0.01
-          Algorithm   $\theta_1$ (std)   $\theta_2$ (std)   $1-\theta_2/\theta_1$ (std)
-        +-----------+------------------+------------------+-----------------------------+
-          ARP         0.44 (0.013)       -0.172 (0.0060)    1.389 (0.0048)
-          Brun        0.305 (0.0089)     -0.113 (0.0042)    1.370 (0.0071)
+          Algorithm   \#Orbits   $\theta_1$ (std)   $\theta_2$ (std)   $1-\theta_2/\theta_1$ (std)
+        +-----------+----------+------------------+------------------+-----------------------------+
+          ARP         100        0.44 (0.012)       -0.172 (0.0060)    1.388 (0.0054)
+          Brun        100        0.30 (0.011)       -0.113 (0.0049)    1.370 (0.0070)
     """
     rows = []
     for algo in L:
@@ -189,8 +191,8 @@ def lyapunov_comparison_table(L, n_orbits=100, n_iterations=10000):
             print "Ignoring {} in Lyapunov table. {}".format(algo.name(), s)
         else:
             rows.append(row)
-    rows.sort(key=lambda d:d[3], reverse=True)
-    header = ("Algorithm", r"$\theta_1$ (std)", r"$\theta_2$ (std)",
+    rows.sort(key=lambda d:d[4], reverse=True)
+    header = ("Algorithm", r"\#Orbits", r"$\theta_1$ (std)", r"$\theta_2$ (std)",
                r"$1-\theta_2/\theta_1$ (std)")
     return table(rows=rows, header_row=header)
 
