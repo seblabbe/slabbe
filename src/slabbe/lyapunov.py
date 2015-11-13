@@ -12,8 +12,9 @@ Lyapunov parallel computation for MCF algorithms
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from sage.misc.table import table
+from sage.misc.prandom import random
 from sage.parallel.decorate import parallel
+from sage.misc.table import table
 
 def lyapunov_sample(algo, n_orbits, n_iterations=1000):
     r"""
@@ -34,8 +35,8 @@ def lyapunov_sample(algo, n_orbits, n_iterations=1000):
     EXAMPLES::
 
         sage: from slabbe.mult_cont_frac import Brun
-        sage: from slabbe.mcf_comparison import lyapunov_sample
-        sage: lyapunov_sample(Brun(), 5, 1000000)
+        sage: from slabbe.lyapunov import lyapunov_sample
+        sage: lyapunov_sample(Brun(), 5, 1000000) # abs tol 0.01
         [(0.3027620661266397,
           0.3033468535021702,
           0.3044950176856005,
@@ -77,12 +78,13 @@ def lyapunov_table(algo, n_orbits, n_iterations=1000):
     EXAMPLES::
 
         sage: from slabbe.mult_cont_frac import Brun
-        sage: lyapunov_table(Brun(), 10, 100000) # abs tol 0.005
-                                  min       mean      max       std
-        +-----------------------+---------+---------+---------+---------+
-          $\theta_1$              0.302     0.304     0.306     0.0011
-          $\theta_2$              -0.1129   -0.1119   -0.1106   0.00075
-          $1-\theta_2/\theta_1$   1.365     1.368     1.370     0.0018
+        sage: from slabbe.lyapunov import lyapunov_table
+        sage: lyapunov_table(Brun(), 10, 1000000) # random
+                                  min      mean     max      std
+        +-----------------------+--------+--------+--------+--------+
+          $\theta_1$              0.300    0.306    0.309    0.0027
+          $\theta_2$              -0.113   -0.112   -0.110   0.0011
+          $1-\theta_2/\theta_1$   1.363    1.368    1.370    0.0020
     """
     import numpy as np
     from sage.misc.functional import numerical_approx
@@ -128,8 +130,8 @@ def _lyapunov_row(algo, n_orbits, n_iterations=1000):
     EXAMPLES::
 
         sage: from slabbe.mult_cont_frac import Brun
-        sage: from slabbe.mcf_comparison import _lyapunov_row
-        sage: _lyapunov_row(Brun(), 10, 100000) # tolerance 0.01
+        sage: from slabbe.lyapunov import _lyapunov_row
+        sage: _lyapunov_row(Brun(), 10, 100000) # abs tol 0.01
         ['Brun', '0.303 (0.0038)', '-0.112 (0.0019)', '1.368 (0.0026)']
     """
     import numpy as np
@@ -170,9 +172,9 @@ def lyapunov_comparison_table(L, n_orbits=100, n_iterations=10000):
     EXAMPLES::
 
         sage: import slabbe.mult_cont_frac as mcf
-        sage: from slabbe.mcf_comparison import lyapunov_comparison_table
+        sage: from slabbe.lyapunov import lyapunov_comparison_table
         sage: algos = [mcf.Brun(), mcf.ARP()]
-        sage: lyapunov_comparison_table(algos)    # tolerance 0.01
+        sage: lyapunov_comparison_table(algos)    # abs tol 0.01
           Algorithm   $\theta_1$ (std)   $\theta_2$ (std)   $1-\theta_2/\theta_1$ (std)
         +-----------+------------------+------------------+-----------------------------+
           ARP         0.44 (0.013)       -0.172 (0.0060)    1.389 (0.0048)
