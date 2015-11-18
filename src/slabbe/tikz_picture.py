@@ -10,7 +10,7 @@ EXAMPLES::
     sage: g = graphs.PetersenGraph()
     sage: s = latex(g)
     sage: t = TikzPicture(s, standalone_configs=["border=3mm"], packages=['tkz-graph'])
-    sage: t.pdf()    # not tested
+    sage: _ = t.pdf()    # not tested
 
 ::
 
@@ -33,6 +33,14 @@ EXAMPLES::
     %
     \end{tikzpicture}
     \end{document}
+
+::
+
+    sage: V = [[1,0,1],[1,0,0],[1,1,0],[0,0,-1],[0,1,0],[-1,0,0],[0,1,1],[0,0,1],[0,-1,0]]
+    sage: P = Polyhedron(vertices=V).polar()
+    sage: s = P.projection().tikz([674,108,-731],112)
+    sage: t = TikzPicture(s)
+    sage: _ = t.pdf()    # not tested
 
 """
 #*****************************************************************************
@@ -98,13 +106,6 @@ class TikzPicture(SageObject):
             sage: s = latex(g)
             sage: t = TikzPicture(s, standalone_configs=["border=3mm"], packages=['tkz-graph'])
             sage: _ = t.pdf()    # not tested
-
-        ::
-
-            sage: from slabbe.matrix_cocycle import cocycles
-            sage: B = cocycles.Brun()
-            sage: s = B.tikz_n_cylinders(1, scale=3)
-            sage: t = TikzPicture(s)
         """
         self._code = code
         self._standalone_configs = standalone_configs
@@ -122,6 +123,16 @@ class TikzPicture(SageObject):
 
     def _latex_file_header_lines(self):
         r"""
+        EXAMPLES::
+
+            sage: from slabbe import TikzPicture
+            sage: g = graphs.PetersenGraph()
+            sage: s = latex(g)
+            sage: t = TikzPicture(s, standalone_configs=["border=3mm"], packages=['tkz-graph'])
+            sage: t._latex_file_header_lines()
+            ['\\documentclass[tikz]{standalone}',
+             '\\standaloneconfig{border=3mm}',
+             '\\usepackage{tkz-graph}']
         """
         lines = []
         lines.append(r"\documentclass[tikz]{standalone}")
@@ -179,6 +190,37 @@ class TikzPicture(SageObject):
 
     def __str__(self):
         r"""
+        EXAMPLES::
+
+            sage: from slabbe import TikzPicture
+            sage: g = graphs.PetersenGraph()
+            sage: s = latex(g)
+            sage: t = TikzPicture(s, packages=['tkz-graph'])
+            sage: print(t)
+            \documentclass[tikz]{standalone}
+            \usepackage{tkz-graph}
+            \begin{document}
+            \begin{tikzpicture}
+            %
+            \useasboundingbox (0,0) rectangle (5.0cm,5.0cm);
+            %
+            \definecolor{cv0}{rgb}{0.0,0.0,0.0}
+            \definecolor{cfv0}{rgb}{1.0,1.0,1.0}
+            \definecolor{clv0}{rgb}{0.0,0.0,0.0}
+            \definecolor{cv1}{rgb}{0.0,0.0,0.0}
+            \definecolor{cfv1}{rgb}{1.0,1.0,1.0}
+            \definecolor{clv1}{rgb}{0.0,0.0,0.0}
+            ...
+            \Edge[lw=0.1cm,style={color=cv3v8,},](v3)(v8)
+            \Edge[lw=0.1cm,style={color=cv4v9,},](v4)(v9)
+            \Edge[lw=0.1cm,style={color=cv5v7,},](v5)(v7)
+            \Edge[lw=0.1cm,style={color=cv5v8,},](v5)(v8)
+            \Edge[lw=0.1cm,style={color=cv6v8,},](v6)(v8)
+            \Edge[lw=0.1cm,style={color=cv6v9,},](v6)(v9)
+            \Edge[lw=0.1cm,style={color=cv7v9,},](v7)(v9)
+            %
+            \end{tikzpicture}
+            \end{document}
         """
         lines = self._latex_file_header_lines()
         lines.append(r"\begin{document}")
@@ -205,9 +247,9 @@ class TikzPicture(SageObject):
         EXAMPLES::
 
             sage: from slabbe import TikzPicture
-            sage: from slabbe.matrix_cocycle import cocycles
-            sage: B = cocycles.Brun()
-            sage: s = B.tikz_n_cylinders(1, scale=3)
+            sage: V = [[1,0,1],[1,0,0],[1,1,0],[0,0,-1],[0,1,0],[-1,0,0],[0,1,1],[0,0,1],[0,-1,0]]
+            sage: P = Polyhedron(vertices=V).polar()
+            sage: s = P.projection().tikz([674,108,-731],112)
             sage: t = TikzPicture(s)
             sage: _ = t.pdf()    # not tested
 
@@ -284,9 +326,9 @@ class TikzPicture(SageObject):
         EXAMPLES::
 
             sage: from slabbe import TikzPicture
-            sage: from slabbe.matrix_cocycle import cocycles
-            sage: B = cocycles.Brun()
-            sage: s = B.tikz_n_cylinders(1, scale=3)
+            sage: V = [[1,0,1],[1,0,0],[1,1,0],[0,0,-1],[0,1,0],[-1,0,0],[0,1,1],[0,0,1],[0,-1,0]]
+            sage: P = Polyhedron(vertices=V).polar()
+            sage: s = P.projection().tikz([674,108,-731],112)
             sage: t = TikzPicture(s)
             sage: _ = t.png()    # not tested
 
