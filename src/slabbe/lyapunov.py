@@ -161,7 +161,6 @@ def _lyapunov_row(algo, n_orbits, n_iterations=1000):
         row.append("{} ({})".format(val, std))
     return row
 
-
 def lyapunov_comparison_table(L, n_orbits=100, n_iterations=10000):
     r"""
     Return a table of values of Lyapunov exponents for many algorithm.
@@ -182,10 +181,10 @@ def lyapunov_comparison_table(L, n_orbits=100, n_iterations=10000):
         sage: from slabbe.lyapunov import lyapunov_comparison_table
         sage: algos = [mcf.Brun(), mcf.ARP()]
         sage: lyapunov_comparison_table(algos)    # abs tol 0.01
-          Algorithm   \#Orbits   $\theta_1$ (std)   $\theta_2$ (std)   $1-\theta_2/\theta_1$ (std)
-        +-----------+----------+------------------+------------------+-----------------------------+
-          ARP         100        0.44 (0.012)       -0.172 (0.0060)    1.388 (0.0054)
-          Brun        100        0.30 (0.011)       -0.113 (0.0049)    1.370 (0.0070)
+          Algorithm                 \#Orbits   $\theta_1$ (std)   $\theta_2$ (std)   $1-\theta_2/\theta_1$ (std)
+        +-------------------------+----------+------------------+------------------+-----------------------------+
+          Arnoux-Rauzy-Poincar\'e   100        0.44 (0.012)       -0.172 (0.0060)    1.388 (0.0054)
+          Brun                      100        0.30 (0.011)       -0.113 (0.0049)    1.370 (0.0070)
     """
     rows = []
     for algo in L:
@@ -193,7 +192,7 @@ def lyapunov_comparison_table(L, n_orbits=100, n_iterations=10000):
             row = _lyapunov_row(algo, n_orbits, n_iterations)
         except Exception as err:
             s = "{}: {}".format(err.__class__.__name__, err)
-            print "Ignoring {} in Lyapunov table. {}".format(algo.name(), s)
+            print "Ignoring {} in Lyapunov table. {}".format(algo.class_name(), s)
         else:
             rows.append(row)
     rows.sort(key=lambda d:d[4], reverse=True)

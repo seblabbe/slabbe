@@ -261,6 +261,17 @@ cdef class MCFAlgorithm(object):
     ######################
     # METHODS FOR THE USER:
     ######################
+    def class_name(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Reverse, Brun
+            sage: Reverse().class_name()
+            'Reverse'
+            sage: Brun().class_name()
+            'Brun'
+        """
+        return self.__class__.__name__
     def name(self):
         r"""
         EXAMPLES::
@@ -271,7 +282,7 @@ cdef class MCFAlgorithm(object):
             sage: Brun().name()
             'Brun'
         """
-        return self.__class__.__name__
+        return self.class_name()
     def __repr__(self):
         r"""
         EXAMPLES::
@@ -340,10 +351,10 @@ cdef class MCFAlgorithm(object):
         """
         from matrix_cocycle import cocycles
         try:
-            f = getattr(cocycles, self.name())
+            f = getattr(cocycles, self.class_name())
         except AttributeError:
             msg = "Matrix cocyle not implemented for {}"
-            msg = msg.format(self.name())
+            msg = msg.format(self.class_name())
             raise NotImplementedError(msg)
         return f()
 
@@ -1274,7 +1285,7 @@ cdef class MCFAlgorithm(object):
             sage: FullySubtractive().s_adic_word((1,2,5))
             Traceback (most recent call last):
             ...
-            ValueError: On input=(1, 2, 5), algorithm FullySubtractive
+            ValueError: On input=(1, 2, 5), algorithm Fully Subtractive
             loops on (1.0, 0.0, 3.0) without finding the gcd
 
         TESTS::
@@ -2124,6 +2135,8 @@ cdef class ARP(MCFAlgorithm):
             return P
         else:
             return _Poincare(P)
+    def name(self):
+        return r"Arnoux-Rauzy-Poincar\'e"
 
     def substitutions(self):
         r"""
@@ -2271,6 +2284,9 @@ cdef class Poincare(MCFAlgorithm):
              ('z', 0.20000000000000007)]
         """
         return _Poincare(P)
+
+    def name(self):
+        return r"Poincar\'e"
 
     def substitutions(self):
         r"""
@@ -2436,6 +2452,9 @@ cdef class FullySubtractive(MCFAlgorithm):
         else:
             raise ValueError('limit case: reach set of measure zero: {}'.format(P))
         return P
+
+    def name(self):
+        return r"Fully Subtractive"
 
     def substitutions(self):
         r"""
