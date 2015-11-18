@@ -1389,9 +1389,9 @@ cdef class MCFAlgorithm(object):
         ax = fig.add_subplot(111, projection='3d')
         ax.plot_wireframe(X, Y, Z, rstride=1, cstride=1)
 
-        ax.text(ndivs, 0, 0, "$(1,0,0)$", color='red', va='top', size=20)
-        ax.text(0, ndivs, 0, "$(0,1,0)$", color='red', ha='left', size=20)
-        ax.text(0, 0, 0, "$(0,0,1)$", color='red', ha='right', size=20)
+        ax.text(ndivs, 0, 0, "$(1,0,0)$", color='black', va='top', size=20)
+        ax.text(0, ndivs, 0, "$(0,1,0)$", color='black', ha='left', size=20)
+        ax.text(0, 0, 0, "$(0,0,1)$", color='black', ha='right', size=20)
 
         ax.set_xticklabels([])
         ax.set_yticklabels([])
