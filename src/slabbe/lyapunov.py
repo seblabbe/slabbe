@@ -35,8 +35,8 @@ def lyapunov_sample(algo, n_orbits, n_iterations=1000, verbose=False):
 
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac import Brun
         sage: from slabbe.lyapunov import lyapunov_sample
+        sage: from slabbe.mult_cont_frac import Brun
         sage: lyapunov_sample(Brun(), 5, 1000000) # abs tol 0.01
         [(0.3027620661266397,
           0.3033468535021702,
@@ -86,11 +86,11 @@ def lyapunov_table(algo, n_orbits, n_iterations=1000):
         sage: from slabbe.mult_cont_frac import Brun
         sage: from slabbe.lyapunov import lyapunov_table
         sage: lyapunov_table(Brun(), 10, 1000000) # random
-                                  min      mean     max      std
-        +-----------------------+--------+--------+--------+--------+
-          $\theta_1$              0.300    0.306    0.309    0.0027
-          $\theta_2$              -0.113   -0.112   -0.110   0.0011
-          $1-\theta_2/\theta_1$   1.363    1.368    1.370    0.0020
+          10 succesfull orbits    min       mean      max       std
+        +-----------------------+---------+---------+---------+---------+
+          $\theta_1$              0.303     0.305     0.307     0.0013
+          $\theta_2$              -0.1131   -0.1124   -0.1115   0.00051
+          $1-\theta_2/\theta_1$   1.3678    1.3687    1.3691    0.00043
     """
     import numpy as np
     from sage.misc.functional import numerical_approx
@@ -135,8 +135,8 @@ def _lyapunov_row(algo, n_orbits, n_iterations=1000):
 
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac import Brun
         sage: from slabbe.lyapunov import _lyapunov_row
+        sage: from slabbe.mult_cont_frac import Brun
         sage: _lyapunov_row(Brun(), 10, 100000) # abs tol 0.01
         ['Brun', 10, '0.303 (0.0038)', '-0.112 (0.0019)', '1.368 (0.0026)']
     """
@@ -149,7 +149,7 @@ def _lyapunov_row(algo, n_orbits, n_iterations=1000):
         return floor(log(abs(number), 10.))
     def my_rounded(number, s):
         m = my_log(number)
-        return numerical_approx(number, digits=m-2+1)
+        return numerical_approx(number, digits=m-s+1)
     row = []
     row.append(algo.name())
     row.append(len(rep[0]))
