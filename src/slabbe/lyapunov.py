@@ -16,7 +16,7 @@ from sage.misc.prandom import random
 from sage.parallel.decorate import parallel
 from sage.misc.table import table
 
-def lyapunov_sample(algo, n_orbits, n_iterations=1000):
+def lyapunov_sample(algo, n_orbits, n_iterations=1000, verbose=False):
     r"""
     Return lists of values for theta1, theta2 and 1-theta2/theta1 computed
     on many orbits.
@@ -27,6 +27,7 @@ def lyapunov_sample(algo, n_orbits, n_iterations=1000):
 
     - ``n_orbits`` -- integer, number of orbits
     - ``n_iterations`` -- integer, length of each orbit
+    - ``verbose`` -- bool (default: ``False``)
 
     OUTPUT:
 
@@ -56,12 +57,16 @@ def lyapunov_sample(algo, n_orbits, n_iterations=1000):
     S = [(random(), random(), random()) for _ in range(n_orbits)]
     @parallel
     def compute_exponents(i):
-        start = S[i]
-        return algo.lyapunov_exponents(start=start, 
-                                       n_iterations=n_iterations) 
-    L = [v for _,v in compute_exponents(range(n_orbits)) 
-            if all(not isinstance(a, str) for a in v)]
-    return zip(*L)
+        try:
+            return algo.lyapunov_exponents(start=S[i], n_iterations=n_iterations) 
+        except Exception as err:
+            return "{}: {}".format(err.__class__.__name__, err)
+    L = [v for _,v in compute_exponents(range(n_orbits))]
+    L_filtered = [v for v in L if isinstance(v, tuple)]
+    if verbose:
+        L_error_msg = [v for v in L if not isinstance(v, tuple)]
+        print L_error_msg
+    return zip(*L_filtered)
 
 def lyapunov_table(algo, n_orbits, n_iterations=1000):
     r"""
