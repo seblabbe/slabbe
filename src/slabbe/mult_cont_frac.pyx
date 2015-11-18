@@ -1554,7 +1554,10 @@ cdef class MCFAlgorithm(object):
         lines.append(r"height=7cm,width=8cm,")
         lines.append(r"xmin=-1.1,xmax=1.1,ymin=-.6,ymax=1.20,")
         lines.append(r"hide axis]")
-        for data in [domain_left, domain_right, image_left, image_right]:
+        datas = [domain_left, domain_right, image_left, image_right]
+        labels = [r"$\mathbf{x}_n$",r"$\mathbf{a}_n$",
+                  r"$\mathbf{x}_{n+1}$",r"$\mathbf{a}_{n+1}$"]
+        for data,label in zip(datas, labels):
             lines.append(r"\nextgroupplot")
             lines.append(r"\draw[dashed] ")
             lines.append(r"(axis cs:%s, %s)" % (-r*sqrt3/2,r*-.5))
@@ -1563,6 +1566,7 @@ cdef class MCFAlgorithm(object):
             lines.append(r" node[right] {$\mathbf{e}_2$} -- ")
             lines.append("(axis cs:%s, %s)" % (0, r))
             lines.append(r" node[above] {$\mathbf{e}_3$} -- cycle;")
+            lines.append(r"\node at (axis cs:%s, %s) {%s};" % (-.5,.8,label))
             for key,value in data.iteritems():
                 lines.append(r"\addplot+[")
                 lines.append(r"legend image post style={mark size=%s}," % legend_marksize)
