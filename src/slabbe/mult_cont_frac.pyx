@@ -5,7 +5,7 @@ Multidimensional Continued Fraction Algorithms
 EXAMPLES::
 
     sage: from slabbe.mult_cont_frac import Brun
-    sage: Brun().natural_extension_plot(3000, norm_left='1', axis_off=True, savefig=False)
+    sage: Brun().natural_extension_plot(3000, norm_left='1', axis_off=True)
     <matplotlib.figure.Figure object at ...>
 
 Construction of an s-adic word::
@@ -909,7 +909,7 @@ cdef class MCFAlgorithm(object):
         # see https://groups.google.com/forum/?fromgroups=#!topic/sage-devel/NCBmj2KjwEM
         cpdef int C[NDIVS][NDIVS]
         for j from 0 <= j <= ndivs:
-            for i from 0 <= i <= j:
+            for i from 0 <= i <= ndivs:
                 C[i][j] = 0
 
         cdef PairPoint3d P
@@ -959,7 +959,7 @@ cdef class MCFAlgorithm(object):
         # Translate the counter into a python dict
         D = {}
         for j from 0 <= j <= ndivs:
-            for i from 0 <= i <= j:
+            for i from 0 <= i <= ndivs:
                 c = C[i][j]
                 if c > 0:
                     D[(i,j)] = c
@@ -1356,8 +1356,7 @@ cdef class MCFAlgorithm(object):
     ######################
     # DRAWINGS METHODS (python):
     ######################
-    def invariant_measure_plot(self, n_iterations, ndivs, norm='sup',
-            savefig=True):
+    def invariant_measure_wireframe_plot(self, n_iterations, ndivs, norm='1'):
         r"""
         Return a matplotlib graph of the invariant measure.
 
@@ -1365,16 +1364,15 @@ cdef class MCFAlgorithm(object):
 
         - ``n_iterations`` - integer, number of iterations
         - ``ndvis`` - integer, number of divisions per dimension
-        - ``norm`` -- string (default: ``'sup'``), either ``'sup'`` or
+        - ``norm`` -- string (default: ``'1'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
-        - ``savefig`` - boolean (default: ``True``)
 
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac import Reverse, Brun
-            sage: Reverse().invariant_measure_plot(1000000, 80, savefig=False)
+            sage: Reverse().invariant_measure_wireframe_plot(1000000, 80)
             <matplotlib.figure.Figure object at ...>
-            sage: Brun().invariant_measure_plot(1000000, 40, norm='sup',savefig=False)
+            sage: Brun().invariant_measure_wireframe_plot(1000000, 40, norm='1')
             <matplotlib.figure.Figure object at ...>
 
         """
@@ -1386,33 +1384,43 @@ cdef class MCFAlgorithm(object):
         X = [[i for i in range(mx+1)] for j in range(my+1)]
         Y = [[j for i in range(mx+1)] for j in range(my+1)]
         Z = [[D.get((i,j),0)/the_mean for i in range(mx+1)] for j in range(my+1)]
+        
+        from mpl_toolkits.mplot3d import axes3d
+        import matplotlib.pyplot as plt
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot_wireframe(X, Y, Z, rstride=1, cstride=1)
 
-        title = "Algo=%s, nbiter=%s, ndivs=%s" % (self.name(), n_iterations, ndivs)
-        filename = 'mesure_%s_iter%s_div%s.png' % (self.name(), n_iterations, ndivs)
+        ax.text(mx, 0, 0, "$(1,0,0)$", color='red', va='top', size=20)
+        ax.text(0, my, 0, "$(0,1,0)$", color='red', ha='left', size=20)
+        ax.text(0, 0, 0, "$(0,0,1)$", color='red', ha='right', size=20)
 
-        fig = self._plot_wideframe(X,Y,Z,title)
-        if savefig:
-            fig.savefig(filename)
-            print "Creation of the file %s" % filename
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+
+        title = "Density of an orbit for\n{} algorithm".format(self.name())
+        ax.set_title(title)
+
         return fig
 
-    def invariant_measure_inverse_plot(self, n_iterations, ndivs,
-            norm='sup', savefig=True):
+
+    def invariant_measure_contour_plot(self, n_iterations, ndivs, norm='1'):
         r"""
-        Return a matplotlib graph of the inverse of the invariant measure.
+        Return a matplotlib graph of the invariant measure.
 
         INPUT:
 
         - ``n_iterations`` - integer, number of iterations
         - ``ndvis`` - integer, number of divisions per dimension
-        - ``norm`` -- string (default: ``'sup'``), either ``'sup'`` or
+        - ``norm`` -- string (default: ``'1'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
-        - ``savefig`` - boolean (default: ``True``)
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Reverse
-            sage: Reverse().invariant_measure_inverse_plot(1000000, 80, savefig=False)
+            sage: from slabbe.mult_cont_frac import Reverse, Brun
+            sage: Reverse().invariant_measure_contour_plot(1000000, 80)
+            <matplotlib.figure.Figure object at ...>
+            sage: Brun().invariant_measure_contour_plot(1000000, 40, norm='1')
             <matplotlib.figure.Figure object at ...>
 
         """
@@ -1420,41 +1428,26 @@ cdef class MCFAlgorithm(object):
         mx,my = map(max, zip(*D.keys()))
         len_D = float(len(D))
         the_mean = n_iterations / len_D
-
-        E = dict((key,the_mean/value) for key,value in D.iteritems())
+        S = sorted(D.values())
+        V = [S[k]/the_mean for k in range(0, len(D), len(D)/10)]
 
         X = [[i for i in range(mx+1)] for j in range(my+1)]
         Y = [[j for i in range(mx+1)] for j in range(my+1)]
-        Z = [[E.get((i,j),0) for i in range(mx+1)] for j in range(my+1)]
-
-        title = "Algo=%s, nbiter=%s, ndivs=%s" % (self.name(), n_iterations, ndivs)
-        filename = 'mesure_inversed_%s_iter%s_div%s.png' % (self.name(), n_iterations, ndivs)
-
-        fig = self._plot_wideframe(X,Y,Z,title)
-        if savefig:
-            fig.savefig(filename)
-            print "Creation of the file %s" % filename
-        return fig
-
-    def _plot_wideframe(self, X,Y,Z, title):
-        r"""
-        EXAMPLES::
-        """
-        from mpl_toolkits.mplot3d import axes3d
+        Z = [[D.get((i,j),0)/the_mean for i in range(mx+1)] for j in range(my+1)]
+        
         import matplotlib.pyplot as plt
         fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.plot_wireframe(X, Y, Z, rstride=1, cstride=1)
+        ax = fig.add_subplot(111)
+        CS = plt.contour(X, Y, Z, V)
+        plt.clabel(CS, inline=1, fontsize=10)
 
-        ax.set_xlabel('X')
-        ax.set_ylabel('Y')
-        ax.set_zlabel('Z')
-
+        title = "Density of an orbit for\n{} algorithm".format(self.name())
         ax.set_title(title)
+
         return fig
 
     def natural_extension_plot(self, n_iterations, norm_left='1',
-            norm_right='1', axis_off=False, savefig=True):
+            norm_right='1', axis_off=False):
         r"""
         INPUT:
 
@@ -1464,12 +1457,11 @@ cdef class MCFAlgorithm(object):
         - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
         - ``axis_off`` - boolean (default: ``False``), 
-        - ``savefig`` - boolean (default: ``True``)
 
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac import Sorted_ARP
-            sage: Sorted_ARP().natural_extension_plot(1000, savefig=False)
+            sage: Sorted_ARP().natural_extension_plot(1000)
             <matplotlib.figure.Figure object at ...>
         """
         import matplotlib
@@ -1503,11 +1495,7 @@ cdef class MCFAlgorithm(object):
 
         title = "Algo=%s, nbiter=%s" % (self.name(), n_iterations)
         fig.suptitle(title)
-        if savefig:
-            filename = 'nat_ext_%s_iter%s.png' % (self.name(), n_iterations)
-            fig.savefig(filename)
-            #plt.subplots_adjust(left=0.02, bottom=0.06, right=0.95, top=0.94, wspace=0.05)
-            print "Creation of the file %s" % filename
+
         return fig
 
     def natural_extension_tikz(self, n_iterations, norm_left='1',
