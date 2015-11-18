@@ -1377,13 +1377,11 @@ cdef class MCFAlgorithm(object):
 
         """
         D = self.invariant_measure_dict(n_iterations, ndivs, norm=norm)
-        mx,my = map(max, zip(*D.keys()))
-        len_D = float(len(D))
-        the_mean = n_iterations / len_D
+        the_mean = n_iterations / float(len(D))
 
-        X = [[i for i in range(mx+1)] for j in range(my+1)]
-        Y = [[j for i in range(mx+1)] for j in range(my+1)]
-        Z = [[D.get((i,j),0)/the_mean for i in range(mx+1)] for j in range(my+1)]
+        X = [[i for i in range(ndivs+1)] for j in range(ndivs+1)]
+        Y = [[j for i in range(ndivs+1)] for j in range(ndivs+1)]
+        Z = [[D.get((i,j),0)/the_mean for i in range(ndivs+1)] for j in range(ndivs+1)]
         
         from mpl_toolkits.mplot3d import axes3d
         import matplotlib.pyplot as plt
@@ -1391,18 +1389,18 @@ cdef class MCFAlgorithm(object):
         ax = fig.add_subplot(111, projection='3d')
         ax.plot_wireframe(X, Y, Z, rstride=1, cstride=1)
 
-        ax.text(mx, 0, 0, "$(1,0,0)$", color='red', va='top', size=20)
-        ax.text(0, my, 0, "$(0,1,0)$", color='red', ha='left', size=20)
+        ax.text(ndivs, 0, 0, "$(1,0,0)$", color='red', va='top', size=20)
+        ax.text(0, ndivs, 0, "$(0,1,0)$", color='red', ha='left', size=20)
         ax.text(0, 0, 0, "$(0,0,1)$", color='red', ha='right', size=20)
 
         ax.set_xticklabels([])
         ax.set_yticklabels([])
+        ax.set_zlabel('Frequency')
 
         title = "Density of an orbit for\n{} algorithm".format(self.name())
         ax.set_title(title)
 
         return fig
-
 
     def invariant_measure_contour_plot(self, n_iterations, ndivs, norm='1'):
         r"""
@@ -1425,15 +1423,13 @@ cdef class MCFAlgorithm(object):
 
         """
         D = self.invariant_measure_dict(n_iterations, ndivs, norm=norm)
-        mx,my = map(max, zip(*D.keys()))
-        len_D = float(len(D))
-        the_mean = n_iterations / len_D
+        the_mean = n_iterations / float(len(D))
         S = sorted(D.values())
         V = [S[k]/the_mean for k in range(0, len(D), len(D)/10)]
 
-        X = [[i for i in range(mx+1)] for j in range(my+1)]
-        Y = [[j for i in range(mx+1)] for j in range(my+1)]
-        Z = [[D.get((i,j),0)/the_mean for i in range(mx+1)] for j in range(my+1)]
+        X = [[i for i in range(ndivs+1)] for j in range(ndivs+1)]
+        Y = [[j for i in range(ndivs+1)] for j in range(ndivs+1)]
+        Z = [[D.get((i,j),0)/the_mean for i in range(ndivs+1)] for j in range(ndivs+1)]
         
         import matplotlib.pyplot as plt
         fig = plt.figure()
