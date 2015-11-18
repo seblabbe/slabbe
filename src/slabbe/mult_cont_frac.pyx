@@ -321,6 +321,28 @@ cdef class MCFAlgorithm(object):
 
         """
         return self.call(P)
+    def __richcmp__(self, other, op):
+        r"""
+        INPUT:
+
+        - ``other`` -- 
+        - ``op`` -- int, from 0 to 5
+
+        EXAMPLES::
+
+        """
+        # 0: <
+        # 1: <=
+        # 2: ==
+        # 3: !=
+        # 4: >
+        # 5: >=
+        if not isinstance(other, MCFAlgorithm):
+            return NotImplemented
+        if op == 2 or op == 3:
+            return other.class_name() == self.class_name()
+        else:
+            return NotImplemented
     ######################
     # DYNAMICS METHODS
     ######################
@@ -2018,14 +2040,6 @@ cdef class Reverse(MCFAlgorithm):
              ('x', 1.1),
              ('y', 0.5),
              ('z', 0.09999999999999987)]
-            sage: 1 + 2  # other version for reverse algo
-            [('branch', 4),
-             ('u', 0.47622031559045996),
-             ('v', 0.39685026299205),
-             ('w', 0.39685026299205),
-             ('x', 0.6929565774421808),
-             ('y', 0.3149802624737185),
-             ('z', 0.06299605249474362)]
         """
         cdef PairPoint3d R
         if P.x + P.y < P.z:
