@@ -1326,6 +1326,40 @@ cdef class MCFAlgorithm(object):
             L.reverse()
             return words.s_adic(S, L, D)
 
+    def discrepancy_statistics(self, length):
+        r"""
+        Return the discrepancy of words of given length.
+
+        INPUT:
+
+        - ``length`` -- integer
+
+        OUTPUT:
+
+            dict
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: Brun().discrepancy_statistics(5)
+            {[1, 1, 3]: 6/5,
+             [1, 2, 2]: 4/5,
+             [1, 3, 1]: 4/5,
+             [2, 1, 2]: 4/5,
+             [2, 2, 1]: 4/5,
+             [3, 1, 1]: 4/5}
+        """
+        from finite_word import discrepancy
+        from sage.combinat.composition import Compositions
+        D = {}
+        for c in Compositions(length, length=3, min_part=1):
+            w = self.s_adic_word(c)
+            if c != w.abelian_vector(): 
+                raise ValueError("c={} but vector is"
+                      " {}".format(c,w.abelian_vector()))
+            D[c] = discrepancy(w)
+        return D
+
     def e_one_star_patch(self, v, n):
         r"""
         Return the n-th iterated patch of normal vector v.
@@ -1525,7 +1559,7 @@ cdef class MCFAlgorithm(object):
             height=7cm,width=8cm,
             xmin=-1.1,xmax=1.1,ymin=-.6,ymax=1.20,
             ...
-            ... 4180 lines not printed (177448 characters in total) ...
+            ... 4184 lines not printed (177644 characters in total) ...
             ...
             \draw[draw=none] (group c2r1.center) --
             node {$\to$}     (group c3r1.center);
