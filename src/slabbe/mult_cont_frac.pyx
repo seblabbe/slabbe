@@ -1414,6 +1414,14 @@ cdef class MCFAlgorithm(object):
             sage: _.abelian_vector()
             [18, 1, 1]
 
+        ::
+
+            sage: Reverse().s_adic_word((3,1,1))
+            Traceback (most recent call last):
+            ...
+            ValueError: On input=(3, 1, 1), algorithm Reverse reaches non
+            integer entries (0.5, 0.5, 0.5)
+
         TESTS::
 
             sage: v = ARP().s_adic_word((1,e,pi))
@@ -1432,6 +1440,9 @@ cdef class MCFAlgorithm(object):
             previousA = None
             for A,B,b in it:
                 sig_check()
+                if not all(a in ZZ for a in A):
+                    raise ValueError("On input={}, algorithm {} reaches"
+                            " non integer entries: {}".format(v, self.name(), A))
                 if A == previousA:
                     break
                 S.append(b)
@@ -1492,10 +1503,7 @@ cdef class MCFAlgorithm(object):
         for c in Compositions(length, length=3, min_part=1):
             w = self.s_adic_word(c)
             if c != w.abelian_vector(): 
-                if w.length() % length == 0:
-                    w = w[:length]
-                else:
-                    raise ValueError("c={} but vector is"
+                raise ValueError("c={} but vector is"
                       " {}".format(c,w.abelian_vector()))
             D[c] = discrepancy(w)
         return D
