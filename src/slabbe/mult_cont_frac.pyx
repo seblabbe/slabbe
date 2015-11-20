@@ -1442,7 +1442,7 @@ cdef class MCFAlgorithm(object):
                 sig_check()
                 if not all(a in ZZ for a in A):
                     raise ValueError("On input={}, algorithm {} reaches"
-                            " non integer entries: {}".format(v, self.name(), A))
+                            " non integer entries {}".format(v, self.name(), A))
                 if A == previousA:
                     break
                 S.append(b)
