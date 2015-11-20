@@ -2,37 +2,81 @@
 r"""
 Multidimensional Continued Fraction Algorithms
 
-EXAMPLES::
+EXAMPLES:
 
     sage: from slabbe.mult_cont_frac import Brun
-    sage: Brun().natural_extension_plot(3000, norm_left='1', axis_off=True)
+    sage: algo = Brun()
+
+Orbit in the cone (with dual coordinates)::
+
+    sage: algo.cone_orbit_list((10,23,15), 6)
+    [(10.0, 8.0, 15.0, 1.0, 1.0, 2.0, 132),
+     (10.0, 8.0, 5.0, 3.0, 1.0, 2.0, 213),
+     (2.0, 8.0, 5.0, 3.0, 4.0, 2.0, 321),
+     (2.0, 3.0, 5.0, 3.0, 4.0, 6.0, 132),
+     (2.0, 3.0, 2.0, 3.0, 10.0, 6.0, 123),
+     (2.0, 1.0, 2.0, 3.0, 10.0, 16.0, 132)]
+
+Orbit in the simplex::
+
+    sage: algo.simplex_orbit_list((10,23,15), 3)
+    [(0.30303030303030304,
+      0.24242424242424246,
+      0.45454545454545453,
+      0.25,
+      0.25,
+      0.5,
+      132),
+     (0.43478260869565216,
+      0.3478260869565218,
+      0.21739130434782603,
+      0.5,
+      0.16666666666666666,
+      0.3333333333333333,
+      213),
+     (0.13333333333333328,
+      0.5333333333333334,
+      0.3333333333333333,
+      0.33333333333333337,
+      0.4444444444444445,
+      0.22222222222222224,
+      321)]
+
+Drawing the natural extension::
+
+    sage: fig = algo.natural_extension_plot(3000, norm_xyz='1', axis_off=True)
+    sage: fig
     <matplotlib.figure.Figure object at ...>
+    sage: fig.savefig('a.png')  # not tested
 
-Construction of an s-adic word::
+Drawing the invariant measure::
 
-    sage: from slabbe.mult_cont_frac import ARP
-    sage: from itertools import repeat
-    sage: D = ARP().substitutions()
-    sage: it = ARP().coding_iterator((1,e,pi))
-    sage: words.s_adic(it, repeat(1), D)
+    sage: fig = algo.invariant_measure_wireframe_plot(10^6, 50)
+    sage: fig
+    <matplotlib.figure.Figure object at ...>
+    sage: fig.savefig('a.png')  # not tested
+
+Word with given frequencies::
+
+    sage: algo.s_adic_word((1,e,pi))
     word: 1232323123233231232332312323123232312323...
 
-It can be done with one line::
+Construction of the same s-adic word from the substitutions and the coding
+iterator::
 
-    sage: ARP().s_adic_word((1,e,pi))
+    sage: from itertools import repeat
+    sage: D = algo.substitutions()
+    sage: it = algo.coding_iterator((1,e,pi))
+    sage: words.s_adic(it, repeat(1), D)
     word: 1232323123233231232332312323123232312323...
 
 TODO:
 
     - Ajout les algo de reuteneaour, nogueira, autres?
-    - make a other class for 2d and and 1d methods
-    - faire une fonction max
+    - Allow 2d, 1d, 4d, algorithms
     - utilise les vecteurs pour les plus grandes dimensions?
-    - or avoid creating a new pairpoint R, the copy is already done by
-      default
 
-    - Read [1] and change cpdef int C[NDIVS][NDIVS][NDIVS]
-    - Replace method ``natural_extention_dict`` by ``simplex_orbit_filtered_list``
+    - Replace method ``_natural_extention_dict`` by ``simplex_orbit_filtered_list``
     - Use ``simplex_orbit_filtered_list`` for ``invariant_measure`` ?
 
     - Essayer d'utiliser @staticmethod pour call pour que ARP puisse
@@ -40,36 +84,20 @@ TODO:
       method on an instance variable.
       https://groups.google.com/d/topic/sage-support/DRI_s31D8ks/discussion
 
-    - invariant_measure_dict ne fonctionne pas bien avec norm 1
-    - rapatrier w0_distance_tijdeman
-    - rapatrier plot2d_distance
-    - rapatrier save_latex_and_dat_tables
-
-    - Compute the orbit of a vector of integers
-
 Question:
 
     - Comment factoriser le code sans utiliser les yield?
     - Comment faire un appel de fonction rapide (pour factoriser le code)
 
-[1] https://groups.google.com/forum/?fromgroups=#!topic/sage-devel/NCBmj2KjwEM
-
-Gain d'optimisation in Cython:
-
-    - Declare x,y,z as double instead of list : factor of 4
-    - Faire les calculs dans une boucle : factor of 2
-    - Do not use yield : factor of 10
-
 AUTHORS:
 
- - Vincent Delecroix, C code, Computation of Lyapounov exponents for Brun
-   algorithm, June 2013.
  - Sebastien Labbe, Invariant measures, Lyapounov exponents and natural
    extensions for a dozen of algorithms, October 2013.
+ - Sebastien Labbé, Cleaning the code, Fall 2015
 
 """
 #*****************************************************************************
-#       Copyright (C) 2014-2015 Sébastien Labbé <slabqc@gmail.com>
+#       Copyright (C) 2013-2015 Sébastien Labbé <slabqc@gmail.com>
 #
 #  Distributed under the terms of the GNU General Public License version 2 (GPLv2)
 #
@@ -79,8 +107,6 @@ AUTHORS:
 #*****************************************************************************
 from sage.misc.prandom import random
 
-#include "sage/ext/cdefs.pxi"
-#include "sage/ext/stdsage.pxi"
 include "sage/ext/interrupt.pxi"  # ctrl-c interrupt block support
 
 cdef struct PairPoint3d:
@@ -418,16 +444,17 @@ cdef class MCFAlgorithm(object):
             s = P.x + P.y + P.z
             P.x /= s; P.y /= s; P.z /= s
 
-    def simplex_orbit_iterator(self, start=None, norm_left='sup', norm_right='1'):
+    def simplex_orbit_iterator(self, start=None, norm_xyz='sup', norm_uvw='1'):
         r"""
         INPUT:
 
         - ``start`` - initial vector (default: ``None``), if None, then
           initial point is random
-        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit of the algo
-        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
-          ``'1'`` or ``'hypersurfac'``, the norm used for the orbit in the natural extension
+        - ``norm_xyz`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit of points `(x,y,z)` of the algo
+        - ``norm_uvw`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'`` or ``'hypersurfac'``, the norm used for the orbit of dual
+          coordinates `(u,v,w)`.
 
         NOTE:
 
@@ -460,7 +487,7 @@ cdef class MCFAlgorithm(object):
         ::
 
             sage: from slabbe.mult_cont_frac import Brun
-            sage: it = Brun().simplex_orbit_iterator((.414578,.571324,.65513), norm_left='1')
+            sage: it = Brun().simplex_orbit_iterator((.414578,.571324,.65513), norm_xyz='1')
             sage: for _ in range(4): next(it)
             ((0.3875618393056797, 0.5340934161472103, 0.07834474454711005),
              (0.25, 0.5, 0.25),
@@ -497,39 +524,40 @@ cdef class MCFAlgorithm(object):
             P = self.call(P)
 
             # Normalize (xnew,ynew,znew)
-            if norm_left == '1':
+            if norm_xyz == '1':
                 s = P.x + P.y + P.z # norm 1
-            elif norm_left == 'sup':
+            elif norm_xyz == 'sup':
                 s = max(P.x, P.y, P.z) # norm sup
             else:
-                raise ValueError("Unknown value for norm_left(=%s)" %norm_left)
+                raise ValueError("Unknown value for norm_xyz(=%s)" %norm_xyz)
             P.x /= s; P.y /= s; P.z /= s
 
             # Normalize (unew,vnew,wnew)
-            if norm_right == '1':
+            if norm_uvw == '1':
                 s = P.u + P.v + P.w    # norm 1
-            elif norm_right == 'sup':
+            elif norm_uvw == 'sup':
                 s = max(P.u, P.v, P.w) # norm sup
-            elif norm_right == 'hypersurface':
+            elif norm_uvw == 'hypersurface':
                 s = P.x*P.u + P.y*P.v + P.z*P.w # hypersurface
             else:
-                raise ValueError("Unknown value for norm_right(=%s)" %norm_right)
+                raise ValueError("Unknown value for norm_uvw(=%s)" %norm_uvw)
             P.u /= s; P.v /= s; P.w /= s
 
             yield (P.x, P.y, P.z), (P.u, P.v, P.w), P.branch
 
     def simplex_orbit_list(self, start=None, int n_iterations=100, 
-                                 norm_left='sup', norm_right='1'):
+                                 norm_xyz='1', norm_uvw='1'):
         r"""
         INPUT:
 
         - ``start`` - initial vector (default: ``None``), if None, then
           initial point is random
         - ``n_iterations`` - integer, number of iterations
-        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit of the algo
-        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
-          ``'1'`` or ``'hypersurfac'``, the norm used for the orbit in the natural extension
+        - ``norm_xyz`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit of points `(x,y,z)` of the algo
+        - ``norm_uvw`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'`` or ``'hypersurfac'``, the norm used for the orbit of dual
+          coordinates `(u,v,w)`.
 
         OUTPUT:
 
@@ -586,23 +614,23 @@ cdef class MCFAlgorithm(object):
             P = self.call(P)
 
             # Normalize (xnew,ynew,znew)
-            if norm_left == '1':
+            if norm_xyz == '1':
                 s = P.x + P.y + P.z # norm 1
-            elif norm_left == 'sup':
+            elif norm_xyz == 'sup':
                 s = max(P.x, P.y, P.z) # norm sup
             else:
-                raise ValueError("Unknown value for norm_left(=%s)" %norm_left)
+                raise ValueError("Unknown value for norm_xyz(=%s)" %norm_xyz)
             P.x /= s; P.y /= s; P.z /= s
 
             # Normalize (unew,vnew,wnew)
-            if norm_right == '1':
+            if norm_uvw == '1':
                 s = P.u + P.v + P.w    # norm 1
-            elif norm_right == 'sup':
+            elif norm_uvw == 'sup':
                 s = max(P.u, P.v, P.w) # norm sup
-            elif norm_right == 'hypersurface':
+            elif norm_uvw == 'hypersurface':
                 s = P.x*P.u + P.y*P.v + P.z*P.w # hypersurface
             else:
-                raise ValueError("Unknown value for norm_right(=%s)" %norm_right)
+                raise ValueError("Unknown value for norm_uvw(=%s)" %norm_uvw)
             P.u /= s; P.v /= s; P.w /= s
 
             L.append( (P.x, P.y, P.z, P.u, P.v, P.w, P.branch))
@@ -610,7 +638,7 @@ cdef class MCFAlgorithm(object):
         return L
 
     def simplex_orbit_filtered_list(self, start=None, int n_iterations=100,
-            norm_left='1', norm_right='1',
+            norm_xyz='1', norm_uvw='1',
             double xmin=-float('inf'), double xmax=float('inf'),
             double ymin=-float('inf'), double ymax=float('inf'),
             double umin=-float('inf'), double umax=float('inf'),
@@ -624,10 +652,11 @@ cdef class MCFAlgorithm(object):
         - ``start`` - initial vector (default: ``None``), if None, then
           initial point is random
         - ``n_iterations`` - integer, number of iterations
-        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit of the algo
-        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
-          ``'1'`` or ``'hypersurfac'``, the norm used for the orbit in the natural extension
+        - ``norm_xyz`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit of points `(x,y,z)` of the algo
+        - ``norm_uvw`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'`` or ``'hypersurfac'``, the norm used for the orbit of dual
+          coordinates `(u,v,w)`.
         - ``xmin`` - double
         - ``ymin`` - double
         - ``umin`` - double
@@ -676,7 +705,7 @@ cdef class MCFAlgorithm(object):
 
         ::
 
-            sage: Brun().simplex_orbit_filtered_list(n_iterations=3, norm_left='1',ndivs=1000)
+            sage: Brun().simplex_orbit_filtered_list(n_iterations=3, norm_xyz='1',ndivs=1000)
             Traceback (most recent call last):
             ...
             ValueError: when ndivs is specified, you must provide a value
@@ -685,7 +714,7 @@ cdef class MCFAlgorithm(object):
         ::
 
             sage: Brun().simplex_orbit_filtered_list(n_iterations=7,  # random
-            ....:       norm_left='1', ndivs=100,
+            ....:       norm_xyz='1', ndivs=100,
             ....:       xmin=-.866, xmax=.866, ymin=-.5, ymax=1.,
             ....:       umin=-.866, umax=.866, vmin=-.5, vmax=1.)
             [(30, 47, 50, 50, 132, 213),
@@ -736,37 +765,37 @@ cdef class MCFAlgorithm(object):
             sig_check()
 
             # Normalize (xnew,ynew,znew)
-            if norm_left == '1':
+            if norm_xyz == '1':
                 s = P.x + P.y + P.z # norm 1
-            elif norm_left == 'sup':
+            elif norm_xyz == 'sup':
                 s = max(P.x, P.y, P.z) # norm sup
             else:
-                raise ValueError("Unknown value for norm_left(=%s)" %norm_left)
+                raise ValueError("Unknown value for norm_xyz(=%s)" %norm_xyz)
             P.x /= s; P.y /= s; P.z /= s
 
             # Normalize (unew,vnew,wnew)
-            if norm_right == '1':
+            if norm_uvw == '1':
                 s = P.u + P.v + P.w    # norm 1
-            elif norm_right == 'sup':
+            elif norm_uvw == 'sup':
                 s = max(P.u, P.v, P.w) # norm sup
-            elif norm_right == 'hypersurface':
+            elif norm_uvw == 'hypersurface':
                 s = P.x*P.u + P.y*P.v + P.z*P.w # hypersurface
             else:
-                raise ValueError("Unknown value for norm_right(=%s)" %norm_right)
+                raise ValueError("Unknown value for norm_uvw(=%s)" %norm_uvw)
             P.u /= s; P.v /= s; P.w /= s
 
             # Projection
-            if norm_left == '1':
+            if norm_xyz == '1':
                 x = -SQRT3SUR2 * P.x + SQRT3SUR2 * P.y
                 y = -.5 * P.x -.5 * P.y + P.z
-            elif norm_left == 'sup':
+            elif norm_xyz == 'sup':
                 x = P.x
                 y = P.y
 
-            if norm_right == '1':
+            if norm_uvw == '1':
                 u = -SQRT3SUR2 * P.u + SQRT3SUR2 * P.v
                 v = -.5 * P.u -.5 * P.v + P.w
-            elif norm_right == 'sup':
+            elif norm_uvw == 'sup':
                 u = P.u
                 v = P.v
 
@@ -882,7 +911,7 @@ cdef class MCFAlgorithm(object):
             L.append( (P.x, P.y, P.z, P.u, P.v, P.w, P.branch))
         return L
 
-    def invariant_measure_dict(self, int n_iterations, int ndivs, v=None,
+    def _invariant_measure_dict(self, int n_iterations, int ndivs, v=None,
             str norm='1', verbose=False):
         r"""
         INPUT:
@@ -896,12 +925,20 @@ cdef class MCFAlgorithm(object):
 
         OUTPUT:
 
-        dict
+            dict
+
+        .. NOTE::
+
+            This method should be erased and replaced by code in the spirit of
+            simplex_orbit_list. Or otherwise read [1] and change cpdef int
+            C[NDIVS][NDIVS][NDIVS]
+
+            [1] https://groups.google.com/forum/?fromgroups=#!topic/sage-devel/NCBmj2KjwEM
 
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac import Brun
-            sage: D = Brun().invariant_measure_dict(4, 10, verbose=True) # random
+            sage: D = Brun()._invariant_measure_dict(4, 10, verbose=True) # random
             0.0799404500357 0.199341464229 0.720718085735
             0 1
             0.0998433745026 0.248971884172 0.651184741325
@@ -913,7 +950,7 @@ cdef class MCFAlgorithm(object):
 
         ::
 
-            sage: D = Brun().invariant_measure_dict(100000, 5)
+            sage: D = Brun()._invariant_measure_dict(100000, 5)
             sage: sorted(D.iteritems())
             [((0, 0), ...),
              ((0, 1), ...),
@@ -927,7 +964,7 @@ cdef class MCFAlgorithm(object):
 
         It is 1000 times faster using C counter instead of a python dict counter::
 
-            sage: D = Brun().invariant_measure_dict(1000000, 10) # 0.05s
+            sage: D = Brun()._invariant_measure_dict(1000000, 10) # 0.05s
 
         """
         # 146 works, 147 causes segmentation error!!!
@@ -998,26 +1035,31 @@ cdef class MCFAlgorithm(object):
                     D[(i,j)] = c
         return D
 
-    def natural_extention_dict(self, int n_iterations, norm_left='sup',
-            norm_right='1', verbose=False):
+    def _natural_extention_dict(self, int n_iterations, norm_xyz='sup',
+            norm_uvw='1', verbose=False):
         r"""
         INPUT:
 
         - ``n_iterations`` -- integer
-        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit of the algo
-        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
-          ``'1'`` or ``'hypersurfac'``, the norm used for the orbit in the natural extension
+        - ``norm_xyz`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'``, the norm used for the orbit of points `(x,y,z)` of the algo
+        - ``norm_uvw`` -- string (default: ``'sup'``), either ``'sup'`` or
+          ``'1'`` or ``'hypersurfac'``, the norm used for the orbit of dual
+          coordinates `(u,v,w)`.
         - ``verbose`` -- bool (default: ``False``)
 
         OUTPUT:
 
-        dict, dict, dict, dict
+            dict, dict, dict, dict
+
+        .. NOTE::
+
+            This method should be erased and replaced by simplex_orbit_list
 
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac import ARP
-            sage: t = ARP().natural_extention_dict(10000)
+            sage: t = ARP()._natural_extention_dict(10000)
             sage: map(type, t)
             [<type 'collections.defaultdict'>,
              <type 'collections.defaultdict'>,
@@ -1075,45 +1117,45 @@ cdef class MCFAlgorithm(object):
                 #print("scal prod <(x,y,z),(u,v,w)> = %f (after algo)" % s)
 
             # Normalize (xnew,ynew,znew)
-            if norm_left == '1':
+            if norm_xyz == '1':
                 s = R.x + R.y + R.z # norm 1
-            elif norm_left == 'sup':
+            elif norm_xyz == 'sup':
                 s = max(R.x, R.y, R.z) # norm sup
             else:
-                raise ValueError("Unknown value for norm_left(=%s)" %norm_left)
+                raise ValueError("Unknown value for norm_xyz(=%s)" %norm_xyz)
             R.x /= s; R.y /= s; R.z /= s
 
             # Normalize (unew,vnew,wnew)
-            if norm_right == '1':
+            if norm_uvw == '1':
                 s = R.u + R.v + R.w    # norm 1
-            elif norm_right == 'sup':
+            elif norm_uvw == 'sup':
                 s = max(R.u, R.v, R.w) # norm sup
-            elif norm_right == 'hypersurface':
+            elif norm_uvw == 'hypersurface':
                 s = R.x*R.u + R.y*R.v + R.z*R.w # hypersurface
             else:
-                raise ValueError("Unknown value for norm_right(=%s)" %norm_right)
+                raise ValueError("Unknown value for norm_uvw(=%s)" %norm_uvw)
             R.u /= s; R.v /= s; R.w /= s
 
             # Projection
-            if norm_left == '1':
+            if norm_xyz == '1':
                 s = -SQRT3SUR2 * P.x + SQRT3SUR2 * P.y
                 t = -.5 * P.x -.5 * P.y + P.z
                 domain_left[R.branch].append((s,t))
                 s = -SQRT3SUR2 * R.x + SQRT3SUR2 * R.y
                 t = -.5 * R.x -.5 * R.y + R.z
                 image_left[R.branch].append((s,t))
-            elif norm_left == 'sup':
+            elif norm_xyz == 'sup':
                 domain_left[R.branch].append((P.x,P.y))
                 image_left[R.branch].append((R.x,R.y))
 
-            if norm_right == '1':
+            if norm_uvw == '1':
                 s = -SQRT3SUR2 * P.u + SQRT3SUR2 * P.v
                 t = -.5 * P.u -.5 * P.v + P.w
                 domain_right[R.branch].append((s,t))
                 s = -SQRT3SUR2 * R.u + SQRT3SUR2 * R.v
                 t = -.5 * R.u -.5 * R.v + R.w
                 image_right[R.branch].append((s,t))
-            elif norm_right == 'sup':
+            elif norm_uvw == 'sup':
                 domain_right[R.branch].append((P.u,P.v))
                 image_right[R.branch].append((R.u,R.v))
 
@@ -1443,7 +1485,7 @@ cdef class MCFAlgorithm(object):
             <matplotlib.figure.Figure object at ...>
 
         """
-        D = self.invariant_measure_dict(n_iterations, ndivs, norm=norm)
+        D = self._invariant_measure_dict(n_iterations, ndivs, norm=norm)
         the_mean = n_iterations / float(len(D))
 
         X = [[i for i in range(ndivs+1)] for j in range(ndivs+1)]
@@ -1489,7 +1531,7 @@ cdef class MCFAlgorithm(object):
             <matplotlib.figure.Figure object at ...>
 
         """
-        D = self.invariant_measure_dict(n_iterations, ndivs, norm=norm)
+        D = self._invariant_measure_dict(n_iterations, ndivs, norm=norm)
         the_mean = n_iterations / float(len(D))
         S = sorted(D.values())
         V = [S[k]/the_mean for k in range(0, len(D), len(D)/10)]
@@ -1509,16 +1551,16 @@ cdef class MCFAlgorithm(object):
 
         return fig
 
-    def natural_extension_plot(self, n_iterations, norm_left='1',
-            norm_right='1', axis_off=False):
+    def natural_extension_plot(self, n_iterations, norm_xyz='1',
+            norm_uvw='1', axis_off=False):
         r"""
         INPUT:
 
         - ``n_iterations`` - integer, number of iterations
-        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
+        - ``norm_xyz`` -- string (default: ``'1'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
-        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit points
+        - ``norm_uvw`` -- string (default: ``'1'``), either ``'sup'`` or
+          ``'1'``, the norm used for the dual orbit points
         - ``axis_off`` - boolean (default: ``False``), 
 
         EXAMPLES::
@@ -1529,8 +1571,8 @@ cdef class MCFAlgorithm(object):
         """
         import matplotlib
         import matplotlib.pyplot as plt
-        t = self.natural_extention_dict(n_iterations, norm_left=norm_left,
-                norm_right=norm_right)
+        t = self._natural_extention_dict(n_iterations, norm_xyz=norm_xyz,
+                norm_uvw=norm_uvw)
         domain_left, image_left, domain_right, image_right = t
         c = dict(zip(domain_left.keys(), ['b','r','g','c','m','y','k']))
 
@@ -1551,28 +1593,28 @@ cdef class MCFAlgorithm(object):
             cx.set_axis_off()
             dx.set_axis_off()
 
-        create_sub_plot(ax, domain_left,  "Algo IN",    norm=norm_left)
-        create_sub_plot(bx, domain_right,    "NatExt IN",  norm=norm_right)
-        create_sub_plot(cx, image_left, "Algo OUT",   norm=norm_left)
-        create_sub_plot(dx, image_right,   "NatExt OUT", norm=norm_right)
+        create_sub_plot(ax, domain_left,  "Algo IN",    norm=norm_xyz)
+        create_sub_plot(bx, domain_right,    "NatExt IN",  norm=norm_uvw)
+        create_sub_plot(cx, image_left, "Algo OUT",   norm=norm_xyz)
+        create_sub_plot(dx, image_right,   "NatExt OUT", norm=norm_uvw)
 
         title = "Algo=%s, nbiter=%s" % (self.name(), n_iterations)
         fig.suptitle(title)
 
         return fig
 
-    def natural_extension_tikz(self, n_iterations, norm_left='1',
-            norm_right='1', marksize=0.2, legend_marksize=2, 
+    def natural_extension_tikz(self, n_iterations, norm_xyz='1',
+            norm_uvw='1', marksize=0.2, legend_marksize=2, 
             group_size="4 by 1"):
         r"""
 
         INPUT:
 
         - ``n_iterations`` -- integer, number of iterations
-        - ``norm_left`` -- string (default: ``'1'``), either ``'sup'`` or
+        - ``norm_xyz`` -- string (default: ``'1'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
-        - ``norm_right`` -- string (default: ``'1'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit points
+        - ``norm_uvw`` -- string (default: ``'1'``), either ``'sup'`` or
+          ``'1'``, the norm used for the dual orbit points
         - ``marksize`` -- tikz marksize (default:``0.2``)
         - ``legend_marksize`` -- tikz legend marksize (default:``2``)
         - ``group_size`` -- string (default:``"4 by 1"``)
@@ -1607,8 +1649,8 @@ cdef class MCFAlgorithm(object):
             sage: filename = tmp_filename('temp','.pdf')
             sage: _ = s.pdf(filename)
         """
-        t = self.natural_extention_dict(n_iterations, norm_left=norm_left,
-                norm_right=norm_right)
+        t = self._natural_extention_dict(n_iterations, norm_xyz=norm_xyz,
+                norm_uvw=norm_uvw)
         domain_left, image_left, domain_right, image_right = t
         sqrt3 = 1.73205080756888
         r = 1.08
@@ -1656,7 +1698,7 @@ cdef class MCFAlgorithm(object):
                 tikzlibraries=['pgfplots.groupplots'])
 
     def natural_extension_part_tikz(self, n_iterations, part=3, 
-                                    norm_left='1', norm_right='1',
+                                    norm_xyz='1', norm_uvw='1',
                                     marksize='1pt', limit_nb_points=None,
                                     verbose=False):
         r"""
@@ -1667,10 +1709,10 @@ cdef class MCFAlgorithm(object):
 
         - ``n_iterations`` - integer, number of iterations
         - ``part`` - integer, taking value 0, 1, 2 or 3
-        - ``norm_left`` -- string (default: ``'sup'``), either ``'sup'`` or
+        - ``norm_xyz`` -- string (default: ``'1'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
-        - ``norm_right`` -- string (default: ``'sup'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit points
+        - ``norm_uvw`` -- string (default: ``'1'``), either ``'sup'`` or
+          ``'1'``, the norm used for the dual orbit points
         - ``marksize`` -- string (default: ``'1pt'``), pgfplots mark size value
         - ``limit_nb_points`` -- None or integer (default: ``None``), limit
           number of points per patch
@@ -1695,8 +1737,8 @@ cdef class MCFAlgorithm(object):
             Taking ... points for key 312
             Taking ... points for key 123
         """
-        t = self.natural_extention_dict(n_iterations, norm_left=norm_left,
-                norm_right=norm_right)
+        t = self._natural_extention_dict(n_iterations, norm_xyz=norm_xyz,
+                norm_uvw=norm_uvw)
         domain_left, image_left, domain_right, image_right = t
         sqrt3 = 1.73205080756888
         r = 1.08
@@ -1736,7 +1778,7 @@ cdef class MCFAlgorithm(object):
         return TikzPicture(s, packages=['pgfplots'])
 
     def natural_extension_part_png(self, n_iterations, draw,
-                                    norm_left='1', norm_right='1',
+                                    norm_xyz='1', norm_uvw='1',
                                     xrange=(-.866, .866),
                                     yrange=(-.5, 1.),
                                     urange=(-.866, .866),
@@ -1759,10 +1801,10 @@ cdef class MCFAlgorithm(object):
           - ``'image_left'`` - use x and y ranges
           - ``'image_right'`` - use u and v ranges
 
-        - ``norm_left`` -- string (default: ``'1'``), either ``'sup'`` or
+        - ``norm_xyz`` -- string (default: ``'1'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
-        - ``norm_right`` -- string (default: ``'1'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit points
+        - ``norm_uvw`` -- string (default: ``'1'``), either ``'sup'`` or
+          ``'1'``, the norm used for the dual orbit points
         - ``xrange`` -- tuple (default: ``(-.866, .866)``), interval of
           values for x
         - ``yrange`` -- tuple (default: ``(-.5, 1.)``), interval of
@@ -1810,7 +1852,7 @@ cdef class MCFAlgorithm(object):
 
         """
         L = self.simplex_orbit_filtered_list(n_iterations=n_iterations,
-            norm_left=norm_left, norm_right=norm_right,
+            norm_xyz=norm_xyz, norm_uvw=norm_uvw,
             xmin=xrange[0], xmax=xrange[1],
             ymin=yrange[0], ymax=yrange[1],
             umin=urange[0], umax=urange[1],
@@ -1860,7 +1902,7 @@ cdef class MCFAlgorithm(object):
         return img
 
     def measure_evaluation(self, n_iterations, draw,
-                                norm_left='1', norm_right='1',
+                                norm_xyz='1', norm_uvw='1',
                                 xrange=(-.866, .866),
                                 yrange=(-.5, 1.),
                                 urange=(-.866, .866),
@@ -1868,6 +1910,7 @@ cdef class MCFAlgorithm(object):
                                 ndivs=1024,
                                 verbose=False):
         r"""
+        Return the measure of a box according to an orbit.
 
         INPUT:
 
@@ -1880,10 +1923,10 @@ cdef class MCFAlgorithm(object):
           - ``'image_left'`` - use x and y ranges
           - ``'image_right'`` - use u and v ranges
 
-        - ``norm_left`` -- string (default: ``'1'``), either ``'sup'`` or
+        - ``norm_xyz`` -- string (default: ``'1'``), either ``'sup'`` or
           ``'1'``, the norm used for the orbit points
-        - ``norm_right`` -- string (default: ``'1'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit points
+        - ``norm_uvw`` -- string (default: ``'1'``), either ``'sup'`` or
+          ``'1'``, the norm used for the dual orbit points
         - ``xrange`` -- tuple (default: ``(-.866, .866)``), interval of
           values for x
         - ``yrange`` -- tuple (default: ``(-.5, 1.)``), interval of
@@ -1910,7 +1953,7 @@ cdef class MCFAlgorithm(object):
 
         """
         L = self.simplex_orbit_filtered_list(n_iterations=n_iterations,
-            norm_left=norm_left, norm_right=norm_right,
+            norm_xyz=norm_xyz, norm_uvw=norm_uvw,
             xmin=xrange[0], xmax=xrange[1],
             ymin=yrange[0], ymax=yrange[1],
             umin=urange[0], umax=urange[1],
