@@ -213,16 +213,10 @@ cdef class MCFAlgorithm(object):
 
         - ``n_iterations`` -- integer
 
-        OUTPUT:
-
-        bool
-
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import ARP, Brun
-            sage: t = ARP()._test_definition(10000)
-            sage: t = Brun()._test_definition(10000)
-
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: Brun()._test_definition(10000)
         """
         cdef double s,t             # temporary variables
         cdef unsigned int i         # loop counter
@@ -241,31 +235,29 @@ cdef class MCFAlgorithm(object):
             s = P.x*P.u + P.y*P.v + P.z*P.w
 
             # Apply Algo
-            R = self.call(P)
+            try:
+                R = self.call(P)
+            except ValueError:
+                continue
             t = R.x*R.u + R.y*R.v + R.z*R.w
 
             if not abs(s - t) < 0.0000001:
                 m = 'This algo does not preserve the scalar product\n'
                 m += '{} != {}\n'.format(s,t)
                 m += 'The problem is on branch {}\n'.format(R.branch)
+                m += 'on the {}-th iteration\n'.format(i)
                 m += 'INPUT: ({}, {}, {}, {}, {}, {})\n'.format(P.x,P.y,P.z,P.u,P.v,P.w)
                 m += 'OUTPUT: ({}, {}, {}, {}, {}, {})\n'.format(R.x,R.y,R.z,R.u,R.v,R.w)
                 raise Exception(m)
 
-        return True
+        return
 
-    def _test_substitution_definition(self):
+    def _test_dual_substitution_definition(self):
         r"""
-        OUTPUT:
-
-        bool
-
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import ARP, Brun
-            sage: t = ARP()._test_substitution_definition()
-            sage: t = Brun()._test_substitution_definition()
-
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: t = Brun()._test_dual_substitution_definition()
         """
         A = self.substitutions()
         B = self.dual_substitutions()
@@ -277,13 +269,69 @@ cdef class MCFAlgorithm(object):
                 raise ValueError("Transpose of substitution {} do not "
                         "match with dual substitution for algo "
                         " {}".format(key, self.name()))
-        return True
+        return
 
-    def _test_coherence(self):
+    def _test_coherence(self, int n_iterations=1000):
         r"""
-        Check coherence between distinct functions.
+        Check coherence between substitutions and the algo.
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: t = Brun()._test_dual_substitution_definition()
         """
-        raise NotImplementedError
+        from sage.modules.free_module_element import vector
+        cdef unsigned int i         # loop counter
+        cdef PairPoint3d P, R
+
+        A = dict((k,s.incidence_matrix()) for k,s in self.substitutions().iteritems())
+
+        # Loop
+        for i from 0 <= i < n_iterations:
+
+            # Check for Keyboard interupt
+            sig_check()
+
+            # random initial values
+            P.x = random(); P.y = random(); P.z = random();
+            P.u = random(); P.v = random(); P.w = random();
+
+            # Apply Algo
+            try:
+                R = self.call(P)
+            except ValueError:
+                continue
+
+            M = A[R.branch]
+
+            # Check the algo
+            s = M * vector((R.x, R.y, R.z))
+            t = vector((P.x, P.y, P.z))
+            if not abs(s - t) < 0.0000001:
+                m = 'Incoherence between the definition of algo \n'
+                m += 'and the associated substitutions.\n'
+                m += '{} != {}\n'.format(s,t)
+                m += 'The problem is on branch {}\n'.format(R.branch)
+                m += 'on the {}-th iteration\n'.format(i)
+                m += 'INPUT: ({}, {}, {}, {}, {}, {})\n'.format(P.x,P.y,P.z,P.u,P.v,P.w)
+                m += 'OUTPUT: ({}, {}, {}, {}, {}, {})\n'.format(R.x,R.y,R.z,R.u,R.v,R.w)
+                raise Exception(m)
+
+            # Check the dual coordinates
+            Mt = M.transpose()
+            s = Mt * vector((P.u, P.v, P.w))
+            t = vector((R.u, R.v, R.w))
+            if not abs(s - t) < 0.0000001:
+                m = 'Incoherence between the definition of algo (dual) \n'
+                m += 'and the associated substitutions.\n'
+                m += '{} != {}\n'.format(s,t)
+                m += 'The problem is on branch {}\n'.format(R.branch)
+                m += 'on the {}-th iteration\n'.format(i)
+                m += 'INPUT: ({}, {}, {}, {}, {}, {})\n'.format(P.x,P.y,P.z,P.u,P.v,P.w)
+                m += 'OUTPUT: ({}, {}, {}, {}, {}, {})\n'.format(R.x,R.y,R.z,R.u,R.v,R.w)
+                raise Exception(m)
+
+        return
     ######################
     # METHODS FOR THE USER:
     ######################
@@ -356,6 +404,11 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
+            sage: from slabbe.mult_cont_frac import Brun, ARP
+            sage: Brun() == ARP()
+            False
+            sage: Brun() == Brun()
+            True
         """
         # 0: <
         # 1: <=
@@ -1350,7 +1403,16 @@ cdef class MCFAlgorithm(object):
             Traceback (most recent call last):
             ...
             ValueError: On input=(1, 2, 5), algorithm Fully Subtractive
-            loops on (1.0, 0.0, 3.0) without finding the gcd
+            loops on (1.0, 0.0, 3.0)
+
+        ::
+
+            sage: from slabbe.mult_cont_frac import Reverse
+            sage: algo = Reverse()
+            sage: algo.s_adic_word((18,1,1))
+            word: 31111111111211111111
+            sage: _.abelian_vector()
+            [18, 1, 1]
 
         TESTS::
 
@@ -1385,8 +1447,8 @@ cdef class MCFAlgorithm(object):
                 letter = 1
                 the_gcd = ZZ(x)
             else:
-                raise ValueError("On input={}, algorithm {} loops on {} "
-                         "without finding the gcd".format(v, self.name(), A))
+                raise ValueError("On input={}, algorithm {} loops"
+                                 " on {}".format(v, self.name(), A))
             return words.s_adic(S, [letter], D)**the_gcd
 
         else:
@@ -1430,7 +1492,10 @@ cdef class MCFAlgorithm(object):
         for c in Compositions(length, length=3, min_part=1):
             w = self.s_adic_word(c)
             if c != w.abelian_vector(): 
-                raise ValueError("c={} but vector is"
+                if w.length() % length == 0:
+                    w = w[:length]
+                else:
+                    raise ValueError("c={} but vector is"
                       " {}".format(c,w.abelian_vector()))
             D[c] = discrepancy(w)
         return D
@@ -1980,6 +2045,9 @@ cdef class Brun(MCFAlgorithm):
         sage: from slabbe.mult_cont_frac import Brun
         sage: algo = Brun()
         sage: TestSuite(algo).run()
+        sage: algo._test_dual_substitution_definition()
+        sage: algo._test_coherence()
+        sage: algo._test_definition()
     """
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
@@ -2068,6 +2136,16 @@ cdef class Brun(MCFAlgorithm):
                 123: WordMorphism({1: [1], 2: [2], 3: [3, 2]})}
 
 cdef class Reverse(MCFAlgorithm):
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.mult_cont_frac import Reverse
+        sage: algo = Reverse()
+        sage: TestSuite(algo).run()
+        sage: algo._test_dual_substitution_definition()
+        sage: algo._test_coherence()
+        sage: algo._test_definition()
+    """
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -2080,9 +2158,9 @@ cdef class Reverse(MCFAlgorithm):
              ('u', 0.6),
              ('v', 0.5),
              ('w', 0.5),
-             ('x', 1.1),
-             ('y', 0.5),
-             ('z', 0.09999999999999987)]
+             ('x', 0.55),
+             ('y', 0.25),
+             ('z', 0.04999999999999993)]
         """
         cdef PairPoint3d R
         if P.x + P.y < P.z:
@@ -2112,9 +2190,9 @@ cdef class Reverse(MCFAlgorithm):
             # R.u = 0.793700525984100 * (P.v + P.w)
             # R.v = 0.793700525984100 * (P.u + P.w)
             # R.w = 0.793700525984100 * (P.u + P.v)
-            R.x = -P.x + P.y + P.z
-            R.y =  P.x - P.y + P.z
-            R.z =  P.x + P.y - P.z
+            R.x = 0.5 * (-P.x + P.y + P.z)
+            R.y = 0.5 * ( P.x - P.y + P.z)
+            R.z = 0.5 * ( P.x + P.y - P.z)
             R.u = P.v + P.w
             R.v = P.u + P.w
             R.w = P.u + P.v
@@ -2156,6 +2234,16 @@ cdef class Reverse(MCFAlgorithm):
                 4:  WordMorphism({1: [2,3], 2: [1,3], 3: [1,2]})}
 
 cdef class ARP(MCFAlgorithm):
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.mult_cont_frac import ARP
+        sage: algo = ARP()
+        sage: TestSuite(algo).run()
+        sage: algo._test_dual_substitution_definition()
+        sage: algo._test_coherence()
+        sage: algo._test_definition()
+    """
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -2193,6 +2281,13 @@ cdef class ARP(MCFAlgorithm):
         else:
             return _Poincare(P)
     def name(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import ARP
+            sage: ARP().name()
+            "Arnoux-Rauzy-Poincar\\'e"
+        """
         return r"Arnoux-Rauzy-Poincar\'e"
 
     def substitutions(self):
@@ -2251,6 +2346,16 @@ cdef class ARP(MCFAlgorithm):
                 231: WordMorphism({1: [1, 3, 2], 2: [2], 3: [3, 2]})}
 
 cdef class ArnouxRauzy(MCFAlgorithm):
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.mult_cont_frac import ArnouxRauzy
+        sage: algo = ArnouxRauzy()
+        sage: TestSuite(algo).run()
+        sage: algo._test_dual_substitution_definition()
+        sage: algo._test_coherence()
+        sage: algo._test_definition()
+    """
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -2258,7 +2363,9 @@ cdef class ArnouxRauzy(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac import ArnouxRauzy
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = ArnouxRauzy()(D)
-            Error: arnoux rauzy not defined on input:
+            Traceback (most recent call last):
+            ...
+            ValueError: Arnoux is not defined on 
             {'branch': 999, 'u': 0.2, 'w': 0.3, 'v': 0.3, 'y': 0.6, 'x': 0.3, 'z': 0.8}
 
         :: 
@@ -2293,7 +2400,8 @@ cdef class ArnouxRauzy(MCFAlgorithm):
             P.branch = 1
             return P
         else:
-            print ("Error: arnoux rauzy not defined on input:\n%s"%P)
+            raise ValueError('Arnoux is not defined on {}'.format(P))
+
     def substitutions(self):
         r"""
         EXAMPLES::
@@ -2324,6 +2432,16 @@ cdef class ArnouxRauzy(MCFAlgorithm):
                 2: WordMorphism({1: [1], 2: [2,3,1], 3: [3]}),
                 3: WordMorphism({1: [1], 2: [2], 3: [3,1,2]})}
 cdef class Poincare(MCFAlgorithm):
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.mult_cont_frac import Poincare
+        sage: algo = Poincare()
+        sage: TestSuite(algo).run()
+        sage: algo._test_dual_substitution_definition()
+        sage: algo._test_coherence()
+        sage: algo._test_definition()
+    """
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -2343,6 +2461,13 @@ cdef class Poincare(MCFAlgorithm):
         return _Poincare(P)
 
     def name(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Poincare
+            sage: Poincare().name()
+            "Poincar\\'e"
+        """
         return r"Poincar\'e"
 
     def substitutions(self):
@@ -2388,6 +2513,16 @@ cdef class Poincare(MCFAlgorithm):
                 231: WordMorphism({1: [1, 3, 2], 2: [2], 3: [3, 2]})}
 
 cdef class Selmer(MCFAlgorithm):
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.mult_cont_frac import Selmer
+        sage: algo = Selmer()
+        sage: TestSuite(algo).run()
+        sage: algo._test_dual_substitution_definition()
+        sage: algo._test_coherence()
+        sage: algo._test_definition()
+    """
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -2475,6 +2610,16 @@ cdef class Selmer(MCFAlgorithm):
                 213: WordMorphism({1: [1], 2: [2], 3: [3, 2]})}
 
 cdef class FullySubtractive(MCFAlgorithm):
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.mult_cont_frac import FullySubtractive
+        sage: algo = FullySubtractive()
+        sage: TestSuite(algo).run()
+        sage: algo._test_dual_substitution_definition()
+        sage: algo._test_coherence()
+        sage: algo._test_definition()
+    """
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         EXAMPLES::
@@ -2511,6 +2656,13 @@ cdef class FullySubtractive(MCFAlgorithm):
         return P
 
     def name(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import FullySubtractive
+            sage: FullySubtractive().name()
+            'Fully Subtractive'
+        """
         return r"Fully Subtractive"
 
     def substitutions(self):
@@ -2544,6 +2696,16 @@ cdef class FullySubtractive(MCFAlgorithm):
                 3:  WordMorphism({1: [1, 3], 2: [2, 3], 3: [3]})}
 
 cdef class Cassaigne(MCFAlgorithm):
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.mult_cont_frac import Cassaigne
+        sage: algo = Cassaigne()
+        sage: TestSuite(algo).run()
+        sage: algo._test_dual_substitution_definition()
+        sage: algo._test_coherence()
+        sage: algo._test_definition()
+    """
     cdef PairPoint3d call(self, PairPoint3d P) except *:
         r"""
         This algorithm was provided by Julien Cassaigne during a meeting of
