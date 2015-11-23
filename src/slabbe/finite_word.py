@@ -31,7 +31,7 @@ def discrepancy(self):
     r"""
     Return the discrepancy of the word.
     
-    This is a distance to the euclidean line defined in [1].
+    This is a distance to the euclidean line defined in [T1980]_.
 
     EXAMPLES::
 
@@ -61,8 +61,8 @@ def discrepancy(self):
 
     REFERENCES:
 
-    - [1] R., Tijdeman. The chairman assignment problem. Discrete Mathematics
-      32, no 3 (1980): 323-30. doi:10.1016/0012-365X(80)90269-1.
+    .. [T1980] R., Tijdeman. The chairman assignment problem. Discrete
+       Mathematics 32, no 3 (1980): 323-30. doi:10.1016/0012-365X(80)90269-1.
     """
     length = self.length()
     freq = {a:QQ((v,length)) for (a,v) in self.evaluation_dict().iteritems()}
