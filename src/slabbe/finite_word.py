@@ -2,7 +2,7 @@
 r"""
 Finite words
 
-Methods that are not in Sage
+Methods that are not in Sage (for now!)
 
 AUTHORS:
 
@@ -10,6 +10,10 @@ AUTHORS:
 
 EXAMPLES::
 
+    sage: from slabbe.finite_word import discrepancy
+    sage: w = words.ChristoffelWord(5,8)
+    sage: discrepancy(w)
+    12/13
 """
 #*****************************************************************************
 #       Copyright (C) 2015 Sebastien Labbe <slabqc@gmail.com>
@@ -57,9 +61,8 @@ def discrepancy(self):
 
     REFERENCES:
 
-    .. [1] R., Tijdeman. « The chairman assignment problem ». Discrete
-       Mathematics 32, nᵒ 3 (1980): 323‑30.
-       doi:10.1016/0012-365X(80)90269-1.
+    - [1] R., Tijdeman. The chairman assignment problem. Discrete Mathematics
+      32, no 3 (1980): 323-30. doi:10.1016/0012-365X(80)90269-1.
     """
     length = self.length()
     freq = {a:QQ((v,length)) for (a,v) in self.evaluation_dict().iteritems()}

@@ -51,6 +51,8 @@ Combinatorics on words
 
    kolakoski_word
    bispecial_extension_type
+   finite_word
+   language
 
 Combinatorics
 =============
