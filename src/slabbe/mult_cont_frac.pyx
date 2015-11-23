@@ -2,7 +2,7 @@
 r"""
 Multidimensional Continued Fraction Algorithms
 
-EXAMPLES:
+EXAMPLES::
 
     sage: from slabbe.mult_cont_frac import Brun
     sage: algo = Brun()
@@ -70,7 +70,7 @@ iterator::
     sage: words.s_adic(it, repeat(1), D)
     word: 1232323123233231232332312323123232312323...
 
-TODO:
+.. TODO::
 
     - Ajout les algo de reuteneaour, nogueira, autres?
     - Allow 2d, 1d, 4d, algorithms
@@ -91,9 +91,9 @@ Question:
 
 AUTHORS:
 
- - Sebastien Labbe, Invariant measures, Lyapounov exponents and natural
+ - Sébastien Labbé, Invariant measures, Lyapounov exponents and natural
    extensions for a dozen of algorithms, October 2013.
- - Sebastien Labbé, Cleaning the code, Fall 2015
+ - Sébastien Labbé, Cleaning the code, Fall 2015
 
 """
 #*****************************************************************************
@@ -728,7 +728,7 @@ cdef class MCFAlgorithm(object):
 
             list
 
-        BENCHMARK:
+        BENCHMARK::
 
             sage: from slabbe.mult_cont_frac import Brun
             sage: %time D = Brun().simplex_orbit_filtered_list(10^6) # not tested
