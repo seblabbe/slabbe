@@ -575,7 +575,7 @@ class MatrixCocycle(object):
         r"""
         INPUT:
 
-        - ``n` -- integer, length
+        - ``n`` -- integer, length
         - ``side`` -- ``'left'`` or ``'right'``, drawing left or right
           eigenvectors
         - ``color_index`` -- 0 for first letter, -1 for last letter

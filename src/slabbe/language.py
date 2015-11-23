@@ -349,6 +349,8 @@ class LanguageGenerator(object):
         r"""
         Return the Brun regular language.
 
+        EXAMPLES::
+
             sage: from slabbe.language import languages
             sage: L = languages.Brun()
             sage: L
@@ -412,6 +414,8 @@ class LanguageGenerator(object):
     def Selmer(self):
         r"""
         Return the Selmer regular language.
+
+        EXAMPLES::
 
             sage: from slabbe.language import languages
             sage: L = languages.Selmer()
