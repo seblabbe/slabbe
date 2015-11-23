@@ -80,6 +80,7 @@ Miscellaneous
 .. toctree::
    :maxdepth: 1
 
+   tikz_picture
    ranking_scale
    fruit
 
