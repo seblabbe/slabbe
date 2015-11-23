@@ -66,8 +66,10 @@ Combinatorics
 Dynamical systems
 =================
 
-.. .. toctree::
+.. toctree::
    :maxdepth: 1
+
+   matrix_cocycle
 
 .. mult_cont_frac
 
