@@ -275,10 +275,14 @@ cdef class MCFAlgorithm(object):
         r"""
         Check coherence between substitutions and the algo.
 
+        INPUT:
+
+        - ``n_iterations`` -- integer
+
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac import Brun
-            sage: t = Brun()._test_dual_substitution_definition()
+            sage: t = Brun()._test_coherence()
         """
         from sage.modules.free_module_element import vector
         cdef unsigned int i         # loop counter
@@ -330,8 +334,8 @@ cdef class MCFAlgorithm(object):
                 m += 'INPUT: ({}, {}, {}, {}, {}, {})\n'.format(P.x,P.y,P.z,P.u,P.v,P.w)
                 m += 'OUTPUT: ({}, {}, {}, {}, {}, {})\n'.format(R.x,R.y,R.z,R.u,R.v,R.w)
                 raise Exception(m)
-
         return
+
     ######################
     # METHODS FOR THE USER:
     ######################
