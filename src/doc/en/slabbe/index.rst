@@ -70,6 +70,7 @@ Dynamical systems
    :maxdepth: 1
 
    matrix_cocycle
+   lyapunov
 
 .. mult_cont_frac
 
