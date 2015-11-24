@@ -714,17 +714,17 @@ class MatrixCocycleGenerator(object):
         P31 = matrix(3, [1,1,1, 0,1,0, 0,1,1])
         P32 = matrix(3, [1,0,0, 1,1,1, 1,0,1])
         gens = (A1, A2, A3, P23, P32, P13, P31, P12, P21)
-        alphabet = ['1', '2', '3', '123', '132', '213', '231', '312', '321']
+        alphabet = [1, 2, 3, 123, 132, 213, 231, 312, 321]
         gens = dict(zip(alphabet, gens))
 
         cone = {}
-        cone['123'] = H23 = matrix(3, [1,0,1, 0,1,0, 0,0,1])
-        cone['132'] = H32 = matrix(3, [1,1,0, 0,1,0, 0,0,1])
-        cone['213'] = H13 = matrix(3, [1,0,0, 0,1,1, 0,0,1])
-        cone['231'] = H31 = matrix(3, [1,0,0, 1,1,0, 0,0,1])
-        cone['312'] = H12 = matrix(3, [1,0,0, 0,1,0, 0,1,1])
-        cone['321'] = H21 = matrix(3, [1,0,0, 0,1,0, 1,0,1])
-        cone['1'] = cone['2'] = cone['3'] = identity_matrix(3) 
+        cone[123] = H23 = matrix(3, [1,0,1, 0,1,0, 0,0,1])
+        cone[132] = H32 = matrix(3, [1,1,0, 0,1,0, 0,0,1])
+        cone[213] = H13 = matrix(3, [1,0,0, 0,1,1, 0,0,1])
+        cone[231] = H31 = matrix(3, [1,0,0, 1,1,0, 0,0,1])
+        cone[312] = H12 = matrix(3, [1,0,0, 0,1,0, 0,1,1])
+        cone[321] = H21 = matrix(3, [1,0,0, 0,1,0, 1,0,1])
+        cone[1] = cone[2] = cone[3] = identity_matrix(3) 
 
         from language import languages
         return MatrixCocycle(gens, cone, language=languages.ARP())
@@ -734,7 +734,7 @@ class MatrixCocycleGenerator(object):
         A2 = matrix(3, [1,0,0, 1,1,1, 0,0,1])
         A3 = matrix(3, [1,0,0, 0,1,0, 1,1,1])
         gens = (A1, A2, A3)
-        alphabet = ['1', '2', '3']
+        alphabet = [1, 2, 3]
         gens = dict(zip(alphabet, gens))
         return MatrixCocycle(gens)
 
@@ -743,7 +743,7 @@ class MatrixCocycleGenerator(object):
         B2 = matrix(3, [1,0,0, 0,0,1, 0,1,1])
         B3 = matrix(3, [0,1,0, 0,0,1, 1,0,1])
         gens = (B1, B2, B3)
-        alphabet = ['1', '2', '3']
+        alphabet = [1, 2, 3]
         gens = dict(zip(alphabet, gens))
         cone = matrix(3, [1,1,1,0,1,1,0,0,1])
         return MatrixCocycle(gens, cone)
@@ -801,16 +801,16 @@ class MatrixCocycleGenerator(object):
         B31 = matrix(3, [1,0,1, 0,1,0, 0,0,1])
         B32 = matrix(3, [1,0,0, 0,1,1, 0,0,1])
         gens = (B23, B32, B13, B31, B12, B21)
-        alphabet = ['123', '132', '213', '231', '312', '321']
+        alphabet = [123, 132, 213, 231, 312, 321]
         gens = dict(zip(alphabet, gens))
 
         cone = {}
-        cone['123'] = B12
-        cone['132'] = B13
-        cone['213'] = B21
-        cone['231'] = B23
-        cone['312'] = B31
-        cone['321'] = B32
+        cone[123] = B12
+        cone[132] = B13
+        cone[213] = B21
+        cone[231] = B23
+        cone[312] = B31
+        cone[321] = B32
 
         from language import languages
         return MatrixCocycle(gens, cone, language=languages.Brun())
@@ -823,13 +823,13 @@ class MatrixCocycleGenerator(object):
         S312 = matrix(3, [1,0,0, 0,1,1, 0,0,1])
         S321 = matrix(3, [1,0,1, 0,1,0, 0,0,1])
         gens = (S123, S132, S213, S231, S312, S321)
-        alphabet = ['123', '132', '213', '231', '312', '321']
+        alphabet = [123, 132, 213, 231, 312, 321]
         gens = dict(zip(alphabet, gens))
 
         cone = {}
-        cone['213'] = cone['312'] = matrix.column(3, [1,1,1, 1,1,0, 1,0,1])
-        cone['123'] = cone['321'] = matrix.column(3, [1,1,1, 0,1,1, 1,1,0])
-        cone['132'] = cone['231'] = matrix.column(3, [1,1,1, 1,0,1, 0,1,1])
+        cone[213] = cone[312] = matrix.column(3, [1,1,1, 1,1,0, 1,0,1])
+        cone[123] = cone[321] = matrix.column(3, [1,1,1, 0,1,1, 1,1,0])
+        cone[132] = cone[231] = matrix.column(3, [1,1,1, 1,0,1, 0,1,1])
 
         from language import languages
         return MatrixCocycle(gens, cone, language=languages.Selmer())
@@ -842,7 +842,7 @@ class MatrixCocycleGenerator(object):
         P31 = matrix(3, [1,1,1, 0,1,0, 0,1,1])
         P32 = matrix(3, [1,0,0, 1,1,1, 1,0,1])
         gens = (P23, P32, P13, P31, P12, P21)
-        alphabet = ['123', '132', '213', '231', '312', '321']
+        alphabet = [123, 132, 213, 231, 312, 321]
         gens = dict(zip(alphabet, gens))
         return MatrixCocycle(gens)
 

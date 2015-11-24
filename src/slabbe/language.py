@@ -31,7 +31,7 @@ Predefined languages::
 
     sage: from slabbe.language import languages
     sage: languages.ARP()
-    Regular language over ['1', '2', '3', '123', '132', '213', '231', '312', '321']
+    Regular language over [1, 2, 3, 123, 132, 213, 231, 312, 321]
     defined by: Automaton with 7 states
 
 AUTHORS:
@@ -296,12 +296,12 @@ class LanguageGenerator(object):
             sage: from slabbe.language import languages
             sage: L = languages.ARP()
             sage: L
-            Regular language over ['1', '2', '3', '123', '132', '213', '231', '312', '321']
+            Regular language over [1, 2, 3, 123, 132, 213, 231, 312, 321]
             defined by: Automaton with 7 states
             sage: map(L.complexity, range(4))
             [1, 9, 57, 345]
         """
-        alphabet = ['1', '2', '3', '123', '132', '213', '231', '312', '321']
+        alphabet = [1, 2, 3, 123, 132, 213, 231, 312, 321]
         automaton = self._ARP_automaton()
         return RegularLanguage(alphabet, automaton)
 
@@ -318,17 +318,17 @@ class LanguageGenerator(object):
 
         TESTS::
 
-            sage: A.process(['1', '312', '1', '213'])
+            sage: A.process([1, 312, 1, 213])
             (True, 'H213')
-            sage: A(['1', '312', '1', '213'])
+            sage: A([1, 312, 1, 213])
             True
         """
         def H(i,j,k):
             return 'H{}{}{}'.format(i,j,k)
         def P(i,j,k):
-            return '{}{}{}'.format(i,j,k)
+            return int('{}{}{}'.format(i,j,k))
         def A(k):
-            return '{}'.format(k)
+            return int('{}'.format(k))
         D = 'Delta'
         states = [H(*p) for p in itertools.permutations((1,2,3))] + [D]
         autom = Automaton(initial_states=[D], final_states=states)
@@ -354,7 +354,7 @@ class LanguageGenerator(object):
             sage: from slabbe.language import languages
             sage: L = languages.Brun()
             sage: L
-            Regular language over ['123', '132', '213', '231', '312', '321']
+            Regular language over [123, 132, 213, 231, 312, 321]
             defined by: Automaton with 6 states
             sage: map(L.complexity, range(4))
             [1, 6, 18, 54]
@@ -378,7 +378,7 @@ class LanguageGenerator(object):
              word: 321,312,
              word: 321,321]
         """
-        alphabet = ['123', '132', '213', '231', '312', '321']
+        alphabet = [123, 132, 213, 231, 312, 321]
         automaton = self._Brun_automaton()
         return RegularLanguage(alphabet, automaton)
 
@@ -395,13 +395,13 @@ class LanguageGenerator(object):
 
         TESTS::
 
-            sage: A(['123', '123', '132', '213'])
+            sage: A([123, 123, 132, 213])
             True
-            sage: A(['123', '123', '132', '213', '123'])
+            sage: A([123, 123, 132, 213, 123])
             False
         """
         def B(i,j,k):
-            return '{}{}{}'.format(i,j,k)
+            return int('{}{}{}'.format(i,j,k))
         states = [B(*p) for p in itertools.permutations((1,2,3))]
         autom = Automaton(initial_states=states, final_states=states)
         for p in itertools.permutations((1,2,3)):
@@ -420,7 +420,7 @@ class LanguageGenerator(object):
             sage: from slabbe.language import languages
             sage: L = languages.Selmer()
             sage: L
-            Regular language over ['123', '132', '213', '231', '312', '321']
+            Regular language over [123, 132, 213, 231, 312, 321]
             defined by: Automaton with 6 states
             sage: map(L.complexity, range(4))
             [1, 6, 12, 24]
@@ -438,7 +438,7 @@ class LanguageGenerator(object):
              word: 321,132,
              word: 321,312]
         """
-        alphabet = ['123', '132', '213', '231', '312', '321']
+        alphabet = [123, 132, 213, 231, 312, 321]
         automaton = self._Selmer_automaton()
         return RegularLanguage(alphabet, automaton)
 
@@ -455,13 +455,13 @@ class LanguageGenerator(object):
 
         TESTS::
 
-            sage: A(['123', '132', '213'])
+            sage: A([123, 132, 213])
             True
-            sage: A(['123', '132', '213', '123'])
+            sage: A([123, 132, 213, 123])
             False
         """
         def S(i,j,k):
-            return '{}{}{}'.format(i,j,k)
+            return int('{}{}{}'.format(i,j,k))
         states = [S(*p) for p in itertools.permutations((1,2,3))]
         autom = Automaton(initial_states=states, final_states=states)
         for p in itertools.permutations((1,2,3)):
