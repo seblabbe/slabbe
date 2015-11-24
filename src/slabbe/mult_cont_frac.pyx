@@ -435,8 +435,8 @@ cdef class MCFAlgorithm(object):
 
             sage: from slabbe.mult_cont_frac import ARP
             sage: ARP().matrix_cocycle()
-            Cocycle with 9 gens over Regular language over ['1', '2', '3', 
-            '123', '132', '213', '231', '312', '321']
+            Cocycle with 9 gens over Regular language over [1, 2, 3, 
+            123, 132, 213, 231, 312, 321]
             defined by: Automaton with 7 states
 
         ::
@@ -444,14 +444,14 @@ cdef class MCFAlgorithm(object):
             sage: from slabbe.mult_cont_frac import Sorted_Brun
             sage: Sorted_Brun().matrix_cocycle()
             Cocycle with 3 gens over Language of finite words over alphabet
-            ['1', '2', '3']
+            [1, 2, 3]
 
         ::
 
             sage: from slabbe.mult_cont_frac import Brun
             sage: Brun().matrix_cocycle()
             Cocycle with 6 gens over Regular language over 
-            ['123', '132', '213', '231', '312', '321']
+            [123, 132, 213, 231, 312, 321]
             defined by: Automaton with 6 states
         """
         from matrix_cocycle import cocycles
@@ -500,6 +500,32 @@ cdef class MCFAlgorithm(object):
             # Normalize (x,y,z)
             s = P.x + P.y + P.z
             P.x /= s; P.y /= s; P.z /= s
+
+    def n_matrix(self, start, n_iterations):
+        r"""
+        Return the n-matrix associated to the direction v.
+
+        INPUT:
+
+        - ``start`` -- iterable of three real numbers
+        - ``n_iterations`` - integer, number of iterations
+
+        OUTPUT:
+
+            matrix
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import ARP
+            sage: ARP().n_matrix((1,e,pi), 10)
+            [ 31  40   7]
+            [ 84 109  19]
+            [ 97 126  22]
+        """
+        it = self.coding_iterator(start)
+        L = [next(it) for _ in range(n_iterations)]
+        cocycle = self.matrix_cocycle()
+        return cocycle.word_to_matrix(L)
 
     def simplex_orbit_iterator(self, start=None, norm_xyz='sup', norm_uvw='1'):
         r"""
