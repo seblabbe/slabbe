@@ -6,6 +6,7 @@ Version ``0.1`` contains modules on digital geometry, combinatorics on words
 and more. Version ``0.2`` provides modules on multidimensional continued
 fraction algorithms, matrix cocycles, languages and tikzpictures.
 
+
 __ http://www.sagemath.org/
 
 Releases:
