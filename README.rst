@@ -6,11 +6,20 @@ It contains modules on digital geometry, combinatorics on words and more.
 
 __ http://www.sagemath.org/
 
-Current version is 0.1, released August 27, 2014.
+Releases:
+
+ - `version 0.1`__, released August 27, 2014.
+ - `version 0.1.1`__, released June 3, 2015.
+ - `version 0.2`__, released November 25, 2015.
+
+__ http://www.slabbe.org/Sage/slabbe-0.1.spkg
+__ http://www.slabbe.org/Sage/slabbe-0.1.1.spkg
+__ http://www.slabbe.org/Sage/slabbe-0.2.spkg
 
 Installation::
 
-    sage -i http://www.liafa.univ-paris-diderot.fr/~labbe/Sage/slabbe-0.1.spkg
+    sage -p http://www.slabbe.org/Sage/slabbe-0.2.spkg  # sage-6.9 or newer
+    sage -i http://www.slabbe.org/Sage/slabbe-0.2.spkg  # sage-6.8 or earlier
 
 Usage::
 
@@ -18,5 +27,5 @@ Usage::
 
 More information is available at:
 
-http://www.liafa.univ-paris-diderot.fr/~labbe/Sage/
+http://www.slabbe.org/Sage/
 
