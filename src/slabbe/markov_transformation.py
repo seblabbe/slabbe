@@ -9,6 +9,7 @@ EXAMPLES:
 TODO:
 
     - Remove cylinder code from matrix cocycle
+    - Remove rounded_string_vector from matrix cocycle
 
 AUTHORS:
 
@@ -275,9 +276,7 @@ class MarkovTransformation(object):
 
             sage: from slabbe.markov_transformation import markov_transformations
             sage: T = markov_transformations.Selmer()
-            sage: from slabbe.matrix_cocycle import cocycles
-            sage: ARP = cocycles.ARP()
-            sage: t = ARP.tikz_n_cylinders(1, labels=True, scale=4)
+            sage: t = T.tikz_n_cylinders(1, labels=True, scale=4)
             sage: t
             \documentclass[tikz]{standalone}
             \begin{document}
@@ -390,3 +389,21 @@ class MarkovTransformationGenerators(object):
         return MarkovTransformation(partition, transitions, linear_maps)
 
 markov_transformations = MarkovTransformationGenerators()
+
+#####################
+# Helper functions
+#####################
+def rounded_string_vector(v, digits=4):
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.matrix_cocycle import rounded_string_vector
+        sage: v = (-0.144337567297406, 0.166666666666667)
+        sage: rounded_string_vector(v)
+        '(-0.1443, 0.1667)'
+        sage: rounded_string_vector(v, digits=6)
+        '(-0.144338, 0.166667)'
+    """
+    s = "{{:.{}f}}".format(digits)
+    content = ", ".join(s.format(float(a)) for a in v)
+    return "({})".format(content)
