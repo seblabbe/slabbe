@@ -1,4 +1,4 @@
-VERSION = 0.2
+VERSION = 0.3.beta
 
 all: install test
 
@@ -22,6 +22,5 @@ docbuild:
 publish:
 	cp ~/Applications/sage-git/src/doc/output/pdf/en/slabbe/slabbe_ref.pdf ../www/Sage/slabbe-$(VERSION).pdf
 	cp ../slabbe-$(VERSION).spkg ../www/Sage/
-	#git tag -a $(VERSION) -m 'version $(VERSION)' 
 
 
