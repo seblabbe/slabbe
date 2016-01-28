@@ -561,6 +561,7 @@ class MatrixCocycle(object):
         from sage.plot.graphics import Graphics
         from sage.plot.polygon import polygon
         from sage.plot.text import text
+        from useful_matrices import projection_matrix
         M3to2 = projection_matrix(3, 2)
         G = Graphics()
         for w,cyl in self.n_cylinders_iterator(n):
@@ -593,6 +594,7 @@ class MatrixCocycle(object):
         from sage.plot.text import text
         from sage.plot.colors import hue
         from sage.modules.free_module_element import vector
+        from useful_matrices import projection_matrix
         M3to2 = projection_matrix(3, 2)
         R = self.n_matrices_eigenvectors(n)
         L = [(w, M3to2*(a/sum(a)), M3to2*(b/sum(b))) for (w,a,b) in R]
@@ -874,41 +876,6 @@ def rounded_string_vector(v, digits=4):
     s = "{{:.{}f}}".format(digits)
     content = ", ".join(s.format(float(a)) for a in v)
     return "({})".format(content)
-
-def projection_matrix(dim_from=3, dim_to=2):
-    r"""
-    Return a projection matrix from R^d to R^l.
-
-    INPUT:
-
-    - ``dim_from` -- integer (default: ``3``)
-    - ``dim_to` -- integer (default: ``2``)
-
-    OUTPUT:
-
-        matrix
-
-    EXAMPLES::
-
-        sage: from slabbe.matrix_cocycle import projection_matrix
-        sage: projection_matrix(3,2)
-        [-0.866025403784439  0.866025403784439  0.000000000000000]
-        [-0.500000000000000 -0.500000000000000   1.00000000000000]
-        sage: projection_matrix(2,3)
-        [-0.577350269189626 -0.333333333333333]
-        [ 0.577350269189626 -0.333333333333333]
-        [ 0.000000000000000  0.666666666666667]
-    """
-    from math import sqrt
-    from sage.rings.real_mpfr import RR
-    sqrt3 = sqrt(3)
-    if dim_from == 3 and dim_to == 2:
-        return matrix(2,[-sqrt3,sqrt3,0,-1,-1,2],ring=RR)/2
-    elif dim_from == 2 and dim_to == 3:
-        return matrix(3,[-sqrt3,-1,sqrt3,-1,0,2],ring=RR)/3
-    else:
-        s = "for input dim_from={} and dim_to={}"
-        raise NotImplementedError(s.format(dim_from, dim_to))
 
 def distorsion(M, p=1):
     r"""

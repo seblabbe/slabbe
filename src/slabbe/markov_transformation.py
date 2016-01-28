@@ -23,7 +23,14 @@ AUTHORS:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+
+import itertools
+from sage.misc.cachefunc import cached_method
+from sage.misc.misc_c import prod
+from sage.matrix.constructor import matrix
 from sage.combinat.finite_state_machine import Automaton
+from language import RegularLanguage
+from useful_matrices import projection_matrix
 
 ######################
 # Markov Transformation
@@ -133,6 +140,13 @@ class MarkovTransformation(object):
             [1 1 1]
             [0 1 0]
             [1 1 2]
+
+        Empty word::
+
+            sage: T.word_to_matrix([])
+            [1 0 0]
+            [0 1 0]
+            [0 0 1]
         """
         return prod((self._linear_maps[a] for a in w), z=self.identity_matrix())
 
@@ -146,6 +160,11 @@ class MarkovTransformation(object):
             [word: 321, word: 132, word: -123, word: 231, word: -312, word:
             -213, word: 213, word: 312, word: -231, word: 123, word: -132,
             word: -321]
+
+        TESTS::
+
+            sage: list(T.n_words_iterator(0))
+            [word: ]
         """
         return self.language().words_of_length_iterator(n)
 
@@ -170,6 +189,15 @@ class MarkovTransformation(object):
             [0 1 0]  [0 1 0]  [1 1 0]  [0 1 0]
             [0 0 1], [1 0 1], [0 0 1], [0 0 1]
             )
+
+        TESTS::
+
+            sage: list(T.n_matrices_iterator(0))
+            [(
+                    [1 0 0]
+                    [0 1 0]
+            word: , [0 0 1]
+            )]
         """
         for w in self.n_words_iterator(n):
             yield w, self.word_to_matrix(w)
@@ -184,10 +212,11 @@ class MarkovTransformation(object):
             sage: A
             sage: B
         """
-        if n == 0:
-            raise NotImplementedError
         for w,m in self.n_matrices_iterator(n):
-            parts = self._transitions[w[-1]]
+            if w:
+                parts = self._transitions[w[-1]]
+            else:
+                parts = self._partition.keys()
             for part in parts:
                 part_matrix = self._partition[part]
                 yield w, m*part_matrix
@@ -217,6 +246,10 @@ class MarkovTransformation(object):
             sage: from slabbe.markov_transformation import markov_transformations
             sage: T = markov_transformations.Selmer()
             sage: G = T.plot_n_cylinders(3)
+
+        TESTS::
+
+            sage: G = T.plot_n_cylinders(0)
         """
         from sage.plot.graphics import Graphics
         from sage.plot.polygon import polygon
