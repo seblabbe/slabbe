@@ -443,6 +443,10 @@ class ExtensionType(object):
             sage: e = ExtensionType1to1([(1,3),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
             sage: t = e.life_graph_tikz(['p32','p13','ar2'])
 
+        This seems broken (why?)::
+
+            sage: t.pdf()
+
         ::
 
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
