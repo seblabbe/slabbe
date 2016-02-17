@@ -56,7 +56,6 @@ TODO:
 
     - use __classcall_private__ stuff for ExtensionType ?
     - rename ExtensionType2to1 to ExtendedExtensionType ?
-    - export tikz to pdf using view instead of tikz2pdf ?
     - fix bug of apply for ExtensionType2to1 when the word appears in the
       image of a letter
     - add the bispecial word to the attribute of extension type
@@ -71,6 +70,7 @@ from sage.misc.table import table
 from sage.combinat.words.word import FiniteWord_class, Word
 from sage.combinat.words.morphism import WordMorphism
 from sage.graphs.digraph import DiGraph
+from tikz_picture import TikzPicture
 
 common_substitutions_dict = dict(
 ar1=WordMorphism({1:[1],      2:[2,1],   3:[3,1]}),
@@ -414,11 +414,10 @@ class ExtensionType(object):
             L,newL = newL,[]
         return G
 
-    def life_graph_save_tikz(self, filename, substitutions, **kwds):
+    def life_graph_tikz(self, substitutions, **kwds):
         r"""
         INPUT:
 
-        - "filename" - string
         - "format" - string, default: 'tkz_graph' -- either 'dot2tex' or
           'tkz_graph'.
 
@@ -442,7 +441,7 @@ class ExtensionType(object):
 
             sage: from slabbe import ExtensionType1to1
             sage: e = ExtensionType1to1([(1,3),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
-            sage: e.life_graph_save_tikz('a.tikz', ['p32','p13','ar2'])    # not tested
+            sage: t = e.life_graph_tikz(['p32','p13','ar2'])
 
         ::
 
@@ -450,24 +449,15 @@ class ExtensionType(object):
             ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: from slabbe import ExtensionType2to1
             sage: E = ExtensionType2to1(L, (1,2,3))
-            sage: E.life_graph_save_tikz('b.tikz', ['b12','b21','b12']) # not tested
-            Creation of file b.tikz
-            Using template '/Users/slabbe/.tikz2pdf.tex'.
-            tikz2pdf: calling pdflatex...
-            tikz2pdf: Output written to 'b.pdf'.
+            sage: t = E.life_graph_tikz(['b12','b21','b12'])
 
         """
         g = self.life_graph(substitutions)
         default_kwds = dict(format='dot2tex', edge_labels=True, color_by_label=False)
         default_kwds.update(kwds)
         g.latex_options().set_options(**default_kwds)
-        tikz = latex(g)
-        if tikz:
-            with open(filename, 'w') as f:
-                f.write(tikz)
-                print "Creation of file %s" % filename
-            import os
-            os.system("tikz2pdf %s" % filename)
+        tikz = g._latex_()
+        return TikzPicture(tikz)
 
     def equivalence_class(self):
         r"""
