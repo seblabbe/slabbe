@@ -7,7 +7,7 @@ from discrete_subset import DiscreteSubset, DiscreteBox, DiscreteTube, Intersect
 from billiard import BilliardCube
 from discrete_plane import DiscretePlane, DiscreteLine, DiscreteHyperplane
 from christoffel_graph import ChristoffelGraph
-from bispecial_extension_type import ExtensionType, ExtensionType1to1, ExtensionType2to1
+from bispecial_extension_type import ExtensionType, ExtensionType1to1, ExtensionTypeLong
 from double_square_tile import DoubleSquare, christoffel_tile
 from fruit import Fruit, Banana, Strawberry
 from joyal_bijection import Endofunctions, Endofunction, DoubleRootedTree
