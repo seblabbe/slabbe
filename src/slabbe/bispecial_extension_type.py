@@ -1723,3 +1723,65 @@ def longest_common_suffix(L):
     for w in L:
         common = w.longest_common_suffix(common)
     return common
+
+def table_bispecial(word, k):
+    r"""
+    Return the table of the first k bispecial factors of a word.
+
+    INPUT:
+
+    - ``word`` -- finite word
+    - ``k`` -- integer
+
+    OUTPUT:
+
+        table
+
+    EXAMPLES::
+
+        sage: from slabbe.bispecial_extension_type import table_bispecial
+        sage: w = words.FibonacciWord()
+        sage: table_bispecial(w[:10000], 6)
+          word                  m(w)   info
+        +---------------------+------+----------+
+                                0      ordinary
+          0                     0      ordinary
+          010                   0      ordinary
+          010010                0      ordinary
+          01001010010           0      ordinary
+          0100101001001010010   0      ordinary
+
+    ::
+
+        sage: w = words.ThueMorseWord()
+        sage: table_bispecial(w[:10000], 10)
+          word     m(w)   info
+        +--------+------+----------+
+                   1      strong
+          0        0      ordinary
+          1        0      ordinary
+          10       1      strong
+          01       1      strong
+          101      -1     weak
+          010      -1     weak
+          1001     1      strong
+          0110     1      strong
+          100110   -1     weak
+    """
+    it = word.bispecial_factors_iterator()
+    bispecials = [next(it) for _ in range(k)]
+    rows = []
+    for w in bispecials:
+        ext = ExtensionType.from_factor(w, word)
+        mw = ext.multiplicity()
+        if ext.is_ordinaire():
+            info = 'ordinary'
+        elif mw == 0:
+            info = 'neutral'
+        elif mw < 0:
+            info = 'weak'
+        else:
+            info = 'strong'
+        row = [w, mw , info]
+        rows.append(row)
+    return table(rows=rows, header_row=['word', 'm(w)','info'])
