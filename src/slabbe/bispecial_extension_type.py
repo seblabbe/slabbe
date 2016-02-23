@@ -389,7 +389,8 @@ class ExtensionType(object):
 
         INPUT:
 
-        - ``substitutions`` - list of substitutions keys
+        - ``substitutions`` - list of substitutions keys, the last one is
+          applied first
         - ``substitutions_dict`` - dict of substitutions, if None then it
           gets replaced by ``common_substitutions_dict`` defined in the
           module.
@@ -404,7 +405,7 @@ class ExtensionType(object):
             Looped multi-digraph on 2 vertices
             sage: e.life_graph(['p32'])
             Looped multi-digraph on 3 vertices
-            sage: e.life_graph(['p32','p13','ar2'])
+            sage: e.life_graph(['ar2','p13','p32'])
             Looped multi-digraph on 5 vertices
 
         2to1::
@@ -422,7 +423,7 @@ class ExtensionType(object):
         loops = True
         G = DiGraph(multiedges=multiedges,loops=loops)
         L,newL = [self],[]
-        for key in substitutions:
+        for key in reversed(substitutions):
             s = substitutions_dict[key]
             for e in L:
                 for new in e.apply(s):
@@ -431,28 +432,15 @@ class ExtensionType(object):
             L,newL = newL,[]
         return G
 
-    def life_graph_tikz(self, substitutions, **kwds):
+    def life_graph_tikz(self, substitutions, substitutions_dict=None, **kwds):
         r"""
         INPUT:
 
-        - "format" - string, default: 'tkz_graph' -- either 'dot2tex' or
-          'tkz_graph'.
-
-        If format is 'dot2tex', then all the LaTeX generation will be
-        delegated to "dot2tex" (which must be installed).
-
-        For the 'dot2tex' format, the possible option names and associated
-        values are given below:
-
-        - "prog" -- the program used for the layout. It must be a string
-          corresponding to one of the software of the graphviz suite:
-          'dot', 'neato', 'twopi', 'circo' or 'fdp'.
-
-        See this for more options::
-
-            sage: g = graphs.PetersenGraph()
-            sage: opts = g.latex_options()
-            sage: opts.set_option?        # not tested
+        - ``substitutions`` - list of substitutions keys, the last one is
+          applied first
+        - ``substitutions_dict`` - dict of substitutions, if None then it
+          gets replaced by ``common_substitutions_dict`` defined in the
+          module.
 
         EXAMPLES::
 
@@ -466,6 +454,14 @@ class ExtensionType(object):
 
         ::
 
+            sage: from slabbe import ExtensionType1to1
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: e = ExtensionType1to1([(1,3),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
+            sage: S = Brun().substitutions()
+            sage: t = e.life_graph_tikz([132,213,123], S)
+
+        ::
+
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: from slabbe import ExtensionTypeLong
@@ -473,7 +469,7 @@ class ExtensionType(object):
             sage: t = E.life_graph_tikz(['b12','b21','b12'])
 
         """
-        g = self.life_graph(substitutions)
+        g = self.life_graph(substitutions, substitutions_dict)
         default_kwds = dict(format='dot2tex', edge_labels=True, color_by_label=False)
         default_kwds.update(kwds)
         g.latex_options().set_options(**default_kwds)
