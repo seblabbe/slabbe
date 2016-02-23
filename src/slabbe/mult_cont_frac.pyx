@@ -994,6 +994,44 @@ cdef class MCFAlgorithm(object):
             L.append( (P.x, P.y, P.z, P.u, P.v, P.w, P.branch))
         return L
 
+    def image(self, start, n_iterations=1):
+        r"""
+        Return the image of a vector in R^3 after n iterations.
+
+        INPUT:
+
+        - ``start`` - initial vector
+        - ``n_iterations`` - integer, number of iterations (default: 1)
+
+        OUTPUT:
+
+            tuple of three floats
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: Brun().image((10, 21, 37))
+            (10.0, 21.0, 16.0)
+            sage: Brun().image((10, 21, 37), 2)
+            (10.0, 5.0, 16.0)
+            sage: Brun().image((10, 21, 37), 3)
+            (10.0, 5.0, 6.0)
+            sage: Brun().image((10, 21, 37), 10)
+            (1.0, 1.0, 0.0)
+        """
+        cdef PairPoint3d P
+        cdef int i
+        P.x = start[0]; P.y = start[1]; P.z = start[2]
+        P.u = 1
+        P.v = 1
+        P.w = 1
+
+        # Loop
+        for i from 0 <= i < n_iterations:
+            sig_check() # Check for Keyboard interupt
+            P = self.call(P)
+        return (P.x, P.y, P.z)
+
     def _invariant_measure_dict(self, int n_iterations, int ndivs, v=None,
             str norm='1', verbose=False):
         r"""
