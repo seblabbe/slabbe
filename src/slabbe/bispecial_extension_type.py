@@ -447,9 +447,6 @@ class ExtensionType(object):
             sage: from slabbe import ExtensionType1to1
             sage: e = ExtensionType1to1([(1,3),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
             sage: t = e.life_graph_tikz(['p32','p13','ar2'])
-
-        This seems broken (why?)::
-
             sage: t.pdf()
 
         ::
@@ -459,6 +456,7 @@ class ExtensionType(object):
             sage: e = ExtensionType1to1([(1,3),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
             sage: S = Brun().substitutions()
             sage: t = e.life_graph_tikz([132,213,123], S)
+            sage: t.pdf()
 
         ::
 
@@ -467,6 +465,7 @@ class ExtensionType(object):
             sage: from slabbe import ExtensionTypeLong
             sage: E = ExtensionTypeLong(L, (1,2,3))
             sage: t = E.life_graph_tikz(['b12','b21','b12'])
+            sage: t.pdf()
 
         """
         g = self.life_graph(substitutions, substitutions_dict)

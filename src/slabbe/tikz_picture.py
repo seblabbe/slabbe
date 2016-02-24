@@ -59,17 +59,17 @@ from sage.structure.sage_object import SageObject
 import os
 
 class TikzPicture(SageObject):
-    def __init__(self, code, standalone_configs=[], packages=[],
+    def __init__(self, code, standalone_configs=[], packages=['amsmath'],
             tikzlibraries=[], macros=[]):
         r"""
         INPUT:
 
         - ``code`` -- string, tikzpicture code
         - ``standalone_configs`` -- list of strings (default: ``[]``),
-          standalone configuration options.
+          latex document class standalone configuration options.
         - ``packages`` -- list of strings or ``'sage_preamble'`` (default:
-          ``[]``), latex packages. If ``'sage_preamble'``, it is replaced by the
-          sage latex preamble.
+          ``['amsmath']``), latex packages. If ``'sage_preamble'``, it is
+          replaced by the sage latex preamble.
         - ``tikzlibraries`` -- list of strings (default: ``[]``), tikz libraries
           to use.
         - ``macros`` -- list of strings or ``'sage_latex_macros'`` (default:
