@@ -2151,6 +2151,119 @@ def double_square_from_four_integers(l0, l1, l2, l3):
     return ( (w0,w1,w2,w3,w4,w5,w6,w7), nbar, steps_dict)
 
 ###############################
+# Creation of Double Hexagon from inputs
+###############################
+def double_hexagon_from_integers(l0, l1, l2, l3, l4, l5):
+    r"""
+    Creates a double hexagon from the lengths of the `w_i`.
+
+    INPUT:
+
+    - ``l0`` - integer, length of `w_0`
+    - ``l1`` - integer, length of `w_1`
+    - ``l2`` - integer, length of `w_2`
+    - ``l3`` - integer, length of `w_3`
+    - ``l4`` - integer, length of `w_4`
+    - ``l5`` - integer, length of `w_5`
+
+    OUTPUT:
+
+    - tuple - tuple of 12 words over alphabet A
+    - WordMorphism, involution on the alphabet A and representing a
+      rotation of 180 degrees.
+    - dict - mapping letters of A to steps in the plane.
+
+    EXAMPLES:
+
+    It seems difficult to find examples that do not overlap. Here are some
+    on the square grid::
+
+        sage: from slabbe.double_square_tile import double_hexagon_from_integers
+        sage: w,rot180,steps = double_hexagon_from_integers(1,3,1,6,1,6)
+        (Path: 2,
+         Path: 222,
+         Path: 2,
+         Path: 323232,
+         Path: 3,
+         Path: 030303,
+         Path: 0,
+         Path: 000,
+         Path: 0,
+         Path: 101010,
+         Path: 1,
+         Path: 212121)
+        sage: w,rot180,steps = double_hexagon_from_integers(1,10,1,5,1,10)
+
+    On the hexagonal grid::
+
+        sage: w,rot180,steps = double_hexagon_from_integers(1,2,1,2,1,2)
+        sage: w,rot180,steps = double_hexagon_from_integers(2,5,2,5,2,5)
+        sage: w,rot180,steps = double_hexagon_from_integers(5,14,5,14,5,14) # une fleur!
+        sage: w,rot180,steps = double_hexagon_from_integers(5,22,5,22,5,22)
+        sage: w,rot180,steps = double_hexagon_from_integers(5,38,5,38,5,38)
+
+    To plot them::
+
+        sage: prod(w).plot()
+    """
+    # Initial words where every letter is assumed to different
+    # The involution exchanges the sign
+    somme = l0 + l1 + l2 + l3 + l4 + l5
+    W = Words(range(1, somme+1) + range(-1, -(somme+1), -1))
+    w0 = W(range(1, l0+1))
+    w1 = W(range(l0+1,l0+l1+1))
+    w2 = W(range(l0+l1+1,l0+l1+l2+1))
+    w3 = W(range(l0+l1+l2+1,l0+l1+l2+l3+1))
+    w4 = W(range(l0+l1+l2+l3+1,l0+l1+l2+l3+l4+1))
+    w5 = W(range(l0+l1+l2+l3+l4+1,l0+l1+l2+l3+l4+l5+1))
+    inv = lambda x : -x
+    rot180 = WordMorphism(dict((x,inv(x)) for x in W.alphabet()), codomain=W)
+    hat = lambda w: rot180(w).reversal()
+    hatA = hat(w0 * w1)
+    hatB = hat(w2 * w3)
+    hatC = hat(w4 * w5)
+    w6 = hatA[:l0]
+    w7 = hatA[l0:]
+    w8 = hatB[:l2]
+    w9 = hatB[l2:]
+    w10 = hatC[:l4]
+    w11 = hatC[l4:]
+    #print w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11
+
+    # Creation of the overlap and of the resulting disjoint set
+    p = hat(w1 * w2).overlap_partition(w7 * w8, 0, involution = inv)
+    p = hat(w3 * w4).overlap_partition(w9 * w10, 0, p, involution = inv)
+    p = hat(w5 * w6).overlap_partition(w11 * w0, 0, p, involution = inv)
+
+    # The alphabet representents and resulting new involution
+    alphabet = p.root_to_elements_dict().keys()
+    proj1 = p.element_to_root_dict()
+    dbar = dict((a,proj1[inv(a)]) for a in alphabet)
+    nbar = WordMorphism(dbar)
+    A, B, C = nbar.partition_of_domain_alphabet()
+    assert len(C) == 0
+    len_A = len(A)
+    steps = []
+    for j in range(len_A):
+        angle = pi * j / len_A
+        steps.append( (cos(angle), sin(angle)) )
+    A_ranged = range(len_A)
+    AB_ranged = range(2 * len_A)
+
+    # Projection of the initial words into words over the new alphabet
+    from sage.combinat.words.paths import WordPaths
+    P = WordPaths(AB_ranged, steps=steps)
+    steps_dict = P.letters_to_steps()
+    proj2 = dict(zip(A,A_ranged))
+    proj2.update((dbar[a], proj2[a] + len_A) for a in A)
+    Projection = WordMorphism(proj2, codomain=P) * WordMorphism(proj1)
+    rep = map(Projection, (w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11))
+    w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11 = rep
+    nbar = WordMorphism( dict((a,(a + len_A) % (2 * len_A)) for a in AB_ranged), codomain=P)
+    #print w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11
+    return ( (w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11), nbar, steps_dict)
+
+###############################
 # Creation of Figure 11 for [BGL2012]_
 ###############################
 def figure_11_BGL2012(scale=0.5, boxsize=10, newcommand=True):
