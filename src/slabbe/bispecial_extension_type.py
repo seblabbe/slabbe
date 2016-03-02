@@ -382,99 +382,6 @@ class ExtensionType(object):
         s += '\n\\end{tabular}'
         return s
 
-    def life_graph(self, substitutions, substitutions_dict=None):
-        r"""
-        Return the graph of extension types generated under a sequence of
-        substitutions.
-
-        INPUT:
-
-        - ``substitutions`` - list of substitutions keys, the last one is
-          applied first
-        - ``substitutions_dict`` - dict of substitutions, if None then it
-          gets replaced by ``common_substitutions_dict`` defined in the
-          module.
-
-        EXAMPLES:
-
-        From an ordinaire word::
-
-            sage: from slabbe import ExtensionType1to1
-            sage: e = ExtensionType1to1([(1,3),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
-            sage: e.life_graph(['p23'])
-            Looped multi-digraph on 2 vertices
-            sage: e.life_graph(['p32'])
-            Looped multi-digraph on 3 vertices
-            sage: e.life_graph(['ar2','p13','p32'])
-            Looped multi-digraph on 5 vertices
-
-        2to1::
-
-            sage: from slabbe import ExtensionTypeLong
-            sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
-            ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
-            sage: E = ExtensionTypeLong(L, (1,2,3))
-            sage: E.life_graph(['b12','b21','b12'])
-            Looped multi-digraph on 8 vertices
-        """
-        if substitutions_dict is None:
-            substitutions_dict = common_substitutions_dict
-        multiedges = True
-        loops = True
-        G = DiGraph(multiedges=multiedges,loops=loops)
-        L,newL = [self],[]
-        for key in reversed(substitutions):
-            s = substitutions_dict[key]
-            for e in L:
-                for new in e.apply(s):
-                    G.add_edge((e,new,key))
-                    newL.append(new)
-            L,newL = newL,[]
-        return G
-
-    def life_graph_tikz(self, substitutions, substitutions_dict=None, **kwds):
-        r"""
-        INPUT:
-
-        - ``substitutions`` - list of substitutions keys, the last one is
-          applied first
-        - ``substitutions_dict`` - dict of substitutions, if None then it
-          gets replaced by ``common_substitutions_dict`` defined in the
-          module.
-
-        EXAMPLES::
-
-            sage: from slabbe import ExtensionType1to1
-            sage: e = ExtensionType1to1([(1,3),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
-            sage: t = e.life_graph_tikz(['p32','p13','ar2'])
-            sage: t.pdf()
-
-        ::
-
-            sage: from slabbe import ExtensionType1to1
-            sage: from slabbe.mult_cont_frac import Brun
-            sage: e = ExtensionType1to1([(1,3),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
-            sage: S = Brun().substitutions()
-            sage: t = e.life_graph_tikz([132,213,123], S)
-            sage: t.pdf()
-
-        ::
-
-            sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
-            ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
-            sage: from slabbe import ExtensionTypeLong
-            sage: E = ExtensionTypeLong(L, (1,2,3))
-            sage: t = E.life_graph_tikz(['b12','b21','b12'])
-            sage: t.pdf()
-
-        """
-        g = self.life_graph(substitutions, substitutions_dict)
-        default_kwds = dict(format='dot2tex', edge_labels=True, color_by_label=False)
-        default_kwds.update(kwds)
-        g.latex_options().set_options(**default_kwds)
-        tikz = g._latex_()
-        return TikzPicture(tikz)
-
     def equivalence_class(self):
         r"""
         EXAMPLES::
@@ -578,32 +485,6 @@ class ExtensionType(object):
             True
         """
         return self.multiplicity() == 0
-
-    def image(self, m):
-        r"""
-
-        EXAMPLES::
-
-            sage: from slabbe import ExtensionTypeLong
-            sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
-            ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
-            sage: E = ExtensionTypeLong(L, (1,2,3))
-            sage: b23 = WordMorphism({1:[1],2:[2,3],3:[3]})
-            sage: E.image(b23)
-              E(w)   1   2   3
-               31        X
-               12            X
-               32            X
-               23    X   X   X
-               33    X
-             m(w)=0, not ord., empty
-        """
-        L = []
-        for e in self.apply(m):
-            if e.is_chignons_empty():
-                L.append(e)
-        assert len(L) == 1, "len of L should be 1"
-        return L[0]
 
     def cardinality(self):
         r"""
@@ -714,6 +595,284 @@ class ExtensionType(object):
             0
         """
         return self.cardinality() - self.left_valence() - self.right_valence() + 1
+    def image(self, m):
+        r"""
+
+        EXAMPLES::
+
+            sage: from slabbe import ExtensionTypeLong
+            sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
+            ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
+            sage: E = ExtensionTypeLong(L, (1,2,3))
+            sage: b23 = WordMorphism({1:[1],2:[2,3],3:[3]})
+            sage: E.image(b23)
+              E(w)   1   2   3
+               31        X
+               12            X
+               32            X
+               23    X   X   X
+               33    X
+             m(w)=0, not ord., empty
+        """
+        L = []
+        for e in self.apply(m):
+            if e.is_chignons_empty():
+                L.append(e)
+        assert len(L) == 1, "len of L should be 1"
+        return L[0]
+
+    def life_graph(self, substitutions, substitutions_dict=None):
+        r"""
+        Return the graph of extension types generated under a sequence of
+        substitutions.
+
+        INPUT:
+
+        - ``substitutions`` - list of substitutions keys, the last one is
+          applied first
+        - ``substitutions_dict`` - dict of substitutions, if None then it
+          gets replaced by ``common_substitutions_dict`` defined in the
+          module.
+
+        EXAMPLES:
+
+        From an ordinaire word::
+
+            sage: from slabbe import ExtensionType1to1
+            sage: e = ExtensionType1to1([(1,3),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
+            sage: e.life_graph(['p23'])
+            Looped multi-digraph on 2 vertices
+            sage: e.life_graph(['p32'])
+            Looped multi-digraph on 3 vertices
+            sage: e.life_graph(['ar2','p13','p32'])
+            Looped multi-digraph on 5 vertices
+
+        2to1::
+
+            sage: from slabbe import ExtensionTypeLong
+            sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
+            ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
+            sage: E = ExtensionTypeLong(L, (1,2,3))
+            sage: E.life_graph(['b12','b21','b12'])
+            Looped multi-digraph on 8 vertices
+        """
+        if substitutions_dict is None:
+            substitutions_dict = common_substitutions_dict
+        multiedges = True
+        loops = True
+        G = DiGraph(multiedges=multiedges,loops=loops)
+        L,newL = [self],[]
+        for key in reversed(substitutions):
+            s = substitutions_dict[key]
+            for e in L:
+                for new in e.apply(s):
+                    G.add_edge((e,new,key))
+                    newL.append(new)
+            L,newL = newL,[]
+        return G
+
+    def life_graph_tikz(self, substitutions, substitutions_dict=None, **kwds):
+        r"""
+        INPUT:
+
+        - ``substitutions`` - list of substitutions keys, the last one is
+          applied first
+        - ``substitutions_dict`` - dict of substitutions, if None then it
+          gets replaced by ``common_substitutions_dict`` defined in the
+          module.
+
+        EXAMPLES::
+
+            sage: from slabbe import ExtensionType1to1
+            sage: e = ExtensionType1to1([(1,3),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
+            sage: t = e.life_graph_tikz(['p32','p13','ar2'])
+            sage: t.pdf()
+
+        ::
+
+            sage: from slabbe import ExtensionType1to1
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: e = ExtensionType1to1([(1,3),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
+            sage: S = Brun().substitutions()
+            sage: t = e.life_graph_tikz([132,213,123], S)
+            sage: t.pdf()
+
+        ::
+
+            sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
+            ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
+            sage: from slabbe import ExtensionTypeLong
+            sage: E = ExtensionTypeLong(L, (1,2,3))
+            sage: t = E.life_graph_tikz(['b12','b21','b12'])
+            sage: t.pdf()
+
+        """
+        g = self.life_graph(substitutions, substitutions_dict)
+        default_kwds = dict(format='dot2tex', edge_labels=True, color_by_label=False)
+        default_kwds.update(kwds)
+        g.latex_options().set_options(**default_kwds)
+        tikz = g._latex_()
+        return TikzPicture(tikz)
+
+    def images_under_language(self, language, initial, substitutions_dict, keep_empty=False):
+        r"""
+        Return the recursively enumerated set of extension type generated
+        by a language of substitutions.
+
+        INPUT:
+
+        - ``language`` -- the language of substitutions
+        - ``initial`` -- initial substitution
+        - ``substitutions_dict`` - dict of substitutions
+        - ``keep_empty`` -- (default: False) whether to keep images that
+          are empty
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.bispecial_extension_type import ExtensionType
+            sage: from slabbe.language import languages
+            sage: algo = Brun()
+            sage: S = algo.substitutions()
+            sage: L = languages.Brun()
+            sage: v = algo.image((1,e,pi), 5)
+            sage: prefix = algo.s_adic_word(v)[:100000]
+            sage: E = ExtensionType.from_factor(prefix.parent()(), prefix, nleft=2)
+            sage: E.images_under_language(L, 123, S)
+            An enumerated set with a forest structure
+        """
+        # what can go before each letter
+        before = defaultdict(list)
+        for w in language.words_of_length_iterator(2): 
+            before[w[1]].append(w[0])
+        before = dict(before)
+
+        def child(V):
+            Y,w = V
+            rep = []
+            for a in before[w[0]]:
+                for Z in Y.apply(substitutions_dict[a]):
+                    if keep_empty or not Z.is_empty():
+                        rep.append((Z,[a]+w))
+            return rep
+        root = (self,[initial])
+
+        from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
+        R = RecursivelyEnumeratedSet([root], child, structure='forest')
+        return R
+
+    def generated_weakstrong(self, language, initial, substitutions_dict, depth, keep_empty=False):
+        r"""
+        Return the word of length depth+1 ending with initial letter of the
+        language that gives weak or strong bispecial factors.
+
+        INPUT:
+
+        - ``language`` -- the language of substitutions
+        - ``initial`` -- initial substitution
+        - ``substitutions_dict`` - dict of substitutions
+        - ``depth`` -- depth
+        - ``keep_empty`` -- (default: False) whether to keep images that
+          are empty
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.bispecial_extension_type import ExtensionType
+            sage: from slabbe.language import languages
+            sage: algo = Brun()
+            sage: S = algo.substitutions()
+            sage: L = languages.Brun()
+            sage: v = algo.image((1,e,pi), 5)
+            sage: prefix = algo.s_adic_word(v)[:100000]
+            sage: E = ExtensionType.from_factor(prefix.parent()(), prefix, nleft=2)
+            sage: E.generated_weakstrong(L, 123, S, 2)
+            set()
+            sage: E.generated_weakstrong(L, 123, S, 3)
+            {(213, 213, 231, 123), (231, 213, 231, 123)}
+            sage: E.generated_weakstrong(L, 123, S, 4)
+            {(132, 213, 213, 231, 123),
+             (213, 213, 213, 231, 123),
+             (213, 213, 231, 231, 123),
+             (213, 231, 213, 231, 123),
+             (231, 213, 213, 231, 123),
+             (231, 213, 231, 231, 123),
+             (231, 231, 213, 231, 123),
+             (312, 231, 213, 231, 123)}
+        """
+        R = self.images_under_language(language, initial, substitutions_dict, keep_empty)
+        it = R.elements_of_depth_iterator(depth) 
+        S = [w for (X,w) in it if X.multiplicity() != 0]
+        return set(tuple(s) for s in S)
+
+    def weakstrong_poset(self, language, initial, substitutions_dict, depth):
+        r"""
+        Return the Poset of words of the language ending with initial
+        letter that gives weak or strong bispecial factors with the "is
+        suffix" relation.
+
+        INPUT:
+
+        - ``language`` -- the language of substitutions
+        - ``initial`` -- initial substitution
+        - ``substitutions_dict`` - dict of substitutions
+        - ``depth`` -- depth
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.bispecial_extension_type import ExtensionType
+            sage: from slabbe.language import languages
+            sage: algo = Brun()
+            sage: S = algo.substitutions()
+            sage: L = languages.Brun()
+            sage: v = algo.image((1,e,pi), 5)
+            sage: prefix = algo.s_adic_word(v)[:100000]
+            sage: E = ExtensionType.from_factor(prefix.parent()(), prefix, nleft=2)
+            sage: E.weakstrong_poset(L, 123, S, 4)
+            Finite poset containing 2 elements
+        """
+        from sage.combinat.posets.posets import Poset
+        is_suffix = lambda w,u: Word(w).is_suffix(Word(u))
+        WS = [self.generated_weakstrong(language, initial, substitutions_dict, depth) 
+                                  for depth in range(depth)]
+        F = reduce(lambda x,y: x.union(y), WS)
+        P = Poset((F,is_suffix))
+        return P
+
+    def weakstrong_poset_tikz(self, language, initial, substitutions_dict, depth):
+        r"""
+        Return the tikz output of the Poset of words of the language ending
+        with initial letter that gives weak or strong bispecial factors
+        with the "is suffix" relation.
+
+        INPUT:
+
+        - ``language`` -- the language of substitutions
+        - ``initial`` -- initial substitution
+        - ``substitutions_dict`` - dict of substitutions
+        - ``depth`` -- depth
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.bispecial_extension_type import ExtensionType
+            sage: from slabbe.language import languages
+            sage: algo = Brun()
+            sage: S = algo.substitutions()
+            sage: L = languages.Brun()
+            sage: v = algo.image((1,e,pi), 5)
+            sage: prefix = algo.s_adic_word(v)[:100000]
+            sage: E = ExtensionType.from_factor(prefix.parent()(), prefix, nleft=2)
+            sage: tikz = E.weakstrong_poset_tikz(L, 123, S, 5)
+            sage: _ = tikz.pdf(view=False)
+        """
+        P = self.weakstrong_poset(language, initial, substitutions_dict, depth)
+        g = P.hasse_diagram()
+        g.latex_options().set_options(format='dot2tex',prog='neato')
+        tikz = TikzPicture(g._latex_())
+        return tikz
+
 class ExtensionType1to1(ExtensionType):
     r"""
     INPUT:
