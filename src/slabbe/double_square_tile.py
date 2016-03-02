@@ -2153,6 +2153,71 @@ def double_square_from_four_integers(l0, l1, l2, l3):
 ###############################
 # Creation of Double Hexagon from inputs
 ###############################
+def double_hexagon_from_boundary_word(ds):
+    r"""
+    Creates a double square object from the boundary word of a double
+    square tile.
+
+    INPUT:
+
+    - ``ds`` - word, the boundary of a double square. The parent alphabet
+      is assumed to be in the order : East, North, West, South.
+
+    OUTPUT:
+
+    - tuple - tuple of 8 words over the alphabet A
+    - WordMorphism, involution on the alphabet A and representing a
+      rotation of 180 degrees.
+    - dict - mapping letters of A to steps in the plane.
+
+    EXAMPLES::
+
+        sage: from slabbe.double_square_tile import double_square_from_boundary_word
+        sage: fibo = words.fibonacci_tile
+        sage: W, rot180, steps = double_square_from_boundary_word(fibo(1))
+        sage: map(len, W)
+        [2, 1, 2, 1, 2, 1, 2, 1]
+        sage: W, rot180, steps = double_square_from_boundary_word(fibo(2))
+        sage: map(len, W)
+        [8, 5, 8, 5, 8, 5, 8, 5]
+        sage: W, rot180, steps = double_square_from_boundary_word(fibo(3))  # long time (6s)
+        sage: map(len, W)                                                   # long time
+        [34, 21, 34, 21, 34, 21, 34, 21]
+        sage: rot180                                                        # long time
+        WordMorphism: 0->2, 1->3, 2->0, 3->1
+
+    """
+    # Define rot180
+    parent = ds.parent()
+    alphabet = parent.alphabet()
+    if not hasattr(alphabet,'cardinality') or alphabet.cardinality() != 4:
+        raise ValueError, "The parent of ds must have a 4-letter alphabet."
+    e,n,w,s = alphabet
+    rot180 = WordMorphism({e:w,w:e,n:s,s:n},codomain=parent)
+
+    # Define steps
+    steps = {}
+    steps[e] = vector((1,0))
+    steps[n] = vector((0,1))
+    steps[w] = vector((-1,0))
+    steps[s] = vector((0,-1))
+
+    # Compute the wi
+    f = find_square_factorisation(ds)
+    g = find_square_factorisation(ds, f, alternate=True)
+    cuts = sorted(f+g)
+    w0 = ds[cuts[0]:cuts[1]]
+    w1 = ds[cuts[1]:cuts[2]]
+    w2 = ds[cuts[2]:cuts[3]]
+    w3 = ds[cuts[3]:cuts[4]]
+    w4 = ds[cuts[4]:cuts[5]]
+    w5 = ds[cuts[5]:cuts[6]]
+    w6 = ds[cuts[6]:cuts[7]]
+    w7 = ds[cuts[7]:] + ds[:cuts[0]]
+    W = (w0,w1,w2,w3,w4,w5,w6,w7)
+
+    return W, rot180, steps
+
 def double_hexagon_from_integers(l0, l1, l2, l3, l4, l5):
     r"""
     Creates a double hexagon from the lengths of the `w_i`.
