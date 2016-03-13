@@ -674,7 +674,8 @@ class ExtensionType(object):
         assert len(L) == 1, "len of L should be 1"
         return L[0]
 
-    def life_graph(self, substitutions, substitutions_dict=None):
+    def life_graph(self, substitutions, substitutions_dict=None,
+            keep_empty=False):
         r"""
         Return the graph of extension types generated under a sequence of
         substitutions.
@@ -686,6 +687,8 @@ class ExtensionType(object):
         - ``substitutions_dict`` - dict of substitutions, if None then it
           gets replaced by ``common_substitutions_dict`` defined in the
           module.
+        - ``keep_empty`` -- (default: False) whether to keep images that
+          are empty
 
         EXAMPLES:
 
@@ -719,12 +722,14 @@ class ExtensionType(object):
             s = substitutions_dict[key]
             for e in L:
                 for new in e.apply(s):
-                    G.add_edge((e,new,key))
-                    newL.append(new)
+                    if keep_empty or not new.is_empty():
+                        G.add_edge((e,new,key))
+                        newL.append(new)
             L,newL = newL,[]
         return G
 
-    def life_graph_tikz(self, substitutions, substitutions_dict=None, **kwds):
+    def life_graph_tikz(self, substitutions, substitutions_dict=None,
+            keep_empty=False, **kwds):
         r"""
         INPUT:
 
@@ -733,6 +738,8 @@ class ExtensionType(object):
         - ``substitutions_dict`` - dict of substitutions, if None then it
           gets replaced by ``common_substitutions_dict`` defined in the
           module.
+        - ``keep_empty`` -- (default: False) whether to keep images that
+          are empty
 
         EXAMPLES::
 
@@ -763,7 +770,7 @@ class ExtensionType(object):
             sage: t = E.life_graph_tikz([312,321,312], S)
             sage: t.pdf()
         """
-        g = self.life_graph(substitutions, substitutions_dict)
+        g = self.life_graph(substitutions, substitutions_dict, keep_empty)
         default_kwds = dict(format='dot2tex', edge_labels=True, color_by_label=False)
         default_kwds.update(kwds)
         g.latex_options().set_options(**default_kwds)
