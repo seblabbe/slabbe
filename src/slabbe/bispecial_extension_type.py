@@ -360,10 +360,10 @@ class ExtensionType(object):
             \begin{tabular}{c}
             $w=as(u)b=$\\
             \begin{tabular}{cccc}
-            E(w) & $1$ & $2$ & $3$ \\
-            $1$ &   &   & X \\
-            $2$ &   &   & X \\
-            $3$ & X & X & X \\
+            $E(w)$ & $1$ & $2$ & $3$ \\
+            $1$ &   &   & $\times$ \\
+            $2$ &   &   & $\times$ \\
+            $3$ & $\times$ & $\times$ & $\times$ \\
             \end{tabular}\\
             $m(w) = 0$, ordinary
             \end{tabular}
@@ -378,12 +378,12 @@ class ExtensionType(object):
             \begin{tabular}{c}
             $w=s(u)=$\\
             \begin{tabular}{cccc}
-            E(w) & $1$ & $2$ & $3$ \\
-            $21$ &   & X &   \\
-            $31$ &   & X &   \\
-            $12$ & X & X & X \\
-            $22$ & X &   &   \\
-            $23$ & X &   &   \\
+            $E(w)$ & $1$ & $2$ & $3$ \\
+            $21$ &   & $\times$ &   \\
+            $31$ &   & $\times$ &   \\
+            $12$ & $\times$ & $\times$ & $\times$ \\
+            $22$ & $\times$ &   &   \\
+            $23$ & $\times$ &   &   \\
             \end{tabular}\\
             $m(w) = 0$, neutral not ord.
             \end{tabular}
@@ -401,7 +401,10 @@ class ExtensionType(object):
         s = '\\begin{tabular}{c}\n'
         s += "$w={}s(u){}={}$".format(chignons[0], chignons[1], self._factor.string_rep())
         s += "\\\\\n"
-        s += self.table()._latex_()
+        table_latex = self.table()._latex_()
+        table_latex = table_latex.replace('E(w)', '$E(w)$')
+        table_latex = table_latex.replace(' X ', ' $\\times$ ')
+        s += table_latex
         s += "\\\\\n"
         s += "$m(w) = {}$, {}".format(mw, info)
         s += '\n\\end{tabular}'
