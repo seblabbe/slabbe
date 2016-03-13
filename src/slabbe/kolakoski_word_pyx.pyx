@@ -201,6 +201,7 @@ cdef class WordDatatype_Kolakoski(object):
             sage: parent = Words([1,2])
             sage: K = WordDatatype_Kolakoski(parent)
             sage: K.__reduce__()
-            (<type 'slabbe.kolakoski_word_pyx.WordDatatype_Kolakoski'>, (Words over {1, 2},))
+            (<type 'slabbe.kolakoski_word_pyx.WordDatatype_Kolakoski'>,
+            (Finite and infinite words over {1, 2},))
         """
         return self.__class__, (self._parent, )

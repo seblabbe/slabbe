@@ -37,7 +37,7 @@ def projection_matrix(dim_from=3, dim_to=2):
 
     EXAMPLES::
 
-        sage: from slabbe.matrix_cocycle import projection_matrix
+        sage: from slabbe.useful_matrices import projection_matrix
         sage: projection_matrix(3,2)
         [-0.866025403784439  0.866025403784439  0.000000000000000]
         [-0.500000000000000 -0.500000000000000   1.00000000000000]

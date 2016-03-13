@@ -50,6 +50,7 @@ class MarkovTransformation(object):
 
     Brun MCF algorithm is a Markov transformation::
 
+        sage: import itertools
         sage: B12 = matrix(3, [1,0,0, 1,1,0, 0,0,1])
         sage: B13 = matrix(3, [1,0,0, 0,1,0, 1,0,1])
         sage: B21 = matrix(3, [1,1,0, 0,1,0, 0,0,1])
@@ -63,6 +64,7 @@ class MarkovTransformation(object):
         sage: transitions = {B(i,j,k):[B(i,j,k), B(i,k,j), B(k,i,j)]
         ....:         for i,j,k in itertools.permutations((1,2,3))}
         sage: linear_maps = partition
+        sage: from slabbe.markov_transformation import MarkovTransformation 
         sage: T = MarkovTransformation(partition, transitions, linear_maps)
 
     """
@@ -185,7 +187,7 @@ class MarkovTransformation(object):
             [1 0 1]  [1 0 0]  [1 0 0]  [1 1 0]  [1 0 0]  [1 0 0]  [1 0 0]  [1 0 0]
             [0 1 0]  [1 1 0]  [0 1 0]  [0 1 0]  [0 1 1]  [0 1 0]  [0 1 0]  [0 1 1]
             [0 0 1], [0 0 1], [1 0 1], [0 0 1], [0 0 1], [0 1 1], [0 1 1], [0 0 1],
-
+            <BLANKLINE>
             [1 1 0]  [1 0 0]  [1 0 0]  [1 0 1]
             [0 1 0]  [0 1 0]  [1 1 0]  [0 1 0]
             [0 0 1], [1 0 1], [0 0 1], [0 0 1]
@@ -210,8 +212,22 @@ class MarkovTransformation(object):
             sage: from slabbe.markov_transformation import markov_transformations
             sage: T = markov_transformations.Selmer()
             sage: A,B = zip(*list(T.n_cylinders_iterator(1)))
-            sage: A
+            sage: A[:5]
+            (word: 321, word: 321, word: 132, word: 132, word: -123)
             sage: B
+            (
+            [1 3 1]  [2 3 1]  [0 1 0]  [1 1 0]  [1 1 0]  [1 1 1]  [1 3 1]  [2 3 1]
+            [0 1 1]  [1 1 1]  [1 3 1]  [2 3 1]  [1 2 1]  [1 2 1]  [0 1 0]  [1 1 0]
+            [0 1 0], [1 1 0], [0 1 1], [1 1 1], [2 2 1], [2 2 1], [0 1 1], [1 1 1],
+            <BLANKLINE>
+            [1 2 1]  [1 2 1]  [1 2 1]  [1 2 1]  [0 1 1]  [1 1 1]  [0 1 1]  [1 1 1]
+            [2 2 1]  [2 2 1]  [1 1 0]  [1 1 1]  [0 1 0]  [1 1 0]  [1 3 1]  [2 3 1]
+            [1 1 0], [1 1 1], [2 2 1], [2 2 1], [1 3 1], [2 3 1], [0 1 0], [1 1 0],
+            <BLANKLINE>
+            [2 2 1]  [2 2 1]  [0 1 0]  [1 1 0]  [1 1 0]  [1 1 1]  [2 2 1]  [2 2 1]
+            [1 1 0]  [1 1 1]  [0 1 1]  [1 1 1]  [2 2 1]  [2 2 1]  [1 2 1]  [1 2 1]
+            [1 2 1], [1 2 1], [1 3 1], [2 3 1], [1 2 1], [1 2 1], [1 1 0], [1 1 1]
+            )
         """
         for w,m in self.n_matrices_iterator(n):
             if w:
@@ -279,6 +295,7 @@ class MarkovTransformation(object):
             sage: t = T.tikz_n_cylinders(1, labels=True, scale=4)
             sage: t
             \documentclass[tikz]{standalone}
+            \usepackage{amsmath}
             \begin{document}
             \begin{tikzpicture}
             [scale=4]
@@ -349,7 +366,7 @@ class MarkovTransformationGenerators(object):
         EXAMPLES::
 
             sage: from slabbe.markov_transformation import markov_transformations
-            sage: T = markov_transformations.Selmer_on_all_the_simplex()
+            sage: T = markov_transformations.Selmer()
             sage: T
             Markov Transformation with transitions
             {321: [321, -321], 132: [132, -132], -123: [-132, -312], 231:

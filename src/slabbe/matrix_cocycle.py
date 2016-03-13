@@ -659,6 +659,7 @@ class MatrixCocycle(object):
             sage: t = ARP.tikz_n_cylinders(1, labels=True, scale=4)
             sage: t
             \documentclass[tikz]{standalone}
+            \usepackage{amsmath}
             \begin{document}
             \begin{tikzpicture}
             [scale=4]
@@ -686,6 +687,7 @@ class MatrixCocycle(object):
         lines = []
         lines.append(r"\begin{tikzpicture}")
         lines.append("[scale={}]".format(scale))
+        from useful_matrices import projection_matrix
         M3to2 = projection_matrix(3, 2)
         for (u,v) in self.n_cylinders_edges(n):
             u = rounded_string_vector(M3to2 * u / u.norm(1), digits=4)

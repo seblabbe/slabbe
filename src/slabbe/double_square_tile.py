@@ -2245,6 +2245,7 @@ def double_hexagon_from_integers(l0, l1, l2, l3, l4, l5):
 
         sage: from slabbe.double_square_tile import double_hexagon_from_integers
         sage: w,rot180,steps = double_hexagon_from_integers(1,3,1,6,1,6)
+        sage: w
         (Path: 2,
          Path: 222,
          Path: 2,
@@ -2269,7 +2270,8 @@ def double_hexagon_from_integers(l0, l1, l2, l3, l4, l5):
 
     To plot them::
 
-        sage: prod(w).plot()
+        sage: prod(w).plot()         # long time
+        Graphics object consisting of 4 graphics primitives
     """
     # Initial words where every letter is assumed to different
     # The involution exchanges the sign
