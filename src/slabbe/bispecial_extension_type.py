@@ -727,21 +727,35 @@ class ExtensionType(object):
             sage: E = ExtensionTypeLong(L, (1,2,3))
             sage: E.life_graph(['b12','b21','b12'])
             Looped multi-digraph on 8 vertices
+
+        TESTS:
+
+        We check that each vertex is generated only once at each level::
+
+            sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: S = Brun().substitutions()
+            sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
+            ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
+            sage: E1 = ExtensionTypeLong(data, (1,2,3))
+            sage: G = E1.life_graph([132,132] + [123]*6, S)
+            sage: G.has_multiple_edges()
+            False
         """
         if substitutions_dict is None:
             substitutions_dict = common_substitutions_dict
         multiedges = True
         loops = True
         G = DiGraph(multiedges=multiedges,loops=loops)
-        L,newL = [self],[]
+        L,newL = set([self]),set()
         for key in reversed(substitutions):
             s = substitutions_dict[key]
             for e in L:
                 for new in e.apply(s):
                     if keep_empty or not new.is_empty():
                         G.add_edge((e,new,key))
-                        newL.append(new)
-            L,newL = newL,[]
+                        newL.add(new)
+            L,newL = newL,set()
         return G
 
     def life_graph_tikz(self, substitutions, substitutions_dict=None,
