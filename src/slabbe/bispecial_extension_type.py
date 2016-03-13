@@ -331,9 +331,17 @@ class ExtensionType(object):
                23    X
               m(w)=0, not ord., empty
         """
-        ordinary = 'ordinary' if self.is_ordinaire() else "not ord."
+        mw = self.multiplicity()
+        if mw > 0:
+            info = 'strong'
+        elif mw < 0:
+            info = 'weak'
+        elif self.is_ordinaire():
+            info = 'ordinary' 
+        else:
+            info = "neutral not ord."
         empty = ', empty' if self.is_empty() else ""
-        s = "\n m(w)={}, {}{}".format(self.multiplicity(), ordinary, empty)
+        s = "\n m(w)={}, {}{}".format(mw, info, empty)
         return self.table()._repr_() + s
 
     def _latex_(self):
@@ -409,6 +417,22 @@ class ExtensionType(object):
             word:
             sage: B.factor()
             word: 2
+
+        ::
+
+            sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
+            sage: data = [((3, 1), (2,)), ((1, 2), (3,)), ((3, 2), (3,)), ((2,
+            ....:      3), (1,)), ((2, 3), (2,)), ((2, 3), (3,)), ((3, 3), (1,))]
+            sage: e = ExtensionTypeLong(data, [1,2,3])
+            sage: e = e.apply(S[132])[1]
+            sage: e.factor()
+            word: 2
+            sage: e = e.apply(S[321])[0]
+            sage: e.factor()
+            word: 21
+            sage: e = e.apply(S[312])[0]
+            sage: e.factor()
+            word: 212
         """
         return self._factor
     def equivalence_class(self):
