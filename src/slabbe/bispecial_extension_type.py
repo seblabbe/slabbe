@@ -59,7 +59,8 @@ TODO:
       image of a letter
     - add the bispecial word to the attribute of extension type
     - use this to compute the factor complexity function
-
+    - When should two bispecial extension type be equal? In graphs, we sometimes
+      prefer when they are all different...
 """
 from collections import defaultdict, Counter
 import itertools
@@ -278,7 +279,7 @@ class ExtensionType(object):
             -3118706505388155963   # 64-bit
 
         """
-        return hash(self._pairs)
+        return hash((self._pairs, self._factor))
     def __iter__(self):
         r"""
         EXAMPLES::
@@ -301,21 +302,23 @@ class ExtensionType(object):
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3])
             sage: E
+            w=s(u)=
               E(w)   1   2   3
                1             X
                2             X
                3     X   X   X
-              m(w)=0, ordinary
+            m(w)=0, ordinary
 
         With chignons::
 
-            sage: E = ExtensionType1to1(L, [1,2,3], ('a','b'))
+            sage: E = ExtensionType1to1(L, [1,2,3], ('a','b'), Word('xyz'))
             sage: E
-              E(awb)   1   2   3
-                1              X
-                2              X
-                3      X   X   X
-              m(w)=0, ordinary
+            w=as(u)b=xyz
+              E(w)   1   2   3
+               1             X
+               2             X
+               3     X   X   X
+            m(w)=0, ordinary
 
         ::
 
@@ -323,13 +326,14 @@ class ExtensionType(object):
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: ExtensionTypeLong(L, (1,2,3))
+            w=s(u)=
               E(w)   1   2   3
                21        X
                31        X
                12    X   X   X
                22    X
                23    X
-              m(w)=0, not ord., empty
+             m(w)=0, neutral not ord.
         """
         mw = self.multiplicity()
         if mw > 0:
@@ -340,9 +344,10 @@ class ExtensionType(object):
             info = 'ordinary' 
         else:
             info = "neutral not ord."
-        empty = ', empty' if self.is_empty() else ""
-        s = "\n m(w)={}, {}{}".format(mw, info, empty)
-        return self.table()._repr_() + s
+        chignons = self._chignons
+        first_line = "w={}s(u){}={}".format(chignons[0], chignons[1], self._factor.string_rep())
+        last_line = "m(w)={}, {}".format(mw, info)
+        return "{}\n{}\n{}".format(first_line, self.table(), last_line)
 
     def _latex_(self):
         r"""
@@ -353,8 +358,9 @@ class ExtensionType(object):
             sage: E = ExtensionType1to1(L, [1,2,3], ('a', 'b'))
             sage: latex(E)
             \begin{tabular}{c}
+            $w=as(u)b=$\\
             \begin{tabular}{cccc}
-            E(awb) & $1$ & $2$ & $3$ \\
+            E(w) & $1$ & $2$ & $3$ \\
             $1$ &   &   & X \\
             $2$ &   &   & X \\
             $3$ & X & X & X \\
@@ -370,6 +376,7 @@ class ExtensionType(object):
             sage: E = ExtensionTypeLong(L, (1,2,3))
             sage: latex(E)
             \begin{tabular}{c}
+            $w=s(u)=$\\
             \begin{tabular}{cccc}
             E(w) & $1$ & $2$ & $3$ \\
             $21$ &   & X &   \\
@@ -378,15 +385,25 @@ class ExtensionType(object):
             $22$ & X &   &   \\
             $23$ & X &   &   \\
             \end{tabular}\\
-            $m(w) = 0$, not ord., empty
+            $m(w) = 0$, neutral not ord.
             \end{tabular}
-
         """
-        ordinary = 'ordinary' if self.is_ordinaire() else "not ord."
-        empty = ', empty' if self.is_empty() else ""
+        mw = self.multiplicity()
+        if mw > 0:
+            info = 'strong'
+        elif mw < 0:
+            info = 'weak'
+        elif self.is_ordinaire():
+            info = 'ordinary' 
+        else:
+            info = "neutral not ord."
+        chignons = self._chignons
         s = '\\begin{tabular}{c}\n'
+        s += "$w={}s(u){}={}$".format(chignons[0], chignons[1], self._factor.string_rep())
+        s += "\\\\\n"
         s += self.table()._latex_()
-        s += "\\\\\n$m(w) = {}$, {}{}".format(self.multiplicity(), ordinary, empty)
+        s += "\\\\\n"
+        s += "$m(w) = {}$, {}".format(mw, info)
         s += '\n\\end{tabular}'
         return s
 
@@ -523,7 +540,6 @@ class ExtensionType(object):
             sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
             sage: E.is_ordinaire()
             True
-
         """
         raise NotImplementedError
 
@@ -1006,10 +1022,10 @@ class ExtensionType1to1(ExtensionType):
 
             sage: E = ExtensionType1to1(L, alphabet=(1,2,3), chignons=('a', 'b'))
             sage: E.table()
-              E(awb)   1   2   3
-                1              X
-                2              X
-                3      X   X   X
+              E(w)   1   2   3
+                1            X
+                2            X
+                3    X   X   X
         """
         lines = []
         L = R = sorted(self._alphabet)
@@ -1021,10 +1037,7 @@ class ExtensionType1to1(ExtensionType):
                 else:
                     line.append(' ')
             lines.append(line)
-        if self._chignons != ('',''):
-            Ew = "E(%sw%s)" % self._chignons
-        else:
-            Ew = "E(w)"
+        Ew = "E(w)"
         t = table(rows=lines, header_row=R, header_column=[Ew]+L)
         t.options(header_column=False,header_row=False,align='center')
         return t
@@ -1131,7 +1144,7 @@ class ExtensionType1to1(ExtensionType):
         if not isinstance(other, ExtensionType1to1):
             return False
         else:
-            return self._pairs == other._pairs
+            return self._factor == other._factor and self._pairs == other._pairs
 
     def chignons_multiplicity_tuple(self):
         r"""
@@ -1603,10 +1616,7 @@ class ExtensionTypeLong(ExtensionType):
                 else:
                     line.append(' ')
             lines.append(line)
-        if self._chignons != ('',''):
-            Ew = "E(%sw%s)" % self._chignons
-        else:
-            Ew = "E(w)"
+        Ew = "E(w)"
         t = table(rows=lines, header_row=R, header_column=[Ew]+L)
         t.options(header_column=False,header_row=False,align='center')
         return t
@@ -1628,7 +1638,7 @@ class ExtensionTypeLong(ExtensionType):
         if not isinstance(other, ExtensionTypeLong):
             return False
         else:
-            return self._pairs == other._pairs
+            return self._factor == other._factor and self._pairs == other._pairs
 
     def chignons_multiplicity_tuple(self):
         r"""
