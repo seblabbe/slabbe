@@ -382,6 +382,35 @@ class ExtensionType(object):
         s += '\n\\end{tabular}'
         return s
 
+    def factor(self):
+        r"""
+        Return the bispecial factor.
+
+        EXAMPLES::
+
+            sage: from slabbe import ExtensionType1to1
+            sage: p = WordMorphism({1:[1,2,3],2:[2,3],3:[3]})
+            sage: E = ExtensionType1to1([(1,2),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
+            sage: A,B = E.apply(p)
+            sage: A.factor()
+            word: 3
+            sage: B.factor()
+            word: 23
+
+        ::
+
+            sage: from slabbe import ExtensionTypeLong
+            sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
+            ....:      2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
+            sage: E = ExtensionTypeLong(L, (1,2,3))
+            sage: b12 = WordMorphism({1:[1,2],2:[2],3:[3]})
+            sage: A,B = E.apply(b12)
+            sage: A.factor()
+            word:
+            sage: B.factor()
+            word: 2
+        """
+        return self._factor
     def equivalence_class(self):
         r"""
         EXAMPLES::
@@ -684,14 +713,18 @@ class ExtensionType(object):
         EXAMPLES::
 
             sage: from slabbe import ExtensionType1to1
+            sage: from slabbe import ExtensionTypeLong
+            sage: from slabbe.mult_cont_frac import ARP, Brun
+
+        ::
+
+            sage: S = ARP().substitutions()
             sage: e = ExtensionType1to1([(1,3),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
-            sage: t = e.life_graph_tikz(['p32','p13','ar2'])
+            sage: t = e.life_graph_tikz([132,213,2], S)
             sage: t.pdf()
 
         ::
 
-            sage: from slabbe import ExtensionType1to1
-            sage: from slabbe.mult_cont_frac import Brun
             sage: e = ExtensionType1to1([(1,3),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
             sage: S = Brun().substitutions()
             sage: t = e.life_graph_tikz([132,213,123], S)
@@ -701,11 +734,10 @@ class ExtensionType(object):
 
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
-            sage: from slabbe import ExtensionTypeLong
             sage: E = ExtensionTypeLong(L, (1,2,3))
-            sage: t = E.life_graph_tikz(['b12','b21','b12'])
+            sage: S = Brun().substitutions()
+            sage: t = E.life_graph_tikz([312,321,312], S)
             sage: t.pdf()
-
         """
         g = self.life_graph(substitutions, substitutions_dict)
         default_kwds = dict(format='dot2tex', edge_labels=True, color_by_label=False)
@@ -881,6 +913,7 @@ class ExtensionType1to1(ExtensionType):
     - ``alphabet`` - the alphabet
     - ``chignons`` - optional (default: None), pair of words added to the
       left  and to the right of the image of the previous bispecial
+    - ``factor`` - optional (default: empty word), the factor
 
     EXAMPLES::
 
@@ -904,7 +937,7 @@ class ExtensionType1to1(ExtensionType):
             3      X   X   X
          m(w)=0, ordinary
     """
-    def __init__(self, L, alphabet, chignons=('','')):
+    def __init__(self, L, alphabet, chignons=('',''), factor=Word()):
         r"""
         EXAMPLES::
 
@@ -921,6 +954,7 @@ class ExtensionType1to1(ExtensionType):
         self._pairs = frozenset(L)
         self._alphabet = alphabet
         self._chignons = tuple(chignons)
+        self._factor = factor
 
     def table(self):
         r"""
@@ -1263,7 +1297,8 @@ class ExtensionType1to1(ExtensionType):
                     chignons = left[len(left)-i+1:], right[:j]
                     extensions[chignons].append( (left[-i], right[j]) )
                 for chignons, extension in extensions.iteritems():
-                    e = ExtensionType1to1(extension, self._alphabet, chignons)
+                    factor = chignons[0] * m(self._factor) * chignons[1]
+                    e = ExtensionType1to1(extension, self._alphabet, chignons, factor)
                     if e.is_bispecial():
                         L.append(e)
         return tuple(L)
@@ -1384,6 +1419,7 @@ class ExtensionTypeLong(ExtensionType):
     - ``alphabet`` - the alphabet
     - ``chignons`` - optional (default: None), pair of words added to the
       left  and to the right of the image of the previous bispecial
+    - ``factor`` - optional (default: empty word), the factor
     - ``factors_length_2`` - list of factors of length 2. If None, they are
       computed from the provided extension assuming the bispecial factor is
       *empty*.
@@ -1407,7 +1443,7 @@ class ExtensionTypeLong(ExtensionType):
         m(w)=0, not ord., empty
 
     """
-    def __init__(self, L, alphabet, chignons=('',''),
+    def __init__(self, L, alphabet, chignons=('',''), factor=Word(),
             factors_length_2=None, empty=None):
         r"""
         EXAMPLES::
@@ -1420,6 +1456,7 @@ class ExtensionTypeLong(ExtensionType):
         self._pairs = frozenset((Word(a),Word(b)) for a,b in L)
         self._alphabet = alphabet
         self._chignons = tuple(chignons)
+        self._factor = factor
         self._factors_length_2 = factors_length_2
         if empty is None:
             self._empty = self.is_chignons_empty()
@@ -1765,7 +1802,10 @@ class ExtensionTypeLong(ExtensionType):
         L = []
         for chignons, extension in extensions.iteritems():
             empty = self.is_empty() and map(len, chignons) == [0,0]
-            e = ExtensionTypeLong(extension, self._alphabet, chignons, F, empty)
+            factor = chignons[0] * m(self._factor) * chignons[1]
+            e = ExtensionTypeLong(extension, alphabet=self._alphabet,
+                    factor=factor, chignons=chignons, factors_length_2=F,
+                    empty=empty)
             if e.is_valid() and e.is_bispecial():
                 L.append(e)
         return tuple(L)
