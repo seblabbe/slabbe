@@ -279,7 +279,8 @@ class ExtensionType(object):
             -3118706505388155963   # 64-bit
 
         """
-        return hash((self._pairs, self._factor))
+        #return hash((self._pairs, self._factor))
+        return hash(self._pairs)
     def __iter__(self):
         r"""
         EXAMPLES::
@@ -810,7 +811,8 @@ class ExtensionType(object):
         tikz = g._latex_()
         return TikzPicture(tikz)
 
-    def images_under_language(self, language, initial, substitutions_dict, keep_empty=False):
+    def images_under_language(self, language, initial, substitutions_dict,
+            keep_empty=False, label='history'):
         r"""
         Return the recursively enumerated set of extension type generated
         by a language of substitutions.
@@ -822,6 +824,9 @@ class ExtensionType(object):
         - ``substitutions_dict`` - dict of substitutions
         - ``keep_empty`` -- (default: False) whether to keep images that
           are empty
+        - ``label`` -- 'history' or 'previous' (default: ``'history'``),
+          whether the vertices contain the whole history of the bispecial word
+          or only the previous applied substitution
 
         EXAMPLES::
 
@@ -836,6 +841,21 @@ class ExtensionType(object):
             sage: E = ExtensionType.from_factor(prefix.parent()(), prefix, nleft=2)
             sage: E.images_under_language(L, 123, S)
             An enumerated set with a forest structure
+
+        ::
+
+            sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: S = Brun().substitutions()
+            sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
+            ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
+            sage: E1 = ExtensionTypeLong(data, (1,2,3))
+            sage: from slabbe.language import languages
+            sage: L = languages.Brun()
+            sage: E = [E for E in E1.apply(S[123]) if E.factor().length() == 1][0]
+            sage: R = E.images_under_language(L, 123, S, label='previous')
+            sage: R
+            A recursively enumerated set (breadth first search)
         """
         # what can go before each letter
         before = defaultdict(list)
@@ -849,12 +869,23 @@ class ExtensionType(object):
             for a in before[w[0]]:
                 for Z in Y.apply(substitutions_dict[a]):
                     if keep_empty or not Z.is_empty():
-                        rep.append((Z,[a]+w))
+                        if label == 'previous':
+                            rep.append((Z,(a,)))
+                        elif label == 'history':
+                            rep.append((Z,(a,)+w))
+                        else:
+                            raise ValueError('when label={}'.format(label))
             return rep
-        root = (self,[initial])
+        root = (self,(initial,))
 
         from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
-        R = RecursivelyEnumeratedSet([root], child, structure='forest')
+        if label == 'history':
+            structure = 'forest'
+        elif label == 'previous':
+            structure = None
+        else:
+            raise ValueError('when label={}'.format(label))
+        R = RecursivelyEnumeratedSet([root], child, structure=structure)
         return R
 
     def generated_weakstrong(self, language, initial, substitutions_dict, depth, keep_empty=False):
@@ -2043,3 +2074,24 @@ def table_bispecial(word, k):
         row = [w, mw , info]
         rows.append(row)
     return table(rows=rows, header_row=['word', 'm(w)','info'])
+
+def recursively_enumerated_set_to_graph(R, depth=float('inf')):
+    r"""
+    Return the graph of the recursively enumerated set.
+
+    TODO:
+
+        Move this to sage.
+
+    EXAMPLES::
+
+        sage: child = lambda i: [(i+3) % 10, (i+8)%10]
+        sage: R = RecursivelyEnumeratedSet([0], child)
+        sage: G = recursively_enumerated_set_to_graph(R)
+        sage: G
+        Looped multi-graph on 10 vertices
+    """
+    successors = R.successors
+    E = [(u,v) for u in R for v in successors(u)]
+    return Graph(E, format='list_of_edges', loops=True, multiedges=True)
+
