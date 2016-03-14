@@ -1161,7 +1161,8 @@ class ExtensionType1to1(ExtensionType):
         if not isinstance(other, ExtensionType1to1):
             return False
         else:
-            return self._factor == other._factor and self._pairs == other._pairs
+            #return self._factor == other._factor and self._pairs == other._pairs
+            return self._pairs == other._pairs
 
     def chignons_multiplicity_tuple(self):
         r"""
@@ -1655,7 +1656,8 @@ class ExtensionTypeLong(ExtensionType):
         if not isinstance(other, ExtensionTypeLong):
             return False
         else:
-            return self._factor == other._factor and self._pairs == other._pairs
+            #return self._factor == other._factor and self._pairs == other._pairs
+            return self._pairs == other._pairs
 
     def chignons_multiplicity_tuple(self):
         r"""
