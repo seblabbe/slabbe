@@ -2075,7 +2075,7 @@ def table_bispecial(word, k):
         rows.append(row)
     return table(rows=rows, header_row=['word', 'm(w)','info'])
 
-def recursively_enumerated_set_to_graph(R, depth=float('inf')):
+def recursively_enumerated_set_to_digraph(R, depth=float('inf')):
     r"""
     Return the graph of the recursively enumerated set.
 
@@ -2085,14 +2085,15 @@ def recursively_enumerated_set_to_graph(R, depth=float('inf')):
 
     EXAMPLES::
 
+        sage: from slabbe.bispecial_extension_type import recursively_enumerated_set_to_digraph
         sage: child = lambda i: [(i+3) % 10, (i+8)%10]
         sage: R = RecursivelyEnumeratedSet([0], child)
-        sage: G = recursively_enumerated_set_to_graph(R)
+        sage: G = recursively_enumerated_set_to_digraph(R)
         sage: G
-        Looped multi-graph on 10 vertices
+        Looped multi-digraph on 10 vertices
     """
     successors = R.successors
     E = [(u,v) for u in R for v in successors(u)]
-    from sage.graphs.graph import Graph
-    return Graph(E, format='list_of_edges', loops=True, multiedges=True)
+    from sage.graphs.digraph import DiGraph
+    return DiGraph(E, format='list_of_edges', loops=True, multiedges=True)
 
