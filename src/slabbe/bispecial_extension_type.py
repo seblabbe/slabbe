@@ -2093,5 +2093,6 @@ def recursively_enumerated_set_to_graph(R, depth=float('inf')):
     """
     successors = R.successors
     E = [(u,v) for u in R for v in successors(u)]
+    from sage.graphs.graph import Graph
     return Graph(E, format='list_of_edges', loops=True, multiedges=True)
 
