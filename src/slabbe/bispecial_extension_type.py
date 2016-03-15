@@ -91,48 +91,6 @@ p32=WordMorphism({1:[1,3,2], 2:[2],     3:[3,2]})
 )
 
 ######################################
-# Utility functions
-######################################
-def factors_length_2_from_morphism_and_factors_length_2(m, F):
-    r"""
-    Return the set of factors of lengths two in the image by a morphism of
-    a set of factors of length 2.
-
-    INPUT:
-
-    - ``m`` - endomorphim
-    - ``F`` - set of factors of length 2
-
-    EXAMPLES::
-
-        sage: from slabbe.bispecial_extension_type import factors_length_2_from_morphism_and_factors_length_2
-        sage: b12 = WordMorphism({1:[1,2],2:[2],3:[3]})
-        sage: sorted(factors_length_2_from_morphism_and_factors_length_2(b12, []))
-        []
-        sage: sorted(factors_length_2_from_morphism_and_factors_length_2(b12, [(1,1)]))
-        [(1, 2), (2, 1)]
-        sage: b23 = WordMorphism({1:[1],2:[2,3],3:[3]})
-        sage: sorted(factors_length_2_from_morphism_and_factors_length_2(b23, [(1,1)]))
-        [(1, 1)]
-
-    """
-    assert m.is_endomorphism(), "m(=%s) must be an endomorphism"
-    L = []
-    # externes
-    letters = set()
-    for a,b in F:
-        L.append( (m(a)[-1], m(b)[0]) )
-        letters.add(a)
-        letters.add(b)
-    # internes
-    for a in letters:
-        image = m(a)
-        for i in range(len(image)-1):
-            L.append( (image[i], image[i+1]) )
-    return set(L)
-
-
-######################################
 # Extension Type
 ######################################
 class ExtensionType(object):
@@ -1513,7 +1471,7 @@ class ExtensionTypeLong(ExtensionType):
     - ``chignons`` - optional (default: None), pair of words added to the
       left  and to the right of the image of the previous bispecial
     - ``factor`` - optional (default: empty word), the factor
-    - ``factors_length_2`` - list of factors of length 2. If None, they are
+    - ``factors_length_k`` - list of factors of length 2. If None, they are
       computed from the provided extension assuming the bispecial factor is
       *empty*.
     - ``empty`` - bool, (optional, default: None), if None, then it is
@@ -1537,7 +1495,7 @@ class ExtensionTypeLong(ExtensionType):
 
     """
     def __init__(self, L, alphabet, chignons=('',''), factor=Word(),
-            factors_length_2=None, empty=None):
+            factors_length_k=None, empty=None):
         r"""
         EXAMPLES::
 
@@ -1550,7 +1508,7 @@ class ExtensionTypeLong(ExtensionType):
         self._alphabet = alphabet
         self._chignons = tuple(chignons)
         self._factor = factor
-        self._factors_length_2 = factors_length_2
+        self._factors_length_k = factors_length_k
         if empty is None:
             self._empty = self.is_chignons_empty()
         else:
@@ -1570,12 +1528,17 @@ class ExtensionTypeLong(ExtensionType):
         """
         return map(len, self._chignons) == [0,0]
 
-    def factors_length_2(self):
+    def factors_length_k(self, k=None):
         r"""
-        Returns the set of factors of length 2 of the language.
+        Returns the set of factors of length k of the language.
 
         This is computed from the extension type if it was not provided at
         the construction.
+
+        INPUT::
+
+        - ``k`` -- integer or None, if None, return factors of length k already
+          computed
 
         EXAMPLES::
 
@@ -1583,13 +1546,31 @@ class ExtensionTypeLong(ExtensionType):
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionTypeLong(L, (1,2,3))
-            sage: sorted(E.factors_length_2())
-            [(1, 2), (2, 1), (2, 2), (2, 3), (3, 1)]
+            sage: sorted(E.factors_length_k(2))
+            [word: 12, word: 21, word: 22, word: 23, word: 31]
+            sage: sorted(E.factors_length_k())
+            [word: 12, word: 21, word: 22, word: 23, word: 31]
+
+        It stores the value and can not compute for other lengths::
+
+            sage: E = ExtensionTypeLong(L, (1,2,3))
+            sage: sorted(E.factors_length_k(3))
+            [word: 121, word: 122, word: 123, word: 212, word: 221, word: 231, word: 312]
+            sage: sorted(E.factors_length_k())
+            [word: 121, word: 122, word: 123, word: 212, word: 221, word: 231, word: 312]
+            sage: sorted(E.factors_length_k(4))
+            Traceback (most recent call last):
+            ...
+            NotImplementedError: can't compute factors of length k for this word
         """
-        if self._factors_length_2 is None:
+        if self._factors_length_k is None:
             # We suppose here the factor is the empty word...
-            self._factors_length_2 = set((a[-1],b[0]) for a,b in self._pairs)
-        return self._factors_length_2
+            assert self.is_empty(), "can't compute factor of length k for nonempty word"
+            assert not k is None, "you must provide a value for k to compute them"
+            self._factors_length_k = set(w for a,b in self._pairs for w in (a*b).factor_iterator(k))
+        if not k is None and next(iter(self._factors_length_k)).length() != k:
+            raise NotImplementedError("can't compute factors of length k for this word")
+        return self._factors_length_k
 
     def is_valid(self):
         r"""
@@ -1702,31 +1683,85 @@ class ExtensionTypeLong(ExtensionType):
         """
         return self._chignons + (self.multiplicity(),)
 
-    def letters_before_and_after(self):
+    def letters_before_and_after(self, factors):
         r"""
-        Returns a pair of dict giving the possible letters that goes before
-        or after a letter.
+        Returns a pair of dict giving the words letters that goes before
+        the left extensions and after the right extensions.
 
-        Computed from the set of factors of length 2 of the language.
+        INPUT:
+
+        - ``factors`` -- factors of length k
+
+        OUTPUT:
+
+        pair of dict
 
         EXAMPLES::
 
             sage: from slabbe import ExtensionTypeLong
+            sage: from slabbe.bispecial_extension_type import letters_before_and_after
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:      2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionTypeLong(L, (1,2,3))
-            sage: sorted(E.factors_length_2())
-            [(1, 2), (2, 1), (2, 2), (2, 3), (3, 1)]
-            sage: E.letters_before_and_after()
-            (defaultdict(<type 'set'>, {1: set([2, 3]), 2: set([1, 2]), 3: set([2])}),
-            defaultdict(<type 'set'>, {1: set([2]), 2: set([1, 2, 3]), 3: set([1])}))
+            sage: F = sorted(E.factors_length_k(2))
+            sage: E.letters_before_and_after(F)
+            ({word: 12: {word: 2, word: 3},
+              word: 21: {word: 1, word: 2},
+              word: 22: {word: 1, word: 2},
+              word: 23: {word: 1, word: 2},
+              word: 31: {word: 2}},
+             {word: 1: {word: 2},
+              word: 2: {word: 1, word: 2, word: 3},
+              word: 3: {word: 1}})
+
+        ::
+
+            sage: E = ExtensionTypeLong(L, (1,2,3))
+            sage: F = sorted(E.factors_length_k(3))
+            sage: E.letters_before_and_after(F)
+            ({word: 12: {word: 2, word: 3},
+              word: 21: {word: 1, word: 2},
+              word: 22: {word: 1},
+              word: 23: {word: 1},
+              word: 31: {word: 2}},
+             {word: 1: {word: 21, word: 22, word: 23},
+              word: 2: {word: 12, word: 21, word: 31},
+              word: 3: {word: 12}})
+
+        ::
+
+            sage: data = [[(1, 1, 1), (3,)], [(1, 1, 1), (1,)], [(1, 1, 1), (2,)], [(1, 2),
+            ....:   (1,)], [(2, 1), (1,)], [(1, 3), (1,)], [(3, 1), (2,)]]
+            sage: E5 = ExtensionTypeLong(data, (1,2,3))
+            sage: b21 = WordMorphism({1:[1],2:[2,1],3:[3]})
+            sage: E51, = [E for E in E5.apply(b21) if E.factor().length()==1]
+            sage: F = sorted(E51.factors_length_k(3))
+            sage: F
+            [word: 111, word: 112, word: 113, word: 121, word: 131, word: 211, word: 312]
+            sage: E.letters_before_and_after(F)
+            ({word: 11: {word: 1, word: 2},
+              word: 12: {word: 1, word: 3},
+              word: 13: {word: 1},
+              word: 21: {word: 1}},
+             {word: 1: {word: 11, word: 12, word: 13, word: 21, word: 31},
+              word: 2: {word: 11},
+              word: 3: {word: 12}})
         """
-        possible_before  = defaultdict(set)
+        possible_before = defaultdict(set)
+        for left in self.left_word_extensions():
+            for f in factors:
+                len_inter = min(f.length()-1, left.length())
+                inter = left[:len_inter]
+                if inter.is_suffix(f):
+                    possible_before[left].add(f[:-len_inter])
         possible_after = defaultdict(set)
-        for x,y in self.factors_length_2():
-            possible_before[y].add(x)
-            possible_after[x].add(y)
-        return possible_before, possible_after
+        for right in self.right_word_extensions():
+            for f in factors:
+                len_inter = min(f.length()-1, right.length())
+                inter = f[:len_inter]
+                if inter.is_suffix(right):
+                    possible_after[right].add(f[len_inter:])
+        return dict(possible_before), dict(possible_after)
 
     def apply(self, m, l=2, r=1):
         r"""
@@ -1853,21 +1888,47 @@ class ExtensionTypeLong(ExtensionType):
                 23     X
               m(w)=0, ordinary)
 
+        Not letter is missing::
+
+            sage: data = [[(1, 1, 1), (3,)], [(1, 1, 1), (1,)], [(1, 1, 1), (2,)], [(1, 2),
+            ....:   (1,)], [(2, 1), (1,)], [(1, 3), (1,)], [(3, 1), (2,)]]
+            sage: E5 = ExtensionTypeLong(data, (1,2,3))
+            sage: b21 = WordMorphism({1:[1],2:[2,1],3:[3]})
+            sage: E51, = [E for E in E5.apply(b21) if E.factor().length()==1]
+            sage: b21 = WordMorphism({1:[1],2:[2,1],3:[3]})
+            sage: E51.apply(b21)
+            (w=s(u)=1
+               E(w)   1   2   3
+                11    X   X   X
+                21    X
+                13        X
+             m(w)=0, ordinary, w=1s(u)=11
+               E(w)   1   2   3
+                11    X   X   X
+                21    X
+                12    X
+             m(w)=0, ordinary)
         """
-        letters_before, letters_after = self.letters_before_and_after()
-        #print letters_before, letters_after
+        F = self.factors_length_k(l+r)
+
+        letters_before, letters_after = self.letters_before_and_after(F)
+        #print letters_before
+        #print letters_after
         word_before = defaultdict(Word)
         word_after = defaultdict(Word)
         for key,value in letters_before.iteritems():
             word_before[key] = longest_common_suffix(map(m, value))
         for key,value in letters_after.iteritems():
             word_after[key] = longest_common_prefix(map(m, value))
-        #print word_before, word_after
+        word_before = dict(word_before)
+        word_after = dict(word_after)
+        #print word_before
+        #print word_after
 
         extensions = defaultdict(list)
         for a,b in self:
-            left = word_before[a[0]] * m(a)
-            right = m(b) * word_after[b[-1]]
+            left = word_before[a] * m(a)
+            right = m(b) * word_after[b]
             length_image_last_a = len(m(a[-1]))
             length_image_first_b = len(m(b[0]))
             for i in range(length_image_last_a+1):
@@ -1881,21 +1942,20 @@ class ExtensionTypeLong(ExtensionType):
             chignons = Word(),Word()
             assert chignons in extensions
             for a,b in self:
-                left = word_before[a[0]] * m(a)
-                right = m(b) * word_after[b[-1]]
+                left = word_before[a] * m(a)
+                right = m(b) * word_after[b]
                 word = left * right
                 for f in word.factor_iterator(l+r):
                     new_ext = f[:l], f[-r:]
                     extensions[chignons].append( new_ext )
 
-        F = factors_length_2_from_morphism_and_factors_length_2(m,
-                self.factors_length_2())
+        Fimage = set(w for f in F for w in m(f).factor_iterator(l+r))
         L = []
         for chignons, extension in extensions.iteritems():
             empty = self.is_empty() and map(len, chignons) == [0,0]
             factor = chignons[0] * m(self._factor) * chignons[1]
             e = ExtensionTypeLong(extension, alphabet=self._alphabet,
-                    factor=factor, chignons=chignons, factors_length_2=F,
+                    factor=factor, chignons=chignons, factors_length_k=Fimage,
                     empty=empty)
             if e.is_valid() and e.is_bispecial():
                 L.append(e)
