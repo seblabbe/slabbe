@@ -1144,14 +1144,14 @@ class ExtensionType(object):
             ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
             sage: E1 = ExtensionTypeLong(data, (1,2,3))
             sage: E1.bispecial_factors_table_under_sadic([132]*2+[123]*6, S)
-              |w|   w                      m(w)   info
-            +-----+----------------------+------+----------+
-              0                            0      ordinary
-              1     2                      0      neutral
-              4     2322                   0      ordinary
-              5     22322                  0      ordinary
-              19    2322322322322322322    1      strong
-              20    22322322322322322322   -1     weak
+              |w|   w                      m(w)   d^-(w)   info
+            +-----+----------------------+------+--------+----------+
+              0                            0      3        ordinary
+              1     2                      0      3        neutral
+              4     2322                   0      2        ordinary
+              5     22322                  0      2        ordinary
+              19    2322322322322322322    1      2        strong
+              20    22322322322322322322   -1     2        weak
         """
         B = self.distinct_bispecial_factors_under_sadic(substitutions, substitutions_dict, keep_empty)
         rows = []
@@ -1166,10 +1166,10 @@ class ExtensionType(object):
             else:
                 info = 'strong'
             w = ext.factor()
-            row = [w.length(), w, mw, info]
+            row = [w.length(), w, mw, ext.left_valence(), info]
             rows.append(row)
         rows.sort(key=lambda row:row[0])
-        return table(rows=rows, header_row=['|w|', 'w', 'm(w)','info'])
+        return table(rows=rows, header_row=['|w|', 'w', 'm(w)', 'd^-(w)', 'info'])
 
 class ExtensionType1to1(ExtensionType):
     r"""
