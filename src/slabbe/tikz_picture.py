@@ -121,6 +121,34 @@ class TikzPicture(SageObject):
         else:
             self._macros = macros
 
+    @classmethod
+    def from_graph(self, graph, prog='dot', edge_labels=True, color_by_label=False):
+        r"""
+        INPUT:
+
+        - ``graph`` -- graph
+        - ``prog`` -- string (default: ``'dot'``) the program used for the
+          layout corresponding to one of the software of the graphviz
+          suite: 'dot', 'neato', 'twopi', 'circo' or 'fdp'.
+        - ``edge_labels`` -- bool (default: ``True``)
+        - ``color_by_label`` -- bool (default: ``False``)
+
+        EXAMPLES::
+
+            sage: from slabbe import TikzPicture
+            sage: g = graphs.PetersenGraph()
+            sage: tikz = TikzPicture.from_graph(g)
+
+        ::
+
+            sage: tikz = TikzPicture.from_graph(g, prog='neato', color_by_label=True)
+        """
+        kwds = dict(format='dot2tex', edge_labels=edge_labels,
+                color_by_label=color_by_label, prog=prog)
+        graph.latex_options().set_options(**kwds)
+        tikz = graph._latex_()
+        return TikzPicture(tikz, standalone_configs=["border=3mm"])
+
     def _latex_file_header_lines(self):
         r"""
         EXAMPLES::
