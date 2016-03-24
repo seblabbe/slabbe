@@ -149,6 +149,34 @@ class TikzPicture(SageObject):
         tikz = graph._latex_()
         return TikzPicture(tikz, standalone_configs=["border=3mm"])
 
+    @classmethod
+    def from_poset(self, poset, prog='dot', edge_labels=True, color_by_label=False):
+        r"""
+        INPUT:
+
+        - ``poset`` -- poset
+        - ``prog`` -- string (default: ``'dot'``) the program used for the
+          layout corresponding to one of the software of the graphviz
+          suite: 'dot', 'neato', 'twopi', 'circo' or 'fdp'.
+        - ``edge_labels`` -- bool (default: ``True``)
+        - ``color_by_label`` -- bool (default: ``False``)
+
+        EXAMPLES::
+
+            sage: from slabbe import TikzPicture
+            sage: P = posets.PentagonPoset()
+            sage: tikz = TikzPicture.from_poset(P)
+            sage: tikz = TikzPicture.from_poset(P, prog='neato', color_by_label=True)
+
+        ::
+
+            sage: P = posets.SymmetricGroupWeakOrderPoset(4)
+            sage: tikz = TikzPicture.from_poset(P)
+            sage: tikz = TikzPicture.from_poset(P, prog='neato')
+        """
+        graph = poset.hasse_diagram()
+        return self.from_graph(graph, prog, edge_labels, color_by_label)
+
     def _latex_file_header_lines(self):
         r"""
         EXAMPLES::
