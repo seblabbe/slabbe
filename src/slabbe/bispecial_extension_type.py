@@ -828,20 +828,20 @@ class ExtensionType(object):
                  12    X   X   X
                  22            X
                  23    X
-              m(w)=0, neutral not ord., ())}
+              m(w)=0, neutral not ord., word: , ())}
             sage: R.graded_component(1)
-            {(w=23s(u)=23
-                E(w)   1   2   3
-                 31    X   X   X
-                 23            X
-              m(w)=0, ordinary, (123,)), (w=3s(u)=3
+            {(w=3s(u)=3
                 E(w)   1   2   3
                  12    X   X   X
                  32            X
                  23    X
-              m(w)=0, ordinary, (123,))}
-              sage: [len(R.graded_component(i)) for i in range(9)]
-              [1, 2, 2, 2, 2, 2, 2, 2, 3]
+              m(w)=0, ordinary, word: 3, (123,)), (w=23s(u)=23
+                E(w)   1   2   3
+                 31    X   X   X
+                 23            X
+              m(w)=0, ordinary, word: 23, (123,))}
+            sage: [len(R.graded_component(i)) for i in range(9)]
+            [1, 2, 2, 2, 2, 2, 2, 2, 3]
 
         This is a bug in sage, it should return an empty set::
 
@@ -854,29 +854,39 @@ class ExtensionType(object):
 
             sage: R = E1.images_under_sadic([132]*2+[123]*6, S, keep_empty=True)
             sage: [len(R.graded_component(i)) for i in range(9)]
-            [1, 3, 4, 5, 5, 5, 5, 4, 7]
+            [1, 3, 4, 5, 6, 7, 8, 9, 17]
             sage: B = R.graded_component(8)
-            sage: [(Z.factor(),Z.multiplicity()) for Z,_ in B]
-            [(word: 22322, 0),
-             (word: , 0),
+            sage: [(Z.factor(),Z.multiplicity()) for Z,_,_ in B]
+            [(word: 2322322322322322322, 1),
+             (word: 22, 0),
+             (word: 22322, 0),
              (word: 2322, 0),
-             (word: 2322322322322322322, 0),
-             (word: 2322322322322322322, 1),
+             (word: 2, 0),
              (word: 22322322322322322322, -1),
-             (word: 2, 0)]
+             (word: 2322322322322, 0),
+             (word: 2322322, 0),
+             (word: 2, 0),
+             (word: , 0),
+             (word: 22322322322, 0),
+             (word: 22322322322322322, 0),
+             (word: 22322322, 0),
+             (word: 2322322322322322322, 0),
+             (word: 22322322322322, 0),
+             (word: 2322322322322322, 0),
+             (word: 2322322322, 0)]
         """
         def child(V):
-            Y,w = V
-            age = len(w)
+            Y,w,history = V
+            age = len(history)
             rep = []
             if age >= len(substitutions):
                 return rep
             a = substitutions[-age-1]
             for Z in Y.apply(substitutions_dict[a]):
                 if keep_empty or not Z.is_empty():
-                    rep.append((Z,(a,)+w))
+                    rep.append((Z,Z.factor(),(a,)+history))
             return rep
-        root = (self, tuple())
+        root = (self, self.factor(), tuple())
 
         from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
         R = RecursivelyEnumeratedSet([root], child, structure='graded')
@@ -1098,20 +1108,28 @@ class ExtensionType(object):
             sage: E1 = ExtensionTypeLong(data, (1,2,3))
             sage: L = E1.distinct_bispecial_factors_under_sadic([132]*2+[123]*6, S)
             sage: [Z.factor() for Z in L]
-            [word: ,
+            [word: 2322322322322,
+             word: ,
              word: 2,
+             word: 22,
+             word: 2322322322322322,
+             word: 22322322322322322,
              word: 2322,
              word: 22322,
              word: 2322322322322322322,
-             word: 22322322322322322322]
+             word: 22322322322322322322,
+             word: 2322322,
+             word: 22322322,
+             word: 2322322322,
+             word: 22322322322,
+             word: 22322322322322]
             sage: [Z.multiplicity() for Z in L]
-            [0, 0, 0, 0, 1, -1]
+            [0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0]
         """
         R = self.images_under_sadic(substitutions, substitutions_dict, keep_empty)
         B = R.graded_component(len(substitutions))
         d = defaultdict(list)
-        for E,_ in B:
-            w = E.factor()
+        for E,w,_ in B:
             if not d[w]:
                 d[w].append(E)
             elif any(E.is_subset(F) for F in d[w]):
@@ -1144,14 +1162,23 @@ class ExtensionType(object):
             ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
             sage: E1 = ExtensionTypeLong(data, (1,2,3))
             sage: E1.bispecial_factors_table_under_sadic([132]*2+[123]*6, S)
-              |w|   w                      m(w)   d^-(w)   info
-            +-----+----------------------+------+--------+----------+
-              0                            0      3        ordinary
-              1     2                      0      3        neutral
-              4     2322                   0      2        ordinary
-              5     22322                  0      2        ordinary
-              19    2322322322322322322    1      2        strong
-              20    22322322322322322322   -1     2        weak
+              |w|   w                      m(w)   d^-(w)   d2^-(w)   info
+            +-----+----------------------+------+--------+---------+----------+
+              0                            0      3        5         ordinary
+              1     2                      0      3        4         neutral
+              2     22                     0      2        2         ordinary
+              4     2322                   0      2        3         ordinary
+              5     22322                  0      2        2         ordinary
+              7     2322322                0      2        3         ordinary
+              8     22322322               0      2        2         ordinary
+              10    2322322322             0      2        3         ordinary
+              11    22322322322            0      2        2         ordinary
+              13    2322322322322          0      2        3         ordinary
+              14    22322322322322         0      2        2         ordinary
+              16    2322322322322322       0      2        3         ordinary
+              17    22322322322322322      0      2        2         ordinary
+              19    2322322322322322322    1      2        3         strong
+              20    22322322322322322322   -1     2        2         weak
         """
         B = self.distinct_bispecial_factors_under_sadic(substitutions, substitutions_dict, keep_empty)
         rows = []
@@ -1166,10 +1193,11 @@ class ExtensionType(object):
             else:
                 info = 'strong'
             w = ext.factor()
-            row = [w.length(), w, mw, ext.left_valence(), info]
+            row = [w.length(), w, mw, ext.left_valence(),
+                    len(ext.left_word_extensions()), info]
             rows.append(row)
         rows.sort(key=lambda row:row[0])
-        return table(rows=rows, header_row=['|w|', 'w', 'm(w)', 'd^-(w)', 'info'])
+        return table(rows=rows, header_row=['|w|', 'w', 'm(w)', 'd^-(w)', 'd2^-(w)', 'info'])
 
 class ExtensionType1to1(ExtensionType):
     r"""
