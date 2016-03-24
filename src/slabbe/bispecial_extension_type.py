@@ -70,7 +70,6 @@ from sage.misc.table import table
 from sage.combinat.words.word import FiniteWord_class, Word
 from sage.combinat.words.morphism import WordMorphism
 from sage.graphs.digraph import DiGraph
-from tikz_picture import TikzPicture
 
 common_substitutions_dict = dict(
 ar1=WordMorphism({1:[1],      2:[2,1],   3:[3,1]}),
@@ -852,6 +851,89 @@ class ExtensionType(object):
         R = RecursivelyEnumeratedSet([root], child, structure=structure)
         return R
 
+    def rec_enum_set_under_language_joined(self, language, initial,
+            substitutions_dict, keep_empty=False, label='history'):
+        r"""
+        Return the recursively enumerated set of extension type generated
+        by a language of substitutions where the extension type of the same
+        age and joined.
+
+        INPUT:
+
+        - ``language`` -- the language of substitutions
+        - ``initial`` -- initial substitution
+        - ``substitutions_dict`` - dict of substitutions
+        - ``keep_empty`` -- (default: False) whether to keep images that
+          are empty
+        - ``label`` -- 'history' or 'previous' (default: ``'history'``),
+          whether the vertices contain the whole history of the bispecial word
+          or only the previous applied substitution
+
+        EXAMPLES::
+
+            sage: from slabbe.bispecial_extension_type import ExtensionType
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.language import languages
+            sage: algo = Brun()
+            sage: S = algo.substitutions()
+            sage: L = languages.Brun()
+            sage: v = algo.image((1,e,pi), 5)
+            sage: prefix = algo.s_adic_word(v)[:100000]
+            sage: E = ExtensionType.from_factor(prefix.parent()(), prefix, nleft=2)
+            sage: E.rec_enum_set_under_language_joined(L, 123, S)
+            An enumerated set with a forest structure
+            sage: E.rec_enum_set_under_language_joined(L, 123, S, label='previous')
+            A recursively enumerated set (breadth first search)
+
+        ::
+
+            sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: S = Brun().substitutions()
+            sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
+            ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
+            sage: E1 = ExtensionTypeLong(data, (1,2,3))
+            sage: from slabbe.language import languages
+            sage: L = languages.Brun()
+            sage: E = [E for E in E1.apply(S[123]) if E.factor().length() == 1][0]
+            sage: R = E.rec_enum_set_under_language_joined(L, 123, S, label='previous')
+            sage: R
+            A recursively enumerated set (breadth first search)
+        """
+        from sage.sets.set import Set
+        # what can go before each letter
+        before = defaultdict(list)
+        for w in language.words_of_length_iterator(2): 
+            before[w[1]].append(w[0])
+        before = dict(before)
+
+        def child(V):
+            ExtIN,w = V
+            rep = []
+            for a in before[w[0]]:
+                ExtOUT = [Z for ext in ExtIN 
+                            for Z in ext.apply(substitutions_dict[a])
+                            if keep_empty or not Z.is_empty()]
+                ExtOUT = Set(remove_extension_types_subsets(ExtOUT))
+                if label == 'previous':
+                    rep.append((ExtOUT,(a,)))
+                elif label == 'history':
+                    rep.append((ExtOUT,(a,)+w))
+                else:
+                    raise ValueError('when label={}'.format(label))
+            return rep
+        root = ((self,),(initial,))
+
+        from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
+        if label == 'history':
+            structure = 'forest'
+        elif label == 'previous':
+            structure = None
+        else:
+            raise ValueError('when label={}'.format(label))
+        R = RecursivelyEnumeratedSet([root], child, structure=structure)
+        return R
+
     def graph_under_sadic(self, substitutions, substitutions_dict,
             keep_empty=False, raw=False):
         r"""
@@ -897,7 +979,6 @@ class ExtensionType(object):
             return G
         else:
             edges = set((u,v,history[0]) for ((u,_,_),(v,_,history),_) in G.edges())
-            from sage.graphs.digraph import DiGraph
             return DiGraph(edges, format='list_of_edges', loops=True, multiedges=True)
 
     def graph_under_language(self, language, initial, substitutions_dict,
@@ -923,7 +1004,44 @@ class ExtensionType(object):
                 substitutions_dict, keep_empty, label='previous')
         G = recursively_enumerated_set_to_digraph(R)
         edges = set((u,v,label) for ((u,_),(v,(label,)),_) in G.edges())
-        from sage.graphs.digraph import DiGraph
+        return DiGraph(edges, format='list_of_edges', loops=True, multiedges=True)
+
+    def graph_under_language_joined(self, language, initial, substitutions_dict,
+            keep_empty=False):
+        r"""
+        Return the recursively enumerated set of extension type generated
+        by a language of substitutions where the extension type of the same
+        age and joined.
+
+        INPUT:
+
+        - ``language`` -- the language of substitutions
+        - ``initial`` -- initial substitution
+        - ``substitutions_dict`` - dict of substitutions
+        - ``keep_empty`` -- (default: False) whether to keep images that
+          are empty
+        - ``label`` -- 'history' or 'previous' (default: ``'history'``),
+          whether the vertices contain the whole history of the bispecial word
+          or only the previous applied substitution
+
+        EXAMPLES::
+
+            sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: S = Brun().substitutions()
+            sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
+            ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
+            sage: E1 = ExtensionTypeLong(data, (1,2,3))
+            sage: from slabbe.language import languages
+            sage: L = languages.Brun()
+            sage: E = [E for E in E1.apply(S[123]) if E.factor().length() == 1][0]
+            sage: E.graph_under_language_joined(L, 123, S)   # not tested long time
+            Looped multi-digraph on 715 vertices
+        """
+        R = self.rec_enum_set_under_language_joined(language, initial,
+                substitutions_dict, keep_empty, label='previous')
+        G = recursively_enumerated_set_to_digraph(R)
+        edges = set((u,v,label) for ((u,_),(v,(label,)),_) in G.edges())
         return DiGraph(edges, format='list_of_edges', loops=True, multiedges=True)
 
     def weakstrong_sublanguage(self, language, initial, substitutions_dict, depth, keep_empty=False):
@@ -2298,7 +2416,7 @@ def table_bispecial(word, k):
         rows.append(row)
     return table(rows=rows, header_row=['word', 'm(w)','info'])
 
-def recursively_enumerated_set_to_digraph(R, depth=float('inf')):
+def recursively_enumerated_set_to_digraph(R, max_depth=float('inf')):
     r"""
     Return the graph of the recursively enumerated set.
 
@@ -2321,8 +2439,8 @@ def recursively_enumerated_set_to_digraph(R, depth=float('inf')):
         successors = R.children
     else:
         raise TypeError("Can't find the successor function for input {}".format(R))
-    E = [(u,v) for u in R for v in successors(u)]
-    from sage.graphs.digraph import DiGraph
+    it = R.breadth_first_search_iterator(max_depth=max_depth)
+    E = [(u,v) for u in it for v in successors(u)]
     return DiGraph(E, format='list_of_edges', loops=True, multiedges=True)
 
 ######################################
