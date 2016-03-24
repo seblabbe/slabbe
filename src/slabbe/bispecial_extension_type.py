@@ -2315,7 +2315,12 @@ def recursively_enumerated_set_to_digraph(R, depth=float('inf')):
         sage: G
         Looped multi-digraph on 10 vertices
     """
-    successors = R.successors
+    if hasattr(R, 'successors'):
+        successors = R.successors
+    elif hasattr(R, 'children'):
+        successors = R.children
+    else:
+        raise TypeError("Can't find the successor function for input {}".format(R))
     E = [(u,v) for u in R for v in successors(u)]
     from sage.graphs.digraph import DiGraph
     return DiGraph(E, format='list_of_edges', loops=True, multiedges=True)
