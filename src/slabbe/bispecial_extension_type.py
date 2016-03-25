@@ -944,9 +944,9 @@ class ExtensionType(object):
 
         - ``substitutions` -- the sequence of substitutions
         - ``substitutions_dict`` - dict of substitutions
-        - ``keep_empty`` -- (default: False) whether to keep images that are
-          empty, thus it will include all bispecial factors of age <= k on the
-          highest graded component.
+        - ``keep_empty`` -- bool (default: False) whether to keep images
+          that are empty, thus it will include all bispecial factors of age
+          <= k on the highest graded component.
         - ``raw`` -- bool (default: False), whether to keep the vertices
           raw, i.e. including history and factors information
 
@@ -982,7 +982,7 @@ class ExtensionType(object):
             return DiGraph(edges, format='list_of_edges', loops=True, multiedges=True)
 
     def graph_under_language(self, language, initial, substitutions_dict,
-            keep_empty=False):
+            keep_empty=False, max_depth=float('inf')):
         r"""
         Return the recursively enumerated set of extension type generated
         by a language of substitutions.
@@ -992,37 +992,9 @@ class ExtensionType(object):
         - ``language`` -- the language of substitutions
         - ``initial`` -- initial substitution
         - ``substitutions_dict`` - dict of substitutions
-        - ``keep_empty`` -- (default: False) whether to keep images that
-          are empty
-        - ``label`` -- 'history' or 'previous' (default: ``'history'``),
-          whether the vertices contain the whole history of the bispecial word
-          or only the previous applied substitution
-
-        EXAMPLES::
-        """
-        R = self.rec_enum_set_under_language(language, initial,
-                substitutions_dict, keep_empty, label='previous')
-        G = recursively_enumerated_set_to_digraph(R)
-        edges = set((u,v,label) for ((u,_),(v,(label,)),_) in G.edges())
-        return DiGraph(edges, format='list_of_edges', loops=True, multiedges=True)
-
-    def graph_under_language_joined(self, language, initial, substitutions_dict,
-            keep_empty=False):
-        r"""
-        Return the recursively enumerated set of extension type generated
-        by a language of substitutions where the extension type of the same
-        age and joined.
-
-        INPUT:
-
-        - ``language`` -- the language of substitutions
-        - ``initial`` -- initial substitution
-        - ``substitutions_dict`` - dict of substitutions
-        - ``keep_empty`` -- (default: False) whether to keep images that
-          are empty
-        - ``label`` -- 'history' or 'previous' (default: ``'history'``),
-          whether the vertices contain the whole history of the bispecial word
-          or only the previous applied substitution
+        - ``keep_empty`` -- bool (default: False) whether to keep images
+          that are empty
+        - ``max_depth`` -- integer (default: ``float('inf')``), max depth
 
         EXAMPLES::
 
@@ -1035,12 +1007,50 @@ class ExtensionType(object):
             sage: from slabbe.language import languages
             sage: L = languages.Brun()
             sage: E = [E for E in E1.apply(S[123]) if E.factor().length() == 1][0]
+            sage: E.graph_under_language(L, 123, S, max_depth=2)
+            Looped multi-digraph on 32 vertices
+        """
+        R = self.rec_enum_set_under_language(language, initial,
+                substitutions_dict, keep_empty, label='previous')
+        G = recursively_enumerated_set_to_digraph(R, max_depth=max_depth)
+        edges = set((u,v,label) for ((u,_),(v,(label,)),_) in G.edges())
+        return DiGraph(edges, format='list_of_edges', loops=True, multiedges=True)
+
+    def graph_under_language_joined(self, language, initial, substitutions_dict,
+            keep_empty=False, max_depth=float('inf')):
+        r"""
+        Return the recursively enumerated set of extension type generated
+        by a language of substitutions where the extension type of the same
+        age and joined.
+
+        INPUT:
+
+        - ``language`` -- the language of substitutions
+        - ``initial`` -- initial substitution
+        - ``substitutions_dict`` - dict of substitutions
+        - ``keep_empty`` -- bool (default: False) whether to keep images
+          that are empty
+        - ``max_depth`` -- integer (default: ``float('inf')``), max depth
+
+        EXAMPLES::
+
+            sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: S = Brun().substitutions()
+            sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
+            ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
+            sage: E1 = ExtensionTypeLong(data, (1,2,3))
+            sage: from slabbe.language import languages
+            sage: L = languages.Brun()
+            sage: E = [E for E in E1.apply(S[123]) if E.factor().length() == 1][0]
+            sage: E.graph_under_language_joined(L, 123, S, max_depth=2)
+            Looped multi-digraph on 26 vertices
             sage: E.graph_under_language_joined(L, 123, S)   # not tested long time
             Looped multi-digraph on 715 vertices
         """
         R = self.rec_enum_set_under_language_joined(language, initial,
                 substitutions_dict, keep_empty, label='previous')
-        G = recursively_enumerated_set_to_digraph(R)
+        G = recursively_enumerated_set_to_digraph(R, max_depth=max_depth)
         edges = set((u,v,label) for ((u,_),(v,(label,)),_) in G.edges())
         return DiGraph(edges, format='list_of_edges', loops=True, multiedges=True)
 
