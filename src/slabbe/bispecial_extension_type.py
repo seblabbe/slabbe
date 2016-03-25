@@ -907,39 +907,10 @@ class ExtensionType(object):
             sage: R
             A recursively enumerated set (breadth first search)
         """
-        from sage.sets.set import Set
-        # what can go before each letter
-        before = defaultdict(list)
-        for w in language.words_of_length_iterator(2): 
-            before[w[1]].append(w[0])
-        before = dict(before)
-
-        def child(V):
-            ExtIN,w = V
-            rep = []
-            for a in before[w[0]]:
-                ExtOUT = [Z for ext in ExtIN 
-                            for Z in ext.apply(substitutions_dict[a], growth_limit=growth_limit)
-                            if keep_empty or not Z.is_empty()]
-                ExtOUT = Set(remove_extension_types_subsets(ExtOUT))
-                if label == 'previous':
-                    rep.append((ExtOUT,(a,)))
-                elif label == 'history':
-                    rep.append((ExtOUT,(a,)+w))
-                else:
-                    raise ValueError('when label={}'.format(label))
-            return rep
-        root = ((self,),(initial,))
-
-        from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
-        if label == 'history':
-            structure = 'forest'
-        elif label == 'previous':
-            structure = None
-        else:
-            raise ValueError('when label={}'.format(label))
-        R = RecursivelyEnumeratedSet([root], child, structure=structure)
-        return R
+        pairs = [(self, initial)]
+        return rec_enum_set_under_language_joined_from_pairs(pairs, language,
+            substitutions_dict, keep_empty=keep_empty, label=label,
+            growth_limit=growth_limit)
 
     def graph_under_sadic(self, substitutions, substitutions_dict,
             keep_empty=False, raw=False, growth_limit=float('inf')):
@@ -2478,7 +2449,7 @@ def recursively_enumerated_set_to_digraph(R, max_depth=float('inf')):
     return DiGraph(E, format='list_of_edges', loops=True, multiedges=True)
 
 ######################################
-# utility function
+# Set of extension type of the same age
 ######################################
 def remove_extension_types_subsets(extensions):
     r"""
@@ -2529,3 +2500,92 @@ def remove_extension_types_subsets(extensions):
             d[w] = [F for F in d[w] if not F.is_subset(E)]
             d[w].append(E)
     return [v for value in d.values() for v in value]
+
+def rec_enum_set_under_language_joined_from_pairs(pairs, language,
+        substitutions_dict, keep_empty=False, label='history',
+        growth_limit=float('inf')):
+    r"""
+    Return the recursively enumerated set of extension type generated
+    by a language of substitutions where the extension type of the same
+    age and joined.
+
+    INPUT:
+
+    - ``pairs`` -- list of pairs of (extension type, previous substitution key)
+    - ``language`` -- the language of substitutions
+    - ``initial`` -- initial substitution
+    - ``substitutions_dict`` - dict of substitutions
+    - ``keep_empty`` -- (default: False) whether to keep images that
+      are empty
+    - ``label`` -- 'history' or 'previous' (default: ``'history'``),
+      whether the vertices contain the whole history of the bispecial
+      word or only the previous applied substitution
+    - ``growth_limit`` -- integer (default: ``float('inf')``), the
+      maximal growth in length of the bispecial extended images
+
+    EXAMPLES::
+
+        sage: from slabbe.bispecial_extension_type import rec_enum_set_under_language_joined_from_pairs
+        sage: from slabbe.bispecial_extension_type import ExtensionType
+        sage: from slabbe.mult_cont_frac import Brun
+        sage: from slabbe.language import languages
+        sage: algo = Brun()
+        sage: S = algo.substitutions()
+        sage: L = languages.Brun()
+        sage: v = algo.image((1,e,pi), 5)
+        sage: prefix = algo.s_adic_word(v)[:100000]
+        sage: E = ExtensionType.from_factor(prefix.parent()(), prefix, nleft=2)
+        sage: pairs = [(E,123)]
+        sage: rec_enum_set_under_language_joined_from_pairs(pairs, L, S)
+        An enumerated set with a forest structure
+        sage: rec_enum_set_under_language_joined_from_pairs(pairs, L, S, label='previous')
+        A recursively enumerated set (breadth first search)
+
+    ::
+
+        sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
+        sage: from slabbe.mult_cont_frac import Brun
+        sage: S = Brun().substitutions()
+        sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
+        ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
+        sage: E1 = ExtensionTypeLong(data, (1,2,3))
+        sage: from slabbe.language import languages
+        sage: L = languages.Brun()
+        sage: E = [E for E in E1.apply(S[123]) if E.factor().length() == 1][0]
+        sage: pairs = [(E,123)]
+        sage: rec_enum_set_under_language_joined_from_pairs(pairs, L, S, label='previous')
+        A recursively enumerated set (breadth first search)
+    """
+    from sage.sets.set import Set
+    # what can go before each letter
+    before = defaultdict(list)
+    for w in language.words_of_length_iterator(2): 
+        before[w[1]].append(w[0])
+    before = dict(before)
+
+    def child(V):
+        ExtIN,w = V
+        rep = []
+        for a in before[w[0]]:
+            ExtOUT = [Z for ext in ExtIN 
+                        for Z in ext.apply(substitutions_dict[a], growth_limit=growth_limit)
+                        if keep_empty or not Z.is_empty()]
+            ExtOUT = Set(remove_extension_types_subsets(ExtOUT))
+            if label == 'previous':
+                rep.append((ExtOUT,(a,)))
+            elif label == 'history':
+                rep.append((ExtOUT,(a,)+w))
+            else:
+                raise ValueError('when label={}'.format(label))
+        return rep
+    roots = [((E,),(b,)) for E,b in pairs]
+
+    from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
+    if label == 'history':
+        structure = 'forest'
+    elif label == 'previous':
+        structure = None
+    else:
+        raise ValueError('when label={}'.format(label))
+    return RecursivelyEnumeratedSet(roots, child, structure=structure)
+
