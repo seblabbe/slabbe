@@ -1447,7 +1447,7 @@ class ExtensionType1to1(ExtensionType):
         """
         return self._chignons + (self.multiplicity(),)
 
-    def apply(self, m):
+    def apply(self, m, growth_limit=float('inf')):
         r"""
         EXAMPLES::
 
@@ -1629,7 +1629,10 @@ class ExtensionType1to1(ExtensionType):
                         continue
                     chignons = left[len(left)-i+1:], right[:j]
                     extensions[chignons].append( (left[-i], right[j]) )
+
                 for chignons, extension in extensions.iteritems():
+                    if len(chignons[0]) + len(chignons[1]) > growth_limit:
+                        continue
                     factor = chignons[0] * m(self._factor) * chignons[1]
                     e = ExtensionType1to1(extension, self._alphabet, chignons, factor)
                     if e.is_bispecial():
@@ -2417,9 +2420,9 @@ def table_bispecial(word, k):
             info = 'weak'
         else:
             info = 'strong'
-        row = [w, mw , info]
+        row = [w.length(), w, mw , info]
         rows.append(row)
-    return table(rows=rows, header_row=['word', 'm(w)','info'])
+    return table(rows=rows, header_row=['|w|', 'word', 'm(w)','info'])
 
 def recursively_enumerated_set_to_digraph(R, max_depth=float('inf')):
     r"""
