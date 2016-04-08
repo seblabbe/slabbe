@@ -23,4 +23,6 @@ publish:
 	cp ~/Applications/sage-git/src/doc/output/pdf/en/slabbe/slabbe_ref.pdf ../www/Sage/slabbe-$(VERSION).pdf
 	cp ../slabbe-$(VERSION).spkg ../www/Sage/
 
-
+# Make my spkg a Python package?
+# https://python-packaging.readthedocs.org/en/latest/
+# https://python-packaging.readthedocs.org/en/latest/minimal.html
