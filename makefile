@@ -26,3 +26,4 @@ publish:
 # Make my spkg a Python package?
 # https://python-packaging.readthedocs.org/en/latest/
 # https://python-packaging.readthedocs.org/en/latest/minimal.html
+# https://packaging.python.org/en/latest/distributing/

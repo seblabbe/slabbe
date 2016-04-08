@@ -12,7 +12,8 @@ rm -fr "$SAGE_LOCAL"/lib/python/site-packages/slabbe*
 # Install new version
 cd src
 echo "Building slabbe spkg..."
-python setup.py install
+# python setup.py install
+pip install .
 
 if [ $? -ne 0 ]; then
     echo >&2 "Error building slabbe"
