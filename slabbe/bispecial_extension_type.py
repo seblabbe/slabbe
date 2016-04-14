@@ -2506,7 +2506,7 @@ def remove_extension_types_subsets(extensions):
 
 def rec_enum_set_under_language_joined_from_pairs(pairs, language,
         substitutions_dict, keep_empty=False, label='history',
-        growth_limit=float('inf')):
+        growth_limit=float('inf'), filter_fn=None):
     r"""
     Return the recursively enumerated set of extension type generated
     by a language of substitutions where the extension type of the same
@@ -2525,6 +2525,7 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
       word or only the previous applied substitution
     - ``growth_limit`` -- integer (default: ``float('inf')``), the
       maximal growth in length of the bispecial extended images
+    - ``filter_fn`` -- function (default: ``None``)
 
     EXAMPLES::
 
@@ -2558,6 +2559,27 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
         sage: pairs = [(E,123)]
         sage: rec_enum_set_under_language_joined_from_pairs(pairs, L, S, label='previous')
         A recursively enumerated set (breadth first search)
+
+    ::
+
+        sage: from slabbe.mult_cont_frac import Brun
+        sage: algo = Brun()
+        sage: S = algo.substitutions()
+        sage: from slabbe.language import languages
+        sage: LBrun = languages.Brun()
+        sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
+        ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
+        sage: E1 = ExtensionTypeLong(data, (1,2,3))
+        sage: pairs = [(E1, 312)] #, (E2, 312), (E3, 312), (E4, 321), (E5, 321)]
+        sage: f = lambda S:any(len(ext.left_word_extensions())>2 for ext in S)
+        sage: from slabbe.bispecial_extension_type import rec_enum_set_under_language_joined_from_pairs
+        sage: R = rec_enum_set_under_language_joined_from_pairs(pairs, LBrun, S, keep_empty=False, label='previous', growth_limit=1, filter_fn=f)
+        sage: R
+        A recursively enumerated set (breadth first search)
+        sage: from slabbe.bispecial_extension_type import recursively_enumerated_set_to_digraph
+        sage: G = recursively_enumerated_set_to_digraph(R)
+        Looped multi-digraph on 87 vertices
+
     """
     from sage.sets.set import Set
     # what can go before each letter
@@ -2573,7 +2595,10 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
             ExtOUT = [Z for ext in ExtIN 
                         for Z in ext.apply(substitutions_dict[a], growth_limit=growth_limit)
                         if keep_empty or not Z.is_empty()]
-            ExtOUT = Set(remove_extension_types_subsets(ExtOUT))
+            ExtOUT = remove_extension_types_subsets(ExtOUT)
+            if filter_fn and not filter_fn(ExtOUT):
+                continue
+            ExtOUT = tuple(sorted(ExtOUT))
             if label == 'previous':
                 rep.append((ExtOUT,(a,)))
             elif label == 'history':
