@@ -23,6 +23,15 @@ https://python-packaging.readthedocs.org/en/latest/non-code-files.html (like doc
 Jeroen link:
 https://packaging.python.org/en/latest/distributing/
 
+What to do with the documentation of an optional spkg?
+https://groups.google.com/forum/#!topic/sage-devel/RKzN-fxIfHI
+
+Other packages to compare with
+------------------------------
+
+https://github.com/pypa/sampleproject
+https://github.com/williamstein/sage_modabvar
+
 Fichiers à ajouter
 ------------------
 
