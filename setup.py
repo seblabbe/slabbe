@@ -15,7 +15,7 @@ ext_modules = [        Extension('slabbe.kolakoski_word_pyx',
             include_dirs=sage_include_directories())]
 
 setup(name='slabbe',
-	version='0.3.b0',
+	version='0.3b0',
 	description="Sebastien Labbe's Research code",
 	author='Sebastien Labbe',
 	author_email='slabbe@ulg.ac.be',
