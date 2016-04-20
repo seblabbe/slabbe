@@ -2591,14 +2591,15 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
     def child(V):
         ExtIN,w = V
         rep = []
+        if filter_fn and not filter_fn(ExtIN):
+            return rep
         for a in before[w[0]]:
             ExtOUT = [Z for ext in ExtIN 
                         for Z in ext.apply(substitutions_dict[a], growth_limit=growth_limit)
                         if keep_empty or not Z.is_empty()]
             ExtOUT = remove_extension_types_subsets(ExtOUT)
-            if filter_fn and not filter_fn(ExtOUT):
-                continue
-            ExtOUT = tuple(sorted(ExtOUT))
+            ExtOUT.sort(key=lambda ext:len(ext.factor()))
+            ExtOUT = tuple(ExtOUT)
             if label == 'previous':
                 rep.append((ExtOUT,(a,)))
             elif label == 'history':
