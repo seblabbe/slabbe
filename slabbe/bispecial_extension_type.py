@@ -415,7 +415,7 @@ class ExtensionType(object):
         elif mw < 0:
             return 'weak'
         elif self.is_ordinaire():
-            return 'ordinary'
+            return 'ord.'
         else:
             return "neutral"
     def equivalence_class(self):
