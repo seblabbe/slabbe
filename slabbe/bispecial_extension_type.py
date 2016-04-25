@@ -417,7 +417,7 @@ class ExtensionType(object):
         elif self.is_ordinaire():
             return 'ordinary'
         else:
-            return "neutral not ord."
+            return "neutral"
     def equivalence_class(self):
         r"""
         EXAMPLES::
