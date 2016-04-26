@@ -561,7 +561,7 @@ class MatrixCocycle(object):
         from sage.plot.graphics import Graphics
         from sage.plot.polygon import polygon
         from sage.plot.text import text
-        from useful_matrices import projection_matrix
+        from matrices import projection_matrix
         M3to2 = projection_matrix(3, 2)
         G = Graphics()
         for w,cyl in self.n_cylinders_iterator(n):
@@ -594,7 +594,7 @@ class MatrixCocycle(object):
         from sage.plot.text import text
         from sage.plot.colors import hue
         from sage.modules.free_module_element import vector
-        from useful_matrices import projection_matrix
+        from matrices import projection_matrix
         M3to2 = projection_matrix(3, 2)
         R = self.n_matrices_eigenvectors(n)
         L = [(w, M3to2*(a/sum(a)), M3to2*(b/sum(b))) for (w,a,b) in R]
@@ -687,7 +687,7 @@ class MatrixCocycle(object):
         lines = []
         lines.append(r"\begin{tikzpicture}")
         lines.append("[scale={}]".format(scale))
-        from useful_matrices import projection_matrix
+        from matrices import projection_matrix
         M3to2 = projection_matrix(3, 2)
         for (u,v) in self.n_cylinders_edges(n):
             u = rounded_string_vector(M3to2 * u / u.norm(1), digits=4)

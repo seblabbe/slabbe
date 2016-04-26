@@ -31,7 +31,7 @@ from sage.misc.misc_c import prod
 from sage.matrix.constructor import matrix
 from sage.combinat.finite_state_machine import Automaton
 from language import RegularLanguage
-from useful_matrices import projection_matrix
+from matrices import projection_matrix
 
 ######################
 # Markov Transformation
