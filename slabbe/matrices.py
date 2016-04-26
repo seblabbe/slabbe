@@ -139,3 +139,50 @@ def is_primitive(M):
             return False
         power *= power
         order += order
+def conjugate_matrix_Z(M):
+    r"""
+    Return the conjugate matrix Z as defined in [1].
+
+    EXAMPLES::
+
+        sage: M = matrix(2, [11,29,14,-1])
+        sage: conjugate_matrix_Z(M)
+        [11.674409930010482  27.69820597163912]
+        [14.349386111618157  -1.67440993001048]
+        sage: conjugate_matrix_Z(M)^2
+        [533.7440993001048 276.9820597163913]
+        [143.4938611161816 400.2559006998952]
+
+    ::
+
+        sage: M = matrix(2, [-11,14,-26,29])
+        sage: conjugate_matrix_Z(M)
+        [ 7.200000000000004  4.199999999999998]
+        [ 7.799999999999995 10.800000000000002]
+        sage: conjugate_matrix_Z(M) * 5
+        [ 36.00000000000002 20.999999999999993]
+        [ 38.99999999999998 54.000000000000014]
+
+    ::
+
+        sage: M = matrix(2, [-11,26,-14,29]) / 15
+        sage: conjugate_matrix_Z(M)
+        [ 0.5999999999999999  0.3999999999999999]
+        [0.39999999999999986  0.5999999999999999]
+
+    REFERENCES:
+
+    [1] Labbé, Jean-Philippe, et Sébastien Labbé. « A Perron theorem for matrices
+    with negative entries and applications to Coxeter groups ». arXiv:1511.04975
+    [math], 16 novembre 2015. http://arxiv.org/abs/1511.04975.
+    """
+    from sage.matrix.special import identity_matrix
+    eig, v = perron_right_eigenvector(M)
+    v /= sum(v)
+    nrows = M.nrows()
+    UNtop = matrix([1]*nrows)
+    v = matrix.column(v)
+    id = identity_matrix(nrows)
+    Z = eig*v*UNtop + (id - v*UNtop)*M
+    return Z
+
