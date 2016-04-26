@@ -294,14 +294,7 @@ class ExtensionType(object):
              m(w)=0, neutral not ord.
         """
         mw = self.multiplicity()
-        if mw > 0:
-            info = 'strong'
-        elif mw < 0:
-            info = 'weak'
-        elif self.is_ordinaire():
-            info = 'ordinary' 
-        else:
-            info = "neutral not ord."
+        info = self.information()
         chignons = self._chignons
         first_line = "w={}s(u){}={}".format(chignons[0], chignons[1], self._factor.string_rep())
         last_line = "m(w)={}, {}".format(mw, info)
@@ -347,14 +340,7 @@ class ExtensionType(object):
             \end{tabular}
         """
         mw = self.multiplicity()
-        if mw > 0:
-            info = 'strong'
-        elif mw < 0:
-            info = 'weak'
-        elif self.is_ordinaire():
-            info = 'ordinary' 
-        else:
-            info = "neutral not ord."
+        info = self.information()
         chignons = self._chignons
         s = '\\begin{tabular}{c}\n'
         s += "$w={}s(u){}={}$".format(chignons[0], chignons[1], self._factor.string_rep())
@@ -413,6 +399,25 @@ class ExtensionType(object):
             word: 212
         """
         return self._factor
+    def information(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import ExtensionType1to1
+            sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
+            sage: E = ExtensionType1to1(L, [1,2,3])
+            sage: E.information()
+            'ordinary'
+        """
+        mw = self.multiplicity()
+        if mw > 0:
+            return 'strong'
+        elif mw < 0:
+            return 'weak'
+        elif self.is_ordinaire():
+            return 'ord.'
+        else:
+            return "neutral"
     def equivalence_class(self):
         r"""
         EXAMPLES::
