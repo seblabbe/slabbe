@@ -292,13 +292,30 @@ class ExtensionType(object):
                22    X
                23    X
              m(w)=0, neutral not ord.
+
+        No factor appearing::
+
+            sage: E._include_factor_in_repr = False
+            sage: E
+              E(w)   1   2   3
+               21        X
+               31        X
+               12    X   X   X
+               22    X
+               23    X
+            m(w)=0, neutral
         """
         mw = self.multiplicity()
         info = self.information()
-        chignons = self._chignons
-        first_line = "w={}s(u){}={}".format(chignons[0], chignons[1], self._factor.string_rep())
-        last_line = "m(w)={}, {}".format(mw, info)
-        return "{}\n{}\n{}".format(first_line, self.table(), last_line)
+        lines = []
+        if self._include_factor_in_repr:
+            chignons = self._chignons
+            first_line = "w={}s(u){}={}".format(chignons[0], chignons[1],
+                                                self._factor.string_rep())
+            lines.append(first_line)
+        lines.append(repr(self.table()))
+        lines.append("m(w)={}, {}".format(mw, info))
+        return "\n".join(lines)
 
     def _latex_(self):
         r"""
@@ -338,13 +355,30 @@ class ExtensionType(object):
             \end{tabular}\\
             $m(w) = 0$, neutral not ord.
             \end{tabular}
+
+        No factor appearing::
+
+            sage: E._include_factor_in_repr = False
+            sage: latex(E)
+            \begin{tabular}{c}
+            \begin{tabular}{cccc}
+            $E(w)$ & $1$ & $2$ & $3$ \\
+            $21$ &   & $\times$ &   \\
+            $31$ &   & $\times$ &   \\
+            $12$ & $\times$ & $\times$ & $\times$ \\
+            $22$ & $\times$ &   &   \\
+            $23$ & $\times$ &   &   \\
+            \end{tabular}\\
+            $m(w) = 0$, neutral
+            \end{tabular}
         """
         mw = self.multiplicity()
         info = self.information()
-        chignons = self._chignons
         s = '\\begin{tabular}{c}\n'
-        s += "$w={}s(u){}={}$".format(chignons[0], chignons[1], self._factor.string_rep())
-        s += "\\\\\n"
+        if self._include_factor_in_repr:
+            chignons = self._chignons
+            s += "$w={}s(u){}={}$".format(chignons[0], chignons[1], self._factor.string_rep())
+            s += "\\\\\n"
         table_latex = self.table()._latex_()
         table_latex = table_latex.replace('E(w)', '$E(w)$')
         table_latex = table_latex.replace(' X ', ' $\\times$ ')
@@ -1254,6 +1288,8 @@ class ExtensionType1to1(ExtensionType):
     - ``chignons`` - optional (default: None), pair of words added to the
       left  and to the right of the image of the previous bispecial
     - ``factor`` - optional (default: empty word), the factor
+    - ``include_factor_in_repr`` - optional (default: True), whether to
+      include the factor in the string or latex representation
 
     EXAMPLES::
 
@@ -1277,7 +1313,8 @@ class ExtensionType1to1(ExtensionType):
             3      X   X   X
          m(w)=0, ordinary
     """
-    def __init__(self, L, alphabet, chignons=('',''), factor=Word()):
+    def __init__(self, L, alphabet, chignons=('',''), factor=Word(),
+            include_factor_in_repr=True):
         r"""
         EXAMPLES::
 
@@ -1295,6 +1332,7 @@ class ExtensionType1to1(ExtensionType):
         self._alphabet = alphabet
         self._chignons = tuple(chignons)
         self._factor = factor
+        self._include_factor_in_repr = include_factor_in_repr
 
     def table(self):
         r"""
@@ -1767,6 +1805,8 @@ class ExtensionTypeLong(ExtensionType):
     - ``empty`` - bool, (optional, default: None), if None, then it is
       computed from the chignons and takes value True iff the chignons are
       empyt.
+    - ``include_factor_in_repr`` - optional (default: True), whether to
+      include the factor in the string or latex representation
 
     EXAMPLES::
 
@@ -1785,7 +1825,8 @@ class ExtensionTypeLong(ExtensionType):
 
     """
     def __init__(self, L, alphabet, chignons=('',''), factor=Word(),
-            factors_length_k=None, empty=None):
+            factors_length_k=None, empty=None,
+            include_factor_in_repr=True):
         r"""
         EXAMPLES::
 
@@ -1803,6 +1844,7 @@ class ExtensionTypeLong(ExtensionType):
             self._empty = self.is_chignons_empty()
         else:
             self._empty = empty
+        self._include_factor_in_repr = include_factor_in_repr
 
     def is_chignons_empty(self):
         r"""
