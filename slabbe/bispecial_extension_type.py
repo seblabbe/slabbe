@@ -1677,7 +1677,9 @@ class ExtensionType1to1(ExtensionType):
                     if len(chignons[0]) + len(chignons[1]) > growth_limit:
                         continue
                     factor = chignons[0] * m(self._factor) * chignons[1]
-                    e = ExtensionType1to1(extension, self._alphabet, chignons, factor)
+                    e = ExtensionType1to1(L=extension, alphabet=self._alphabet,
+                            chignons=chignons, factor=factor,
+                            include_factor_in_repr=self._include_factor_in_repr)
                     if e.is_bispecial():
                         L.append(e)
         return tuple(L)
@@ -2292,7 +2294,7 @@ class ExtensionTypeLong(ExtensionType):
             factor = chignons[0] * m(self._factor) * chignons[1]
             e = ExtensionTypeLong(extension, alphabet=self._alphabet,
                     factor=factor, chignons=chignons, factors_length_k=Fimage,
-                    empty=empty)
+                    empty=empty, include_factor_in_repr=self._include_factor_in_repr)
             if e.is_valid() and e.is_bispecial():
                 L.append(e)
         return tuple(L)
