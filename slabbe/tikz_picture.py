@@ -4,6 +4,10 @@ Dealing with tikzpicture
 
 Conversions to pdf, png.
 
+TODO:
+
+    - Rename to_pdf, to_png, to_tex
+
 EXAMPLES::
 
     sage: from slabbe import TikzPicture
