@@ -107,7 +107,7 @@ AUTHORS:
 #*****************************************************************************
 from sage.misc.prandom import random
 
-include "sage/ext/interrupt.pxi"  # ctrl-c interrupt block support
+include "cysignals/signals.pxi"   # ctrl-c interrupt block support
 
 cdef struct PairPoint3d:
     double x
