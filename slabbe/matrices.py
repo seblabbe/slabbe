@@ -186,3 +186,36 @@ def conjugate_matrix_Z(M):
     Z = eig*v*UNtop + (id - v*UNtop)*M
     return Z
 
+def recurrence_matrix(coeffs):
+    r"""
+    Return the recurrence matrix of a relation, for example:
+
+    INPUT: 
+
+    - ``coeffs`` -- list of integers, for example if 
+      R(n) = R(n-1) + 2 R(n-2) + 3R(n-3) + 4R(n-4) + 5R(n-5)
+      then coeff must be [1,2,3,4,5]
+
+    EXAMPLES::
+
+        sage: recurrence_matrix([1,2,3,4,5])
+        [1 2 3 4 5]
+        [1 0 0 0 0]
+        [0 1 0 0 0]
+        [0 0 1 0 0]
+        [0 0 0 1 0]
+    """
+    poly = [-a for a in reversed(coeffs)]
+    poly.append(1)
+    return matrix.companion(poly, format='top')
+
+def spectrum(M):
+    r"""
+    EXAMPLES::
+
+        sage: M = recurrence_matrix([1,2,3,4,5])
+        sage: spectrum(M)
+        2.576021761956651?
+    """
+    return max(map(abs, M.eigenvalues()))
+
