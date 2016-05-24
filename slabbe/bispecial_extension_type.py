@@ -56,7 +56,7 @@ TODO:
 
     - use __classcall_private__ stuff for ExtensionType ?
     - fix bug of apply for ExtensionTypeLong when the word appears in the
-      image of a letter
+      image of a letter (first initial fix: 18 May 2016, to be confirmed)
     - add the bispecial word to the attribute of extension type
     - use this to compute the factor complexity function
     - When should two bispecial extension type be equal? In graphs, we sometimes
@@ -2244,6 +2244,26 @@ class ExtensionTypeLong(ExtensionType):
                 21    X
                 12    X
              m(w)=0, ordinary)
+
+        We check that 12 is a left extension of X because this can not be
+        guessed only from the direct image of left extensions::
+
+            sage: b21 = WordMorphism({1:[1],2:[2,1],3:[3]})
+            sage: data = [((1, 1), (2,)), ((2, 1), (3,)), ((2, 1), (2,)),
+            ....:         ((1, 2), (1,)), ((2, 1), (1,)), ((1, 3), (2,))]
+            sage: F = [(1,1,1), (1,2,1), (1,1,3), (3,1,2), (2,1,1), (1,1,2), (1,3,1)]
+            sage: F = map(Word, F)
+            sage: E4_1 = ExtensionTypeLong(data, (1,2,3), factor=Word([1]),
+            ....:                          factors_length_k=F, empty=False)
+            sage: X,Y = E4_1.apply(b21)
+            sage: X
+            w=s(u)=1
+              E(w)   1   2   3
+               11    X   X   X
+               21    X
+               12    X
+               13        X
+            m(w)=0, ord.
         """
         F = self.factors_length_k(l+r)
 
@@ -2273,15 +2293,18 @@ class ExtensionTypeLong(ExtensionType):
                     new_ext  = left[:len(left)-i][-l:], right[j:j+r]
                     extensions[chignons].append( new_ext )
 
-        # The empty word (as image of the empty word) occurs in every place...
-        if self.is_empty():
-            chignons = Word(),Word()
-            assert chignons in extensions
-            for a,b in self:
-                left = word_before[a] * m(a)
-                right = m(b) * word_after[b]
-                word = left * right
-                for f in word.factor_iterator(l+r):
+        # The image of the factor may occur in other places ...
+        # This is necessary when self is empty or is a letter ...
+        # TODO: improvement, run this code only if necessary (when?)
+        chignons = Word(),Word()
+        assert chignons in extensions
+        for a,b in self:
+            left = word_before[a] * m(a)
+            right = m(b) * word_after[b]
+            m_factor = m(self._factor)
+            word = left * m_factor * right
+            for f in word.factor_iterator(l+len(m_factor)+r):
+                if f[l:-r] == m_factor:
                     new_ext = f[:l], f[-r:]
                     extensions[chignons].append( new_ext )
 
