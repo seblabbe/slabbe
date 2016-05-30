@@ -2296,17 +2296,18 @@ class ExtensionTypeLong(ExtensionType):
         # The image of the factor may occur in other places ...
         # This is necessary when self is empty or is a letter ...
         # TODO: improvement, run this code only if necessary (when?)
-        chignons = Word(),Word()
-        assert chignons in extensions
-        for a,b in self:
-            left = word_before[a] * m(a)
-            right = m(b) * word_after[b]
-            m_factor = m(self._factor)
-            word = left * m_factor * right
-            for f in word.factor_iterator(l+len(m_factor)+r):
-                if f[l:-r] == m_factor:
-                    new_ext = f[:l], f[-r:]
-                    extensions[chignons].append( new_ext )
+        if len(self._factor) <= 1:
+            chignons = Word(),Word()
+            assert chignons in extensions
+            for a,b in self:
+                left = word_before[a] * m(a)
+                right = m(b) * word_after[b]
+                m_factor = m(self._factor)
+                word = left * m_factor * right
+                for f in word.factor_iterator(l+len(m_factor)+r):
+                    if f[l:-r] == m_factor:
+                        new_ext = f[:l], f[-r:]
+                        extensions[chignons].append( new_ext )
 
         Fimage = set(w for f in F for w in m(f).factor_iterator(l+r))
         L = []
@@ -2577,8 +2578,8 @@ def remove_extension_types_subsets(extensions):
     return [v for value in d.values() for v in value]
 
 def rec_enum_set_under_language_joined_from_pairs(pairs, language,
-        substitutions_dict, keep_empty=False, label='history',
-        growth_limit=float('inf'), filter_fn=None):
+        substitutions_dict, keep_equal_length=False, keep_unique=False,
+        label='history', growth_limit=float('inf'), filter_fn=None):
     r"""
     Return the recursively enumerated set of extension type generated
     by a language of substitutions where the extension type of the same
@@ -2588,10 +2589,11 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
 
     - ``pairs`` -- list of pairs of (extension type, previous substitution key)
     - ``language`` -- the language of substitutions
-    - ``initial`` -- initial substitution
     - ``substitutions_dict`` - dict of substitutions
-    - ``keep_empty`` -- (default: False) whether to keep images that
-      are empty
+    - ``keep_equal_length`` -- (default: False) whether to keep images that
+      have equal length
+    - ``keep_unique`` -- (default: False) whether to keep a unique copy of
+      equal extension types
     - ``label`` -- 'history' or 'previous' (default: ``'history'``),
       whether the vertices contain the whole history of the bispecial
       word or only the previous applied substitution
@@ -2645,12 +2647,39 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
         sage: pairs = [(E1, 312)] #, (E2, 312), (E3, 312), (E4, 321), (E5, 321)]
         sage: f = lambda S:any(len(ext.left_word_extensions())>2 for ext in S)
         sage: from slabbe.bispecial_extension_type import rec_enum_set_under_language_joined_from_pairs
-        sage: R = rec_enum_set_under_language_joined_from_pairs(pairs, LBrun, S, keep_empty=False, label='previous', growth_limit=1, filter_fn=f)
+        sage: R = rec_enum_set_under_language_joined_from_pairs(pairs,
+        ....:    LBrun, S, keep_equal_length=False, label='previous', growth_limit=1, filter_fn=f)
         sage: R
         A recursively enumerated set (breadth first search)
         sage: from slabbe.bispecial_extension_type import recursively_enumerated_set_to_digraph
         sage: G = recursively_enumerated_set_to_digraph(R)
         Looped multi-digraph on 87 vertices
+
+    Testing the keep_unique option (not a good example apparently?)::
+
+        sage: from slabbe.mult_cont_frac import Brun
+        sage: algo = Brun()
+        sage: S = algo.substitutions()
+        sage: from slabbe.language import languages
+        sage: LBrun = languages.Brun()
+        sage: data = [((1,1),(2,)),((2,1),(3,)),((2,1),(2,)),
+        ....:         ((1,2),(1,)),((2,1),(1,)),((1,3),(2,))]
+        sage: factors = map(Word,[(1,1,1),(1,2,1),(1,1,3),(3,1,2),(2,1,1),(1,1,2),(1,3,1)])
+        sage: E4_1 = ExtensionTypeLong(data, (1,2,3), factor=Word([1]), factors_length_k=factors)
+        sage: pairs = [(E4_1, 321)]
+        sage: f = lambda S:any(len(ext.left_word_extensions())>2 for ext in S)
+        sage: R = rec_enum_set_under_language_joined_from_pairs(pairs,
+        ....:    LBrun, S, keep_equal_length=False, 
+        ....:    keep_unique=False, label='previous', growth_limit=1, filter_fn=f)
+        sage: R
+        A recursively enumerated set (breadth first search)
+        sage: R.to_digraph()
+        Looped multi-digraph on 62 vertices
+        sage: R = rec_enum_set_under_language_joined_from_pairs(pairs,
+        ....:    LBrun, S, keep_equal_length=False, 
+        ....:    keep_unique=True, label='previous', growth_limit=1, filter_fn=f)
+        sage: R.to_digraph()
+        Looped multi-digraph on 62 vertices
 
     """
     from sage.sets.set import Set
@@ -2668,8 +2697,10 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
         for a in before[w[0]]:
             ExtOUT = [Z for ext in ExtIN 
                         for Z in ext.apply(substitutions_dict[a], growth_limit=growth_limit)
-                        if keep_empty or not Z.is_empty()]
+                        if keep_equal_length or not len(ext.factor())==len(Z.factor())]
             ExtOUT = remove_extension_types_subsets(ExtOUT)
+            if keep_unique:
+                ExtOUT = list(set(ExtOUT))
             ExtOUT.sort(key=lambda ext:len(ext.factor()))
             ExtOUT = tuple(ExtOUT)
             if label == 'previous':
