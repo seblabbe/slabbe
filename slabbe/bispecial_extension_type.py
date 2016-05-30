@@ -163,10 +163,12 @@ class ExtensionType(object):
                 L.append((a,b))
         if nleft == 1 and nright == 1:
             L = [(a[0], b[0]) for (a,b) in L]
-            return ExtensionType1to1(L, W.alphabet())
+            return ExtensionType1to1(L, W.alphabet(), factor=bispecial)
         else:
             L = [(tuple(a), tuple(b)) for (a,b) in L]
-            return ExtensionTypeLong(L, W.alphabet(), empty=bispecial.is_empty())
+            return ExtensionTypeLong(L, W.alphabet(), factor=bispecial,
+                    empty=bispecial.is_empty())
+
 
     @staticmethod
     def from_morphism(m):
@@ -664,6 +666,18 @@ class ExtensionType(object):
 
         """
         return len(self.right_extensions())
+    def palindromic_valence(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import ExtensionType1to1
+            sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
+            sage: E = ExtensionType1to1(L, [1,2,3])
+            sage: E.palindromic_valence()
+            1
+        """
+        return len(self.palindromic_extensions())
+
     def multiplicity(self):
         r"""
         EXAMPLES::
@@ -1790,6 +1804,73 @@ class ExtensionType1to1(ExtensionType):
             {1, 2, 3}
         """
         return set(b for a,b in self)
+    def palindromic_extensions(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import ExtensionType1to1
+            sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
+            sage: E = ExtensionType1to1(L, [1,2,3])
+            sage: E.palindromic_extensions()
+            {3}
+        """
+        return set(a for a,b in self if a == b)
+
+    def extension_digraph(self):
+        r"""
+        Return the extension directed graph made of edges
+
+            (-1,a) -> (+1,b)
+
+        for each pair (a,b) in the extension set.
+
+        EXAMPLES::
+
+            sage: from slabbe import ExtensionType1to1
+            sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
+            sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
+            sage: E.extension_digraph()
+            Bipartite graph on 6 vertices
+        """
+        left, right = zip(*self)
+        left = set([(-1,a) for a in left])
+        right = set([(+1,b) for b in right])
+        V = left.union(right)
+        E = [((-1,a), (+1,b)) for (a,b) in self]
+        G = DiGraph([V,E], format='vertices_and_edges')
+        from sage.graphs.bipartite_graph import BipartiteGraph
+        return BipartiteGraph(G, partition=(left,right))
+
+    def extension_graph(self, loops=False):
+        r"""
+        Return the extension graph made of edges (a,b)
+        for each pair (a,b) in the extension set.
+
+        EXAMPLES::
+
+            sage: from slabbe import ExtensionType1to1
+            sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
+            sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
+            sage: E.extension_graph()
+            Graph on 3 vertices
+            sage: E.extension_graph(loops=True)
+            Looped graph on 3 vertices
+
+        ::
+
+            sage: L = [(1,1), (1,2), (2,1), (3,3)]
+            sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
+            sage: G = E.extension_graph()
+            sage: G.is_connected()
+            False
+        """
+        from sage.graphs.graph import Graph
+        edges = [(a,b) for (a,b) in self if loops or a!=b]
+        left, right = zip(*self)
+        vertices = set(left).union(right)
+        return Graph([vertices,edges], format='vertices_and_edges',
+                multiedges=False, loops=loops)
+
 class ExtensionTypeLong(ExtensionType):
     r"""
     Generalized to words.
@@ -2403,6 +2484,18 @@ class ExtensionTypeLong(ExtensionType):
         """
         return self.extension_type_1to1().right_extensions()
         #return set(b[:1] for b in self.right_word_extensions())
+    def palindromic_extensions(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import ExtensionTypeLong
+            sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
+            ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
+            sage: E = ExtensionTypeLong(L, (1,2,3))
+            sage: E.palindromic_extensions()
+            {2}
+        """
+        return self.extension_type_1to1().palindromic_extensions()
 ######################################
 # methods that should be in Sage
 ######################################
@@ -2453,31 +2546,31 @@ def table_bispecial(word, k):
         sage: from slabbe.bispecial_extension_type import table_bispecial
         sage: w = words.FibonacciWord()
         sage: table_bispecial(w[:10000], 6)
-          word                  m(w)   info
-        +---------------------+------+----------+
-                                0      ordinary
-          0                     0      ordinary
-          010                   0      ordinary
-          010010                0      ordinary
-          01001010010           0      ordinary
-          0100101001001010010   0      ordinary
+          |w|   word                  m(w)   info
+        +-----+---------------------+------+------+
+          0                           0      ord.
+          1     0                     0      ord.
+          3     010                   0      ord.
+          6     010010                0      ord.
+          11    01001010010           0      ord.
+          19    0100101001001010010   0      ord.
 
     ::
 
         sage: w = words.ThueMorseWord()
         sage: table_bispecial(w[:10000], 10)
-          word     m(w)   info
-        +--------+------+----------+
-                   1      strong
-          0        0      ordinary
-          1        0      ordinary
-          10       1      strong
-          01       1      strong
-          101      -1     weak
-          010      -1     weak
-          1001     1      strong
-          0110     1      strong
-          100110   -1     weak
+          |w|   word     m(w)   info
+        +-----+--------+------+--------+
+          0              1      strong
+          1     0        0      ord.
+          1     1        0      ord.
+          2     10       1      strong
+          2     01       1      strong
+          3     101      -1     weak
+          3     010      -1     weak
+          4     1001     1      strong
+          4     0110     1      strong
+          6     100110   -1     weak
     """
     it = word.bispecial_factors_iterator()
     bispecials = [next(it) for _ in range(k)]
@@ -2485,15 +2578,8 @@ def table_bispecial(word, k):
     for w in bispecials:
         ext = ExtensionType.from_factor(w, word)
         mw = ext.multiplicity()
-        if ext.is_ordinaire():
-            info = 'ordinary'
-        elif mw == 0:
-            info = 'neutral'
-        elif mw < 0:
-            info = 'weak'
-        else:
-            info = 'strong'
-        row = [w.length(), w, mw , info]
+        info = ext.information()
+        row = [w.length(), w, mw, info]
         rows.append(row)
     return table(rows=rows, header_row=['|w|', 'word', 'm(w)','info'])
 
