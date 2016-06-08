@@ -12,12 +12,11 @@ TODO:
 
 """
 #*****************************************************************************
-#       Copyright (C) 2014-2016 Sébastien Labbé <slabqc@gmail.com>
+#       Copyright (C) 2016 Sebastien Labbe <slabqc@gmail.com>
 #
-#  Distributed under the terms of the GNU General Public License version 2 (GPLv2)
-#
-#  The full text of the GPLv2 is available at:
-#
+#  Distributed under the terms of the GNU General Public License (GPL)
+#  as published by the Free Software Foundation; either version 2 of
+#  the License, or (at your option) any later version.
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 from sage.matrix.constructor import matrix
