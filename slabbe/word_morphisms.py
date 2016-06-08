@@ -210,3 +210,182 @@ def iter_primitive_marked_classP_morphisms(words, n):
         if m.is_primitive() and is_marked(m):
             yield m
 
+def desubstitute_prefix_code(self, u):
+    r"""
+    Return the preimage of u under self.
+
+    INPUT:
+
+    - ``self`` -- word morphism, a prefix code
+    - ``u`` -- word
+
+    EXAMPLES::
+
+        sage: from slabbe.word_morphisms import desubstitute_prefix_code
+        sage: s = WordMorphism({0:[0,1],1:[1,0]})
+        sage: w = desubstitute_prefix_code(s, Word([0,1,0,1,1,0]))
+        sage: w
+        word: 001
+
+    The result lives in the domain of the given substitution::
+
+        sage: w.parent()
+        Finite words over {0, 1}
+
+    TESTS::
+
+        sage: s = WordMorphism({0:[0,1],1:[1,0],2:[1,0]})
+        sage: desubstitute_prefix_code(s, Word([0,1,0,1,1,0]))
+        Traceback (most recent call last):
+        ...
+        ValueError: non unique desubstitution, m(1)=10, m(2)=10 are prefixes of u[4:]
+
+    ::
+
+        sage: s = WordMorphism({0:[0,1],1:[1,0]})
+        sage: desubstitute_prefix_code(s, Word([0,1,0,1,1,1]))
+        Traceback (most recent call last):
+        ...
+        ValueError: desubstitution is impossible for u[4:]
+    """
+    morph = self._morph
+    i = 0
+    len_u = len(u)
+    result = []
+    while i < len_u:
+        ui = u[i:]
+        keys = [(k,v) for k,v in morph.iteritems() if v.is_prefix(ui)]
+        if len(keys) > 1:
+            s = ", ".join(["m({})={}".format(k,v) for (k,v) in keys])
+            msg = ("non unique desubstitution, "
+                   "{} are prefixes of u[{}:] ".format(s,i))
+            raise ValueError(msg)
+        if len(keys) == 0:
+            raise ValueError("desubstitution is impossible for u[{}:]".format(i))
+        k,v = keys[0]
+        result.append(k)
+        i += len(v)
+    W = self.domain()
+    return W(result)
+
+def desubstitute(self, u):
+    r"""
+    EXAMPLES:
+
+    Unique preimage::
+
+        sage: from slabbe.word_morphisms import desubstitute
+        sage: s = WordMorphism({0:[0,1],1:[1,0]})
+        sage: desubstitute(s, Word([0,1,0,1,1,0]))
+        [word: 001]
+
+    Non-unique preimage::
+
+        sage: s = WordMorphism({0:[0,1],1:[1,0],2:[1,0]})
+        sage: desubstitute(s, Word([0,1,0,1,1,0]))
+        [word: 001, word: 002]
+
+    No preimage::
+
+        sage: s = WordMorphism({0:[0,1],1:[1,0]})
+        sage: desubstitute(s, Word([0,1,0,1,1,1]))
+        []
+
+    Lot of preimages (computation is done in parallel with Florent's Hivert
+    parallel map reduce code)::
+
+        sage: s = WordMorphism({0:[0,1],1:[0,1]})
+        sage: w = Word([0,1]) ^ 10
+        sage: L = desubstitute(s, w)
+        sage: len(L)
+        1024
+    """
+    morph = self._morph
+    len_u = len(u)
+    def successor(node):
+        L,i = node
+        if i == len_u:
+            return []
+        else:
+            ui = u[i:]
+            return [(L+[k],i+len(v)) for k,v in morph.iteritems() if v.is_prefix(ui)]
+    roots = [([],0)]
+    post_process = lambda node:node if node[1]==len_u else None
+    from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
+    R = RecursivelyEnumeratedSet(roots, successor, structure='forest',
+            post_process=post_process)
+    W = self.domain()
+    map_function = lambda node:[W(node[0])]
+    reduce_function = lambda x,y:x+y
+    reduce_init = []
+    return R.map_reduce(map_function, reduce_function, reduce_init)
+
+def return_substitution(self, u, coding=False):
+    r"""
+    Return the return substitution of self according to factor u.
+
+    INPUT:
+
+    - ``self`` -- word morphism
+    - ``u`` -- word such that u is a prefix of self(u)
+    - ``coding`` -- boolean (default: ``False``), whether to
+      include the return word coding morphism
+
+    EXAMPLES::
+
+        sage: from slabbe.word_morphisms import return_substitution
+        sage: s = WordMorphism({0:[0,1],1:[1,0]})
+        sage: return_substitution(s, Word([0]))
+        WordMorphism: 0->012, 1->02, 2->1
+        sage: return_substitution(s, Word([0,1]))
+        WordMorphism: 0->01, 1->23, 2->013, 3->2
+        sage: return_substitution(s, Word([0,1,1]))
+        WordMorphism: 0->01, 1->23, 2->013, 3->2
+
+    ::
+
+        sage: return_substitution(s, Word([0]), True)
+        (WordMorphism: 0->012, 1->02, 2->1, 
+         WordMorphism: 0->011, 1->01, 2->0)
+        sage: return_substitution(s, Word([0,1]), True)
+        (WordMorphism: 0->01, 1->23, 2->013, 3->2,
+         WordMorphism: 0->011, 1->010, 2->0110, 3->01)
+
+    TESTS::
+
+        sage: sigma_u, theta_u = return_substitution(s, Word([0]), coding=True)
+        sage: sigma_u
+        WordMorphism: 0->012, 1->02, 2->1
+        sage: theta_u
+        WordMorphism: 0->011, 1->01, 2->0
+        sage: theta_u*sigma_u == s*theta_u
+        True
+        sage: theta_u*sigma_u
+        WordMorphism: 0->011010, 1->0110, 2->01
+    """
+    from slabbe.infinite_word import derived_sequence
+    a = u[0]
+    x = self.fixed_point(a)
+    s, D = derived_sequence(x, u, coding=True)
+    code_to_return_word = WordMorphism({v:k for k,v in D.iteritems()})
+    rep = {}
+    for key,value in D.iteritems():
+        self_key = self(key)
+        L = desubstitute(code_to_return_word, self_key)
+        if len(L) == 0:
+            raise ValueError("desubstitution is impossible for {}".format(self_key))
+        elif len(L) > 1:
+            s = "=".join(["m({})".format(u) for u in L])
+            msg = ("non unique desubstitution, "
+                   "{}={}".format(s,self_key))
+            raise ValueError(msg)
+        #print key,value,self_key,L[0]
+        preimage = L[0]
+        rep[value] = preimage
+    m = WordMorphism(rep) 
+    if coding:
+        return m, code_to_return_word
+    else:
+        return m
+
+
