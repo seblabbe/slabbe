@@ -1,12 +1,27 @@
+# -*- coding: utf-8 -*-
+r"""
+Word morphisms methods and iterators
 
+"""
+#*****************************************************************************
+#       Copyright (C) 2016 Sébastien Labbé <slabqc@gmail.com>
+#
+#  Distributed under the terms of the GNU General Public License version 2 (GPLv2)
+#
+#  The full text of the GPLv2 is available at:
+#
+#                  http://www.gnu.org/licenses/
+#*****************************************************************************
 from sage.combinat.integer_lists.invlex import IntegerListsLex
 from sage.combinat.words.morphism import WordMorphism
+from sage.combinat.words.words import FiniteWords
 import itertools
 
 def iter_palindromes(words, length):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.word_morphisms import iter_palindromes
         sage: list(iter_palindromes(Words('ab'), 2))
         [word: aa, word: bb]
         sage: list(iter_palindromes(Words('ab'), 3))
@@ -35,6 +50,7 @@ def iter_conjugate_classP(words, n):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.word_morphisms import iter_conjugate_classP
         sage: F = FiniteWords('ab')
         sage: list(iter_conjugate_classP(F, 2))
         [WordMorphism: a->a, b->a,
@@ -74,10 +90,58 @@ def iter_conjugate_classP(words, n):
                     continue
                 yield WordMorphism(d, codomain=words)
 
+def iter_pisot_irreductible(d=3, arg=None):
+    r"""
+    Return an iterator over Pisot irreductible substitutions
+
+    INPUT:
+
+    - ``d`` -- size of alphabet, [0,1,...,d-1]
+
+    - "arg" -- (optional, default: None) It can be one of the
+      following :
+
+      * "None" -- then the method iterates through all morphisms.
+
+      * tuple (a, b) of two integers  - It specifies the range
+        "range(a, b)" of values to consider for the sum of the length
+
+    EXAMPLES::
+
+        sage: from slabbe.word_morphisms import iter_pisot_irreductible
+        sage: it = iter_pisot_irreductible(3)
+        sage: for _ in range(4): next(it)
+        WordMorphism: 0->01, 1->2, 2->0
+        WordMorphism: 0->02, 1->0, 2->1
+        WordMorphism: 0->10, 1->2, 2->0
+        WordMorphism: 0->12, 1->0, 2->1
+
+    Pour linstant, avec le tuple, il y a un bogue::
+
+        sage: it = iter_pisot_irreductible(3, (5,10))
+        sage: for _ in range(4): next(it)
+        WordMorphism: 0->0000001, 1->2, 2->0
+        WordMorphism: 0->0000002, 1->0, 2->1
+        WordMorphism: 0->0000010, 1->2, 2->0
+        WordMorphism: 0->0000012, 1->0, 2->1
+    """
+    from slabbe.matrices import is_pisot
+    W = FiniteWords(range(d))
+    for m in W.iter_morphisms(arg):
+        incidence_matrix = m.incidence_matrix()
+        if not incidence_matrix.det() == 1:
+            continue
+        if not m.is_primitive(): # mathematiquement non necessaire
+            continue
+        if not is_pisot(incidence_matrix):
+            continue
+        yield m
+
 def is_left_marked(m):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.word_morphisms import is_left_marked
         sage: m = WordMorphism('0->00001,1->00010')
         sage: is_left_marked(m)
         True
@@ -110,12 +174,21 @@ def is_left_marked(m):
     return False
 
 def is_marked(m):
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.word_morphisms import is_marked
+        sage: m = WordMorphism('0->00001,1->00010')
+        sage: is_marked(m)
+        True
+    """
     return is_left_marked(m) and is_left_marked(m.reversal())
 
 def iter_primitive_marked_classP_morphisms(words, n):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.word_morphisms import iter_primitive_marked_classP_morphisms
         sage: F = FiniteWords('ab')
         sage: it = iter_primitive_marked_classP_morphisms(F, 2)
         sage: list(it)

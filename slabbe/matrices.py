@@ -21,6 +21,7 @@ TODO:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 from sage.matrix.constructor import matrix
+import heapq
 
 def projection_matrix(dim_from=3, dim_to=2):
     r"""
@@ -63,8 +64,8 @@ def perron_right_eigenvector(M):
 
         sage: from slabbe.matrices import perron_right_eigenvector
         sage: m = matrix(2,[-11,14,-26,29])
-        sage: perron_right_eigenvector(m)
-        (15.0000000000000, (0.35, 0.6499999999999999))
+        sage: perron_right_eigenvector(m)    # abs tol 0.0000001
+        (15.0, (0.35, 0.65))
     """
     import numpy
     from sage.rings.real_mpfr import RR
@@ -100,10 +101,10 @@ def is_nonnegative(M):
     EXAMPLES::
 
         sage: from slabbe.matrices import is_nonnegative
-        sage: m = matrix(4, range(16))
+        sage: m = matrix(4, range(-8,8))
         sage: is_nonnegative(m)
         False
-        sage: m = matrix(4, range(1,17))
+        sage: m = matrix(4, range(16))
         sage: is_nonnegative(m)
         True
     """
@@ -139,12 +140,32 @@ def is_primitive(M):
             return False
         power *= power
         order += order
+def is_pisot(M):
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.matrices import is_pisot
+        sage: M = matrix(2,[1,1,0,1])
+        sage: is_pisot(M)
+        False
+
+    ::
+
+        sage: M = matrix(2,[0,1,1,1])
+        sage: is_pisot(M)
+        True
+    """
+    eig_module = map(abs, M.eigenvalues())
+    largest, second_largest = heapq.nlargest(2, eig_module)
+    return second_largest < 1
+
 def conjugate_matrix_Z(M):
     r"""
     Return the conjugate matrix Z as defined in [1].
 
     EXAMPLES::
 
+        sage: from slabbe.matrices import conjugate_matrix_Z
         sage: M = matrix(2, [11,29,14,-1])
         sage: conjugate_matrix_Z(M)
         [11.674409930010482  27.69820597163912]
@@ -198,6 +219,7 @@ def recurrence_matrix(coeffs):
 
     EXAMPLES::
 
+        sage: from slabbe.matrices import recurrence_matrix
         sage: recurrence_matrix([1,2,3,4,5])
         [1 2 3 4 5]
         [1 0 0 0 0]
@@ -213,6 +235,7 @@ def spectrum(M):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.matrices import spectrum, recurrence_matrix
         sage: M = recurrence_matrix([1,2,3,4,5])
         sage: spectrum(M)
         2.576021761956651?
