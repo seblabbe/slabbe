@@ -1,5 +1,3 @@
-VERSION = 0.3.b
-
 all: install test
 
 install:
@@ -10,12 +8,6 @@ install:
 develop:
 	# python setup.py develop
 	sage -pip install --upgrade -e .
-
-old-install:
-	cd .. && sage -pkg slabbe-$(VERSION)
-	cd .. && sage -p slabbe-$(VERSION).spkg
-	echo "Effectuer une commande sage pour mettre a jour les path..."
-	sage -c "a=randint(1,1000);print 'factor(%s) = %s'%(a,factor(a))"
 
 old-uninstall:
 	rm -fr ~/Applications/sage-git/local/lib/python/site-packages/slabbe*
@@ -33,7 +25,9 @@ docbuild:
 	sage -docbuild slabbe pdf
 	rm -fr ~/Applications/sage-git/src/sage/doc/en/slabbe*
 
+dist:
+	sage -python setup.py sdist
+
 publish:
-	cp ~/Applications/sage-git/src/doc/output/pdf/en/slabbe/slabbe_ref.pdf ../www/Sage/slabbe-$(VERSION).pdf
-	cp ../slabbe-$(VERSION).spkg ../www/Sage/
+	cp ~/Applications/sage-git/src/doc/output/pdf/en/slabbe/slabbe_ref.pdf ../www/Sage/
 

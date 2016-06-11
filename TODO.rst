@@ -28,6 +28,8 @@ https://packaging.python.org/en/latest/distributing/
 What to do with the documentation of an optional spkg?
 https://groups.google.com/forum/#!topic/sage-devel/RKzN-fxIfHI
 
+https://python-packaging-user-guide.readthedocs.io/en/latest/index.html
+
 Other packages to compare with
 ------------------------------
 

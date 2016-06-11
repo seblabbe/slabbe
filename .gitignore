@@ -2,6 +2,9 @@
 # Compiled python modules.
 *.pyc
 
+# Compiled c code
+slabbe/*.c
+
 # Setuptools distribution folder.
 /dist/
 
