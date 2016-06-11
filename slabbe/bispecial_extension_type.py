@@ -733,7 +733,7 @@ class ExtensionType(object):
 
         INPUT:
 
-        - ``substitutions` -- the sequence of substitutions
+        - ``substitutions`` -- the sequence of substitutions
         - ``substitutions_dict`` - dict of substitutions
         - ``keep_empty`` -- (default: False) whether to keep images that are
           empty, thus it will include all bispecial factors of age <= k on the
@@ -828,6 +828,71 @@ class ExtensionType(object):
         from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
         R = RecursivelyEnumeratedSet([root], child, structure='graded')
         return R
+
+    def rec_enum_set_under_sadic_joined(self, substitutions, 
+            substitutions_dict, keep_equal_length=False, keep_unique=False,
+            growth_limit=float('inf'), filter_fn=None):
+        r"""
+        Return the recursively enumerated set of extension type generated
+        by a language of substitutions where the extension type of the same
+        age are joined.
+
+        INPUT:
+
+        - ``substitutions`` -- the sequence of substitutions
+        - ``substitutions_dict`` - dict of substitutions
+        - ``keep_equal_length`` -- (default: False) whether to keep images that
+          have equal length
+        - ``keep_unique`` -- (default: False) whether to keep a unique copy of
+          equal extension types
+        - ``growth_limit`` -- integer (default: ``float('inf')``), the
+          maximal growth in length of the bispecial extended images
+        - ``filter_fn`` -- function (default: ``None``)
+
+        EXAMPLES::
+
+            sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: S = Brun().substitutions()
+            sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
+            ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
+            sage: E1 = ExtensionTypeLong(data, (1,2,3))
+
+        ::
+
+            sage: seq = [231,213,213,321]+[213,231,231,123]+[132,123]
+            sage: R = E1.rec_enum_set_under_sadic_joined(seq, S, growth_limit=1)
+            A recursively enumerated set with a graded structure (breadth first search)
+
+        ::
+
+            sage: from slabbe.bispecial_extension_type import recursively_enumerated_set_to_digraph
+            sage: G = recursively_enumerated_set_to_digraph(R)
+            Looped multi-digraph on 11 vertices
+        """
+        def child(V):
+            ExtIN,history = V
+            rep = []
+            if filter_fn and not filter_fn(ExtIN):
+                return rep
+            age = len(history)
+            if age >= len(substitutions):
+                return rep
+            a = substitutions[-age-1]
+            ExtOUT = [Z for ext in ExtIN 
+                        for Z in ext.apply(substitutions_dict[a], growth_limit=growth_limit)
+                        if keep_equal_length or not len(ext.factor())==len(Z.factor())]
+            ExtOUT = remove_extension_types_subsets(ExtOUT)
+            if keep_unique:
+                ExtOUT = list(set(ExtOUT))
+            ExtOUT.sort(key=lambda ext:len(ext.factor()))
+            ExtOUT = tuple(ExtOUT)
+            rep.append((ExtOUT,(a,)+history))
+            return rep
+        root = ((self,), tuple())
+
+        from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
+        return RecursivelyEnumeratedSet([root], child, structure='graded')
 
     def rec_enum_set_under_language(self, language, initial, substitutions_dict,
             keep_empty=False, label='history', growth_limit=float('inf')):
@@ -1013,6 +1078,51 @@ class ExtensionType(object):
             return G
         else:
             edges = set((u,v,history[0]) for ((u,_,_),(v,_,history),_) in G.edges())
+            return DiGraph(edges, format='list_of_edges', loops=True, multiedges=True)
+
+    def graph_under_sadic_joined(self, substitutions, 
+            substitutions_dict, keep_equal_length=False, keep_unique=False,
+            growth_limit=float('inf'), filter_fn=None, raw=False):
+        r"""
+        Return the graph of extension types under the application of an
+        s-adic word where the extension type of the same age are joined.
+
+        INPUT:
+
+        - ``substitutions`` -- the sequence of substitutions
+        - ``substitutions_dict`` - dict of substitutions
+        - ``keep_equal_length`` -- (default: False) whether to keep images that
+          have equal length
+        - ``keep_unique`` -- (default: False) whether to keep a unique copy of
+          equal extension types
+        - ``growth_limit`` -- integer (default: ``float('inf')``), the
+          maximal growth in length of the bispecial extended images
+        - ``filter_fn`` -- function (default: ``None``)
+        - ``raw`` -- bool (default: False), whether to keep the vertices
+          raw, i.e. including history and factors information
+
+        EXAMPLES::
+
+            sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: S = Brun().substitutions()
+            sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
+            ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
+            sage: E1 = ExtensionTypeLong(data, (1,2,3))
+            sage: E1._include_factor_in_repr=False
+            sage: seq = [231,213,213,213,321]+[213,231,231,231,123]+[132,123]
+            sage: E1.graph_under_sadic_joined(seq, S, growth_limit=1)
+            Looped multi-digraph on 10 vertices
+        """
+        R = self.rec_enum_set_under_sadic_joined(substitutions,
+                substitutions_dict, keep_equal_length=keep_equal_length,
+                keep_unique=keep_unique, growth_limit=growth_limit,
+                filter_fn=filter_fn)
+        G = recursively_enumerated_set_to_digraph(R)
+        if raw:
+            return G
+        else:
+            edges = set((u,v,history[0]) for ((u,_),(v,history),_) in G.edges())
             return DiGraph(edges, format='list_of_edges', loops=True, multiedges=True)
 
     def graph_under_language(self, language, initial, substitutions_dict,
@@ -2768,7 +2878,6 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
         Looped multi-digraph on 62 vertices
 
     """
-    from sage.sets.set import Set
     # what can go before each letter
     before = defaultdict(list)
     for w in language.words_of_length_iterator(2): 
