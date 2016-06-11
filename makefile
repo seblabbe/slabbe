@@ -4,7 +4,8 @@ all: install test
 
 install:
 	# python setup.py install
-	sage -pip install --upgrade -v .
+	#sage -pip install --upgrade -v .
+	sage -pip install --upgrade .
 
 develop:
 	# python setup.py develop

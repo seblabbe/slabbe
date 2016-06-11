@@ -2,6 +2,19 @@
 r"""
 Word morphisms methods and iterators
 
+EXAMPLES::
+
+    sage: F = FiniteWords('ab')
+    sage: it = iter_primitive_marked_classP_morphisms(F, 4)
+    sage: list(it)
+    [WordMorphism: a->aba, b->a,
+     WordMorphism: a->bab, b->a,
+     WordMorphism: a->b, b->aba,
+     WordMorphism: a->b, b->bab,
+     WordMorphism: a->abb, b->a,
+     WordMorphism: a->ab, b->aa,
+     WordMorphism: a->bb, b->ba,
+     WordMorphism: a->b, b->baa]
 """
 #*****************************************************************************
 #       Copyright (C) 2016 Sebastien Labbe <slabqc@gmail.com>
