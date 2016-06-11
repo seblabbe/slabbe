@@ -320,7 +320,7 @@ def desubstitute(self, u):
     reduce_init = []
     return R.map_reduce(map_function, reduce_function, reduce_init)
 
-def return_substitution(self, u, coding=False):
+def return_substitution(self, u, coding=False, length=1000):
     r"""
     Return the return substitution of self according to factor u.
 
@@ -330,6 +330,8 @@ def return_substitution(self, u, coding=False):
     - ``u`` -- word such that u is a prefix of self(u)
     - ``coding`` -- boolean (default: ``False``), whether to
       include the return word coding morphism
+    - ``length`` -- integer (default: ``1000``), compute the first 1000 letters
+      of the derived sequence to make sure every return word are seen
 
     EXAMPLES::
 
@@ -351,8 +353,15 @@ def return_substitution(self, u, coding=False):
         (WordMorphism: 0->01, 1->23, 2->013, 3->2,
          WordMorphism: 0->011, 1->010, 2->0110, 3->01)
 
+    ::
+
+        sage: s = WordMorphism({0:[0,0,1],1:[0,1]})
+        sage: return_substitution(s, Word([0]))
+        WordMorphism: 0->01, 1->011
+
     TESTS::
 
+        sage: s = WordMorphism({0:[0,1],1:[1,0]})
         sage: sigma_u, theta_u = return_substitution(s, Word([0]), coding=True)
         sage: sigma_u
         WordMorphism: 0->012, 1->02, 2->1
@@ -367,13 +376,16 @@ def return_substitution(self, u, coding=False):
     a = u[0]
     x = self.fixed_point(a)
     s, D = derived_sequence(x, u, coding=True)
+    _ = s[length] # make sure that D is complete (exact value 
+                  # is known by J. Leroy and F. Durand)
     code_to_return_word = WordMorphism({v:k for k,v in D.iteritems()})
     rep = {}
     for key,value in D.iteritems():
         self_key = self(key)
         L = desubstitute(code_to_return_word, self_key)
         if len(L) == 0:
-            raise ValueError("desubstitution is impossible for {}".format(self_key))
+            raise ValueError("desubstitution of {} by {} "
+                     "is impossible ".format(self_key, code_to_return_word))
         elif len(L) > 1:
             s = "=".join(["m({})".format(u) for u in L])
             msg = ("non unique desubstitution, "
@@ -387,5 +399,27 @@ def return_substitution(self, u, coding=False):
         return m, code_to_return_word
     else:
         return m
+
+def compute_xsi(self, u):
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.word_morphisms import compute_xsi
+        sage: s = WordMorphism({0:[0,1],1:[1,0]})
+        sage: compute_xsi(s, Word([0]))
+    """
+    sigma_u, theta_u = return_substitution(self, u, coding=True)
+    assert theta_u*sigma_u == self*theta_u, "identity is not verified"
+    print "sigma_u=", sigma_u
+    print "theta_u=", theta_u
+    d = {k:[(k,i) for i in range(len(v))] for k,v in theta_u._morph.iteritems()}
+    psi = WordMorphism(d)
+    print "psi=", psi
+    print "psi*sigma_u=", psi*sigma_u
+    print psi.codomain()
+    print psi.incidence_matrix()
+    print "We want zeta such that:"
+    for k,v in psi._morph.iteritems():
+        print "zeta({}) = {}".format(v, psi(sigma_u(k)))
 
 
