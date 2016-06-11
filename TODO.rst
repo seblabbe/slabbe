@@ -23,6 +23,7 @@ https://python-packaging.readthedocs.org/en/latest/non-code-files.html (like doc
 http://stackoverflow.com/questions/4505747/how-should-i-structure-a-python-package-that-contains-cython-code
 
 Jeroen link:
+https://packaging.python.org/en/latest/installing/
 https://packaging.python.org/en/latest/distributing/
 
 What to do with the documentation of an optional spkg?

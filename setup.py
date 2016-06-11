@@ -1,29 +1,42 @@
 from setuptools import setup, Extension
+# To use a consistent encoding
+from codecs import open
+from os import path
 from Cython.Build import cythonize
 import Cython.Compiler.Options
-import os
 from sage.env import sage_include_directories
 
 Cython.Compiler.Options.old_style_globals = True
 
 ext_modules = [
         Extension('slabbe.kolakoski_word_pyx',
-            sources = [os.path.join('slabbe','kolakoski_word_pyx.pyx')],),
+            sources = [path.join('slabbe','kolakoski_word_pyx.pyx')],),
         Extension('slabbe.mult_cont_frac',
-            sources = [os.path.join('slabbe','mult_cont_frac.pyx')],
+            sources = [path.join('slabbe','mult_cont_frac.pyx')],
             include_dirs=sage_include_directories())]
+
+
+# Get the long description from the README file
+here = path.abspath(path.dirname(__file__))
+with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(name='slabbe',
     version=open("VERSION").read().strip(),
     description="Sebastien Labbe's Research code",
     long_description=open('README.rst').read(),
     classifiers=[
+      # How mature is this project? Common values are
+      #   3 - Alpha
+      #   4 - Beta
+      #   5 - Production/Stable
       'Development Status :: 4 - Beta',
       'Intended Audience :: Science/Research',
       'License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)'
       'Programming Language :: Python :: 2.7',
       'Topic :: Scientific/Engineering :: Mathematics',
     ],
+    keywords='sagemath combinatorics discrete geometry symbolic dynamics',
     author='Sebastien Labbe',
     author_email='slabbe@ulg.ac.be',
     install_requires=['cython','cysignals'],
