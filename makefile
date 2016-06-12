@@ -26,17 +26,15 @@ docbuild:
 	rm -fr ~/Applications/sage-git/src/sage/doc/en/slabbe*
 
 register:
-	sage -sh 
-	twine register dist/*   
+	sage -python setup.py sdist
+	VERSION=`cat VERSION`; sage -sh -c "twine register dist/slabbe-$$VERSION.tar.gz"
 
 distribution:
 	sage -python setup.py sdist
 
 upload:
-	rm -rf dist
 	sage -python setup.py sdist
-	sage -sh 
-	twine upload dist/*
+	VERSION=`cat VERSION`; sage -sh -c "twine upload dist/slabbe-$$VERSION.tar.gz"
 
 publish:
 	cp ~/Applications/sage-git/src/doc/output/pdf/en/slabbe/slabbe_ref.pdf ../www/Sage/

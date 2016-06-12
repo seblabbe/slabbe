@@ -38,6 +38,7 @@ https://github.com/pypa/sampleproject
 https://github.com/williamstein/sage_modabvar
 https://github.com/abelfunctions/abelfunctions 
 https://github.com/nthiery/sage-semigroups/
+https://github.com/sagemath/cysignals
 
 Fichiers à ajouter
 ------------------
