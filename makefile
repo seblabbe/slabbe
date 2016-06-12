@@ -15,21 +15,24 @@ test:
 coverage:
 	sage -coverage slabbe/*
 
-dochtml:
-	cd docs; sage -sh -c "make html"
+doc:
+	cd docs && sage -sh -c "make html"
 
-docpdf:
-	cd docs; sage -sh -c "make latexpdf"
+doc-pdf:
+	cd docs && sage -sh -c "make latexpdf"
 
 dist:
 	sage -python setup.py sdist
 
-register:
-	make dist
+register: dist
 	VERSION=`cat VERSION`; sage -sh -c "twine register dist/slabbe-$$VERSION.tar.gz"
 
-upload:
-	make dist
+upload: dist
 	VERSION=`cat VERSION`; sage -sh -c "twine upload dist/slabbe-$$VERSION.tar.gz"
 
-.PHONY: all install develop test coverage dochtml docpdf register dist upload
+clean: clean-doc
+
+clean-doc:
+	cd docs && sage -sh -c "make clean"
+
+.PHONY: all install develop test coverage clean clean-doc doc doc-pdf dist register upload
