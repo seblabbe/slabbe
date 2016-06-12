@@ -32,7 +32,7 @@ setup(name='slabbe',
       #   5 - Production/Stable
       'Development Status :: 4 - Beta',
       'Intended Audience :: Science/Research',
-      'License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)'
+      'License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)',
       'Programming Language :: Python :: 2.7',
       'Topic :: Scientific/Engineering :: Mathematics',
     ],

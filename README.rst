@@ -1,34 +1,73 @@
 Sébastien Labbé Research Code
 =============================
 
-This is a Sage__ optional package containing a part of my own research code.
-Version ``0.1`` contains modules on digital geometry, combinatorics on words
-and more. Version ``0.2`` provides modules on multidimensional continued
-fraction algorithms, matrix cocycles, languages and tikzpictures.
+This is a `Sage <http://www.sagemath.org/>`_ optional package containing a part
+of my own research code.  It contains modules on digital geometry,
+combinatorics, combinatorics on words multidimensional continued fraction
+algorithms, matrix cocycles, languages, substitutions, bispecial factors,
+tikzpictures.
 
+Links:
 
-__ http://www.sagemath.org/
+ - http://www.slabbe.org/Sage/
+ - http://github.com/seblabbe/slabbe
+ - http://pypi.python.org/pypi/slabbe
 
-Releases:
+Usage::
 
- - `version 0.1`__, released August 27, 2014.
- - `version 0.1.1`__, released June 3, 2015.
- - `version 0.2`__, released November 25, 2015.
+    sage: from slabbe import *
 
-__ http://www.slabbe.org/Sage/slabbe-0.1.spkg
-__ http://www.slabbe.org/Sage/slabbe-0.1.1.spkg
-__ http://www.slabbe.org/Sage/slabbe-0.2.spkg
+Version 0.3b0 (June 12, 2016)
+-------------------------------
+
+Version ``0.3b0`` is a Python package now available on the Python Package index
+(PyPI). It was migrated from the sage optional spkg format. It also adds code
+to deal with bispecial factors.
+
+Installation::
+
+    sage -pip slabbe
+
+Version 0.2 (November 25, 2015)
+-------------------------------
+
+Version ``0.2`` provides modules on multidimensional continued
+fraction algorithms, matrix cocycles, languages and tikzpictures.  
+
+    http://www.slabbe.org/Sage/slabbe-0.2.spkg
+
+Documentation:
+
+    http://www.slabbe.org/Sage/slabbe-0.2.pdf
 
 Installation::
 
     sage -p http://www.slabbe.org/Sage/slabbe-0.2.spkg  # sage-6.9 or newer
     sage -i http://www.slabbe.org/Sage/slabbe-0.2.spkg  # sage-6.8 or earlier
 
-Usage::
+Version 0.1.1 (June 3, 2015)
+-----------------------------
 
-    sage: from slabbe import *
+This version fixes a bug with ``gcd`` import error.
 
-More information is available at:
+    http://www.slabbe.org/Sage/slabbe-0.1.1.spkg
 
-http://www.slabbe.org/Sage/
+Installation::
 
+    sage -i http://www.slabbe.org/Sage/slabbe-0.1.1.spkg
+
+Version 0.1 (August 27, 2014)
+-----------------------------
+
+Version ``0.1`` contains modules on digital geometry, combinatorics on words
+and more. 
+
+    http://www.slabbe.org/Sage/slabbe-0.1.spkg
+
+Documentation:
+
+    http://www.slabbe.org/Sage/slabbe-0.1.pdf
+
+Installation::
+
+    sage -i http://www.slabbe.org/Sage/slabbe-0.1.spkg

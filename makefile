@@ -25,8 +25,18 @@ docbuild:
 	sage -docbuild slabbe pdf
 	rm -fr ~/Applications/sage-git/src/sage/doc/en/slabbe*
 
+register:
+	sage -sh 
+	twine register dist/*   
+
 dist:
 	sage -python setup.py sdist
+
+upload:
+	rm -rf dist
+	sage -python setup.py sdist
+	sage -sh 
+	twine upload dist/*
 
 publish:
 	cp ~/Applications/sage-git/src/doc/output/pdf/en/slabbe/slabbe_ref.pdf ../www/Sage/

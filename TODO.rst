@@ -36,6 +36,8 @@ Other packages to compare with
 
 https://github.com/pypa/sampleproject
 https://github.com/williamstein/sage_modabvar
+https://github.com/abelfunctions/abelfunctions 
+https://github.com/nthiery/sage-semigroups/
 
 Fichiers à ajouter
 ------------------
