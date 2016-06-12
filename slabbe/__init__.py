@@ -1,3 +1,6 @@
+# For sphinx to work, we first need to import the sage library
+from sage.all_cmdline import *
+
 from sage.misc.latex import latex
 latex.add_to_preamble('\\usepackage{tikz}')
 latex.add_to_preamble('\\usepackage{pgfplots}')
@@ -14,8 +17,13 @@ from joyal_bijection import Endofunctions, Endofunction, DoubleRootedTree
 from bond_percolation import (BondPercolationSamples, 
                              BondPercolationSample, 
                              PercolationProbability)
-from kolakoski_word import KolakoskiWord
 from tikz_picture import TikzPicture
+
+# BUG (sometimes, cython code does not work properly)
+try:
+    from kolakoski_word import KolakoskiWord
+except ImportError:
+    print "There was an error while importing KolakoskiWord cython module"
 
 # for doctext to work, we import convex_boundary
 # from discrete_subset import convex_boundary
