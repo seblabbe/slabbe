@@ -7,20 +7,20 @@ combinatorics, combinatorics on words multidimensional continued fraction
 algorithms, matrix cocycles, languages, substitutions, bispecial factors,
 tikzpictures.
 
+Usage::
+
+    sage: from slabbe import *
+
 Links:
 
  - http://www.slabbe.org/Sage/
  - http://github.com/seblabbe/slabbe
  - http://pypi.python.org/pypi/slabbe
 
-Usage::
-
-    sage: from slabbe import *
-
-Version 0.3b0 (June 12, 2016)
+Version 0.3b1 (June 12, 2016)
 -------------------------------
 
-Version ``0.3b0`` is a Python package now available on the Python Package index
+Version ``0.3b1`` is a Python package now available on the Python Package index
 (PyPI). It was migrated from the sage optional spkg format. It also adds code
 to deal with bispecial factors.
 
@@ -31,14 +31,11 @@ Installation::
 Version 0.2 (November 25, 2015)
 -------------------------------
 
-Version ``0.2`` provides modules on multidimensional continued
-fraction algorithms, matrix cocycles, languages and tikzpictures.  
+slabbe-0.2.spkg__ (documentation__) provides modules on multidimensional
+continued fraction algorithms, matrix cocycles, languages and tikzpictures.  
 
-    http://www.slabbe.org/Sage/slabbe-0.2.spkg
-
-Documentation:
-
-    http://www.slabbe.org/Sage/slabbe-0.2.pdf
+__ http://www.slabbe.org/Sage/slabbe-0.2.spkg
+__ http://www.slabbe.org/Sage/slabbe-0.2.pdf
 
 Installation::
 
@@ -48,9 +45,9 @@ Installation::
 Version 0.1.1 (June 3, 2015)
 -----------------------------
 
-This version fixes a bug with ``gcd`` import error.
+slabbe-0.1.1.spkg__ fixes a bug with ``gcd`` import error.
 
-    http://www.slabbe.org/Sage/slabbe-0.1.1.spkg
+__ http://www.slabbe.org/Sage/slabbe-0.1.1.spkg
 
 Installation::
 
@@ -59,14 +56,11 @@ Installation::
 Version 0.1 (August 27, 2014)
 -----------------------------
 
-Version ``0.1`` contains modules on digital geometry, combinatorics on words
-and more. 
+slabbe-0.1.spkg__ (documentation__) contains modules on digital geometry,
+combinatorics on words and more. 
 
-    http://www.slabbe.org/Sage/slabbe-0.1.spkg
-
-Documentation:
-
-    http://www.slabbe.org/Sage/slabbe-0.1.pdf
+__ http://www.slabbe.org/Sage/slabbe-0.1.spkg
+__ http://www.slabbe.org/Sage/slabbe-0.1.pdf
 
 Installation::
 

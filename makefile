@@ -29,7 +29,7 @@ register:
 	sage -sh 
 	twine register dist/*   
 
-dist:
+distribution:
 	sage -python setup.py sdist
 
 upload:
