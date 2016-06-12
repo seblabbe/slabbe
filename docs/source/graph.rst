@@ -1,7 +1,7 @@
 .. nodoctest
 
-Graphs methods
-==============
+Graphs
+======
 
 .. automodule:: slabbe.graph
    :members:
