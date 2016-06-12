@@ -15,10 +15,13 @@
 import sys
 import os
 
+from sage.env import SAGE_DOC_SRC, SAGE_DOC, SAGE_SRC
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.append(os.path.abspath('../../slabbe'))
+sys.path.append(os.path.join(SAGE_SRC, "sage_setup", "docbuild", "ext"))
 
 # -- General configuration ------------------------------------------------
 
@@ -29,15 +32,18 @@ import os
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
+    #'sphinx.ext.autodoc',
+    'sage_autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
+    'sphinx.ext.extlinks', 
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+# templates_path = ['_templates']
+templates_path = [os.path.join(SAGE_DOC_SRC, 'common', 'templates'), '_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -77,7 +83,7 @@ exclude_patterns = []
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
-#default_role = None
+default_role = 'math'
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 #add_function_parentheses = True
@@ -99,6 +105,17 @@ pygments_style = 'sphinx'
 # If true, keep warnings as "system message" paragraphs in the built documents.
 #keep_warnings = False
 
+pythonversion = sys.version.split(' ')[0]
+# Python and Sage trac ticket shortcuts. For example, :trac:`7549` .
+extlinks = {
+    'python': ('https://docs.python.org/release/'+pythonversion+'/%s', ''),
+    'trac': ('http://trac.sagemath.org/%s', 'trac ticket #'),
+    'wikipedia': ('https://en.wikipedia.org/wiki/%s', 'Wikipedia article '),
+    'arxiv': ('http://arxiv.org/abs/%s', 'Arxiv '),
+    'oeis': ('https://oeis.org/%s', 'OEIS sequence '),
+    'doi': ('https://dx.doi.org/%s', 'doi:'),
+    'mathscinet': ('http://www.ams.org/mathscinet-getitem?mr=%s', 'MathSciNet ')
+    }
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -109,10 +126,13 @@ html_theme = 'default'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = {}
+
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
+#html_theme_path = [os.path.join(SAGE_DOC_SRC, 'common', 'themes')]
+html_theme_path = [os.path.join(SAGE_DOC_SRC, 'common', 'themes', 'sage')]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -262,3 +282,35 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+# -- Options copied from Sagemath conf.py file -------------------------------
+
+# We use MathJax to build the documentation unless the environment
+# variable SAGE_DOC_MATHJAX is set to "no" or "False".  (Note that if
+# the user does not set this variable, then the script sage-env sets
+# it to "True".)
+
+if (os.environ.get('SAGE_DOC_MATHJAX', 'no') != 'no'
+            and os.environ.get('SAGE_DOC_MATHJAX', 'no') != 'False'):
+
+    extensions.append('sphinx.ext.mathjax')
+    mathjax_path = 'MathJax.js?config=TeX-AMS_HTML-full,../mathjax_sage.js'
+
+    from sage.misc.latex_macros import sage_mathjax_macros
+    # this is broken for now
+    # html_theme_options['mathjax_macros'] = sage_mathjax_macros()
+
+    from pkg_resources import Requirement, working_set
+    sagenb_path = working_set.find(Requirement.parse('sagenb')).location
+    mathjax_relative = os.path.join('sagenb','data','mathjax')
+
+    # It would be really nice if sphinx would copy the entire mathjax directory,
+    # (so we could have a _static/mathjax directory), rather than the contents of the directory
+
+    mathjax_static = os.path.join(sagenb_path, mathjax_relative)
+    html_static_path.append(mathjax_static)
+    exclude_patterns=['**/'+os.path.join(mathjax_relative, i) for i in ('docs', 'README*', 'test',
+                                                                        'unpacked', 'LICENSE')]
+else:
+     extensions.append('sphinx.ext.pngmath')
+
