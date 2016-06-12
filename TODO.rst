@@ -13,6 +13,7 @@ Make my spkg a Python package?
  - Uploader tout ça sur PyPI
  - Ajouter MANIFEST.in  (see metadata link below)
  - tests or sage tests ?
+ - Move doc to docs (conf.py)
 
 https://python-packaging.readthedocs.org/en/latest/
 https://python-packaging.readthedocs.org/en/latest/minimal.html

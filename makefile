@@ -25,11 +25,14 @@ docbuild:
 	sage -docbuild slabbe pdf
 	rm -fr ~/Applications/sage-git/src/sage/doc/en/slabbe*
 
+docs:
+	cd docs; sage -sh -c "make html"
+
 register:
 	sage -python setup.py sdist
 	VERSION=`cat VERSION`; sage -sh -c "twine register dist/slabbe-$$VERSION.tar.gz"
 
-distribution:
+dist:
 	sage -python setup.py sdist
 
 upload:
@@ -39,3 +42,4 @@ upload:
 publish:
 	cp ~/Applications/sage-git/src/doc/output/pdf/en/slabbe/slabbe_ref.pdf ../www/Sage/
 
+.PHONY: all install develop test coverage docbuild docs register dist upload publish
