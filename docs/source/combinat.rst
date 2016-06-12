@@ -1,9 +1,9 @@
 .. nodoctest
 
-Discrete Lines
-==============
+Combinatorics
+=============
 
-.. automodule:: slabbe.billiard
+.. automodule:: slabbe.combinat
    :members:
    :undoc-members:
    :show-inheritance:

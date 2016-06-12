@@ -1,9 +1,9 @@
 .. nodoctest
 
-Discrete Lines
+Graphs methods
 ==============
 
-.. automodule:: slabbe.billiard
+.. automodule:: slabbe.graph
    :members:
    :undoc-members:
    :show-inheritance:

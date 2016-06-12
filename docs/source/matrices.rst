@@ -1,9 +1,9 @@
 .. nodoctest
 
-Discrete Lines
-==============
+Matrices
+========
 
-.. automodule:: slabbe.billiard
+.. automodule:: slabbe.matrices
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,9 +1,9 @@
 .. nodoctest
 
-Discrete Lines
+Word Morphisms
 ==============
 
-.. automodule:: slabbe.billiard
+.. automodule:: slabbe.word_morphisms
    :members:
    :undoc-members:
    :show-inheritance:

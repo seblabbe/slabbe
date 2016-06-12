@@ -1,9 +1,9 @@
 .. nodoctest
 
-Discrete Lines
+Infinite words
 ==============
 
-.. automodule:: slabbe.billiard
+.. automodule:: slabbe.infinite_word
    :members:
    :undoc-members:
    :show-inheritance:

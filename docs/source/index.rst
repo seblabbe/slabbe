@@ -1,6 +1,6 @@
-==============================================
-Sébastien Labbé Research Code Reference Manual
-==============================================
+=============================
+Sébastien Labbé Research Code
+=============================
 
 This is the reference manual for the `Sébastien Labbé
 <http://www.liafa.univ-paris-diderot.fr/~labbe>`_ Research Code extension to
@@ -52,7 +52,10 @@ Combinatorics on words
    kolakoski_word
    bispecial_extension_type
    finite_word
+   infinite_word
    language
+   word_morphisms
+
 
 Combinatorics
 =============
@@ -62,6 +65,8 @@ Combinatorics
    joyal_bijection
    bond_percolation
    dyck_3d
+   combinat
+   graph
 
 Dynamical systems
 =================
@@ -72,6 +77,8 @@ Dynamical systems
    matrix_cocycle
    mult_cont_frac
    lyapunov
+   markov_transformation
+   matrices
 
 Miscellaneous
 =============
