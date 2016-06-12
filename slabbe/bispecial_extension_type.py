@@ -1038,7 +1038,7 @@ class ExtensionType(object):
 
         INPUT:
 
-        - ``substitutions` -- the sequence of substitutions
+        - ``substitutions`` -- the sequence of substitutions
         - ``substitutions_dict`` - dict of substitutions
         - ``keep_empty`` -- bool (default: False) whether to keep images
           that are empty, thus it will include all bispecial factors of age
@@ -1305,7 +1305,7 @@ class ExtensionType(object):
 
         INPUT:
 
-        - ``substitutions` -- the sequence of substitutions
+        - ``substitutions`` -- the sequence of substitutions
         - ``substitutions_dict`` - dict of substitutions
         - ``keep_empty`` -- (default: True) whether to keep images that are
           empty, thus it will include all bispecial factors of age <= k on the
@@ -1351,7 +1351,7 @@ class ExtensionType(object):
 
         INPUT:
 
-        - ``substitutions` -- the sequence of substitutions
+        - ``substitutions`` -- the sequence of substitutions
         - ``substitutions_dict`` - dict of substitutions
         - ``keep_empty`` -- (default: True) whether to keep images that are
           empty, thus it will include all bispecial factors of age <= k on the
@@ -2060,7 +2060,7 @@ class ExtensionTypeLong(ExtensionType):
         This is computed from the extension type if it was not provided at
         the construction.
 
-        INPUT::
+        INPUT:
 
         - ``k`` -- integer or None, if None, return factors of length k already
           computed
