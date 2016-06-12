@@ -26,7 +26,7 @@ to deal with bispecial factors.
 
 Installation::
 
-    sage -pip slabbe
+    sage -pip install slabbe
 
 Version 0.2 (November 25, 2015)
 -------------------------------
