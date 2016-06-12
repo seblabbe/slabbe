@@ -55,7 +55,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'slabbe'
+project = u"Sébastien Labbé Research Code"
 copyright = u'2016, Sébastien Labbé'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -136,10 +136,10 @@ html_theme_path = [os.path.join(SAGE_DOC_SRC, 'common', 'themes', 'sage')]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-#html_title = None
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None
+html_short_title = u'slabbe v' + release
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
@@ -215,14 +215,14 @@ latex_elements = {
 #'pointsize': '10pt',
 
 # Additional stuff for the LaTeX preamble.
-#'preamble': '',
+'preamble': '',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'slabbe.tex', u'slabbe Documentation',
+  ('index', 'slabbe.tex', u'Sébastien Labbé Research Code Documentation',
    u'Sébastien Labbé', 'manual'),
 ]
 
@@ -314,3 +314,28 @@ if (os.environ.get('SAGE_DOC_MATHJAX', 'no') != 'no'
 else:
      extensions.append('sphinx.ext.pngmath')
 
+# This is to make the verbatim font smaller; 
+# Verbatim environment is not breaking long lines 
+from sphinx.highlighting import PygmentsBridge
+from pygments.formatters.latex import LatexFormatter
+
+class CustomLatexFormatter(LatexFormatter):
+    def __init__(self, **options):
+        super(CustomLatexFormatter, self).__init__(**options)
+        self.verboptions = r"formatcom=\footnotesize"
+
+PygmentsBridge.latex_formatter = CustomLatexFormatter
+
+latex_elements['preamble'] += r'''
+% One-column index
+\makeatletter
+\renewenvironment{theindex}{
+  \chapter*{\indexname}
+  \markboth{\MakeUppercase\indexname}{\MakeUppercase\indexname}
+  \setlength{\parskip}{0.1em}
+  \relax
+  \let\item\@idxitem
+}{}
+\makeatother
+\renewcommand{\ttdefault}{txtt}
+'''
