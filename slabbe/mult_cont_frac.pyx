@@ -1603,6 +1603,115 @@ cdef class MCFAlgorithm(object):
         cube = Patch([Face((1,0,0),1), Face((0,1,0),2), Face((0,0,1),3)])
         return dual_sub(cube)
 
+    def _base_translation_vectors(self):
+        r"""
+        Return the base translation vectors associated to each elementary matrix
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import FullySubtractive
+            sage: algoFS = FullySubtractive()
+            sage: algoFS._base_translation_vectors()
+            {1: (1, 0, 0), 2: (0, 1, 0), 3: (0, 0, 1)}
+
+        ::
+
+            sage: from slabbe.mult_cont_frac import ARP
+            sage: algoARP = ARP()
+            sage: algoARP._base_translation_vectors()
+            {1: (0, 1, 1),
+             2: (1, 0, 1),
+             3: (1, 1, 0),
+             123: (1, 1, 0),
+             132: (1, 0, 1),
+             213: (1, 1, 0),
+             231: (0, 1, 1),
+             312: (1, 0, 1),
+             321: (0, 1, 1)}
+        """
+        from sage.modules.free_module_element import vector
+        def e(i):
+            A = [0,0,0]
+            A[i-1] = 1
+            return vector(A)
+        D = {}
+        gens = self.matrix_cocycle().gens()
+        for key,M in gens.iteritems():
+            Minv = M.inverse()
+            v = sum(e(list(c).index(1)+1) for c in Minv.columns() if -1 in c)
+            D[key] = v
+        return D
+
+    def translation_vectors(self, start, n_iterations):
+        r"""
+        Return the base translation vectors associated to each elementary matrix
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import FullySubtractive, ARP, Brun
+            sage: ARP().translation_vectors((1,e,pi), 5)
+            [(1, 1, 0), (1, -1, 1), (-2, 1, 0), (1, 1, -1), (-3, 0, 1)]
+            sage: Brun().translation_vectors((1,e,pi), 5)
+            [(0, 1, 0), (1, 0, 0), (1, 0, 0), (-2, 1, 0), (0, -1, 1)]
+            sage: FullySubtractive().translation_vectors((1,e,pi), 5)
+            [(1, 0, 0), (1, 0, 0), (-2, 1, 0), (3, -1, 0), (-3, 0, 1)]
+        """
+        D = self._base_translation_vectors()
+        it = self.coding_iterator(start)
+        L = [next(it) for _ in range(n_iterations)]
+        cocycle = self.matrix_cocycle()
+        gens_inv = cocycle.gens_inverses()
+        Minv = cocycle.identity_matrix()
+        T = []
+        for a in L:
+            v = D[a] * Minv
+            v.set_immutable()
+            T.append(v)
+            Minv = gens_inv[a] * Minv
+        return T
+
+    def discrete_plane_patches(self, start, n_iterations):
+        r"""
+        Return the patches subsets of a discrete plane.
+
+        ... using Xavier Provencal method...
+
+        EXAMPLES::
+
+        Partial sums for Brun forms a connected subset of Z^3::
+
+            sage: from slabbe.mult_cont_frac import FullySubtractive, ARP, Brun
+            sage: A = Brun().discrete_plane_patches((1,e,pi), 10)
+            sage: _ = A.tikz().pdf()     # long time
+
+        ::
+
+            sage: A = FullySubtractive().discrete_plane_patches((1,e,pi), 10)
+            sage: _ = A.tikz().pdf()     # not tested
+
+        Result does not seem to work well::
+
+            sage: A = ARP().discrete_plane_patches((1,e,pi), 10)
+            sage: _ = A.tikz().pdf()     # not tested
+
+        .. TODO::
+
+            - Make DiscreteSubset accept a set as input.
+            - Choose better name for this method
+        """
+        T = self.translation_vectors(start, n_iterations)
+        zero = T[0].parent().zero()
+        from sage.combinat.subset import Subsets
+        S = Subsets(range(len(T)))
+        V = [sum((T[s] for s in subset), zero) for subset in S]
+        for v in V: v.set_immutable()
+        V = set(V)
+        from slabbe import DiscreteSubset
+        def predicate(p):
+            p.set_immutable()
+            return p in V
+        return DiscreteSubset(dimension=3, predicate=predicate)
+
     ######################
     # DRAWINGS METHODS (python):
     ######################
