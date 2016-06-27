@@ -146,6 +146,51 @@ class MatrixCocycle(object):
 
     def gens(self):
         return self._gens
+    def gens_inverses(self):
+        r"""
+        Return a dictionary of the inverses of the generators.
+
+        EXAMPLES::
+
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: coc = cocycles.Brun()
+            sage: coc.gens_inverses().keys()
+            [321, 132, 231, 213, 312, 123]
+            sage: coc.gens_inverses().values()
+            [
+            [ 1 -1  0]  [ 1  0  0]  [ 1  0 -1]  [ 1  0  0]  [ 1  0  0]  [ 1  0  0]
+            [ 0  1  0]  [ 0  1 -1]  [ 0  1  0]  [ 0  1  0]  [-1  1  0]  [ 0  1  0]
+            [ 0  0  1], [ 0  0  1], [ 0  0  1], [-1  0  1], [ 0  0  1], [ 0 -1  1]
+            ]
+
+        If possible, the ring is the Integer ring::
+
+            sage: coc = cocycles.Reverse()
+            sage: coc.gens_inverses().values()
+            [
+            [ 1 -1 -1]  [ 1  0  0]  [ 1  0  0]  [-1/2  1/2  1/2]
+            [ 0  1  0]  [-1  1 -1]  [ 0  1  0]  [ 1/2 -1/2  1/2]
+            [ 0  0  1], [ 0  0  1], [-1 -1  1], [ 1/2  1/2 -1/2]
+            ]
+            sage: [m.parent() for m in _]
+            [Full MatrixSpace of 3 by 3 dense matrices over Integer Ring,
+             Full MatrixSpace of 3 by 3 dense matrices over Integer Ring,
+             Full MatrixSpace of 3 by 3 dense matrices over Integer Ring,
+             Full MatrixSpace of 3 by 3 dense matrices over Rational Field]
+        """
+        from sage.rings.integer_ring import ZZ
+        D = {}
+        for k,v in self.gens().iteritems():
+            M = v.inverse()
+            try:
+                M_ZZ = M.change_ring(ZZ)
+            except TypeError:
+                pass
+            else:
+                M = M_ZZ
+            D[k] = M
+        return D
+
     def cone_dict(self):
         return self._cone_dict
     def cone(self, key):
