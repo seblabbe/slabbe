@@ -97,20 +97,8 @@ TODO:
     - Code Complement
     - The method projection_matrix should be outside of the class?
     - DiscreteTube should have a method projection_matrix
-    - The user should be able to provide an element to the object or a list
-      of element for the roots
     - Their should be an input saying whether the object is connected or
       not and what kind of neighbor connectedness
-    - When zero is not in self, then the an_element method fails (see below)
-
-::
-
-    sage: D = DiscreteSubset(dimension=2, predicate=lambda (x,y) : 4 < x^2 + y^2 < 25)
-    sage: D.an_element()
-    Traceback (most recent call last):
-    ...
-    AssertionError: an_element method returns an element which is not in self
-
 """
 #*****************************************************************************
 #       Copyright (C) 2010-2014 Sébastien Labbé <slabqc@gmail.com>
@@ -183,11 +171,15 @@ class DiscreteSubset(SageObject):
 
     INPUT:
 
-    - ``dimension`` - integer, dimension of the space
-    - ``predicate`` - function ZZ^d -> {False, True}
-    - ``edge_predicate`` - function ZZ^d,ZZ^d -> {False, True}
-    - ``iterator`` - function returning an iterator of points, it must be
-      consistent with the predicate
+    - ``dimension`` -- integer, dimension of the space
+    - ``predicate`` -- function ZZ^d -> {False, True} (default: ``None``)
+    - ``edge_predicate`` -- function ZZ^d,ZZ^d -> {False, True} (default:
+      ``None``)
+    - ``iterator`` -- function (default: ``None``) returning an iterator of
+      points, it must be consistent with the predicate
+    - ``roots`` -- list (default: ``None``) of some elements in self. If
+      ``iterator`` is not provided, it is used to iterate the elements throught
+      connectedness.
 
     EXAMPLES::
 
@@ -204,7 +196,7 @@ class DiscreteSubset(SageObject):
     ::
 
         sage: fn = lambda p : p[0]+p[1]<p[2]
-        sage: p = DiscreteSubset(dimension=3, predicate=fn)
+        sage: p = DiscreteSubset(dimension=3, predicate=fn, roots=[(0,0,1)])
         sage: p
         Subset of ZZ^3
 
@@ -216,14 +208,17 @@ class DiscreteSubset(SageObject):
         sage: D
         Subset of ZZ^3
 
-    From a list (see also ``from_subset`` class method)::
+    From a list::
 
         sage: L = [(0,0,0), (1,0,0), (2,0,0), (3,0,0)]
-        sage: predicate = L.__contains__
-        sage: iterator = L.__iter__
-        sage: s = DiscreteSubset(dimension=3, predicate=predicate, iterator=iterator)
+        sage: s = DiscreteSubset.from_subset(L)
         sage: s
         Subset of ZZ^3
+
+    Providing a root may be necessary if zero (the origin) is not inside::
+
+        sage: predicate = lambda (x,y) : 4 < x^2 + y^2 < 25
+        sage: D = DiscreteSubset(dimension=2, predicate=predicate, roots=[(3,0)])
 
     TESTS:
 
@@ -240,7 +235,7 @@ class DiscreteSubset(SageObject):
         ((1, -1), (1, 0)), ((1, 0), (1, 1))]
     """
     def __init__(self, dimension=3, predicate=None, edge_predicate=None,
-            iterator=None):
+            iterator=None, roots=None):
         r"""
         Constructor.
 
@@ -262,11 +257,72 @@ class DiscreteSubset(SageObject):
         else:
             self._edge_predicate = edge_predicate
         self._iterator = iterator
+        if roots is None:
+            self._roots = None
+        else:
+            self._roots = map(self._space, roots)
+            for p in self._roots: p.set_immutable()
+
+    @cached_method
+    def roots(self):
+        r"""
+        Return the roots.
+
+        It also makes sure the roots are in self and raises an error otherwise.
+
+        EXAMPLES::
+
+            sage: from slabbe import DiscreteSubset
+            sage: s = DiscreteSubset.from_subset([(0,0,0)])
+            sage: s.roots()
+            [(0, 0, 0)]
+
+        ::
+
+            sage: predicate = lambda (x,y) : 4 < x^2 + y^2 < 25
+            sage: D = DiscreteSubset(dimension=2, predicate=predicate, roots=[(3,0)])
+            sage: D.roots()
+            [(3, 0)]
+
+        TESTS::
+
+            sage: predicate = lambda (x,y) : 4 < x^2 + y^2 < 25
+            sage: D = DiscreteSubset(dimension=2, predicate=predicate, roots=[(2,0)])
+            sage: D.roots()
+            Traceback (most recent call last):
+            ...
+            ValueError: root element (=(2, 0)) provided at initialisation is not in self
+
+        An error is raised if the roots are inconsistent::
+
+            sage: s = DiscreteSubset.from_subset([])
+            sage: s.roots()
+            Traceback (most recent call last):
+            ...
+            ValueError: default element (=(0, 0, 0)) is not in self, please provide one at initialisation
+        """
+        if self._roots is None:
+            element = self._space(0)
+            element.set_immutable()
+            if not element in self: 
+                raise ValueError("default element (={}) is not in self, please provide "
+                        "one at initialisation".format(element))
+            self._roots = [element]
+        else:
+            for p in self._roots:
+                if not p in self: 
+                    raise ValueError("root element (={}) provided at"
+                            " initialisation is not in self".format(p))
+        return self._roots
 
     @classmethod
     def from_subset(self, subset):
         r"""
         Constructor from a finite subset.
+
+        INPUT:
+
+        - ``subset`` -- iterable of integer coordinate points
 
         EXAMPLES::
 
@@ -276,6 +332,13 @@ class DiscreteSubset(SageObject):
             sage: s
             Subset of ZZ^3
             sage: all(p in s for p in s)
+            True
+
+        Note that tuple or mutable vectors work fine::
+
+            sage: (0,0,0) in s
+            True
+            sage: vector((0,0,0)) in s
             True
 
         TESTS::
@@ -293,7 +356,10 @@ class DiscreteSubset(SageObject):
             p = space(p)
             p.set_immutable()
             space_subset.add(p)
-        predicate = space_subset.__contains__
+        def predicate(p):
+            p = space(p)
+            p.set_immutable()
+            return p in space_subset
         iterator = space_subset.__iter__
         return DiscreteSubset(dimension=dimension, predicate=predicate,
                 iterator=iterator)
@@ -314,8 +380,8 @@ class DiscreteSubset(SageObject):
             Subset of ZZ^3
 
         """
-        s = "Subset of ZZ^%s" % self.dimension()
-        return s
+        return "Subset of ZZ^{}".format(self.dimension())
+
     def dimension(self):
         r"""
         Returns the dimension of the ambiant space.
@@ -405,11 +471,15 @@ class DiscreteSubset(SageObject):
             (0, 0, 0)
             sage: p.an_element().is_immutable()
             True
+
+        ::
+
+            sage: predicate = lambda (x,y) : 4 < x^2 + y^2 < 25
+            sage: D = DiscreteSubset(dimension=2, predicate=predicate, roots=[(3,0)])
+            sage: D.an_element()
+            (3, 0)
         """
-        element = self._space(0)
-        element.set_immutable()
-        assert element in self, "an_element method returns an element which is not in self"
-        return element
+        return self.roots()[0]
 
     def __and__(self, other):
         r"""
@@ -550,10 +620,8 @@ class DiscreteSubset(SageObject):
         EXAMPLES::
 
             sage: from slabbe import DiscreteSubset
-            sage: p = DiscreteSubset(dimension=3)
-            sage: root = vector((0,0,0))
-            sage: root.set_immutable()
-            sage: it = p.connected_component_iterator(roots=[root])
+            sage: p = DiscreteSubset(dimension=3, roots=[(0,0,0)])
+            sage: it = p.connected_component_iterator()
             sage: [next(it) for _ in range(5)]
             [(0, 0, 0), (1, 0, 0), (0, 0, 1), (0, 0, -1), (0, -1, 0)]
 
@@ -567,7 +635,7 @@ class DiscreteSubset(SageObject):
             sage: [next(it) for _ in range(5)]
             [(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1), (-1, 1, 0)]
         """
-        roots = roots if roots else [self.an_element()]
+        roots = roots if roots else self.roots()
         if not all(root in self for root in roots):
             raise ValueError("roots (=%s) must all be in self(=%s)" % (roots, self))
         #for root in roots:
@@ -598,7 +666,7 @@ class DiscreteSubset(SageObject):
             True
         """
         if self._iterator is None:
-            return self.connected_component_iterator(roots=None)
+            return self.connected_component_iterator()
         else:
             return self._iterator()
 
@@ -615,23 +683,18 @@ class DiscreteSubset(SageObject):
             sage: sorted(I.list())
             [(-3, -1, -1), (-3, -1, 0), (-2, -2, -1), (-2, -2, 0), (-2, -1,
             -1), (-2, -1, 0), (-2, 0, -1), (-1, -1, -1)]
-
         """
         return list(self)
 
-    def level_iterator(self, roots=None):
+    def level_iterator(self):
         r"""
-        INPUT:
-
-        - ``roots`` - iterator of some elements in self
+        This returns an iterator of the levels according to the given roots.
 
         EXAMPLES::
 
             sage: from slabbe import DiscreteSubset
-            sage: p = DiscreteSubset(dimension=3)
-            sage: root = vector((0,0,0))
-            sage: root.set_immutable()
-            sage: it = p.level_iterator(roots=[root])
+            sage: p = DiscreteSubset(dimension=3, roots=[(0,0,0)])
+            sage: it = p.level_iterator()
             sage: sorted(next(it))
             [(0, 0, 0)]
             sage: sorted(next(it))
@@ -660,9 +723,7 @@ class DiscreteSubset(SageObject):
 
             sage: from slabbe import DiscretePlane
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
-            sage: root = vector((0,0,0))
-            sage: root.set_immutable()
-            sage: it = p.level_iterator(roots=[root])
+            sage: it = p.level_iterator()
             sage: sorted(next(it))
             [(0, 0, 0)]
             sage: sorted(next(it))
@@ -676,13 +737,12 @@ class DiscreteSubset(SageObject):
              (1, 0, 1),
              (1, 1, 0),
              (2, 0, 0)]
-
         """
-        roots = roots if roots else [self.an_element()]
+        roots = self.roots()
         t = RecursivelyEnumeratedSet(seeds=roots, successors=self.children, structure='symmetric')
         return t.graded_component_iterator()
 
-    def edges_iterator(self, roots=None):
+    def edges_iterator(self):
         r"""
         Returns an iterator over the pair of points in self that are
         adjacents, i.e. their difference is a canonical vector.
@@ -691,15 +751,11 @@ class DiscreteSubset(SageObject):
 
         INPUT:
 
-        - ``roots`` - list of some elements in self
-
         EXAMPLES::
 
             sage: from slabbe import DiscretePlane
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
-            sage: root = vector((0,0,0))
-            sage: root.set_immutable()
-            sage: it = p.edges_iterator(roots=[root])
+            sage: it = p.edges_iterator()
             sage: next(it)
             ((0, 0, 0), (1, 0, 0))
             sage: next(it)
@@ -710,10 +766,9 @@ class DiscreteSubset(SageObject):
             ((-1, 1, 0), (0, 1, 0))
             sage: next(it)
             ((-2, 1, 0), (-1, 1, 0))
-
         """
         base_edges = self.base_edges()
-        for p in self.connected_component_iterator(roots):
+        for p in self:
             # astuce pour eviter les doublons pour cette connexite
             if sum(p)%2 != 0: continue
             for e in base_edges:
@@ -836,7 +891,7 @@ class DiscreteSubset(SageObject):
         #G.axes(False)         # for 2d only
         return G
 
-    def plot_points_at_distance(self, k, roots=None, color='blue', projmat=None):
+    def plot_points_at_distance(self, k, color='blue', projmat=None):
         r"""
         Plot points at distance k from the roots.
 
@@ -854,8 +909,7 @@ class DiscreteSubset(SageObject):
             sage: Pr.plot_points_at_distance(200)               # optional long
             sage: Pr.plot_points_at_distance(200, projmat='isometric') # optional long
         """
-        roots = roots if roots else [self.an_element()]
-        it = self.level_iterator(roots=roots)
+        it = self.level_iterator()
         G = Graphics()
         for i in range(k):
             B = next(it)
@@ -864,20 +918,19 @@ class DiscreteSubset(SageObject):
         else:
             m = self.projection_matrix(m=projmat)
             L = [m * p for p in B]
-            roots = [m * root for root in roots]
+            roots = [m * root for root in self.roots()]
         G += point(L, color='black')
         for root in roots:
             G += circle(root, 0.5, color='red', thickness=4)
         return G
 
-    def plot_edges(self, roots=None, color='blue', m=None):
+    def plot_edges(self, color='blue', m=None):
         r"""
         Returns the mesh of the plane. The mesh is the union of segments
         joining two adjacents points.
 
         INPUT:
 
-        - ``roots`` - list of some elements in self
         - ``color`` -- string (default: ``'blue'``), the color of the edges
         - ``m`` -- projection matrix (default: ``None``), it can be one of
           the following:
@@ -917,7 +970,7 @@ class DiscreteSubset(SageObject):
             L = self.edges_iterator()
         else:
             m = self.projection_matrix(m=m)
-            L = [(m*p,m*q) for (p,q) in self.edges_iterator(roots=roots)]
+            L = [(m*p,m*q) for (p,q) in self.edges_iterator()]
         G = Graphics()
         for edge in L:
                 G += line(edge, color=color)
@@ -1109,8 +1162,7 @@ class DiscreteSubset(SageObject):
             raise ValueError("this method is currently implemented only for "
                              "objects living in 2 or 3 dimensions")
 
-    def tikz_edges(self, style='very thick', color='blue', roots=None,
-            projmat=None):
+    def tikz_edges(self, style='very thick', color='blue', projmat=None):
         r"""
         Returns the mesh of the object. The mesh is the union of segments
         joining two adjacents points.
@@ -1120,7 +1172,6 @@ class DiscreteSubset(SageObject):
         - ``style`` - string (default: ``'dashed, very thick'``)
         - ``color`` - string or callable (default: ``'blue'``), the color
           of all edges or a function : (u,v) -> color of the edge (u,v)
-        - ``roots`` - list of some elements in self
         - ``projmat`` - matrix (default: ``None``), projection matrix, if
           None, no projection is done.
 
@@ -1162,7 +1213,7 @@ class DiscreteSubset(SageObject):
             color_f = lambda u,v: color
         else:
             color_f = color
-        for (p, q) in self.edges_iterator(roots=roots):
+        for (p, q) in self.edges_iterator():
             c = color_f(p,q)
             if projmat:
                 p = projmat * p
@@ -1173,7 +1224,7 @@ class DiscreteSubset(SageObject):
         return LatexExpr(s)
 
     def tikz_points(self, size='0.8mm', label=None, label_pos='right',
-            fill='black', options="", roots=None, filter=None,
+            fill='black', options="", filter=None,
             projmat=None):
         r"""
         INPUT:
@@ -1186,7 +1237,6 @@ class DiscreteSubset(SageObject):
           position
         - ``fill`` - string (default: ``'black'``), fill color
         - ``options`` - string (default: ``''``), author tikz node circle options
-        - ``roots`` - list of some elements in self
         - ``filter`` - boolean function, if filter(p) is False, the point p
           is not drawn
         - ``projmat`` - matrix (default: ``None``), projection matrix, if
@@ -1223,8 +1273,24 @@ class DiscreteSubset(SageObject):
             \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (1, 0, 0) {};
             \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (0, 1, 0) {};
             \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (0, 0, 1) {};
+
+        Of a finite subset::
+
+            sage: from slabbe import DiscreteSubset
+            sage: V = [(0,0,0), (1,1,0), (1,-1,1), (-2,1,0), (2,0,1), (-1,2,0),
+            ....:      (-1,0,1), (0,1,1)]
+            sage: s = DiscreteSubset.from_subset(V)
+            sage: s.tikz_points()
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (-2, 1, 0) {};
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (1, 1, 0) {};
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (0, 1, 1) {};
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (-1, 2, 0) {};
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (-1, 0, 1) {};
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (0, 0, 0) {};
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (1, -1, 1) {};
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (2, 0, 1) {};
         """
-        it = self.connected_component_iterator(roots=roots)
+        it = iter(self)
         if filter:
             it = itertools.ifilter(filter, it)
         s = ''
