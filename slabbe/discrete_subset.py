@@ -12,6 +12,13 @@ EXAMPLES::
     sage: DiscreteSubset(dimension=4)
     Subset of ZZ^4
 
+A subset from an iterable::
+
+    sage: L = [(0,0,0,0), (1,0,0,0), (2,0,0,0), (3,0,0,0)]
+    sage: s = DiscreteSubset.from_subset(L)
+    sage: s
+    Subset of ZZ^4
+
 A discrete 2d disk::
 
     sage: D = DiscreteSubset(dimension=2, predicate=lambda (x,y) : x^2 + y^2 < 4)
@@ -91,7 +98,7 @@ TODO:
     - The method projection_matrix should be outside of the class?
     - DiscreteTube should have a method projection_matrix
     - The user should be able to provide an element to the object or a list
-      of element
+      of element for the roots
     - Their should be an input saying whether the object is connected or
       not and what kind of neighbor connectedness
     - When zero is not in self, then the an_element method fails (see below)
@@ -178,7 +185,9 @@ class DiscreteSubset(SageObject):
 
     - ``dimension`` - integer, dimension of the space
     - ``predicate`` - function ZZ^d -> {False, True}
-    - ``edge_predicate`` - function ZZ^d,{-1,0,1}^d -> {False, True}
+    - ``edge_predicate`` - function ZZ^d,ZZ^d -> {False, True}
+    - ``iterator`` - function returning an iterator of points, it must be
+      consistent with the predicate
 
     EXAMPLES::
 
@@ -207,6 +216,15 @@ class DiscreteSubset(SageObject):
         sage: D
         Subset of ZZ^3
 
+    From a list (see also ``from_subset`` class method)::
+
+        sage: L = [(0,0,0), (1,0,0), (2,0,0), (3,0,0)]
+        sage: predicate = L.__contains__
+        sage: iterator = L.__iter__
+        sage: s = DiscreteSubset(dimension=3, predicate=predicate, iterator=iterator)
+        sage: s
+        Subset of ZZ^3
+
     TESTS:
 
     No edges go outside of the box::
@@ -221,7 +239,8 @@ class DiscreteSubset(SageObject):
         (1, -1)), ((0, 0), (0, 1)), ((0, 0), (1, 0)), ((0, 1), (1, 1)),
         ((1, -1), (1, 0)), ((1, 0), (1, 1))]
     """
-    def __init__(self, dimension=3, predicate=None, edge_predicate=None):
+    def __init__(self, dimension=3, predicate=None, edge_predicate=None,
+            iterator=None):
         r"""
         Constructor.
 
@@ -242,6 +261,42 @@ class DiscreteSubset(SageObject):
             self._edge_predicate = lambda p,s: p in self and s in self
         else:
             self._edge_predicate = edge_predicate
+        self._iterator = iterator
+
+    @classmethod
+    def from_subset(self, subset):
+        r"""
+        Constructor from a finite subset.
+
+        EXAMPLES::
+
+            sage: from slabbe import DiscreteSubset
+            sage: L = [(0,0,0), (1,0,0), (2,0,0), (3,0,0)]
+            sage: s = DiscreteSubset.from_subset(L)
+            sage: s
+            Subset of ZZ^3
+            sage: all(p in s for p in s)
+            True
+
+        TESTS::
+
+            sage: DiscreteSubset.from_subset([])
+            Subset of ZZ^3
+        """
+        try:
+            dimension = len(next(iter(subset)))
+        except StopIteration:
+            dimension = 3
+        space = FreeModule(ZZ, dimension)
+        space_subset = set()
+        for p in subset:
+            p = space(p)
+            p.set_immutable()
+            space_subset.add(p)
+        predicate = space_subset.__contains__
+        iterator = space_subset.__iter__
+        return DiscreteSubset(dimension=dimension, predicate=predicate,
+                iterator=iterator)
 
     def _repr_(self):
         r"""
@@ -531,8 +586,21 @@ class DiscreteSubset(SageObject):
             sage: it = iter(p)
             sage: [next(it) for _ in range(5)]
             [(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1), (-1, 1, 0)]
+
+        ::
+
+            sage: from slabbe import DiscreteSubset
+            sage: L = [(0,0,0), (1,0,0), (2,0,0), (3,0,0)]
+            sage: s = DiscreteSubset.from_subset(L)
+            sage: sorted(s)
+            [(0, 0, 0), (1, 0, 0), (2, 0, 0), (3, 0, 0)]
+            sage: all(p in s for p in s)
+            True
         """
-        return self.connected_component_iterator(roots=None)
+        if self._iterator is None:
+            return self.connected_component_iterator(roots=None)
+        else:
+            return self._iterator()
 
     def list(self):
         r"""
