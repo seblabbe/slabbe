@@ -45,6 +45,7 @@ TODO:
 from sage.rings.real_mpfr import RealField
 from sage.functions.other import ceil, sqrt
 from sage.modules.free_module_element import vector
+from sage.misc.cachefunc import cached_method
 from slabbe.discrete_subset import DiscreteSubset
 ################################################
 # Discrete plane and hyperplanes
@@ -137,6 +138,32 @@ class DiscreteHyperplane(DiscreteSubset):
             #print "est-ce proche : ", self._v.dot_product(p) + self._mu
             return  0 <= self._v.dot_product(p) + self._mu < self._omega
         DiscreteSubset.__init__(self, dimension=len(self._v), predicate=contain)
+
+    @cached_method
+    def roots(self):
+        r"""
+        Return the roots, i.e., a list of elements in self.
+
+        It also makes sure the roots are in self and raises an error otherwise.
+
+        EXAMPLES::
+
+            sage: from slabbe import DiscretePlane
+            sage: P = DiscretePlane([3,4,5], 12, mu=20)
+            sage: P.roots()
+            [(-1, -1, -1)]
+            sage: all(p in P for p in P.roots())
+            True
+        """
+        p = self.an_element()
+        p = self._space(p)
+        p.set_immutable()
+        if not p in self: 
+            raise ValueError("root element (={}) provided at"
+                    " initialisation is not in self".format(p))
+        self._roots = [p]
+        return self._roots
+
     def _repr_(self):
         r"""
         EXAMPLES::
@@ -175,12 +202,13 @@ class DiscreteHyperplane(DiscreteSubset):
             (0, 0)
 
         """
-        if self.dimension() == 2:
+        dimension = len(self._v)
+        if dimension == 2:
             return self._an_element_2d(x=x,y=y)
-        elif self.dimension() == 3:
+        elif dimension == 3:
             return self._an_element_3d(x=x,y=y)
         else:
-            raise NotImplementedError("implemented only for dimension(=%s) 2 or 3" % self.dimension())
+            raise NotImplementedError("implemented only for dimension(=%s) 2 or 3" % dimension)
 
     def _an_element_3d(self, x=0, y=0):
         r"""
