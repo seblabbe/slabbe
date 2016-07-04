@@ -1672,11 +1672,15 @@ cdef class MCFAlgorithm(object):
 
     def discrete_plane_patches(self, start, n_iterations):
         r"""
-        Return the patches subsets of a discrete plane.
+        Return the patches subsets of a discrete plane using method from
+        [JLP2016]_.
 
-        ... using Xavier Provencal method...
+        INPUT:
 
-        EXAMPLES::
+        - ``start`` -- normal vector
+        - ``n_iterations`` -- integer, number of iterations
+
+        EXAMPLES:
 
         Partial sums for Brun forms a connected subset of Z^3::
 
@@ -1689,28 +1693,27 @@ cdef class MCFAlgorithm(object):
             sage: A = FullySubtractive().discrete_plane_patches((1,e,pi), 10)
             sage: _ = A.tikz().pdf()     # not tested
 
-        Result does not seem to work well::
+        Result is not connected::
 
             sage: A = ARP().discrete_plane_patches((1,e,pi), 10)
             sage: _ = A.tikz().pdf()     # not tested
 
-        .. TODO::
+        REFERENCES:
 
-            - Make DiscreteSubset accept a set as input.
-            - Choose better name for this method
+        .. [JLP2016] Jamet, Damien, Nadia Lafrenière, et Xavier Provençal. « Generation
+           of Digital Planes Using Generalized Continued-Fractions Algorithms
+           ». In Discrete Geometry for Computer Imagery, édité par Nicolas
+           Normand, Jeanpierre Guédon, et Florent Autrusseau, 45-56. Lecture
+           Notes in Computer Science 9647. Springer International Publishing,
+           2016. http://link.springer.com/chapter/10.1007/978-3-319-32360-2_4.
         """
         T = self.translation_vectors(start, n_iterations)
         zero = T[0].parent().zero()
         from sage.combinat.subset import Subsets
         S = Subsets(range(len(T)))
         V = [sum((T[s] for s in subset), zero) for subset in S]
-        for v in V: v.set_immutable()
-        V = set(V)
         from slabbe import DiscreteSubset
-        def predicate(p):
-            p.set_immutable()
-            return p in V
-        return DiscreteSubset(dimension=3, predicate=predicate)
+        return DiscreteSubset.from_subset(V)
 
     ######################
     # DRAWINGS METHODS (python):
