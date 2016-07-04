@@ -112,15 +112,16 @@ TODO:
 import itertools
 from copy import copy
 from sage.functions.other import sqrt
-from sage.misc.decorators import options
 from sage.matrix.constructor import matrix
 from sage.rings.real_mpfr import RR
 from sage.modules.free_module_element import vector
 from sage.structure.sage_object import SageObject
-from sage.misc.cachefunc import cached_method
 from sage.modules.free_module import FreeModule
 from sage.rings.integer_ring import ZZ
 from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
+from sage.misc.decorators import options
+from sage.misc.cachefunc import cached_method
+from sage.misc.functional import round
 from sage.misc.latex import LatexExpr
 from sage.plot.graphics import Graphics
 from sage.plot.point import point
@@ -266,7 +267,7 @@ class DiscreteSubset(SageObject):
     @cached_method
     def roots(self):
         r"""
-        Return the roots.
+        Return the roots, i.e., a list of elements in self.
 
         It also makes sure the roots are in self and raises an error otherwise.
 
@@ -1249,7 +1250,7 @@ class DiscreteSubset(SageObject):
             sage: s = p.tikz_points()
             sage: lines = s.splitlines()
             sage: lines[0]
-            '\\node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (0, 0, 0) {};'
+            '\\node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (...) {};'
 
         ::
 
@@ -1591,6 +1592,26 @@ class Intersection(DiscreteSubset):
             raise ValueError("Intersection not defined for objects not of the same dimension")
         self._objets = objets
         DiscreteSubset.__init__(self, dimension=dimension)
+    @cached_method
+    def roots(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import DiscreteBox, DiscreteSubset
+            sage: d3 = DiscreteSubset(dimension=3, roots=[(0,0,0), (1,1,1)])
+            sage: box = DiscreteBox([-5,5],[-5,5],[-5,5])
+            sage: I = d3 & box
+            sage: sorted(d3.roots())
+            [(0, 0, 0), (1, 1, 1)]
+            sage: box.roots()
+            [(0, 0, 0)]
+            sage: sorted(I.roots())
+            [(0, 0, 0), (1, 1, 1)]
+        """
+        s = set()
+        for o in self._objets:
+            s.update(o.roots())
+        return [p for p in s if p in self]
 
     def _repr_(self):
         r"""
@@ -1787,16 +1808,20 @@ class DiscreteBox(DiscreteSubset):
         EXAMPLES::
 
             sage: from slabbe import DiscreteBox
-            sage: DiscreteBox([2,10],[3,4])
+            sage: b = DiscreteBox([2,10],[3,4])
+            sage: b
             Box: [2, 10] x [3, 4]
-
+            sage: b.roots()
+            [(6, 4)]
         """
         self._intervals = args
         def predicate(p):
             return all(xmin <= x <= xmax for (x,(xmin,xmax)) in
                     itertools.izip(p,self._intervals))
         dim = len(self._intervals)
-        DiscreteSubset.__init__(self, dim, predicate)
+        root = tuple(round((xmax+xmin)/2) for (xmin,xmax) in self._intervals)
+        DiscreteSubset.__init__(self, dimension=dim,
+                predicate=predicate, roots=[root])
 
     def __str__(self):
         r"""
@@ -1919,7 +1944,10 @@ class DiscreteTube(DiscreteSubset):
         projmat = kwds['projmat']
         def predicate(p):
             return projmat * p in self._box
-        DiscreteSubset.__init__(self, dimension=projmat.ncols(), predicate=predicate)
+        root = projmat.pseudoinverse() * self._box.an_element()
+        root = vector(map(round, root))
+        DiscreteSubset.__init__(self, dimension=projmat.ncols(),
+                predicate=predicate,roots=[root])
         self._projmat = projmat
 
     def _repr_(self):
