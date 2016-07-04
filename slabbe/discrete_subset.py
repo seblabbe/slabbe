@@ -7,14 +7,14 @@ Subsets of ZZ^d with the edge relation +e_i and -e_i.
 EXAMPLES::
 
     sage: from slabbe import DiscreteSubset
-    sage: DiscreteSubset(2)
+    sage: DiscreteSubset(dimension=2)
     Subset of ZZ^2
-    sage: DiscreteSubset(4)
+    sage: DiscreteSubset(dimension=4)
     Subset of ZZ^4
 
 A discrete 2d disk::
 
-    sage: D = DiscreteSubset(2, lambda (x,y) : x^2 + y^2 < 4)
+    sage: D = DiscreteSubset(dimension=2, predicate=lambda (x,y) : x^2 + y^2 < 4)
     sage: D.list()
     [(0, 0), (0, 1), (0, -1), (1, 0), (-1, 0), (-1, 1), (1, -1), (1, 1), (-1, -1)]
     sage: D
@@ -23,7 +23,7 @@ A discrete 2d disk::
 A discrete 3d ball::
 
     sage: predicate = lambda (x,y,z) : x^2 + y^2 + z^2 <= 4
-    sage: D = DiscreteSubset(3, predicate)
+    sage: D = DiscreteSubset(dimension=3, predicate=predicate)
     sage: D
     Subset of ZZ^3
     sage: (0,0,0) in D
@@ -37,7 +37,7 @@ A discrete 3d ball::
 A discrete 4d hyperplane::
 
     sage: predicate = lambda (x,y,z,w) : 0 <= 2*x + 3*y + 4*z + 5*w < 14
-    sage: D = DiscreteSubset(4, predicate)
+    sage: D = DiscreteSubset(dimension=4, predicate=predicate)
     sage: D
     Subset of ZZ^4
     sage: D.an_element()
@@ -60,7 +60,7 @@ A 3d discrete box::
 
 The intersection of two discrete objects of the same dimension::
 
-    sage: circ = DiscreteSubset(2, lambda p: p[0]^2+p[1]^2<=100)
+    sage: circ = DiscreteSubset(dimension=2, predicate=lambda p: p[0]^2+p[1]^2<=100)
     sage: b = DiscreteBox([0,10], [0,10])
     sage: I = circ & b
     sage: I
@@ -98,7 +98,7 @@ TODO:
 
 ::
 
-    sage: D = DiscreteSubset(2, lambda (x,y) : 4 < x^2 + y^2 < 25)
+    sage: D = DiscreteSubset(dimension=2, predicate=lambda (x,y) : 4 < x^2 + y^2 < 25)
     sage: D.an_element()
     Traceback (most recent call last):
     ...
@@ -183,19 +183,19 @@ class DiscreteSubset(SageObject):
     EXAMPLES::
 
         sage: from slabbe import DiscreteSubset
-        sage: DiscreteSubset(3)
+        sage: DiscreteSubset(dimension=3)
         Subset of ZZ^3
 
     ::
 
-        sage: p = DiscreteSubset(3, lambda x:True)
+        sage: p = DiscreteSubset(dimension=3, predicate=lambda x:True)
         sage: p
         Subset of ZZ^3
 
     ::
 
         sage: fn = lambda p : p[0]+p[1]<p[2]
-        sage: p = DiscreteSubset(3, fn)
+        sage: p = DiscreteSubset(dimension=3, predicate=fn)
         sage: p
         Subset of ZZ^3
 
@@ -203,7 +203,7 @@ class DiscreteSubset(SageObject):
 
         sage: F = lambda p: Integers(7)(2*p[0]+5*p[1])
         sage: edge_predicate = lambda p,s: F(s) < F(s)
-        sage: D = DiscreteSubset(3, edge_predicate=edge_predicate)
+        sage: D = DiscreteSubset(dimension=3, edge_predicate=edge_predicate)
         sage: D
         Subset of ZZ^3
 
@@ -230,7 +230,7 @@ class DiscreteSubset(SageObject):
         EXAMPLES::
 
             sage: from slabbe import DiscreteSubset
-            sage: DiscreteSubset(3)
+            sage: DiscreteSubset(dimension=3)
             Subset of ZZ^3
         """
         self._space = FreeModule(ZZ, dimension)
@@ -250,12 +250,12 @@ class DiscreteSubset(SageObject):
         EXAMPLES::
 
             sage: from slabbe import DiscreteSubset
-            sage: DiscreteSubset(3)
+            sage: DiscreteSubset(dimension=3)
             Subset of ZZ^3
 
         ::
 
-            sage: DiscreteSubset(3, lambda x:True)
+            sage: DiscreteSubset(dimension=3, predicate=lambda x:True)
             Subset of ZZ^3
 
         """
@@ -272,7 +272,7 @@ class DiscreteSubset(SageObject):
         EXAMPLES::
 
             sage: from slabbe import DiscreteSubset
-            sage: d = DiscreteSubset(3)
+            sage: d = DiscreteSubset(dimension=3)
             sage: d.dimension()
             3
 
@@ -296,7 +296,7 @@ class DiscreteSubset(SageObject):
         EXAMPLES::
 
             sage: from slabbe import DiscreteSubset
-            sage: d = DiscreteSubset(3)
+            sage: d = DiscreteSubset(dimension=3)
             sage: (0,0,0) in d
             True
             sage: (0,0,0,0) in d
@@ -305,7 +305,7 @@ class DiscreteSubset(SageObject):
         ::
 
             sage: fn = lambda p : p[0]+p[1]<p[2]
-            sage: p = DiscreteSubset(3, fn)
+            sage: p = DiscreteSubset(dimension=3, predicate=fn)
             sage: vector((1,2,4)) in p
             True
             sage: vector((1,2,2)) in p
@@ -338,8 +338,6 @@ class DiscreteSubset(SageObject):
         """
         return self._edge_predicate(p, s)
 
-
-
     def an_element(self):
         r"""
         Returns an immutable element in self.
@@ -347,7 +345,7 @@ class DiscreteSubset(SageObject):
         EXAMPLES::
 
             sage: from slabbe import DiscreteSubset
-            sage: p = DiscreteSubset(3)
+            sage: p = DiscreteSubset(dimension=3)
             sage: p.an_element()
             (0, 0, 0)
             sage: p.an_element().is_immutable()
@@ -369,7 +367,7 @@ class DiscreteSubset(SageObject):
         EXAMPLES::
 
             sage: from slabbe import DiscreteSubset, DiscretePlane
-            sage: d3 = DiscreteSubset(3)
+            sage: d3 = DiscreteSubset(dimension=3)
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: p & d3
             Intersection of the following objects:
@@ -378,7 +376,7 @@ class DiscreteSubset(SageObject):
 
         TESTS::
 
-            sage: d3 = DiscreteSubset(3)
+            sage: d3 = DiscreteSubset(dimension=3)
             sage: d3 & 4
             Traceback (most recent call last):
             ...
@@ -386,8 +384,8 @@ class DiscreteSubset(SageObject):
 
         ::
 
-            sage: d3 = DiscreteSubset(3)
-            sage: d5 = DiscreteSubset(5)
+            sage: d3 = DiscreteSubset(dimension=3)
+            sage: d5 = DiscreteSubset(dimension=5)
             sage: d3 & d5
             Traceback (most recent call last):
             ...
@@ -395,7 +393,7 @@ class DiscreteSubset(SageObject):
 
         Intersection of intersection do not stack up::
 
-            sage: d3 = DiscreteSubset(3)
+            sage: d3 = DiscreteSubset(dimension=3)
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
             sage: p & I
@@ -415,7 +413,7 @@ class DiscreteSubset(SageObject):
         EXAMPLES::
 
             sage: from slabbe import DiscreteSubset
-            sage: d = DiscreteSubset(2)
+            sage: d = DiscreteSubset(dimension=2)
             sage: d.base_edges()
             [(1, 0), (0, 1)]
 
@@ -497,7 +495,7 @@ class DiscreteSubset(SageObject):
         EXAMPLES::
 
             sage: from slabbe import DiscreteSubset
-            sage: p = DiscreteSubset(3)
+            sage: p = DiscreteSubset(dimension=3)
             sage: root = vector((0,0,0))
             sage: root.set_immutable()
             sage: it = p.connected_component_iterator(roots=[root])
@@ -562,7 +560,7 @@ class DiscreteSubset(SageObject):
         EXAMPLES::
 
             sage: from slabbe import DiscreteSubset
-            sage: p = DiscreteSubset(3)
+            sage: p = DiscreteSubset(dimension=3)
             sage: root = vector((0,0,0))
             sage: root.set_immutable()
             sage: it = p.level_iterator(roots=[root])
@@ -679,7 +677,7 @@ class DiscreteSubset(SageObject):
         EXAMPLES::
 
             sage: from slabbe import DiscreteSubset
-            sage: d = DiscreteSubset(3)
+            sage: d = DiscreteSubset(dimension=3)
             sage: d.projection_matrix(vector((2,3,4))) # tolerance 0.00001
             [  1.00000000000000  0.000000000000000 -0.500000000000000]
             [ 0.000000000000000   1.00000000000000 -0.750000000000000]
@@ -739,21 +737,21 @@ class DiscreteSubset(SageObject):
         A 2d plot of a 2d object::
 
             sage: from slabbe import DiscreteSubset, DiscreteBox
-            sage: D = DiscreteSubset(2)
+            sage: D = DiscreteSubset(dimension=2)
             sage: box = DiscreteBox([-5,5],[-5,5])
             sage: I = D & box
             sage: I.plot_points(color='green')      # optional long
 
         A 3d plot of a 3d object::
 
-            sage: D = DiscreteSubset(3)
+            sage: D = DiscreteSubset(dimension=3)
             sage: box = DiscreteBox([-5,5],[-5,5],[-5,5])
             sage: I = D & box
             sage: I.plot_points(color='green')      # optional long
 
         A 2d plot of a 3d object::
 
-            sage: D = DiscreteSubset(3)
+            sage: D = DiscreteSubset(dimension=3)
             sage: box = DiscreteBox([-5,5],[-5,5],[-5,5])
             sage: I = D & box
             sage: I.plot_points(color='green', m='isometric')      # optional long
@@ -828,21 +826,21 @@ class DiscreteSubset(SageObject):
         A 2d plot of a 2d object::
 
             sage: from slabbe import DiscreteSubset, DiscreteBox
-            sage: D = DiscreteSubset(2)
+            sage: D = DiscreteSubset(dimension=2)
             sage: box = DiscreteBox([-5,5],[-5,5])
             sage: I = D & box
             sage: I.plot_edges(color='green') # optional long
 
         A 3d plot of a 3d object::
 
-            sage: D = DiscreteSubset(3)
+            sage: D = DiscreteSubset(dimension=3)
             sage: box = DiscreteBox([-3,3],[-3,3],[-3,3])
             sage: I = D & box
             sage: I.plot_edges(color='green') # optional long
 
         A 2d plot of a 3d object::
 
-            sage: D = DiscreteSubset(3)
+            sage: D = DiscreteSubset(dimension=3)
             sage: box = DiscreteBox([-3,3],[-3,3],[-3,3])
             sage: I = D & box
             sage: I.plot_edges(color='green', m='isometric') # optional long
@@ -988,7 +986,7 @@ class DiscreteSubset(SageObject):
         2d example::
 
             sage: from slabbe import DiscreteSubset
-            sage: d = DiscreteSubset(2)
+            sage: d = DiscreteSubset(dimension=2)
             sage: d.tikz_axes()
             %the axes
             \begin{scope}[xshift=0cm,yshift=0cm]
@@ -1000,7 +998,7 @@ class DiscreteSubset(SageObject):
 
         3d example::
 
-            sage: d = DiscreteSubset(3)
+            sage: d = DiscreteSubset(dimension=3)
             sage: d.tikz_axes(projmat='isometric')
             %the axes
             \begin{scope}
@@ -1214,18 +1212,24 @@ class DiscreteSubset(SageObject):
             sage: I = L & b
             sage: point_kwds = {'label':lambda p:2*p[0]+5*p[1],'label_pos':'above right'}
             sage: tikz = I.tikz_noprojection(scale=0.5,point_kwds=point_kwds)
-            sage: len(tikz)
-            2659
             sage: tikz
+            \documentclass[tikz]{standalone}
+            \usepackage{amsmath}
+            \begin{document}
             \begin{tikzpicture}
             [scale=0.500000000000000]
             \draw[very thick, blue] (0, 0) -- (1, 0);
             \draw[very thick, blue] (0, 0) -- (0, 1);
+            \draw[very thick, blue] (2, 0) -- (3, 0);
             ...
+            ... 40 lines not printed (2659 characters in total) ...
+            ...
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (-5, 2) {};
             \node[above right] at (-5, 2) {$0$};
             \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (-5, 3) {};
             \node[above right] at (-5, 3) {$5$};
             \end{tikzpicture}
+            \end{document}
 
         Object in 3d::
 
@@ -1234,15 +1238,24 @@ class DiscreteSubset(SageObject):
             sage: d = DiscreteTube([-5,5],[-5,5])
             sage: I = p & d
             sage: s = I.tikz_noprojection()
-            sage: lines = s.splitlines()
-            sage: len(lines)
-            321
-            sage: print '\n'.join(lines[:4])
+            sage: s
+            \documentclass[tikz]{standalone}
+            \usepackage{amsmath}
+            \begin{document}
             \begin{tikzpicture}
-            [x={(-0.866025cm,-0.500000cm)}, y={(0.866025cm,-0.500000cm)},
+             [x={(-0.866025cm,-0.500000cm)}, y={(0.866025cm,-0.500000cm)},
             z={(0.000000cm,1.000000cm)}, scale=1]
             \draw[very thick, blue] (0, 0, 0) -- (1, 0, 0);
-
+            \draw[very thick, blue] (0, 0, 0) -- (0, 1, 0);
+            ...
+            ... 311 lines not printed (20339 characters in total) ...
+            ...
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (1, -4, 3) {};
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (4, 4, -1) {};
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (5, 3, -1) {};
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (6, 2, -1) {};
+            \end{tikzpicture}
+            \end{document}
         """
         s = '\\begin{tikzpicture}\n'
         if self.dimension() == 2:
@@ -1295,10 +1308,13 @@ class DiscreteSubset(SageObject):
             sage: from slabbe import DiscretePlane
             sage: p = DiscretePlane([2,3,5], 10)
             sage: p.tikz(points=False, edges=False)
+            \documentclass[tikz]{standalone}
+            \usepackage{amsmath}
+            \begin{document}
             \begin{tikzpicture}
             [scale=1]
             \end{tikzpicture}
-
+            \end{document}
         """
         s = '\\begin{tikzpicture}\n'
         s += '[scale=%s]\n' % scale
@@ -1414,7 +1430,7 @@ class Intersection(DiscreteSubset):
         EXAMPLES::
 
             sage: from slabbe import DiscretePlane, DiscreteSubset
-            sage: d3 = DiscreteSubset(3)
+            sage: d3 = DiscreteSubset(dimension=3)
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
             sage: I
@@ -1425,11 +1441,11 @@ class Intersection(DiscreteSubset):
         TESTS::
 
             sage: from slabbe import Intersection
-            sage: type(Intersection([DiscreteSubset(2)]))
+            sage: type(Intersection([DiscreteSubset(dimension=2)]))
             <class 'slabbe.discrete_subset.Intersection'>
-            sage: type(Intersection([DiscreteSubset(3)]))
+            sage: type(Intersection([DiscreteSubset(dimension=3)]))
             <class 'slabbe.discrete_subset.Intersection'>
-            sage: type(Intersection([DiscreteSubset(4)]))
+            sage: type(Intersection([DiscreteSubset(dimension=4)]))
             <class 'slabbe.discrete_subset.Intersection'>
         """
         for o in objets:
@@ -1471,7 +1487,7 @@ class Intersection(DiscreteSubset):
         EXAMPLES::
 
             sage: from slabbe import DiscretePlane, DiscreteSubset
-            sage: d3 = DiscreteSubset(3)
+            sage: d3 = DiscreteSubset(dimension=3)
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
             sage: vector((0,0,0)) in I
@@ -1492,7 +1508,7 @@ class Intersection(DiscreteSubset):
         EXAMPLES::
 
             sage: from slabbe import DiscretePlane, DiscreteSubset
-            sage: d3 = DiscreteSubset(3)
+            sage: d3 = DiscreteSubset(dimension=3)
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
             sage: I.has_edge(vector((0,0,0)),vector((0,0,1)))
@@ -1538,7 +1554,7 @@ class Intersection(DiscreteSubset):
         EXAMPLES::
 
             sage: from slabbe import DiscretePlane, DiscreteSubset
-            sage: d3 = DiscreteSubset(3)
+            sage: d3 = DiscreteSubset(dimension=3)
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
             sage: I & p
@@ -1549,7 +1565,7 @@ class Intersection(DiscreteSubset):
 
         ::
 
-            sage: d3 = DiscreteSubset(3)
+            sage: d3 = DiscreteSubset(dimension=3)
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: I = p & d3
             sage: p & I
