@@ -166,27 +166,27 @@ def conjugate_matrix_Z(M):
 
         sage: from slabbe.matrices import conjugate_matrix_Z
         sage: M = matrix(2, [11,29,14,-1])
-        sage: conjugate_matrix_Z(M)
+        sage: conjugate_matrix_Z(M)       # abs tol 1e-8
         [11.674409930010482  27.69820597163912]
         [14.349386111618157  -1.67440993001048]
-        sage: conjugate_matrix_Z(M)^2
+        sage: conjugate_matrix_Z(M)^2     # abs tol 1e-8
         [533.7440993001048 276.9820597163913]
         [143.4938611161816 400.2559006998952]
 
     ::
 
         sage: M = matrix(2, [-11,14,-26,29])
-        sage: conjugate_matrix_Z(M)
+        sage: conjugate_matrix_Z(M)     # abs tol 1e-8
         [ 7.200000000000004  4.199999999999998]
         [ 7.799999999999995 10.800000000000002]
-        sage: conjugate_matrix_Z(M) * 5
+        sage: conjugate_matrix_Z(M) * 5     # abs tol 1e-8
         [ 36.00000000000002 20.999999999999993]
         [ 38.99999999999998 54.000000000000014]
 
     ::
 
         sage: M = matrix(2, [-11,26,-14,29]) / 15
-        sage: conjugate_matrix_Z(M)
+        sage: conjugate_matrix_Z(M)     # abs tol 1e-8
         [ 0.5999999999999999  0.3999999999999999]
         [0.39999999999999986  0.5999999999999999]
 

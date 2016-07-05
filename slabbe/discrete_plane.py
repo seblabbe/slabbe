@@ -34,7 +34,7 @@ TODO:
 """
 
 #*****************************************************************************
-#       Copyright (C) 2010-2014 Sébastien Labbé <slabqc@gmail.com>
+#       Copyright (C) 2010-2016 Sébastien Labbé <slabqc@gmail.com>
 #
 #  Distributed under the terms of the GNU General Public License version 2 (GPLv2)
 #
