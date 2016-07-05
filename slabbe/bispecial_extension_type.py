@@ -23,7 +23,7 @@ The extension type of an ordinary bispecial factor::
        1             X
        2             X
        3     X   X   X
-     m(w)=0, ordinary
+     m(w)=0, ord.
     sage: E.is_ordinaire()
     True
 
@@ -134,7 +134,7 @@ class ExtensionType(object):
                01        X
                11            X
                12    X
-             m(w)=-1, not ord., empty
+             m(w)=-1, neutral
 
         ::
 
@@ -142,7 +142,7 @@ class ExtensionType(object):
               E(w)   11   12   20
                0     X
                1          X    X
-             m(w)=0, ordinary, empty
+             m(w)=0, ord.
 
         ::
 
@@ -152,7 +152,7 @@ class ExtensionType(object):
                00              X
                10         X    X
                01    X    X
-             m(w)=0, ordinary, empty
+             m(w)=0, ord.
         """
         W = word.parent()
         left = list(W.iterate_by_length(nleft))
@@ -189,7 +189,7 @@ class ExtensionType(object):
                1             X
                2             X
                3     X   X   X
-             m(w)=0, ordinary
+             m(w)=0, ord.
 
         ::
 
@@ -267,7 +267,7 @@ class ExtensionType(object):
                1             X
                2             X
                3     X   X   X
-            m(w)=0, ordinary
+            m(w)=0, ord.
 
         With chignons::
 
@@ -278,7 +278,7 @@ class ExtensionType(object):
                1             X
                2             X
                3     X   X   X
-            m(w)=0, ordinary
+            m(w)=0, ord.
 
         ::
 
@@ -335,7 +335,7 @@ class ExtensionType(object):
             $2$ &   &   & $\times$ \\
             $3$ & $\times$ & $\times$ & $\times$ \\
             \end{tabular}\\
-            $m(w) = 0$, ordinary
+            $m(w) = 0$, ord.
             \end{tabular}
 
         ::
@@ -443,7 +443,7 @@ class ExtensionType(object):
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3])
             sage: E.information()
-            'ordinary'
+            'ord.'
         """
         mw = self.multiplicity()
         if mw > 0:
@@ -715,7 +715,7 @@ class ExtensionType(object):
                32            X
                23    X   X   X
                33    X
-             m(w)=0, not ord., empty
+             m(w)=0, neutral
         """
         L = []
         for e in self.apply(m):
@@ -772,11 +772,11 @@ class ExtensionType(object):
                  12    X   X   X
                  32            X
                  23    X
-              m(w)=0, ordinary, word: 3, (123,)), (w=23s(u)=23
+              m(w)=0, ord., word: 3, (123,)), (w=23s(u)=23
                 E(w)   1   2   3
                  31    X   X   X
                  23            X
-              m(w)=0, ordinary, word: 23, (123,))}
+              m(w)=0, ord., word: 23, (123,))}
             sage: [len(R.graded_component(i)) for i in range(9)]
             [1, 2, 2, 2, 2, 2, 2, 2, 3]
 
@@ -1069,7 +1069,7 @@ class ExtensionType(object):
 
             sage: G = E1.graph_under_sadic([132]*2+[123]*6, S)
             sage: from slabbe.tikz_picture import TikzPicture
-            sage: TikzPicture.from_graph(G).pdf()
+            sage: _ = TikzPicture.from_graph(G).pdf(view=False)
         """
         R = self.rec_enum_set_under_sadic(substitutions,
                 substitutions_dict, keep_empty, growth_limit=growth_limit)
@@ -1368,19 +1368,19 @@ class ExtensionType(object):
             sage: E1.bispecial_factors_table_under_sadic([132]*2+[123]*6, S)
               |w|   w                      m(w)   d^-(w)   d2^-(w)   info
             +-----+----------------------+------+--------+---------+----------+
-              0                            0      3        5         ordinary
+              0                            0      3        5         ord.
               1     2                      0      3        4         neutral
-              2     22                     0      2        2         ordinary
-              4     2322                   0      2        3         ordinary
-              5     22322                  0      2        2         ordinary
-              7     2322322                0      2        3         ordinary
-              8     22322322               0      2        2         ordinary
-              10    2322322322             0      2        3         ordinary
-              11    22322322322            0      2        2         ordinary
-              13    2322322322322          0      2        3         ordinary
-              14    22322322322322         0      2        2         ordinary
-              16    2322322322322322       0      2        3         ordinary
-              17    22322322322322322      0      2        2         ordinary
+              2     22                     0      2        2         ord.
+              4     2322                   0      2        3         ord.
+              5     22322                  0      2        2         ord.
+              7     2322322                0      2        3         ord.
+              8     22322322               0      2        2         ord.
+              10    2322322322             0      2        3         ord.
+              11    22322322322            0      2        2         ord.
+              13    2322322322322          0      2        3         ord.
+              14    22322322322322         0      2        2         ord.
+              16    2322322322322322       0      2        3         ord.
+              17    22322322322322322      0      2        2         ord.
               19    2322322322322322322    1      2        3         strong
               20    22322322322322322322   -1     2        2         weak
         """
@@ -1388,14 +1388,7 @@ class ExtensionType(object):
         rows = []
         for ext in B:
             mw = ext.multiplicity()
-            if ext.is_ordinaire():
-                info = 'ordinary'
-            elif mw == 0:
-                info = 'neutral'
-            elif mw < 0:
-                info = 'weak'
-            else:
-                info = 'strong'
+            info = ext.information()
             w = ext.factor()
             row = [w.length(), w, mw, ext.left_valence(),
                     len(ext.left_word_extensions()), info]
@@ -1425,7 +1418,7 @@ class ExtensionType1to1(ExtensionType):
            1             X
            2             X
            3     X   X   X
-         m(w)=0, ordinary
+         m(w)=0, ord.
 
     With chignons::
 
@@ -1435,7 +1428,7 @@ class ExtensionType1to1(ExtensionType):
             1              X
             2              X
             3      X   X   X
-         m(w)=0, ordinary
+         m(w)=0, ord.
     """
     def __init__(self, L, alphabet, chignons=('',''), factor=Word(),
             include_factor_in_repr=True):
@@ -1450,7 +1443,7 @@ class ExtensionType1to1(ExtensionType):
                1             X
                2             X
                3     X   X   X
-             m(w)=0, ordinary
+             m(w)=0, ord.
         """
         self._pairs = frozenset(L)
         self._alphabet = alphabet
@@ -1626,14 +1619,14 @@ class ExtensionType1to1(ExtensionType):
                1             X
                2             X
                3     X   X   X
-             m(w)=0, ordinary
+             m(w)=0, ord.
             sage: ar = WordMorphism({1:[1,3],2:[2,3],3:[3]})
             sage: E.apply(ar)
             (  E(3w)   1   2   3
                 1             X
                 2             X
                 3     X   X   X
-             m(w)=0, ordinary,)
+             m(w)=0, ord.,)
 
         ::
 
@@ -1643,7 +1636,7 @@ class ExtensionType1to1(ExtensionType):
                 1             X
                 2             X
                 3     X   X   X
-             m(w)=0, ordinary,)
+             m(w)=0, ord.,)
 
         Creation of a pair of ordinaire bispecial words from an
         **ordinaire** word::
@@ -1655,19 +1648,19 @@ class ExtensionType1to1(ExtensionType):
                 1
                 2             X
                 3     X   X   X
-             m(w)=0, ordinary,)
+             m(w)=0, ord.,)
             sage: p3 = WordMorphism({1:[1,3,2],2:[2],3:[3,2]})
             sage: e.apply(p3)
             (  E(2w)   1   2   3
                 1
                 2             X
                 3     X   X   X
-             m(w)=0, ordinary,
+             m(w)=0, ord.,
                E(32w)   1   2   3
                 1              X
                 2      X   X   X
                 3
-             m(w)=0, ordinary)
+             m(w)=0, ord.)
 
         Creation of a strong-weak pair of bispecial words from a neutral
         **not ordinaire** word::
@@ -1696,12 +1689,12 @@ class ExtensionType1to1(ExtensionType):
                 1     X   X   X
                 2             X
                 3
-             m(w)=0, ordinary,
+             m(w)=0, ord.,
                E(12w)   1   2   3
                 1
                 2          X
                 3      X   X   X
-             m(w)=0, ordinary)
+             m(w)=0, ord.)
 
         This result is now fixed::
 
@@ -1822,7 +1815,7 @@ class ExtensionType1to1(ExtensionType):
                1             X
                2             X
                3     X   X   X
-             m(w)=0, ordinary
+             m(w)=0, ord.
             sage: E.is_ordinaire()
             True
 
@@ -1998,7 +1991,7 @@ class ExtensionTypeLong(ExtensionType):
     - ``empty`` - bool, (optional, default: None), if None, then it is
       computed from the chignons and takes value True iff the chignons are
       empyt.
-    - ``include_factor_in_repr`` - optional (default: True), whether to
+    - ``include_factor_in_repr`` - optional (default: False), whether to
       include the factor in the string or latex representation
 
     EXAMPLES::
@@ -2014,12 +2007,12 @@ class ExtensionTypeLong(ExtensionType):
            12    X   X   X
            22    X
            23    X
-        m(w)=0, not ord., empty
+        m(w)=0, neutral
 
     """
     def __init__(self, L, alphabet, chignons=('',''), factor=Word(),
             factors_length_k=None, empty=None,
-            include_factor_in_repr=True):
+            include_factor_in_repr=False):
         r"""
         EXAMPLES::
 
@@ -2158,7 +2151,7 @@ class ExtensionTypeLong(ExtensionType):
                12    X   X   X
                22    X
                23    X
-             m(w)=0, not ord., empty
+             m(w)=0, neutral
         """
         lines = []
         L = sorted(self.left_word_extensions(), key=lambda w:w.reversal())
@@ -2334,7 +2327,7 @@ class ExtensionTypeLong(ExtensionType):
                3     X   X   X
                13    X   X   X
                23            X
-             m(w)=0, ordinary, empty,)
+             m(w)=0, ord., empty,)
             sage: E.apply(b23)[0].apply(b31)
             (  E(w)   1   2   3
                 11    X   X   X
@@ -2342,7 +2335,7 @@ class ExtensionTypeLong(ExtensionType):
                 12            X
                 13    X
                 23    X
-              m(w)=0, not ord., empty,
+              m(w)=0, neutral,
               E(1w)   1   2   3
                  1     X   X   X
                  3     X   X   X
@@ -2363,7 +2356,7 @@ class ExtensionTypeLong(ExtensionType):
                12    X   X   X
                22    X
                23    X
-             m(w)=0, not ord., empty
+             m(w)=0, neutral
             sage: b12 = WordMorphism({1:[1,2],2:[2],3:[3]})
             sage: E.apply(b12)
             (  E(w)   1   2   3
@@ -2372,13 +2365,13 @@ class ExtensionTypeLong(ExtensionType):
                 12        X
                 22    X   X   X
                 23    X
-              m(w)=0, not ord., empty,
+              m(w)=0, neutral,
                E(2w)   1   2   3
                 21         X
                 31         X
                 12     X   X   X
                 22     X
-              m(w)=0, ordinary)
+              m(w)=0, ord.)
 
         ::
 
@@ -2390,30 +2383,30 @@ class ExtensionTypeLong(ExtensionType):
                 31        X
                 12    X
                 13    X
-              m(w)=0, ordinary, empty,
+              m(w)=0, ord., empty,
                E(1w)   1   2   3
                 21         X
                 12     X   X   X
                 13         X
-              m(w)=0, ordinary)
+              m(w)=0, ord.)
             sage: b23 = WordMorphism({1:[1],2:[2,3],3:[3]})
             sage: E.apply(b23)
             (  E(23w)   1   2   3
                  31     X   X   X
                  23     X
-              m(w)=0, ordinary,
+              m(w)=0, ord.,
                E(w)   1   2   3
                 31        X
                 12            X
                 32            X
                 23    X   X   X
                 33    X
-              m(w)=0, not ord., empty,
+              m(w)=0, neutral,
                E(3w)   1   2   3
                 12     X   X   X
                 32     X
                 23     X
-              m(w)=0, ordinary)
+              m(w)=0, ord.)
 
         Not letter is missing::
 
@@ -2429,12 +2422,12 @@ class ExtensionTypeLong(ExtensionType):
                 11    X   X   X
                 21    X
                 13        X
-             m(w)=0, ordinary, w=1s(u)=11
+             m(w)=0, ord., w=1s(u)=11
                E(w)   1   2   3
                 11    X   X   X
                 21    X
                 12    X
-             m(w)=0, ordinary)
+             m(w)=0, ord.)
 
         We check that 12 is a left extension of X because this can not be
         guessed only from the direct image of left extensions::
