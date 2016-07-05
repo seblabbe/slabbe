@@ -1066,7 +1066,7 @@ class ExtensionType(object):
 
             sage: G = E1.graph_under_sadic([132]*2+[123]*6, S)
             sage: from slabbe.tikz_picture import TikzPicture
-            sage: _ = TikzPicture.from_graph(G).pdf(view=False)
+            sage: _ = TikzPicture.from_graph(G).pdf(view=False) # long time (9s)
         """
         R = self.rec_enum_set_under_sadic(substitutions,
                 substitutions_dict, keep_equal_length=keep_equal_length,
@@ -1152,7 +1152,7 @@ class ExtensionType(object):
             sage: from slabbe.language import languages
             sage: L = languages.Brun()
             sage: E = [E for E in E1.apply(S[123]) if E.factor().length() == 1][0]
-            sage: E.graph_under_language(L, 123, S, max_depth=2)
+            sage: E.graph_under_language(L, 123, S, max_depth=2)  # long time (3s)
             Looped multi-digraph on 41 vertices
         """
         R = self.rec_enum_set_under_language(language, initial,
@@ -1235,7 +1235,7 @@ class ExtensionType(object):
             set()
             sage: E.weakstrong_sublanguage(L, 123, S, 3)
             {(213, 213, 231, 123), (231, 213, 231, 123)}
-            sage: E.weakstrong_sublanguage(L, 123, S, 4)
+            sage: E.weakstrong_sublanguage(L, 123, S, 4)   # long time (8s)
             {(132, 213, 213, 231, 123),
              (213, 213, 213, 231, 123),
              (213, 213, 231, 231, 123),
@@ -1272,7 +1272,7 @@ class ExtensionType(object):
             sage: S = algo.substitutions()
             sage: L = languages.Brun()
             sage: v = algo.image((1,e,pi), 5)
-            sage: prefix = algo.s_adic_word(v)[:100000]
+            sage: prefix = algo.s_adic_word(v)[:1000]
             sage: E = ExtensionType.from_factor(prefix.parent()(), prefix, nleft=2)
             sage: P = E.weakstrong_poset(L, 123, S, 4)
             sage: P
@@ -2813,7 +2813,7 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
         sage: S = algo.substitutions()
         sage: L = languages.Brun()
         sage: v = algo.image((1,e,pi), 5)
-        sage: prefix = algo.s_adic_word(v)[:100000]
+        sage: prefix = algo.s_adic_word(v)[:1000]
         sage: E = ExtensionType.from_factor(prefix.parent()(), prefix, nleft=2)
         sage: pairs = [(E,123)]
         sage: rec_enum_set_under_language_joined_from_pairs(pairs, L, S)
@@ -2854,8 +2854,7 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
         sage: R
         A recursively enumerated set (breadth first search)
         sage: from slabbe.bispecial_extension_type import recursively_enumerated_set_to_digraph
-        sage: G = recursively_enumerated_set_to_digraph(R)
-        sage: G
+        sage: recursively_enumerated_set_to_digraph(R)    # long time (12s)
         Looped multi-digraph on 127 vertices
 
     Testing the keep_unique option (not a good example apparently?)::
@@ -2874,14 +2873,15 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
         sage: R = rec_enum_set_under_language_joined_from_pairs(pairs,
         ....:    LBrun, S, keep_equal_length=False, 
         ....:    keep_unique=False, label='previous', growth_limit=1, filter_fn=f)
-        sage: R
-        A recursively enumerated set (breadth first search)
-        sage: R.to_digraph()
+        sage: R.to_digraph()                 # long time (15s)
         Looped multi-digraph on 129 vertices
+
+    ::
+
         sage: R = rec_enum_set_under_language_joined_from_pairs(pairs,
         ....:    LBrun, S, keep_equal_length=False, 
         ....:    keep_unique=True, label='previous', growth_limit=1, filter_fn=f)
-        sage: R.to_digraph()
+        sage: R.to_digraph()                 # long time (15s)
         Looped multi-digraph on 129 vertices
 
     """
