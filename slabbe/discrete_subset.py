@@ -531,6 +531,45 @@ class DiscreteSubset(SageObject):
         if isinstance(other, Intersection):
             return other.__and__(self)
         return Intersection((self, other))
+
+    def __le__(self, other):
+        r"""
+        Return whether self is a subset of other.
+
+        Runs into an infinite loop if self is infinite.
+
+        EXAMPLES::
+
+            sage: from slabbe import DiscretePlane, DiscreteTube
+            sage: P = DiscretePlane([4,6,7], 17, mu=0)
+            sage: tube = DiscreteTube([-6.4, 6.4], [-5.2, 5.2])
+            sage: I = tube & P
+            sage: I <= tube
+            True
+            sage: I <= P
+            True
+        """
+        return all(p in other for p in self)
+
+    def __ge__(self, other):
+        r"""
+        Return whether self is a superset of other.
+
+        Runs into an infinite loop if other is infinite.
+
+        EXAMPLES::
+
+            sage: from slabbe import DiscretePlane, DiscreteTube
+            sage: P = DiscretePlane([4,6,7], 17, mu=0)
+            sage: tube = DiscreteTube([-6.4, 6.4], [-5.2, 5.2])
+            sage: I = tube & P
+            sage: tube >= I
+            True
+            sage: P >= I
+            True
+        """
+        return all(p in self for p in other)
+
     @cached_method
     def base_edges(self):
         r"""
