@@ -22,6 +22,10 @@ EXEMPLES::
     sage: p = p + vector([20,0,0])
     sage: random_interior_point(p)          # random
     (19.33174562788114, -0.5428002756082744, -0.3568284089832092)
+
+.. TODO::
+
+    - Fix random_interior_point function (see below).
 """
 #*****************************************************************************
 #       Copyright (C) 2016 Sébastien Labbé <slabqc@gmail.com>
@@ -115,6 +119,12 @@ def random_interior_point(self, a=10, integer=False):
       ray.
     - ``integer`` -- bool, whether the output must be with integer
       coordinates
+
+    .. TODO::
+
+        - Problem: the output is not uniform doing like this. We should
+          rather add vertices on rays first. Then, take this bounded
+          polyhedron and choose inside of it.
 
     EXEMPLES::
 
