@@ -4,6 +4,7 @@ Word morphisms methods and iterators
 
 EXAMPLES::
 
+    sage: from slabbe.word_morphisms import iter_primitive_marked_classP_morphisms
     sage: F = FiniteWords('ab')
     sage: it = iter_primitive_marked_classP_morphisms(F, 4)
     sage: list(it)
@@ -420,6 +421,21 @@ def compute_xsi(self, u):
         sage: from slabbe.word_morphisms import compute_xsi
         sage: s = WordMorphism({0:[0,1],1:[1,0]})
         sage: compute_xsi(s, Word([0]))
+        sigma_u= 0->012, 1->02, 2->1
+        theta_u= 0->011, 1->01, 2->0
+        psi= 0->(0, 0),(0, 1),(0, 2), 1->(1, 0),(1, 1), 2->(2, 0)
+        psi*sigma_u= 0->(0, 0),(0, 1),(0, 2),(1, 0),(1, 1),(2, 0), 1->(0, 0),(0, 1),(0, 2),(2, 0), 2->(1, 0),(1, 1)
+        Finite words over {(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (2, 0)}
+        [1 0 0]
+        [1 0 0]
+        [1 0 0]
+        [0 1 0]
+        [0 1 0]
+        [0 0 1]
+        We want zeta such that:
+        zeta((0, 0),(0, 1),(0, 2)) = (0, 0),(0, 1),(0, 2),(1, 0),(1, 1),(2, 0)
+        zeta((1, 0),(1, 1)) = (0, 0),(0, 1),(0, 2),(2, 0)
+        zeta((2, 0)) = (1, 0),(1, 1)
     """
     sigma_u, theta_u = return_substitution(self, u, coding=True)
     assert theta_u*sigma_u == self*theta_u, "identity is not verified"

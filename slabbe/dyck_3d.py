@@ -30,9 +30,9 @@ def Possible(n):
 
         sage: from slabbe.dyck_3d import Possible
         sage: Possible(1)
-        The cartesian product of ({[1, 0]},)
+        The Cartesian product of ({[1, 0]},)
         sage: Possible(2)
-        The cartesian product of ({[1, 1, 0, 0]}, {[1, 0, 1, 0], [1, 1, 0, 0]})
+        The Cartesian product of ({[1, 1, 0, 0]}, {[1, 0, 1, 0], [1, 1, 0, 0]})
         sage: Possible(3).list()
         [([1, 1, 1, 0, 0, 0], [1, 1, 0, 1, 0, 0], [1, 0, 1, 0, 1, 0]),
          ([1, 1, 1, 0, 0, 0], [1, 1, 0, 1, 0, 0], [1, 0, 1, 1, 0, 0]),

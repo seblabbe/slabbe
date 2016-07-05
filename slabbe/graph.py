@@ -1,8 +1,20 @@
+r"""
+.. TODO::
+
+    - Make the doctests more simple
+"""
 
 def projection_graph(G, proj_fn, filename=None, verbose=False):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.mult_cont_frac import Brun
+        sage: algo = Brun()
+        sage: S = algo.substitutions()
+        sage: from slabbe.language import languages
+        sage: LBrun = languages.Brun()
+        sage: E1, E2, E3, E4, E5 = empty_word_extension_types()
+        sage: pairs = [(E1, 312), (E2, 312), (E3, 312), (E4, 321), (E5, 321)]
         sage: from slabbe.bispecial_extension_type import rec_enum_set_under_language_joined_from_pairs
         sage: R = rec_enum_set_under_language_joined_from_pairs(pairs, LBrun, S, keep_empty=False, label='previous', growth_limit=1)
         sage: from slabbe.bispecial_extension_type import recursively_enumerated_set_to_digraph
@@ -20,17 +32,14 @@ def projection_graph(G, proj_fn, filename=None, verbose=False):
         sage: map_f2 = lambda s:tuple(sorted(map(f2,s)))
         sage: map_f3 = lambda s:tuple(sorted(map(f3,s)))
         sage: map_f4 = lambda s:tuple(sorted(map(f4,s)))
+
+    ::
+
+        sage: from slabbe.graph import projection_graph
         sage: projection_graph(G, map_f2, key='2')
 
     ::
 
-        sage: from slabbe.mult_cont_frac import Brun
-        sage: algo = Brun()
-        sage: S = algo.substitutions()
-        sage: from slabbe.language import languages
-        sage: LBrun = languages.Brun()
-        sage: E1, E2, E3, E4, E5 = empty_word_extension_types()
-        sage: pairs = [(E1, 312), (E2, 312), (E3, 312), (E4, 321), (E5, 321)]
         sage: f = lambda S:any(len(ext.left_word_extensions())>2 for ext in S)
         sage: from slabbe.bispecial_extension_type import rec_enum_set_under_language_joined_from_pairs
         sage: R = rec_enum_set_under_language_joined_from_pairs(pairs, LBrun, S, keep_empty=False, label='previous', growth_limit=1, filter_fn=f)

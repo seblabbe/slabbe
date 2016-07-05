@@ -10,7 +10,7 @@ develop:
 	sage -pip install --upgrade -e .
 
 test: 
-	sage -tp --force-lib slabbe/*
+	sage -tp --force-lib slabbe/*.py slabbe/*.pyx
 
 coverage:
 	sage -coverage slabbe/*

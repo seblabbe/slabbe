@@ -2748,7 +2748,7 @@ def remove_extension_types_subsets(extensions):
          word: 22322322322322322322]
         sage: A[1].is_subset(A[0])
         True
-        sage: from slabbe.bispecial_extension_type import remove_redondancies
+        sage: from slabbe.bispecial_extension_type import remove_extension_types_subsets
         sage: remove_extension_types_subsets(A)
         [w=s(u)=2322322322322322322
            E(w)   1   2   3
@@ -2870,12 +2870,12 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
         sage: R
         A recursively enumerated set (breadth first search)
         sage: R.to_digraph()
-        Looped multi-digraph on 62 vertices
+        Looped multi-digraph on 129 vertices
         sage: R = rec_enum_set_under_language_joined_from_pairs(pairs,
         ....:    LBrun, S, keep_equal_length=False, 
         ....:    keep_unique=True, label='previous', growth_limit=1, filter_fn=f)
         sage: R.to_digraph()
-        Looped multi-digraph on 62 vertices
+        Looped multi-digraph on 129 vertices
 
     """
     # what can go before each letter
