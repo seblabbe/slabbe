@@ -33,24 +33,24 @@ not ordinairy word::
     sage: m = WordMorphism({1:[1,2,3],2:[2,3],3:[3]})
     sage: E = ExtensionType1to1([(1,2),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
     sage: E
-      E(w)   1   2   3
-       1         X
-       2             X
-       3     X   X   X
-     m(w)=0, not ord.
+      E(w)  1   2   3
+       1        X
+       2            X
+       3    X   X   X
+     m(w)=0, neutral
     sage: E1, E2 = E.apply(m)
     sage: E1
-      E(3w)   1   2   3
-        1
-        2         X   X
-        3     X   X   X
-     m(w)=1, not ord.
+      E(w)  1   2   3
+       1
+       2        X   X
+       3    X   X   X
+     m(w)=1, strong
     sage: E2
-      E(23w)   1   2   3
-        1          X
+      E(w)   1   2   3
+        1        X
         2
-        3              X
-     m(w)=-1, not ord.
+        3            X
+     m(w)=-1, weak
 
 TODO:
 
@@ -125,7 +125,7 @@ class ExtensionType(object):
                0         X
                1         X   X
                2     X
-             m(w)=-1, not ord.
+             m(w)=-1, weak
 
         ::
 
@@ -134,7 +134,7 @@ class ExtensionType(object):
                01        X
                11            X
                12    X
-             m(w)=-1, neutral
+             m(w)=-1, weak
 
         ::
 
@@ -199,7 +199,7 @@ class ExtensionType(object):
                1         X    
                2             X
                3     X   X   X
-             m(w)=0, not ord.
+             m(w)=0, neutral
 
         ::
 
@@ -209,7 +209,7 @@ class ExtensionType(object):
                1         X    
                2     X   X   X
                3     X   X   X
-             m(w)=2, not ord.
+             m(w)=2, strong
 
         """
         assert m.is_endomorphism(), "m(=%s) must be an endomorphism"
@@ -262,7 +262,6 @@ class ExtensionType(object):
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3])
             sage: E
-            w=s(u)=
               E(w)   1   2   3
                1             X
                2             X
@@ -273,6 +272,16 @@ class ExtensionType(object):
 
             sage: E = ExtensionType1to1(L, [1,2,3], ('a','b'), Word('xyz'))
             sage: E
+              E(w)   1   2   3
+               1             X
+               2             X
+               3     X   X   X
+            m(w)=0, ord.
+
+        The factor may be included in the repr::
+
+            sage: ExtensionType1to1(L, [1,2,3], ('a','b'), Word('xyz'), 
+            ....:                   include_factor_in_repr=True)
             w=as(u)b=xyz
               E(w)   1   2   3
                1             X
@@ -286,26 +295,13 @@ class ExtensionType(object):
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: ExtensionTypeLong(L, (1,2,3))
-            w=s(u)=
               E(w)   1   2   3
                21        X
                31        X
                12    X   X   X
                22    X
                23    X
-             m(w)=0, neutral not ord.
-
-        No factor appearing::
-
-            sage: E._include_factor_in_repr = False
-            sage: E
-              E(w)   1   2   3
-               21        X
-               31        X
-               12    X   X   X
-               22    X
-               23    X
-            m(w)=0, neutral
+             m(w)=0, neutral
         """
         mw = self.multiplicity()
         info = self.information()
@@ -328,7 +324,6 @@ class ExtensionType(object):
             sage: E = ExtensionType1to1(L, [1,2,3], ('a', 'b'))
             sage: latex(E)
             \begin{tabular}{c}
-            $w=as(u)b=$\\
             \begin{tabular}{cccc}
             $E(w)$ & $1$ & $2$ & $3$ \\
             $1$ &   &   & $\times$ \\
@@ -346,7 +341,6 @@ class ExtensionType(object):
             sage: E = ExtensionTypeLong(L, (1,2,3))
             sage: latex(E)
             \begin{tabular}{c}
-            $w=s(u)=$\\
             \begin{tabular}{cccc}
             $E(w)$ & $1$ & $2$ & $3$ \\
             $21$ &   & $\times$ &   \\
@@ -355,14 +349,15 @@ class ExtensionType(object):
             $22$ & $\times$ &   &   \\
             $23$ & $\times$ &   &   \\
             \end{tabular}\\
-            $m(w) = 0$, neutral not ord.
+            $m(w) = 0$, neutral
             \end{tabular}
 
-        No factor appearing::
+        With factor appearing::
 
-            sage: E._include_factor_in_repr = False
+            sage: E._include_factor_in_repr = True
             sage: latex(E)
             \begin{tabular}{c}
+            $w=s(u)=$\\
             \begin{tabular}{cccc}
             $E(w)$ & $1$ & $2$ & $3$ \\
             $21$ &   & $\times$ &   \\
@@ -420,6 +415,8 @@ class ExtensionType(object):
 
         ::
 
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: S = Brun().substitutions()
             sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
             sage: data = [((3, 1), (2,)), ((1, 2), (3,)), ((3, 2), (3,)), ((2,
             ....:      3), (1,)), ((2, 3), (2,)), ((2, 3), (3,)), ((3, 3), (1,))]
@@ -725,7 +722,7 @@ class ExtensionType(object):
         return L[0]
 
     def rec_enum_set_under_sadic(self, substitutions, substitutions_dict,
-            keep_empty=False, growth_limit=float('inf')):
+            keep_equal_length=False, growth_limit=float('inf')):
         r"""
         Return the graded recursively enumerated set of all the extension type
         leading to those of age k generated by a finite sequence of
@@ -735,8 +732,8 @@ class ExtensionType(object):
 
         - ``substitutions`` -- the sequence of substitutions
         - ``substitutions_dict`` - dict of substitutions
-        - ``keep_empty`` -- (default: False) whether to keep images that are
-          empty, thus it will include all bispecial factors of age <= k on the
+        - ``keep_equal_length`` -- (default: False) whether to keep images that
+          have equal length, thus it will include all bispecial factors of age <= k on the
           highest graded component.
         - ``growth_limit`` -- integer (default: ``float('inf')``), the
           maximal growth in length of the bispecial extended images
@@ -758,40 +755,36 @@ class ExtensionType(object):
             sage: R
             A recursively enumerated set with a graded structure (breadth first search)
             sage: R.graded_component(0)
-            {(w=s(u)=
-                E(w)   1   2   3
+            {(  E(w)   1   2   3
                  21        X
                  31        X
                  12    X   X   X
                  22            X
                  23    X
-              m(w)=0, neutral not ord., word: , ())}
+              m(w)=0, neutral, word: , ())}
             sage: R.graded_component(1)
-            {(w=3s(u)=3
-                E(w)   1   2   3
+            {(  E(w)   1   2   3
                  12    X   X   X
                  32            X
                  23    X
-              m(w)=0, ord., word: 3, (123,)), (w=23s(u)=23
-                E(w)   1   2   3
+              m(w)=0, ord., word: 3, (123,)), 
+              ( E(w)   1   2   3
                  31    X   X   X
                  23            X
               m(w)=0, ord., word: 23, (123,))}
             sage: [len(R.graded_component(i)) for i in range(9)]
             [1, 2, 2, 2, 2, 2, 2, 2, 3]
 
-        This is a bug in sage, it should return an empty set::
+        This used to be a bug in sage, it is now fixed::
 
             sage: R.graded_component(9)
-            Traceback (most recent call last)
-            ...
-            StopIteration:
+            set()
 
         Including all younger bispecial factors::
 
-            sage: R = E1.rec_enum_set_under_sadic([132]*2+[123]*6, S, keep_empty=True)
+            sage: R = E1.rec_enum_set_under_sadic([132]*2+[123]*6, S, keep_equal_length=True)
             sage: [len(R.graded_component(i)) for i in range(9)]
-            [1, 3, 4, 5, 6, 7, 8, 9, 17]
+            [1, 3, 4, 5, 6, 7, 8, 9, 16]
             sage: B = R.graded_component(8)
             sage: [(Z.factor(),Z.multiplicity()) for Z,_,_ in B]
             [(word: 2322322322322322322, 1),
@@ -802,7 +795,6 @@ class ExtensionType(object):
              (word: 22322322322322322322, -1),
              (word: 2322322322322, 0),
              (word: 2322322, 0),
-             (word: 2, 0),
              (word: , 0),
              (word: 22322322322, 0),
              (word: 22322322322322322, 0),
@@ -820,7 +812,7 @@ class ExtensionType(object):
                 return rep
             a = substitutions[-age-1]
             for Z in Y.apply(substitutions_dict[a], growth_limit=growth_limit):
-                if keep_empty or not Z.is_empty():
+                if keep_equal_length or not len(Y.factor()) == len(Z.factor()):
                     rep.append((Z,Z.factor(),(a,)+history))
             return rep
         root = (self, self.factor(), tuple())
@@ -862,12 +854,14 @@ class ExtensionType(object):
 
             sage: seq = [231,213,213,321]+[213,231,231,123]+[132,123]
             sage: R = E1.rec_enum_set_under_sadic_joined(seq, S, growth_limit=1)
+            sage: R
             A recursively enumerated set with a graded structure (breadth first search)
 
         ::
 
             sage: from slabbe.bispecial_extension_type import recursively_enumerated_set_to_digraph
             sage: G = recursively_enumerated_set_to_digraph(R)
+            sage: G
             Looped multi-digraph on 11 vertices
         """
         def child(V):
@@ -974,8 +968,8 @@ class ExtensionType(object):
         return R
 
     def rec_enum_set_under_language_joined(self, language, initial,
-            substitutions_dict, keep_empty=False, label='history',
-            growth_limit=float('inf')):
+            substitutions_dict, keep_equal_length=False, keep_unique=False,
+            label='history', growth_limit=float('inf')):
         r"""
         Return the recursively enumerated set of extension type generated
         by a language of substitutions where the extension type of the same
@@ -986,8 +980,10 @@ class ExtensionType(object):
         - ``language`` -- the language of substitutions
         - ``initial`` -- initial substitution
         - ``substitutions_dict`` - dict of substitutions
-        - ``keep_empty`` -- (default: False) whether to keep images that
-          are empty
+        - ``keep_equal_length`` -- (default: False) whether to keep images that
+          have equal length
+        - ``keep_unique`` -- (default: False) whether to keep a unique copy of
+          equal extension types
         - ``label`` -- 'history' or 'previous' (default: ``'history'``),
           whether the vertices contain the whole history of the bispecial
           word or only the previous applied substitution
@@ -1027,11 +1023,12 @@ class ExtensionType(object):
         """
         pairs = [(self, initial)]
         return rec_enum_set_under_language_joined_from_pairs(pairs, language,
-            substitutions_dict, keep_empty=keep_empty, label=label,
+            substitutions_dict, keep_equal_length=keep_equal_length,
+            keep_unique=keep_unique, label=label,
             growth_limit=growth_limit)
 
     def graph_under_sadic(self, substitutions, substitutions_dict,
-            keep_empty=False, raw=False, growth_limit=float('inf')):
+            keep_equal_length=False, raw=False, growth_limit=float('inf')):
         r"""
         Return the graph of extension types under the application of an
         s-adic word.
@@ -1040,9 +1037,9 @@ class ExtensionType(object):
 
         - ``substitutions`` -- the sequence of substitutions
         - ``substitutions_dict`` - dict of substitutions
-        - ``keep_empty`` -- bool (default: False) whether to keep images
-          that are empty, thus it will include all bispecial factors of age
-          <= k on the highest graded component.
+        - ``keep_equal_length`` -- (default: False) whether to keep images that
+          have equal length, thus it will include all bispecial factors of age <= k on the
+          highest graded component.
         - ``raw`` -- bool (default: False), whether to keep the vertices
           raw, i.e. including history and factors information
         - ``growth_limit`` -- integer (default: ``float('inf')``), the
@@ -1058,12 +1055,12 @@ class ExtensionType(object):
             sage: E1 = ExtensionTypeLong(data, (1,2,3))
             sage: E1.graph_under_sadic([132]*2+[123]*6, S)
             Looped multi-digraph on 9 vertices
-            sage: E1.graph_under_sadic([132]*2+[123]*6, S, keep_empty=True)
+            sage: E1.graph_under_sadic([132]*2+[123]*6, S, keep_equal_length=True)
             Looped multi-digraph on 19 vertices
             sage: E1.graph_under_sadic([132]*2+[123]*6, S, raw=True)
             Looped multi-digraph on 18 vertices
-            sage: E1.graph_under_sadic([132]*2+[123]*6, S, raw=True, keep_empty=True)
-            Looped multi-digraph on 60 vertices
+            sage: E1.graph_under_sadic([132]*2+[123]*6, S, raw=True, keep_equal_length=True)
+            Looped multi-digraph on 59 vertices
 
         ::
 
@@ -1072,7 +1069,8 @@ class ExtensionType(object):
             sage: _ = TikzPicture.from_graph(G).pdf(view=False)
         """
         R = self.rec_enum_set_under_sadic(substitutions,
-                substitutions_dict, keep_empty, growth_limit=growth_limit)
+                substitutions_dict, keep_equal_length=keep_equal_length,
+                growth_limit=growth_limit)
         G = recursively_enumerated_set_to_digraph(R)
         if raw:
             return G
@@ -1155,7 +1153,7 @@ class ExtensionType(object):
             sage: L = languages.Brun()
             sage: E = [E for E in E1.apply(S[123]) if E.factor().length() == 1][0]
             sage: E.graph_under_language(L, 123, S, max_depth=2)
-            Looped multi-digraph on 32 vertices
+            Looped multi-digraph on 41 vertices
         """
         R = self.rec_enum_set_under_language(language, initial,
                 substitutions_dict, keep_empty, label='previous',
@@ -1197,7 +1195,7 @@ class ExtensionType(object):
             sage: E.graph_under_language_joined(L, 123, S, max_depth=2)
             Looped multi-digraph on 26 vertices
             sage: E.graph_under_language_joined(L, 123, S, max_depth=2, growth_limit=1)
-            Looped multi-digraph on 22 vertices
+            Looped multi-digraph on 21 vertices
             sage: E.graph_under_language_joined(L, 123, S)   # not tested long time
             Looped multi-digraph on 715 vertices
         """
@@ -1367,7 +1365,7 @@ class ExtensionType(object):
             sage: E1 = ExtensionTypeLong(data, (1,2,3))
             sage: E1.bispecial_factors_table_under_sadic([132]*2+[123]*6, S)
               |w|   w                      m(w)   d^-(w)   d2^-(w)   info
-            +-----+----------------------+------+--------+---------+----------+
+            +-----+----------------------+------+--------+---------+---------+
               0                            0      3        5         ord.
               1     2                      0      3        4         neutral
               2     22                     0      2        2         ord.
@@ -1405,8 +1403,8 @@ class ExtensionType1to1(ExtensionType):
     - ``chignons`` - optional (default: None), pair of words added to the
       left  and to the right of the image of the previous bispecial
     - ``factor`` - optional (default: empty word), the factor
-    - ``include_factor_in_repr`` - optional (default: True), whether to
-      include the factor in the string or latex representation
+    - ``include_factor_in_repr`` - optional (default: False), whether to include
+      the factor in the string or latex representation
 
     EXAMPLES::
 
@@ -1424,14 +1422,14 @@ class ExtensionType1to1(ExtensionType):
 
         sage: E = ExtensionType1to1(L, [1,2,3], ('a','b'))
         sage: E
-          E(awb)   1   2   3
-            1              X
-            2              X
-            3      X   X   X
+          E(w)   1   2   3
+           1             X
+           2             X
+           3     X   X   X
          m(w)=0, ord.
     """
     def __init__(self, L, alphabet, chignons=('',''), factor=Word(),
-            include_factor_in_repr=True):
+            include_factor_in_repr=False):
         r"""
         EXAMPLES::
 
@@ -1622,17 +1620,17 @@ class ExtensionType1to1(ExtensionType):
              m(w)=0, ord.
             sage: ar = WordMorphism({1:[1,3],2:[2,3],3:[3]})
             sage: E.apply(ar)
-            (  E(3w)   1   2   3
-                1             X
-                2             X
-                3     X   X   X
+            (  E(w)  1   2   3
+                1            X
+                2            X
+                3    X   X   X
              m(w)=0, ord.,)
 
         ::
 
             sage: ar = WordMorphism({1:[3,1],2:[3,2],3:[3]})
             sage: E.apply(ar)
-            (  E(w3)   1   2   3
+            (  E(w)   1   2   3
                 1             X
                 2             X
                 3     X   X   X
@@ -1644,21 +1642,21 @@ class ExtensionType1to1(ExtensionType):
             sage: e = ExtensionType1to1([(1,3),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
             sage: p0 = WordMorphism({1:[1,2,3],2:[2,3],3:[3]})
             sage: e.apply(p0)
-            (  E(3w)   1   2   3
+            ( E(w)   1   2   3
                 1
-                2             X
-                3     X   X   X
+                2            X
+                3    X   X   X
              m(w)=0, ord.,)
             sage: p3 = WordMorphism({1:[1,3,2],2:[2],3:[3,2]})
             sage: e.apply(p3)
-            (  E(2w)   1   2   3
+            (  E(w)   1   2   3
                 1
                 2             X
                 3     X   X   X
              m(w)=0, ord.,
-               E(32w)   1   2   3
-                1              X
-                2      X   X   X
+               E(w)   1   2   3
+                1             X
+                2     X   X   X
                 3
              m(w)=0, ord.)
 
@@ -1668,16 +1666,16 @@ class ExtensionType1to1(ExtensionType):
             sage: p0 = WordMorphism({1:[1,2,3],2:[2,3],3:[3]})
             sage: e = ExtensionType1to1([(1,2),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
             sage: e.apply(p0)
-            (  E(3w)   1   2   3
+            (  E(w)   1   2   3
                 1
                 2         X   X
                 3     X   X   X
-             m(w)=1, not ord.,
-               E(23w)   1   2   3
-                1          X
+             m(w)=1, strong,
+               E(w)   1   2   3
+                1         X
                 2
-                3              X
-             m(w)=-1, not ord.)
+                3             X
+             m(w)=-1, weak)
 
         Creation of a pair of ordinaire bispecial words from an **not
         ordinaire** word::
@@ -1685,15 +1683,15 @@ class ExtensionType1to1(ExtensionType):
             sage: p1 = WordMorphism({1:[1,2],2:[2],3:[3,1,2]})
             sage: e = ExtensionType1to1([(1,2),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
             sage: e.apply(p1)
-            (  E(2w)   1   2   3
+            (  E(w)   1   2   3
                 1     X   X   X
                 2             X
                 3
              m(w)=0, ord.,
-               E(12w)   1   2   3
+               E(w)   1   2   3
                 1
-                2          X
-                3      X   X   X
+                2         X
+                3     X   X   X
              m(w)=0, ord.)
 
         This result is now fixed::
@@ -1701,42 +1699,42 @@ class ExtensionType1to1(ExtensionType):
             sage: e = ExtensionType1to1([(1,2), (3,3)], [1,2,3])
             sage: p3 = WordMorphism({1:[1,3,2],2:[2],3:[3,2]})
             sage: e.apply(p3)
-            (  E(32w)   1   2   3
-                1          X
-                2              X
+            (  E(w)   1   2   3
+                1         X
+                2             X
                 3
-             m(w)=-1, not ord.,)
+             m(w)=-1, weak,)
 
         ::
 
             sage: e = ExtensionType1to1([(2,2),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
             sage: e.apply(p3)
-            (  E(2w)   1   2   3
+            (  E(w)   1   2   3
                 1
                 2         X   X
                 3     X   X   X
-             m(w)=1, not ord.,)
+             m(w)=1, strong,)
 
         This result is now fixed::
 
             sage: e = ExtensionType1to1([(2,2),(2,3),(3,1),(3,2),(3,3)], [1,2,3])
             sage: p2 = WordMorphism({1:[1],2:[2,3,1],3:[3,1]})
             sage: e.apply(p2)
-            (  E(31w)   1   2   3
-                1      X   X   X
-                2          X   X
+            (  E(w)   1   2   3
+                1     X   X   X
+                2         X   X
                 3
-             m(w)=1, not ord.,)
+             m(w)=1, strong,)
 
         ::
 
             sage: e = ExtensionType1to1([(1,2),(3,3)], [1,2,3])
             sage: e.apply(p2)
-            (  E(1w)   1   2   3
+            (  E(w)   1   2   3
                 1         X
                 2
                 3             X
-             m(w)=-1, not ord.,)
+             m(w)=-1, weak,)
 
         TESTS::
 
@@ -1747,7 +1745,7 @@ class ExtensionType1to1(ExtensionType):
                1             X
                2
                3
-             m(w)=0, not ord.
+             m(w)=0, neutral
             sage: ar = WordMorphism({1:[1,3],2:[2,3],3:[3]})
             sage: E.apply(ar)
             ()
@@ -1835,7 +1833,7 @@ class ExtensionType1to1(ExtensionType):
                1     X
                2             X
                3     X   X   X
-             m(w)=0, not ord.
+             m(w)=0, neutral
             sage: E.is_neutral()
             True
             sage: E.is_ordinaire()
@@ -1850,7 +1848,7 @@ class ExtensionType1to1(ExtensionType):
                1     X
                2     X
                3         X   X
-             m(w)=-1, not ord.
+             m(w)=-1, weak
             sage: E.is_neutral()
             False
             sage: E.is_ordinaire()
@@ -1990,7 +1988,7 @@ class ExtensionTypeLong(ExtensionType):
       *empty*.
     - ``empty`` - bool, (optional, default: None), if None, then it is
       computed from the chignons and takes value True iff the chignons are
-      empyt.
+      empty.
     - ``include_factor_in_repr`` - optional (default: False), whether to
       include the factor in the string or latex representation
 
@@ -2080,13 +2078,30 @@ class ExtensionTypeLong(ExtensionType):
             Traceback (most recent call last):
             ...
             NotImplementedError: can't compute factors of length k for this word
+
+        ::
+
+            sage: L = [(1, 2), (3, 2), (1, 3), (3, 3), (3, 1), (2, 3), (1, 1)]
+            sage: E = ExtensionTypeLong((([a], [b]) for a,b in L), (1,2,3))
+            sage: E.factors_length_k(2)
+            {word: 11, word: 12, word: 13, word: 23, word: 31, word: 32, word: 33}
+
+        TESTS::
+
+            sage: L = [(1, 2), (3, 2), (1, 3), (3, 3), (3, 1), (2, 3), (1, 1)]
+            sage: E = ExtensionTypeLong((([a], [b]) for a,b in L), (1,2,3), factors_length_k=set())
+            sage: E.factors_length_k(2)
+            Traceback (most recent call last):
+            ...
+            NotImplementedError: can't compute factors of length k for this word
         """
         if self._factors_length_k is None:
             # We suppose here the factor is the empty word...
             assert self.is_empty(), "can't compute factor of length k for nonempty word"
             assert not k is None, "you must provide a value for k to compute them"
             self._factors_length_k = set(w for a,b in self._pairs for w in (a*b).factor_iterator(k))
-        if not k is None and next(iter(self._factors_length_k)).length() != k:
+        if not k is None and (not self._factors_length_k or
+                next(iter(self._factors_length_k)).length() != k):
             raise NotImplementedError("can't compute factors of length k for this word")
         return self._factors_length_k
 
@@ -2217,7 +2232,6 @@ class ExtensionTypeLong(ExtensionType):
         EXAMPLES::
 
             sage: from slabbe import ExtensionTypeLong
-            sage: from slabbe.bispecial_extension_type import letters_before_and_after
             sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
             ....:      2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionTypeLong(L, (1,2,3))
@@ -2316,31 +2330,28 @@ class ExtensionTypeLong(ExtensionType):
             sage: r.apply(b31)
             ()
 
-        On a le meme bug (ca se corrige avec de plus grandes extensions a gauche)::
+        Ce bug se corrige avec de plus grandes extensions a gauche et en
+        considérant les facteurs de longueur 2::
 
             sage: from slabbe import ExtensionTypeLong
             sage: E = ExtensionTypeLong((([a],[b]) for a,b in e), (1,2,3))
-            sage: E.apply(b23)[0].apply(b13)
+            sage: R = E.apply(b23, l=1)[0]
+            sage: R.apply(b13, l=1)
             (  E(w)   1   2   3
-               31            X
-               32            X
-               3     X   X   X
-               13    X   X   X
-               23            X
-             m(w)=0, ord., empty,)
-            sage: E.apply(b23)[0].apply(b31)
+                1             X
+                2             X
+                3     X   X   X
+             m(w)=0, ord.,)
+            sage: R.apply(b31, l=1)
             (  E(w)   1   2   3
-                11    X   X   X
-                31    X   X   X
-                12            X
-                13    X
-                23    X
-              m(w)=0, neutral,
-              E(1w)   1   2   3
-                 1     X   X   X
-                 3     X   X   X
-                23             X
-              m(w)=2, not ord.)
+                1     X   X   X
+                2             X
+                3     X
+             m(w)=0, neutral,   
+               E(w)   1   2   3
+                1     X   X   X
+                3     X   X   X
+             m(w)=2, strong)
 
         EXAMPLES:
 
@@ -2366,11 +2377,11 @@ class ExtensionTypeLong(ExtensionType):
                 22    X   X   X
                 23    X
               m(w)=0, neutral,
-               E(2w)   1   2   3
-                21         X
-                31         X
-                12     X   X   X
-                22     X
+               E(w)   1   2   3
+                21        X
+                31        X
+                12    X   X   X
+                22    X
               m(w)=0, ord.)
 
         ::
@@ -2383,17 +2394,17 @@ class ExtensionTypeLong(ExtensionType):
                 31        X
                 12    X
                 13    X
-              m(w)=0, ord., empty,
-               E(1w)   1   2   3
-                21         X
-                12     X   X   X
-                13         X
+              m(w)=0, ord.,
+               E(w)   1   2   3
+                21        X
+                12    X   X   X
+                13        X
               m(w)=0, ord.)
             sage: b23 = WordMorphism({1:[1],2:[2,3],3:[3]})
             sage: E.apply(b23)
-            (  E(23w)   1   2   3
-                 31     X   X   X
-                 23     X
+            (  E(w)   1   2   3
+                31    X   X   X
+                23    X
               m(w)=0, ord.,
                E(w)   1   2   3
                 31        X
@@ -2402,10 +2413,10 @@ class ExtensionTypeLong(ExtensionType):
                 23    X   X   X
                 33    X
               m(w)=0, neutral,
-               E(3w)   1   2   3
-                12     X   X   X
-                32     X
-                23     X
+               E(w)   1   2   3
+                12    X   X   X
+                32    X
+                23    X
               m(w)=0, ord.)
 
         Not letter is missing::
@@ -2417,12 +2428,12 @@ class ExtensionTypeLong(ExtensionType):
             sage: E51, = [E for E in E5.apply(b21) if E.factor().length()==1]
             sage: b21 = WordMorphism({1:[1],2:[2,1],3:[3]})
             sage: E51.apply(b21)
-            (w=s(u)=1
-               E(w)   1   2   3
+            (  E(w)   1   2   3
                 11    X   X   X
                 21    X
+                12    X
                 13        X
-             m(w)=0, ord., w=1s(u)=11
+             m(w)=0, neutral,
                E(w)   1   2   3
                 11    X   X   X
                 21    X
@@ -2441,13 +2452,12 @@ class ExtensionTypeLong(ExtensionType):
             ....:                          factors_length_k=F, empty=False)
             sage: X,Y = E4_1.apply(b21)
             sage: X
-            w=s(u)=1
               E(w)   1   2   3
                11    X   X   X
                21    X
                12    X
                13        X
-            m(w)=0, ord.
+            m(w)=0, neutral
         """
         F = self.factors_length_k(l+r)
 
@@ -2521,7 +2531,7 @@ class ExtensionTypeLong(ExtensionType):
                1         X
                2     X   X   X
                3     X
-             m(w)=0, not ord.
+             m(w)=0, neutral
 
         """
         pairs = set((a[-1],b[0]) for a,b in self)
@@ -2554,7 +2564,7 @@ class ExtensionTypeLong(ExtensionType):
                1         X
                2     X   X   X
                3     X
-             m(w)=0, not ord.
+             m(w)=0, neutral
             sage: E.is_ordinaire()
             False
         """
@@ -2742,17 +2752,20 @@ def remove_extension_types_subsets(extensions):
         sage: A[1].is_subset(A[0])
         True
         sage: from slabbe.bispecial_extension_type import remove_extension_types_subsets
-        sage: remove_extension_types_subsets(A)
-        [w=s(u)=2322322322322322322
-           E(w)   1   2   3
+        sage: B = remove_extension_types_subsets(A)
+        sage: B
+        [  E(w)   1   2   3
             21    X   X   X
             22            X
             32    X
-         m(w)=1, strong, w=2s(u)=22322322322322322322
+         m(w)=1, strong, 
            E(w)   1   3
             32        X
             23    X
          m(w)=-1, weak]
+        sage: [b.factor() for b in B]
+        [word: 2322322322322322322, 
+         word: 22322322322322322322]
     """
     d = defaultdict(list)
     for E in extensions:
@@ -2842,7 +2855,8 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
         A recursively enumerated set (breadth first search)
         sage: from slabbe.bispecial_extension_type import recursively_enumerated_set_to_digraph
         sage: G = recursively_enumerated_set_to_digraph(R)
-        Looped multi-digraph on 87 vertices
+        sage: G
+        Looped multi-digraph on 127 vertices
 
     Testing the keep_unique option (not a good example apparently?)::
 
