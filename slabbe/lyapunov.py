@@ -65,7 +65,7 @@ def lyapunov_sample(algo, n_orbits, n_iterations=1000, verbose=False):
     L_filtered = [v for v in L if isinstance(v, tuple)]
     if verbose:
         L_error_msg = [v for v in L if not isinstance(v, tuple)]
-        print L_error_msg
+        print(L_error_msg)
     return zip(*L_filtered)
 
 def lyapunov_table(algo, n_orbits, n_iterations=1000):
@@ -192,7 +192,7 @@ def lyapunov_comparison_table(L, n_orbits=100, n_iterations=10000):
             row = _lyapunov_row(algo, n_orbits, n_iterations)
         except Exception as err:
             s = "{}: {}".format(err.__class__.__name__, err)
-            print "Ignoring {} in Lyapunov table. {}".format(algo.class_name(), s)
+            print("Ignoring {} in Lyapunov table. {}".format(algo.class_name(), s))
         else:
             rows.append(row)
     rows.sort(key=lambda d:d[4], reverse=True)
