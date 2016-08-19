@@ -23,7 +23,7 @@ from tikz_picture import TikzPicture
 try:
     from kolakoski_word import KolakoskiWord
 except ImportError:
-    print "There was an error while importing KolakoskiWord cython module"
+    print("There was an error while importing KolakoskiWord cython module")
 
 # for doctext to work, we import convex_boundary
 # from discrete_subset import convex_boundary
