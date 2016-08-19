@@ -3,6 +3,11 @@
 TODO
 ====
 
+Transition à Python 3
+---------------------
+
+ - Ajouter des import print_chose pour prévenir le retour des vieilles méthodes
+
 Transition spkg -> pip
 ----------------------
 
