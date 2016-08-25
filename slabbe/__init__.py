@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 # For sphinx to work, we first need to import the sage library
 from sage.all_cmdline import *
 
