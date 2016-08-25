@@ -1,54 +1,92 @@
 # -*- coding: utf-8 -*-
 r"""
-Dealing with tikzpicture
+TikzPicture
 
-Conversions to pdf, png.
-
-TODO:
-
-    - Rename to_pdf, to_png, to_tex
+Easy creation of tikzpicture from Sage objects like graphs and posets.
+Conversion of tikzpicture to pdf and png format based on standalone LaTeX
+document class.
 
 EXAMPLES::
 
-    sage: from slabbe import TikzPicture
-    sage: g = graphs.PetersenGraph()
-    sage: s = latex(g)
-    sage: t = TikzPicture(s, standalone_configs=["border=3mm"], packages=['tkz-graph'])
-    sage: _ = t.pdf()    # not tested
+    sage: from sage.misc.tikzpicture import TikzPicture
+    sage: V = [[1,0,1],[1,0,0],[1,1,0],[0,0,-1],[0,1,0],[-1,0,0],[0,1,1],[0,0,1],[0,-1,0]]
+    sage: P = Polyhedron(vertices=V).polar()
+    sage: s = P.projection().tikz([674,108,-731],112)
+    sage: t = TikzPicture(s)
+
+Creation of a pdf in a temporary directory. The returned value is a string
+giving the file path::
+
+    sage: path_to_file = t.pdf(view=False)   # long time (2s)
+
+Setting ``view=True``, which is the default, opens the pdf in a viewer.
 
 ::
 
     sage: t
     \documentclass[tikz]{standalone}
-    \standaloneconfig{border=3mm}
-    \usepackage{tkz-graph}
+    \usepackage{amsmath}
+    \newcommand{\ZZ}{\Bold{Z}}
+    \newcommand{\NN}{\Bold{N}}
+    \newcommand{\RR}{\Bold{R}}
+    \newcommand{\CC}{\Bold{C}}
+    \newcommand{\QQ}{\Bold{Q}}
+    \newcommand{\QQbar}{\overline{\QQ}}
+    \newcommand{\GF}[1]{\Bold{F}_{#1}}
+    \newcommand{\Zp}[1]{\ZZ_{#1}}
+    \newcommand{\Qp}[1]{\QQ_{#1}}
+    \newcommand{\Zmod}[1]{\ZZ/#1\ZZ}
+    \newcommand{\CDF}{\Bold{C}}
+    \newcommand{\CIF}{\Bold{C}}
+    \newcommand{\CLF}{\Bold{C}}
+    \newcommand{\RDF}{\Bold{R}}
+    \newcommand{\RIF}{\Bold{I} \Bold{R}}
+    \newcommand{\RLF}{\Bold{R}}
+    \newcommand{\CFF}{\Bold{CFF}}
+    \newcommand{\Bold}[1]{\mathbf{#1}}
     \begin{document}
-    \begin{tikzpicture}
-    %
-    \useasboundingbox (0,0) rectangle (5.0cm,5.0cm);
-    %
-    \definecolor{cv0}{rgb}{0.0,0.0,0.0}
+    \begin{tikzpicture}%
+            [x={(0.249656cm, -0.577639cm)},
+            y={(0.777700cm, -0.358578cm)},
+            z={(-0.576936cm, -0.733318cm)},
+            scale=2.000000,
     ...
-    ... 68 lines not printed (3748 characters in total) ...
+    ... 80 lines not printed (4889 characters in total) ...
     ...
-    \Edge[lw=0.1cm,style={color=cv6v8,},](v6)(v8)
-    \Edge[lw=0.1cm,style={color=cv6v9,},](v6)(v9)
-    \Edge[lw=0.1cm,style={color=cv7v9,},](v7)(v9)
-    %
+    \node[vertex] at (1.00000, 1.00000, -1.00000)     {};
+    \node[vertex] at (1.00000, 1.00000, 1.00000)     {};
+    %%
+    %%
     \end{tikzpicture}
     \end{document}
 
-::
+Use ``print t`` to see the complete content of the file.
 
-    sage: V = [[1,0,1],[1,0,0],[1,1,0],[0,0,-1],[0,1,0],[-1,0,0],[0,1,1],[0,0,1],[0,-1,0]]
-    sage: P = Polyhedron(vertices=V).polar()
-    sage: s = P.projection().tikz([674,108,-731],112)
-    sage: t = TikzPicture(s)
+Adding a border avoids croping the vertices of a graph::
+
+    sage: g = graphs.PetersenGraph()
+    sage: s = latex(g)   # takes 3s but the result is cached
+    sage: t = TikzPicture(s, standalone_options=["border=4mm"], usepackage=['tkz-graph'])
     sage: _ = t.pdf()    # not tested
 
+If dot2tex Sage optional package and graphviz are installed, then the following
+one liner works::
+
+    sage: t = TikzPicture.from_graph(g)  # optional: dot2tex # long time (3s)
+
+::
+
+    sage: s = latex(transducers.GrayCode())
+    sage: t = TikzPicture(s, usetikzlibrary=['automata'])
+    sage: _ = t.pdf(view=False)  # long time (2s)
+
+AUTHORS:
+
+- Sébastien Labbé, initial version in slabbe-0.2.spkg, nov 2015.
+- Sébastien Labbé, inclusion in Sage, 2016.
 """
 #*****************************************************************************
-#       Copyright (C) 2015 Sébastien Labbé <slabqc@gmail.com>
+#       Copyright (C) 2015-2016 Sébastien Labbé <slabqc@gmail.com>
 #
 #  Distributed under the terms of the GNU General Public License version 2 (GPLv2)
 #
@@ -63,71 +101,84 @@ from sage.structure.sage_object import SageObject
 import os
 
 class TikzPicture(SageObject):
-    def __init__(self, code, standalone_configs=[], packages=['amsmath'],
-            tikzlibraries=[], macros=[]):
+    r"""
+    Creates a TikzPicture embedded in a LaTeX standalone document class.
+
+    INPUT:
+
+    - ``code`` -- string, tikzpicture code starting with ``r'\begin{tikzpicture}'``
+      and ending with ``r'\end{tikzpicture}'``
+    - ``standalone_options`` -- list of strings (default: ``[]``),
+      latex document class standalone configuration options.
+    - ``usepackage`` -- list of strings (default: ``['amsmath']``), latex
+      packages.
+    - ``usetikzlibrary`` -- list of strings (default: ``[]``), tikz libraries
+      to use.
+    - ``macros`` -- list of strings (default: ``[]``), stuff you need for the picture.
+    - ``use_sage_preamble`` -- bool (default: ``True``), whether to include sage
+      latex preamble and sage latex macros, that is, the content of
+      :func:`sage.misc.latex.extra_preamble()`,
+      :func:`sage.misc.latex.extra_macros()` and
+      :func:`sage.misc.latex_macros.sage_latex_macros()`.
+
+    EXAMPLES::
+
+        sage: from sage.misc.tikzpicture import TikzPicture
+        sage: g = graphs.PetersenGraph()
+        sage: s = latex(g)
+        sage: t = TikzPicture(s, standalone_options=["border=4mm"], usepackage=['tkz-graph'])
+        sage: _ = t.pdf(view=False)   # long time (2s)
+
+    Here are standalone configurations, packages, tikz libraries and macros you
+    may want to set::
+
+        sage: options = ['preview', 'border=4mm', 'beamer', 'float']
+        sage: usepackage = ['nicefrac', 'amsmath', 'pifont', 'tikz-3dplot',
+        ....:    'tkz-graph', 'tkz-berge', 'pgfplots']
+        sage: tikzlib = ['arrows', 'snakes', 'backgrounds', 'patterns',
+        ....:      'matrix', 'shapes', 'fit', 'calc', 'shadows', 'plotmarks',
+        ....:      'positioning', 'pgfplots.groupplots', 'mindmap']
+        sage: macros = [r'\newcommand{\ZZ}{\mathbb{Z}}']
+        sage: s = "\\begin{tikzpicture}\n\\draw (0,0) -- (1,1);\n\\end{tikzpicture}"
+        sage: t = TikzPicture(s, standalone_options=options, usepackage=usepackage, 
+        ....:        usetikzlibrary=tikzlib, macros=macros, use_sage_preamble=False)
+        sage: _ = t.pdf(view=False)   # long time (2s)
+    """
+    def __init__(self, code, standalone_options=None, usepackage=['amsmath'],
+            usetikzlibrary=None, macros=None, use_sage_preamble=True):
         r"""
-        INPUT:
-
-        - ``code`` -- string, tikzpicture code
-        - ``standalone_configs`` -- list of strings (default: ``[]``),
-          latex document class standalone configuration options.
-        - ``packages`` -- list of strings or ``'sage_preamble'`` (default:
-          ``['amsmath']``), latex packages. If ``'sage_preamble'``, it is
-          replaced by the sage latex preamble.
-        - ``tikzlibraries`` -- list of strings (default: ``[]``), tikz libraries
-          to use.
-        - ``macros`` -- list of strings or ``'sage_latex_macros'`` (default:
-          ``[]``), stuff you need for the picture. If ``'sage_latex_macros'``,
-          it is replaced by the sage latex macros.
-
-        POSSIBLE OPTIONS:
-
-        Here are some standalone config you may want to use (see standalone
-        documentation for more options)::
-
-            standalone_configs = ['preview', 'border=3mm', 'varwidth', 'beamer',
-            'float']
-
-        Here are some packages you may want to load::
-
-            packages = ['nicefrac', 'amsmath', 'pifont', 'tikz-3dplot',
-            'tkz-graph', 'tkz-berge', 'pgfplots']
-
-        Here are some tikzlibraries you may want to load::
-
-            tikzlibraries = ['arrows', 'snakes', 'backgrounds', 'patterns',
-            'matrix', 'shapes', 'fit', 'calc', 'shadows', 'plotmarks',
-            'positioning', 'pgfplots.groupplots', 'mindmap']
-
-        Here are some macros you may want to set::
-
-            macros = [r'\newcommand{\ZZ}{\mathbb{Z}}']
+        See the class documentation for full information.
 
         EXAMPLES::
 
-            sage: from slabbe import TikzPicture
-            sage: g = graphs.PetersenGraph()
-            sage: s = latex(g)
-            sage: t = TikzPicture(s, standalone_configs=["border=3mm"], packages=['tkz-graph'])
-            sage: _ = t.pdf()    # not tested
+            sage: from sage.misc.tikzpicture import TikzPicture
+            sage: s = "\\begin{tikzpicture}\n\\draw (0,0) -- (1,1);\n\\end{tikzpicture}"
+            sage: t = TikzPicture(s)
         """
         self._code = code
-        self._standalone_configs = standalone_configs
-        self._tikzlibraries = tikzlibraries
-        if packages == 'sage_preamble':
+        self._standalone_options = [] if standalone_options is None else standalone_options
+        self._usepackage = usepackage
+        self._usetikzlibrary = [] if usetikzlibrary is None else usetikzlibrary
+        self._macros = [] if macros is None else macros
+        if use_sage_preamble:
             from sage.misc.latex import _Latex_prefs
-            self._packages = _Latex_prefs._option['preamble']
-        else:
-            self._packages = packages
-        if macros == 'sage_latex_macros':
+            for key in ['preamble', 'macros']:
+                s = _Latex_prefs._option[key]
+                if s: 
+                    self._macros.append(s)
             from sage.misc.latex_macros import sage_latex_macros
-            self._macros = sage_latex_macros()
-        else:
-            self._macros = macros
+            self._macros.extend(sage_latex_macros())
 
     @classmethod
-    def from_graph(self, graph, prog='dot', edge_labels=True, color_by_label=False):
+    def from_graph(cls, graph, prog='dot', edge_labels=True, color_by_label=False):
         r"""
+        Convert a graph to a tikzpicture using graphviz and dot2tex.
+
+        .. NOTE::
+
+            Prerequisite: dot2tex optional Sage package and graphviz must be
+            installed.
+
         INPUT:
 
         - ``graph`` -- graph
@@ -139,23 +190,30 @@ class TikzPicture(SageObject):
 
         EXAMPLES::
 
-            sage: from slabbe import TikzPicture
+            sage: from sage.misc.tikzpicture import TikzPicture
             sage: g = graphs.PetersenGraph()
-            sage: tikz = TikzPicture.from_graph(g)
+            sage: tikz = TikzPicture.from_graph(g) # optional dot2tex # long time (3s)
 
         ::
 
-            sage: tikz = TikzPicture.from_graph(g, prog='neato', color_by_label=True)
+            sage: tikz = TikzPicture.from_graph(g, prog='neato', color_by_label=True) # optional dot2tex # long time (3s)
         """
         kwds = dict(format='dot2tex', edge_labels=edge_labels,
                 color_by_label=color_by_label, prog=prog)
         graph.latex_options().set_options(**kwds)
         tikz = graph._latex_()
-        return TikzPicture(tikz, standalone_configs=["border=3mm"])
+        return TikzPicture(tikz, standalone_options=["border=4mm"])
 
     @classmethod
-    def from_poset(self, poset, prog='dot', edge_labels=True, color_by_label=False):
+    def from_poset(cls, poset, prog='dot', edge_labels=True, color_by_label=False):
         r"""
+        Convert a poset to a tikzpicture using graphviz and dot2tex.
+
+        .. NOTE::
+
+            Prerequisite: dot2tex optional Sage package and graphviz must be
+            installed.
+
         INPUT:
 
         - ``poset`` -- poset
@@ -167,52 +225,57 @@ class TikzPicture(SageObject):
 
         EXAMPLES::
 
-            sage: from slabbe import TikzPicture
+            sage: from sage.misc.tikzpicture import TikzPicture
             sage: P = posets.PentagonPoset()
-            sage: tikz = TikzPicture.from_poset(P)
-            sage: tikz = TikzPicture.from_poset(P, prog='neato', color_by_label=True)
+            sage: tikz = TikzPicture.from_poset(P) # optional dot2tex # long time (3s)
+            sage: tikz = TikzPicture.from_poset(P, prog='neato', color_by_label=True) # optional dot2tex # long time (3s)
 
         ::
 
             sage: P = posets.SymmetricGroupWeakOrderPoset(4)
-            sage: tikz = TikzPicture.from_poset(P)
-            sage: tikz = TikzPicture.from_poset(P, prog='neato')
+            sage: tikz = TikzPicture.from_poset(P) # optional dot2tex # long time (4s)
+            sage: tikz = TikzPicture.from_poset(P, prog='neato') # optional dot2tex # long time (4s)
         """
         graph = poset.hasse_diagram()
-        return self.from_graph(graph, prog, edge_labels, color_by_label)
+        return cls.from_graph(graph, prog, edge_labels, color_by_label)
 
     def _latex_file_header_lines(self):
         r"""
         EXAMPLES::
 
-            sage: from slabbe import TikzPicture
-            sage: g = graphs.PetersenGraph()
-            sage: s = latex(g)
-            sage: t = TikzPicture(s, standalone_configs=["border=3mm"], packages=['tkz-graph'])
-            sage: t._latex_file_header_lines()
+            sage: latex.extra_preamble('')
+            sage: from sage.misc.tikzpicture import TikzPicture
+            sage: s = "\\begin{tikzpicture}\n\\draw (0,0) -- (1,1);\n\\end{tikzpicture}"
+            sage: t = TikzPicture(s, standalone_options=["border=4mm"], usepackage=['tkz-graph'])
+            sage: t._latex_file_header_lines()[:6]
             ['\\documentclass[tikz]{standalone}',
-             '\\standaloneconfig{border=3mm}',
-             '\\usepackage{tkz-graph}']
+             '\\standaloneconfig{border=4mm}',
+             '\\usepackage{tkz-graph}',
+             '\\newcommand{\\ZZ}{\\Bold{Z}}',
+             '\\newcommand{\\NN}{\\Bold{N}}',
+             '\\newcommand{\\RR}{\\Bold{R}}']
         """
         lines = []
         lines.append(r"\documentclass[tikz]{standalone}")
-        for config in self._standalone_configs:
+        for config in self._standalone_options:
             lines.append(r"\standaloneconfig{{{}}}".format(config))
-        for package in self._packages:
+        for package in self._usepackage:
             lines.append(r"\usepackage{{{}}}".format(package))
-        for library in self._tikzlibraries:
+        for library in self._usetikzlibrary:
             lines.append(r"\usetikzlibrary{{{}}}".format(library))
         lines.extend(self._macros)
         return lines
 
     def _repr_(self):
         r"""
+        Returns the first few and last few lines.
+
         EXAMPLES::
 
-            sage: from slabbe import TikzPicture
+            sage: from sage.misc.tikzpicture import TikzPicture
             sage: g = graphs.PetersenGraph()
             sage: s = latex(g)
-            sage: t = TikzPicture(s, packages=['tkz-graph'])
+            sage: t = TikzPicture(s, usepackage=['tkz-graph'], use_sage_preamble=False)
             sage: t
             \documentclass[tikz]{standalone}
             \usepackage{tkz-graph}
@@ -250,35 +313,19 @@ class TikzPicture(SageObject):
 
     def __str__(self):
         r"""
+        Returns the complete string.
+
         EXAMPLES::
 
-            sage: from slabbe import TikzPicture
-            sage: g = graphs.PetersenGraph()
-            sage: s = latex(g)
-            sage: t = TikzPicture(s, packages=['tkz-graph'])
+            sage: from sage.misc.tikzpicture import TikzPicture
+            sage: s = "\\begin{tikzpicture}\n\\draw (0,0) -- (1,1);\n\\end{tikzpicture}"
+            sage: t = TikzPicture(s, use_sage_preamble=False)
             sage: print(t)
             \documentclass[tikz]{standalone}
-            \usepackage{tkz-graph}
+            \usepackage{amsmath}
             \begin{document}
             \begin{tikzpicture}
-            %
-            \useasboundingbox (0,0) rectangle (5.0cm,5.0cm);
-            %
-            \definecolor{cv0}{rgb}{0.0,0.0,0.0}
-            \definecolor{cfv0}{rgb}{1.0,1.0,1.0}
-            \definecolor{clv0}{rgb}{0.0,0.0,0.0}
-            \definecolor{cv1}{rgb}{0.0,0.0,0.0}
-            \definecolor{cfv1}{rgb}{1.0,1.0,1.0}
-            \definecolor{clv1}{rgb}{0.0,0.0,0.0}
-            ...
-            \Edge[lw=0.1cm,style={color=cv3v8,},](v3)(v8)
-            \Edge[lw=0.1cm,style={color=cv4v9,},](v4)(v9)
-            \Edge[lw=0.1cm,style={color=cv5v7,},](v5)(v7)
-            \Edge[lw=0.1cm,style={color=cv5v8,},](v5)(v8)
-            \Edge[lw=0.1cm,style={color=cv6v8,},](v6)(v8)
-            \Edge[lw=0.1cm,style={color=cv6v9,},](v6)(v9)
-            \Edge[lw=0.1cm,style={color=cv7v9,},](v7)(v9)
-            %
+            \draw (0,0) -- (1,1);
             \end{tikzpicture}
             \end{document}
         """
@@ -306,7 +353,7 @@ class TikzPicture(SageObject):
 
         EXAMPLES::
 
-            sage: from slabbe import TikzPicture
+            sage: from sage.misc.tikzpicture import TikzPicture
             sage: V = [[1,0,1],[1,0,0],[1,1,0],[0,0,-1],[0,1,0],[-1,0,0],[0,1,1],[0,0,1],[0,-1,0]]
             sage: P = Polyhedron(vertices=V).polar()
             sage: s = P.projection().tikz([674,108,-731],112)
@@ -317,7 +364,11 @@ class TikzPicture(SageObject):
 
             sage: from sage.misc.temporary_file import tmp_filename
             sage: filename = tmp_filename('temp','.pdf')
-            sage: _ = t.pdf(filename)
+            sage: _ = t.pdf(filename)   # long time (2s)
+
+        ACKNOWLEDGEMENT:
+
+            The code was adapted and taken from the module :mod:`sage.misc.latex.py`.
         """
         if not have_pdflatex():
             raise RuntimeError("PDFLaTeX does not seem to be installed. " 
@@ -385,7 +436,7 @@ class TikzPicture(SageObject):
 
         EXAMPLES::
 
-            sage: from slabbe import TikzPicture
+            sage: from sage.misc.tikzpicture import TikzPicture
             sage: V = [[1,0,1],[1,0,0],[1,1,0],[0,0,-1],[0,1,0],[-1,0,0],[0,1,1],[0,0,1],[0,-1,0]]
             sage: P = Polyhedron(vertices=V).polar()
             sage: s = P.projection().tikz([674,108,-731],112)
@@ -396,7 +447,11 @@ class TikzPicture(SageObject):
 
             sage: from sage.misc.temporary_file import tmp_filename
             sage: filename = tmp_filename('temp','.png')
-            sage: _ = t.png(filename)
+            sage: _ = t.png(filename)      # long time (2s)
+
+        ACKNOWLEDGEMENT:
+
+            The code was adapted and taken from the module :mod:`sage.misc.latex.py`.
         """
         if not have_convert():
             raise RuntimeError("convert (from the ImageMagick suite) does not "
