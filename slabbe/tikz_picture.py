@@ -8,7 +8,7 @@ document class.
 
 EXAMPLES::
 
-    sage: from sage.misc.tikzpicture import TikzPicture
+    sage: from slabbe import TikzPicture
     sage: V = [[1,0,1],[1,0,0],[1,1,0],[0,0,-1],[0,1,0],[-1,0,0],[0,1,1],[0,0,1],[0,-1,0]]
     sage: P = Polyhedron(vertices=V).polar()
     sage: s = P.projection().tikz([674,108,-731],112)
@@ -123,7 +123,7 @@ class TikzPicture(SageObject):
 
     EXAMPLES::
 
-        sage: from sage.misc.tikzpicture import TikzPicture
+        sage: from slabbe import TikzPicture
         sage: g = graphs.PetersenGraph()
         sage: s = latex(g)
         sage: t = TikzPicture(s, standalone_options=["border=4mm"], usepackage=['tkz-graph'])
@@ -151,7 +151,7 @@ class TikzPicture(SageObject):
 
         EXAMPLES::
 
-            sage: from sage.misc.tikzpicture import TikzPicture
+            sage: from slabbe import TikzPicture
             sage: s = "\\begin{tikzpicture}\n\\draw (0,0) -- (1,1);\n\\end{tikzpicture}"
             sage: t = TikzPicture(s)
         """
@@ -190,7 +190,7 @@ class TikzPicture(SageObject):
 
         EXAMPLES::
 
-            sage: from sage.misc.tikzpicture import TikzPicture
+            sage: from slabbe import TikzPicture
             sage: g = graphs.PetersenGraph()
             sage: tikz = TikzPicture.from_graph(g) # optional dot2tex # long time (3s)
 
@@ -225,7 +225,7 @@ class TikzPicture(SageObject):
 
         EXAMPLES::
 
-            sage: from sage.misc.tikzpicture import TikzPicture
+            sage: from slabbe import TikzPicture
             sage: P = posets.PentagonPoset()
             sage: tikz = TikzPicture.from_poset(P) # optional dot2tex # long time (3s)
             sage: tikz = TikzPicture.from_poset(P, prog='neato', color_by_label=True) # optional dot2tex # long time (3s)
@@ -244,7 +244,7 @@ class TikzPicture(SageObject):
         EXAMPLES::
 
             sage: latex.extra_preamble('')
-            sage: from sage.misc.tikzpicture import TikzPicture
+            sage: from slabbe import TikzPicture
             sage: s = "\\begin{tikzpicture}\n\\draw (0,0) -- (1,1);\n\\end{tikzpicture}"
             sage: t = TikzPicture(s, standalone_options=["border=4mm"], usepackage=['tkz-graph'])
             sage: t._latex_file_header_lines()[:6]
@@ -272,7 +272,7 @@ class TikzPicture(SageObject):
 
         EXAMPLES::
 
-            sage: from sage.misc.tikzpicture import TikzPicture
+            sage: from slabbe import TikzPicture
             sage: g = graphs.PetersenGraph()
             sage: s = latex(g)
             sage: t = TikzPicture(s, usepackage=['tkz-graph'], use_sage_preamble=False)
@@ -317,7 +317,7 @@ class TikzPicture(SageObject):
 
         EXAMPLES::
 
-            sage: from sage.misc.tikzpicture import TikzPicture
+            sage: from slabbe import TikzPicture
             sage: s = "\\begin{tikzpicture}\n\\draw (0,0) -- (1,1);\n\\end{tikzpicture}"
             sage: t = TikzPicture(s, use_sage_preamble=False)
             sage: print(t)
@@ -353,7 +353,7 @@ class TikzPicture(SageObject):
 
         EXAMPLES::
 
-            sage: from sage.misc.tikzpicture import TikzPicture
+            sage: from slabbe import TikzPicture
             sage: V = [[1,0,1],[1,0,0],[1,1,0],[0,0,-1],[0,1,0],[-1,0,0],[0,1,1],[0,0,1],[0,-1,0]]
             sage: P = Polyhedron(vertices=V).polar()
             sage: s = P.projection().tikz([674,108,-731],112)
@@ -436,7 +436,7 @@ class TikzPicture(SageObject):
 
         EXAMPLES::
 
-            sage: from sage.misc.tikzpicture import TikzPicture
+            sage: from slabbe import TikzPicture
             sage: V = [[1,0,1],[1,0,0],[1,1,0],[0,0,-1],[0,1,0],[-1,0,0],[0,1,1],[0,0,1],[0,-1,0]]
             sage: P = Polyhedron(vertices=V).polar()
             sage: s = P.projection().tikz([674,108,-731],112)
