@@ -2,6 +2,8 @@
 r"""
 Multidimensional Continued Fraction Algorithms (Cython code)
 
+See also the Python code which provides more methods.
+
 EXAMPLES::
 
     sage: from slabbe.mult_cont_frac import Brun
@@ -41,34 +43,6 @@ Orbit in the simplex::
       0.4444444444444445,
       0.22222222222222224,
       321)]
-
-Drawing the natural extension::
-
-    sage: fig = algo.natural_extension_plot(3000, norm_xyz='1', axis_off=True)
-    sage: fig
-    <matplotlib.figure.Figure object at ...>
-    sage: fig.savefig('a.png')  # not tested
-
-Drawing the invariant measure::
-
-    sage: fig = algo.invariant_measure_wireframe_plot(10^6, 50)
-    sage: fig
-    <matplotlib.figure.Figure object at ...>
-    sage: fig.savefig('a.png')  # not tested
-
-Word with given frequencies::
-
-    sage: algo.s_adic_word((1,e,pi))
-    word: 1232323123233231232332312323123232312323...
-
-Construction of the same s-adic word from the substitutions and the coding
-iterator::
-
-    sage: from itertools import repeat
-    sage: D = algo.substitutions()
-    sage: it = algo.coding_iterator((1,e,pi))
-    sage: words.s_adic(it, repeat(1), D)
-    word: 1232323123233231232332312323123232312323...
 
 .. TODO::
 
