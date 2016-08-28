@@ -49,9 +49,8 @@ AUTHORS:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-
 from sage.structure.dynamic_class import dynamic_class
-from slabbe import mult_cont_frac
+from slabbe import mult_cont_frac_pyx
 
 PGF_COLORS = ["red", "green", "blue", "cyan", "brown", "gray", "orange", "pink",
 "yellow", "black", "white", "darkgray", "lightgray",
@@ -942,7 +941,7 @@ def _algo_with_bonus(base):
 
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac import Brun
+        sage: from slabbe.mult_cont_frac_pyx import Brun
         sage: from slabbe.mult_cont_frac_bonus import _algo_with_bonus
         sage: algo = _algo_with_bonus(Brun)
         sage: algo
@@ -962,7 +961,7 @@ def Brun():
         sage: Brun()
         Brun 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.Brun)
+    return _algo_with_bonus(mult_cont_frac_pyx.Brun)
 def Reverse():
     r"""
     EXAMPLES::
@@ -971,7 +970,7 @@ def Reverse():
         sage: Reverse()
         Reverse 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.Reverse)
+    return _algo_with_bonus(mult_cont_frac_pyx.Reverse)
 def ARP():
     r"""
     EXAMPLES::
@@ -980,7 +979,7 @@ def ARP():
         sage: ARP()
         Arnoux-Rauzy-Poincar\'e 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.ARP)
+    return _algo_with_bonus(mult_cont_frac_pyx.ARP)
 def ArnouxRauzy():
     r"""
     EXAMPLES::
@@ -989,7 +988,7 @@ def ArnouxRauzy():
         sage: ArnouxRauzy()
         ArnouxRauzy 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.ArnouxRauzy)
+    return _algo_with_bonus(mult_cont_frac_pyx.ArnouxRauzy)
 def Poincare():
     r"""
     EXAMPLES::
@@ -998,7 +997,7 @@ def Poincare():
         sage: Poincare()
         Poincar\'e 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.Poincare)
+    return _algo_with_bonus(mult_cont_frac_pyx.Poincare)
 def Selmer():
     r"""
     EXAMPLES::
@@ -1007,7 +1006,7 @@ def Selmer():
         sage: Selmer()
         Selmer 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.Selmer)
+    return _algo_with_bonus(mult_cont_frac_pyx.Selmer)
 def FullySubtractive():
     r"""
     EXAMPLES::
@@ -1016,7 +1015,7 @@ def FullySubtractive():
         sage: FullySubtractive()
         Fully Subtractive 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.FullySubtractive)
+    return _algo_with_bonus(mult_cont_frac_pyx.FullySubtractive)
 def Cassaigne():
     r"""
     EXAMPLES::
@@ -1025,7 +1024,7 @@ def Cassaigne():
         sage: Cassaigne()
         Cassaigne 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.Cassaigne)
+    return _algo_with_bonus(mult_cont_frac_pyx.Cassaigne)
 def Sorted_Brun():
     r"""
     EXAMPLES::
@@ -1034,7 +1033,7 @@ def Sorted_Brun():
         sage: Sorted_Brun()
         Sorted_Brun 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.Sorted_Brun)
+    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_Brun)
 def Sorted_BrunMulti():
     r"""
     EXAMPLES::
@@ -1043,7 +1042,7 @@ def Sorted_BrunMulti():
         sage: Sorted_BrunMulti()
         Sorted_BrunMulti 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.Sorted_BrunMulti)
+    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_BrunMulti)
 def Sorted_Selmer():
     r"""
     EXAMPLES::
@@ -1052,7 +1051,7 @@ def Sorted_Selmer():
         sage: Sorted_Selmer()
         Sorted_Selmer 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.Sorted_Selmer)
+    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_Selmer)
 def Sorted_Meester():
     r"""
     EXAMPLES::
@@ -1061,7 +1060,7 @@ def Sorted_Meester():
         sage: Sorted_Meester()
         Sorted_Meester 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.Sorted_Meester)
+    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_Meester)
 def Sorted_ArnouxRauzy():
     r"""
     EXAMPLES::
@@ -1070,7 +1069,7 @@ def Sorted_ArnouxRauzy():
         sage: Sorted_ArnouxRauzy()
         Sorted_ArnouxRauzy 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.Sorted_ArnouxRauzy)
+    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_ArnouxRauzy)
 def Sorted_ArnouxRauzyMulti():
     r"""
     EXAMPLES::
@@ -1079,7 +1078,7 @@ def Sorted_ArnouxRauzyMulti():
         sage: Sorted_ArnouxRauzyMulti()
         Sorted_ArnouxRauzyMulti 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.Sorted_ArnouxRauzyMulti)
+    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_ArnouxRauzyMulti)
 def Sorted_ARP():
     r"""
     EXAMPLES::
@@ -1088,7 +1087,7 @@ def Sorted_ARP():
         sage: Sorted_ARP()
         Sorted_ARP 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.Sorted_ARP)
+    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_ARP)
 def Sorted_ARPMulti():
     r"""
     EXAMPLES::
@@ -1097,7 +1096,7 @@ def Sorted_ARPMulti():
         sage: Sorted_ARPMulti()
         Sorted_ARPMulti 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.Sorted_ARPMulti)
+    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_ARPMulti)
 def Sorted_Poincare():
     r"""
     EXAMPLES::
@@ -1106,7 +1105,7 @@ def Sorted_Poincare():
         sage: Sorted_Poincare()
         Sorted_Poincare 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.Sorted_Poincare)
+    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_Poincare)
 def Sorted_ARrevert():
     r"""
     EXAMPLES::
@@ -1115,7 +1114,7 @@ def Sorted_ARrevert():
         sage: Sorted_ARrevert()
         Sorted_ARrevert 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.Sorted_ARrevert)
+    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_ARrevert)
 def Sorted_ARrevertMulti():
     r"""
     EXAMPLES::
@@ -1124,7 +1123,7 @@ def Sorted_ARrevertMulti():
         sage: Sorted_ARrevertMulti()
         Sorted_ARrevertMulti 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.Sorted_ARrevertMulti)
+    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_ARrevertMulti)
 def Sorted_ARMonteil():
     r"""
     EXAMPLES::
@@ -1133,7 +1132,7 @@ def Sorted_ARMonteil():
         sage: Sorted_ARMonteil()
         Sorted_ARMonteil 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.Sorted_ARMonteil)
+    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_ARMonteil)
 def Sorted_Delaunay():
     r"""
     EXAMPLES::
@@ -1142,7 +1141,7 @@ def Sorted_Delaunay():
         sage: Sorted_Delaunay()
         Sorted_Delaunay 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.Sorted_Delaunay)
+    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_Delaunay)
 def JacobiPerron():
     r"""
     EXAMPLES::
@@ -1151,7 +1150,7 @@ def JacobiPerron():
         sage: JacobiPerron()
         JacobiPerron 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.JacobiPerron)
+    return _algo_with_bonus(mult_cont_frac_pyx.JacobiPerron)
 def JacobiPerronAdditif():
     r"""
     EXAMPLES::
@@ -1160,7 +1159,7 @@ def JacobiPerronAdditif():
         sage: JacobiPerronAdditif()
         JacobiPerronAdditif 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.JacobiPerronAdditif)
+    return _algo_with_bonus(mult_cont_frac_pyx.JacobiPerronAdditif)
 def JacobiPerronAdditifv2():
     r"""
     EXAMPLES::
@@ -1169,4 +1168,4 @@ def JacobiPerronAdditifv2():
         sage: JacobiPerronAdditifv2()
         JacobiPerronAdditifv2 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac.JacobiPerronAdditifv2)
+    return _algo_with_bonus(mult_cont_frac_pyx.JacobiPerronAdditifv2)

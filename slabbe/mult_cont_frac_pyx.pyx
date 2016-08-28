@@ -6,7 +6,7 @@ See also the Python code which provides more methods.
 
 EXAMPLES::
 
-    sage: from slabbe.mult_cont_frac import Brun
+    sage: from slabbe.mult_cont_frac_pyx import Brun
     sage: algo = Brun()
 
 Orbit in the cone (with dual coordinates)::
@@ -112,7 +112,7 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: Brun().substitutions()
             {123: WordMorphism: 1->1, 2->23, 3->3,
              132: WordMorphism: 1->1, 2->2, 3->32,
@@ -130,7 +130,7 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: Brun().dual_substitutions()
             {123: WordMorphism: 1->1, 2->2, 3->32,
              132: WordMorphism: 1->1, 2->23, 3->3,
@@ -150,7 +150,7 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: import slabbe.mult_cont_frac as mcf
+            sage: import slabbe.mult_cont_frac_pyx as mcf
             sage: mcf.Brun().branches()
             {123, 132, 213, 231, 312, 321}
             sage: mcf.ARP().branches()
@@ -185,7 +185,7 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: Brun()._test_definition(10000)
         """
         cdef double s,t             # temporary variables
@@ -226,7 +226,7 @@ cdef class MCFAlgorithm(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: t = Brun()._test_dual_substitution_definition()
         """
         A = self.substitutions()
@@ -251,7 +251,7 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: t = Brun()._test_coherence()
         """
         from sage.modules.free_module_element import vector
@@ -319,7 +319,7 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Reverse, Brun, ARP
+            sage: from slabbe.mult_cont_frac_pyx import Reverse, Brun, ARP
             sage: Reverse().class_name()
             'Reverse'
             sage: Brun().class_name()
@@ -332,7 +332,7 @@ cdef class MCFAlgorithm(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Reverse, Brun, ARP
+            sage: from slabbe.mult_cont_frac_pyx import Reverse, Brun, ARP
             sage: Reverse().name()
             'Reverse'
             sage: Brun().name()
@@ -345,7 +345,7 @@ cdef class MCFAlgorithm(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Reverse, Brun
+            sage: from slabbe.mult_cont_frac_pyx import Reverse, Brun
             sage: Reverse()
             Reverse 3-dimensional continued fraction algorithm
             sage: Brun()
@@ -359,7 +359,7 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Brun()(D)
             sage: sorted(E.iteritems())
@@ -388,7 +388,7 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun, ARP
+            sage: from slabbe.mult_cont_frac_pyx import Brun, ARP
             sage: Brun() == ARP()
             False
             sage: Brun() == Brun()
@@ -421,7 +421,7 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import ARP
+            sage: from slabbe.mult_cont_frac_pyx import ARP
             sage: it = ARP().coding_iterator((1,e,pi))
             sage: [next(it) for _ in range(20)]
             [123, 2, 1, 123, 1, 231, 3, 3, 3, 3, 123, 1, 1, 1, 231, 2, 321, 2, 3, 312]
@@ -471,7 +471,7 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: it = Brun().simplex_orbit_iterator((.414578,.571324,.65513))
             sage: for _ in range(4): next(it)
             ((0.7256442929056017, 1.0, 0.14668734378391243), 
@@ -489,7 +489,7 @@ cdef class MCFAlgorithm(object):
 
         ::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: it = Brun().simplex_orbit_iterator((.414578,.571324,.65513), norm_xyz='1')
             sage: for _ in range(4): next(it)
             ((0.3875618393056797, 0.5340934161472103, 0.07834474454711005),
@@ -578,7 +578,7 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: L = Brun().simplex_orbit_list(n_iterations=10^5)
             sage: L[-1]    # random
             (0.7307002153148079,
@@ -676,14 +676,14 @@ cdef class MCFAlgorithm(object):
 
         BENCHMARK::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: %time D = Brun().simplex_orbit_filtered_list(10^6) # not tested
             CPU times: user 366 ms, sys: 203 ms, total: 568 ms
             Wall time: 570 ms
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: start=(.414578,.571324,.65513)
             sage: D = Brun().simplex_orbit_filtered_list(start, 3)
             sage: D      # random
@@ -842,7 +842,7 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: it = Brun().cone_orbit_iterator((13,17,29))
             sage: for _ in range(10): next(it)
             ((13.0, 17.0, 12.0), (1.0, 2.0, 1.0), 123)
@@ -885,7 +885,7 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: L = Brun().cone_orbit_list((10, 21, 37), 20)
             sage: L[-1]
             (1.0, 0.0, 0.0, 68.0, 55.0, 658.0, 231)
@@ -929,7 +929,7 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: Brun().image((10, 21, 37))
             (10.0, 21.0, 16.0)
             sage: Brun().image((10, 21, 37), 2)
@@ -978,7 +978,7 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: D = Brun()._invariant_measure_dict(4, 10, verbose=True) # random
             0.0799404500357 0.199341464229 0.720718085735
             0 1
@@ -1099,7 +1099,7 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import ARP
+            sage: from slabbe.mult_cont_frac_pyx import ARP
             sage: t = ARP()._natural_extention_dict(10000)
             sage: map(type, t)
             [<type 'collections.defaultdict'>,
@@ -1233,7 +1233,7 @@ cdef class MCFAlgorithm(object):
 
         Some benchmarks (on my machine)::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: Brun().lyapunov_exponents(n_iterations=1000000)  # 68.6 ms # tolerance 0.003
             (0.3049429393152174, -0.1120652699014143, 1.367495867105725)
 
@@ -1343,7 +1343,7 @@ cdef class Brun(MCFAlgorithm):
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac import Brun
+        sage: from slabbe.mult_cont_frac_pyx import Brun
         sage: algo = Brun()
         sage: TestSuite(algo).run()
         sage: algo._test_dual_substitution_definition()
@@ -1354,7 +1354,7 @@ cdef class Brun(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Brun()(D)
             sage: sorted(E.iteritems())
@@ -1398,7 +1398,7 @@ cdef class Brun(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: Brun().substitutions()
             {123: WordMorphism: 1->1, 2->23, 3->3,
              132: WordMorphism: 1->1, 2->2, 3->32,
@@ -1419,7 +1419,7 @@ cdef class Brun(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: Brun().dual_substitutions()
             {123: WordMorphism: 1->1, 2->2, 3->32,
              132: WordMorphism: 1->1, 2->23, 3->3,
@@ -1440,7 +1440,7 @@ cdef class Reverse(MCFAlgorithm):
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac import Reverse
+        sage: from slabbe.mult_cont_frac_pyx import Reverse
         sage: algo = Reverse()
         sage: TestSuite(algo).run()
         sage: algo._test_dual_substitution_definition()
@@ -1451,7 +1451,7 @@ cdef class Reverse(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Reverse
+            sage: from slabbe.mult_cont_frac_pyx import Reverse
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Reverse()(D)
             sage: sorted(E.iteritems())
@@ -1504,7 +1504,7 @@ cdef class Reverse(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Reverse
+            sage: from slabbe.mult_cont_frac_pyx import Reverse
             sage: Reverse().substitutions()
             {1: WordMorphism: 1->1, 2->21, 3->31,
              2: WordMorphism: 1->12, 2->2, 3->32,
@@ -1521,7 +1521,7 @@ cdef class Reverse(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Reverse
+            sage: from slabbe.mult_cont_frac_pyx import Reverse
             sage: Reverse().dual_substitutions()
             {1: WordMorphism: 1->123, 2->2, 3->3,
              2: WordMorphism: 1->1, 2->231, 3->3,
@@ -1538,7 +1538,7 @@ cdef class ARP(MCFAlgorithm):
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac import ARP
+        sage: from slabbe.mult_cont_frac_pyx import ARP
         sage: algo = ARP()
         sage: TestSuite(algo).run()
         sage: algo._test_dual_substitution_definition()
@@ -1549,7 +1549,7 @@ cdef class ARP(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import ARP
+            sage: from slabbe.mult_cont_frac_pyx import ARP
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = ARP()(D)
             sage: sorted(E.iteritems())
@@ -1585,7 +1585,7 @@ cdef class ARP(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import ARP
+            sage: from slabbe.mult_cont_frac_pyx import ARP
             sage: ARP().name()
             "Arnoux-Rauzy-Poincar\\'e"
         """
@@ -1595,7 +1595,7 @@ cdef class ARP(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import ARP
+            sage: from slabbe.mult_cont_frac_pyx import ARP
             sage: ARP().substitutions()
             {1: WordMorphism: 1->1, 2->21, 3->31,
              2: WordMorphism: 1->12, 2->2, 3->32,
@@ -1623,7 +1623,7 @@ cdef class ARP(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import ARP
+            sage: from slabbe.mult_cont_frac_pyx import ARP
             sage: ARP().dual_substitutions()
             {1: WordMorphism: 1->123, 2->2, 3->3,
              2: WordMorphism: 1->1, 2->231, 3->3,
@@ -1650,7 +1650,7 @@ cdef class ArnouxRauzy(MCFAlgorithm):
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac import ArnouxRauzy
+        sage: from slabbe.mult_cont_frac_pyx import ArnouxRauzy
         sage: algo = ArnouxRauzy()
         sage: TestSuite(algo).run()
         sage: algo._test_dual_substitution_definition()
@@ -1661,7 +1661,7 @@ cdef class ArnouxRauzy(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import ArnouxRauzy
+            sage: from slabbe.mult_cont_frac_pyx import ArnouxRauzy
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = ArnouxRauzy()(D)
             Traceback (most recent call last):
@@ -1707,7 +1707,7 @@ cdef class ArnouxRauzy(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import ArnouxRauzy
+            sage: from slabbe.mult_cont_frac_pyx import ArnouxRauzy
             sage: ArnouxRauzy().substitutions()
             {1: WordMorphism: 1->1, 2->21, 3->31,
              2: WordMorphism: 1->12, 2->2, 3->32,
@@ -1722,7 +1722,7 @@ cdef class ArnouxRauzy(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import ArnouxRauzy
+            sage: from slabbe.mult_cont_frac_pyx import ArnouxRauzy
             sage: ArnouxRauzy().dual_substitutions()
             {1: WordMorphism: 1->123, 2->2, 3->3,
              2: WordMorphism: 1->1, 2->231, 3->3,
@@ -1736,7 +1736,7 @@ cdef class Poincare(MCFAlgorithm):
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac import Poincare
+        sage: from slabbe.mult_cont_frac_pyx import Poincare
         sage: algo = Poincare()
         sage: TestSuite(algo).run()
         sage: algo._test_dual_substitution_definition()
@@ -1747,7 +1747,7 @@ cdef class Poincare(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Poincare
+            sage: from slabbe.mult_cont_frac_pyx import Poincare
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Poincare()(D)
             sage: sorted(E.iteritems())
@@ -1765,7 +1765,7 @@ cdef class Poincare(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Poincare
+            sage: from slabbe.mult_cont_frac_pyx import Poincare
             sage: Poincare().name()
             "Poincar\\'e"
         """
@@ -1775,7 +1775,7 @@ cdef class Poincare(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Poincare
+            sage: from slabbe.mult_cont_frac_pyx import Poincare
             sage: Poincare().substitutions()
             {123: WordMorphism: 1->123, 2->23, 3->3,
              132: WordMorphism: 1->132, 2->2, 3->32,
@@ -1796,7 +1796,7 @@ cdef class Poincare(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Poincare
+            sage: from slabbe.mult_cont_frac_pyx import Poincare
             sage: Poincare().dual_substitutions()
             {123: WordMorphism: 1->1, 2->21, 3->321,
              132: WordMorphism: 1->1, 2->231, 3->31,
@@ -1817,7 +1817,7 @@ cdef class Selmer(MCFAlgorithm):
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac import Selmer
+        sage: from slabbe.mult_cont_frac_pyx import Selmer
         sage: algo = Selmer()
         sage: TestSuite(algo).run()
         sage: algo._test_dual_substitution_definition()
@@ -1828,7 +1828,7 @@ cdef class Selmer(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Selmer
+            sage: from slabbe.mult_cont_frac_pyx import Selmer
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Selmer()(D)
             sage: sorted(E.iteritems())
@@ -1872,7 +1872,7 @@ cdef class Selmer(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Selmer
+            sage: from slabbe.mult_cont_frac_pyx import Selmer
             sage: Selmer().substitutions()
             {123: WordMorphism: 1->13, 2->2, 3->3,
              132: WordMorphism: 1->12, 2->2, 3->3,
@@ -1893,7 +1893,7 @@ cdef class Selmer(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Selmer
+            sage: from slabbe.mult_cont_frac_pyx import Selmer
             sage: Selmer().dual_substitutions()
             {123: WordMorphism: 1->1, 2->2, 3->31,
              132: WordMorphism: 1->1, 2->21, 3->3,
@@ -1914,7 +1914,7 @@ cdef class FullySubtractive(MCFAlgorithm):
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac import FullySubtractive
+        sage: from slabbe.mult_cont_frac_pyx import FullySubtractive
         sage: algo = FullySubtractive()
         sage: TestSuite(algo).run()
         sage: algo._test_dual_substitution_definition()
@@ -1925,7 +1925,7 @@ cdef class FullySubtractive(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import FullySubtractive
+            sage: from slabbe.mult_cont_frac_pyx import FullySubtractive
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = FullySubtractive()(D)
             sage: sorted(E.iteritems())
@@ -1960,7 +1960,7 @@ cdef class FullySubtractive(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import FullySubtractive
+            sage: from slabbe.mult_cont_frac_pyx import FullySubtractive
             sage: FullySubtractive().name()
             'Fully Subtractive'
         """
@@ -1970,7 +1970,7 @@ cdef class FullySubtractive(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import FullySubtractive
+            sage: from slabbe.mult_cont_frac_pyx import FullySubtractive
             sage: FullySubtractive().substitutions()
             {1: WordMorphism: 1->123, 2->2, 3->3,
              2: WordMorphism: 1->1, 2->231, 3->3,
@@ -1985,7 +1985,7 @@ cdef class FullySubtractive(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import FullySubtractive
+            sage: from slabbe.mult_cont_frac_pyx import FullySubtractive
             sage: FullySubtractive().dual_substitutions()
             {1: WordMorphism: 1->1, 2->21, 3->31,
              2: WordMorphism: 1->12, 2->2, 3->32,
@@ -2000,7 +2000,7 @@ cdef class Cassaigne(MCFAlgorithm):
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac import Cassaigne
+        sage: from slabbe.mult_cont_frac_pyx import Cassaigne
         sage: algo = Cassaigne()
         sage: TestSuite(algo).run()
         sage: algo._test_dual_substitution_definition()
@@ -2016,7 +2016,7 @@ cdef class Cassaigne(MCFAlgorithm):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Cassaigne
+            sage: from slabbe.mult_cont_frac_pyx import Cassaigne
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Cassaigne()(D)
             sage: sorted(E.iteritems())
@@ -2055,7 +2055,7 @@ cdef class Cassaigne(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Cassaigne
+            sage: from slabbe.mult_cont_frac_pyx import Cassaigne
             sage: Cassaigne().substitutions()
             {1: WordMorphism: 1->1, 2->13, 3->2, 
              2: WordMorphism: 1->2, 2->13, 3->3}
@@ -2068,7 +2068,7 @@ cdef class Cassaigne(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Cassaigne
+            sage: from slabbe.mult_cont_frac_pyx import Cassaigne
             sage: Cassaigne().dual_substitutions()
             {1: WordMorphism: 1->12, 2->3, 3->2, 
              2: WordMorphism: 1->2, 2->1, 3->23}
@@ -2082,7 +2082,7 @@ cdef class Sorted_Brun(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Sorted_Brun
+            sage: from slabbe.mult_cont_frac_pyx import Sorted_Brun
             sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Sorted_Brun()(D)
             sage: sorted(E.iteritems())
@@ -2125,7 +2125,7 @@ cdef class Sorted_BrunMulti(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Sorted_BrunMulti
+            sage: from slabbe.mult_cont_frac_pyx import Sorted_BrunMulti
             sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Sorted_BrunMulti()(D)
             sage: sorted(E.iteritems())
@@ -2148,7 +2148,7 @@ cdef class Sorted_Selmer(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Sorted_Selmer
+            sage: from slabbe.mult_cont_frac_pyx import Sorted_Selmer
             sage: D = {'x':.2,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Sorted_Selmer()(D)
             sage: sorted(E.iteritems())
@@ -2170,7 +2170,7 @@ cdef class Sorted_Meester(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Sorted_Meester
+            sage: from slabbe.mult_cont_frac_pyx import Sorted_Meester
             sage: D = {'x':.5,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Sorted_Meester()(D)
             sage: sorted(E.iteritems())
@@ -2194,7 +2194,7 @@ cdef class Sorted_ArnouxRauzy(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Sorted_ArnouxRauzy
+            sage: from slabbe.mult_cont_frac_pyx import Sorted_ArnouxRauzy
             sage: D = dict(x=.3,y=.4,z=.8,u=.2,v=.3,w=.4,branch=999)
             sage: E = Sorted_ArnouxRauzy()(D)
             sage: sorted(E.iteritems())
@@ -2251,7 +2251,7 @@ cdef class Sorted_ARP(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Sorted_ARP
+            sage: from slabbe.mult_cont_frac_pyx import Sorted_ARP
             sage: D = dict(x=.3,y=.4,z=.8,u=.2,v=.3,w=.4,branch=999)
             sage: E = Sorted_ARP()(D)
             sage: sorted(E.iteritems())
@@ -2287,7 +2287,7 @@ cdef class Sorted_ARPMulti(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Sorted_ARPMulti
+            sage: from slabbe.mult_cont_frac_pyx import Sorted_ARPMulti
             sage: D = {'x':.3,'y':.5,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Sorted_ARPMulti()(D)
             sage: sorted(E.iteritems())
@@ -2310,7 +2310,7 @@ cdef class Sorted_Poincare(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Sorted_Poincare
+            sage: from slabbe.mult_cont_frac_pyx import Sorted_Poincare
             sage: D = dict(x=.3,y=.7,z=.8,u=.2,v=.3,w=.4,branch=999)
             sage: E = Sorted_Poincare()(D)
             sage: sorted(E.iteritems())
@@ -2351,7 +2351,7 @@ cdef class Sorted_ARrevert(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Sorted_ARrevert
+            sage: from slabbe.mult_cont_frac_pyx import Sorted_ARrevert
             sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Sorted_ARrevert()(D)
             sage: sorted(E.iteritems())
@@ -2405,7 +2405,7 @@ cdef class Sorted_ARrevertMulti(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Sorted_ARrevertMulti
+            sage: from slabbe.mult_cont_frac_pyx import Sorted_ARrevertMulti
             sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Sorted_ARrevertMulti()(D)
             sage: sorted(E.iteritems())
@@ -2460,7 +2460,7 @@ cdef class Sorted_ARMonteil(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Sorted_ARMonteil
+            sage: from slabbe.mult_cont_frac_pyx import Sorted_ARMonteil
             sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Sorted_ARMonteil()(D)
             sage: sorted(E.iteritems())
@@ -2502,7 +2502,7 @@ cdef class Sorted_Delaunay(MCFAlgorithm):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Sorted_Delaunay
+            sage: from slabbe.mult_cont_frac_pyx import Sorted_Delaunay
             sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = Sorted_Delaunay()(D)
             sage: sorted(E.iteritems())
@@ -2533,7 +2533,7 @@ cdef class JacobiPerron(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import JacobiPerron
+            sage: from slabbe.mult_cont_frac_pyx import JacobiPerron
             sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = JacobiPerron()(D)
             sage: sorted(E.iteritems())
@@ -2576,7 +2576,7 @@ cdef class JacobiPerronAdditif(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import JacobiPerronAdditif
+            sage: from slabbe.mult_cont_frac_pyx import JacobiPerronAdditif
             sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = JacobiPerronAdditif()(D)
             sage: sorted(E.iteritems())
@@ -2622,7 +2622,7 @@ cdef class JacobiPerronAdditifv2(MCFAlgorithm):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import JacobiPerronAdditifv2
+            sage: from slabbe.mult_cont_frac_pyx import JacobiPerronAdditifv2
             sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: E = JacobiPerronAdditifv2()(D)
             sage: sorted(E.iteritems())

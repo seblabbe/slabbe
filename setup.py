@@ -11,8 +11,8 @@ Cython.Compiler.Options.old_style_globals = True
 ext_modules = [
         Extension('slabbe.kolakoski_word_pyx',
             sources = [path.join('slabbe','kolakoski_word_pyx.pyx')],),
-        Extension('slabbe.mult_cont_frac',
-            sources = [path.join('slabbe','mult_cont_frac.pyx')],
+        Extension('slabbe.mult_cont_frac_pyx',
+            sources = [path.join('slabbe','mult_cont_frac_pyx.pyx')],
             include_dirs=sage_include_directories())]
 
 
