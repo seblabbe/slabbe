@@ -4,7 +4,7 @@ Multidimensional Continued Fraction Algorithms (Python code)
 
 EXAMPLES::
 
-    sage: from slabbe.mult_cont_frac_bonus import Brun
+    sage: from slabbe.mult_cont_frac import Brun
     sage: algo = Brun()
 
 Drawing the natural extension::
@@ -56,7 +56,7 @@ PGF_COLORS = ["red", "green", "blue", "cyan", "brown", "gray", "orange", "pink",
 "yellow", "black", "white", "darkgray", "lightgray",
 "lime", "olive", "magenta", "purple", "teal", "violet"]
 
-class _MCFAlgorithm_bonus_methods(object):
+class _MCFAlgorithm_methods(object):
     ######################
     # COMBINATORICS METHODS
     ######################
@@ -64,7 +64,7 @@ class _MCFAlgorithm_bonus_methods(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_bonus import ARP
+            sage: from slabbe.mult_cont_frac import ARP
             sage: ARP().matrix_cocycle()
             Cocycle with 9 gens over Regular language over [1, 2, 3, 
             123, 132, 213, 231, 312, 321]
@@ -72,14 +72,14 @@ class _MCFAlgorithm_bonus_methods(object):
 
         ::
 
-            sage: from slabbe.mult_cont_frac_bonus import Sorted_Brun
+            sage: from slabbe.mult_cont_frac import Sorted_Brun
             sage: Sorted_Brun().matrix_cocycle()
             Cocycle with 3 gens over Language of finite words over alphabet
             [1, 2, 3]
 
         ::
 
-            sage: from slabbe.mult_cont_frac_bonus import Brun
+            sage: from slabbe.mult_cont_frac import Brun
             sage: Brun().matrix_cocycle()
             Cocycle with 6 gens over Regular language over 
             [123, 132, 213, 231, 312, 321]
@@ -109,7 +109,7 @@ class _MCFAlgorithm_bonus_methods(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_bonus import ARP
+            sage: from slabbe.mult_cont_frac import ARP
             sage: ARP().n_matrix((1,e,pi), 10)
             [ 31  40   7]
             [ 84 109  19]
@@ -139,7 +139,7 @@ class _MCFAlgorithm_bonus_methods(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_bonus import Brun, ARP, Cassaigne
+            sage: from slabbe.mult_cont_frac import Brun, ARP, Cassaigne
             sage: Brun().s_adic_word((.414578,.571324,.65513))
             word: 1232312312323123123312323123123312323123...
             sage: Brun().s_adic_word((1,e,pi))
@@ -164,7 +164,7 @@ class _MCFAlgorithm_bonus_methods(object):
 
         ::
 
-            sage: from slabbe.mult_cont_frac_bonus import FullySubtractive
+            sage: from slabbe.mult_cont_frac import FullySubtractive
             sage: FullySubtractive().s_adic_word((1,2,5))
             Traceback (most recent call last):
             ...
@@ -173,7 +173,7 @@ class _MCFAlgorithm_bonus_methods(object):
 
         ::
 
-            sage: from slabbe.mult_cont_frac_bonus import Reverse
+            sage: from slabbe.mult_cont_frac import Reverse
             sage: algo = Reverse()
             sage: algo.s_adic_word((18,1,1))
             word: 31111111111211111111
@@ -253,7 +253,7 @@ class _MCFAlgorithm_bonus_methods(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_bonus import Brun
+            sage: from slabbe.mult_cont_frac import Brun
             sage: Brun().discrepancy_statistics(5)
             {[1, 1, 3]: 6/5,
              [1, 2, 2]: 4/5,
@@ -284,7 +284,7 @@ class _MCFAlgorithm_bonus_methods(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_bonus import FullySubtractive
+            sage: from slabbe.mult_cont_frac import FullySubtractive
             sage: FullySubtractive().e_one_star_patch((1,e,pi), 4)
             Patch of 21 faces
         """
@@ -306,14 +306,14 @@ class _MCFAlgorithm_bonus_methods(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_bonus import FullySubtractive
+            sage: from slabbe.mult_cont_frac import FullySubtractive
             sage: algoFS = FullySubtractive()
             sage: algoFS._base_translation_vectors()
             {1: (1, 0, 0), 2: (0, 1, 0), 3: (0, 0, 1)}
 
         ::
 
-            sage: from slabbe.mult_cont_frac_bonus import ARP
+            sage: from slabbe.mult_cont_frac import ARP
             sage: algoARP = ARP()
             sage: algoARP._base_translation_vectors()
             {1: (0, 1, 1),
@@ -345,7 +345,7 @@ class _MCFAlgorithm_bonus_methods(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_bonus import FullySubtractive, ARP, Brun
+            sage: from slabbe.mult_cont_frac import FullySubtractive, ARP, Brun
             sage: ARP().translation_vectors((1,e,pi), 5)
             [(1, 1, 0), (1, -1, 1), (-2, 1, 0), (1, 1, -1), (-3, 0, 1)]
             sage: Brun().translation_vectors((1,e,pi), 5)
@@ -381,7 +381,7 @@ class _MCFAlgorithm_bonus_methods(object):
 
         Partial sums for Brun forms a connected subset of Z^3::
 
-            sage: from slabbe.mult_cont_frac_bonus import FullySubtractive, ARP, Brun
+            sage: from slabbe.mult_cont_frac import FullySubtractive, ARP, Brun
             sage: A = Brun().discrete_plane_patches((1,e,pi), 10)
             sage: _ = A.tikz().pdf()     # long time
 
@@ -428,7 +428,7 @@ class _MCFAlgorithm_bonus_methods(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_bonus import Reverse, Brun
+            sage: from slabbe.mult_cont_frac import Reverse, Brun
             sage: Reverse().invariant_measure_wireframe_plot(1000000, 80)
             <matplotlib.figure.Figure object at ...>
             sage: Brun().invariant_measure_wireframe_plot(1000000, 40, norm='1')
@@ -474,7 +474,7 @@ class _MCFAlgorithm_bonus_methods(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_bonus import Reverse, Brun
+            sage: from slabbe.mult_cont_frac import Reverse, Brun
             sage: Reverse().invariant_measure_contour_plot(1000000, 80)
             <matplotlib.figure.Figure object at ...>
             sage: Brun().invariant_measure_contour_plot(1000000, 40, norm='1')
@@ -515,7 +515,7 @@ class _MCFAlgorithm_bonus_methods(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_bonus import Sorted_ARP
+            sage: from slabbe.mult_cont_frac import Sorted_ARP
             sage: Sorted_ARP().natural_extension_plot(1000)
             <matplotlib.figure.Figure object at ...>
         """
@@ -571,7 +571,7 @@ class _MCFAlgorithm_bonus_methods(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_bonus import Brun
+            sage: from slabbe.mult_cont_frac import Brun
             sage: s = Brun().natural_extension_tikz(1000)
             sage: s
             \documentclass[tikz]{standalone}
@@ -670,7 +670,7 @@ class _MCFAlgorithm_bonus_methods(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_bonus import ARP
+            sage: from slabbe.mult_cont_frac import ARP
             sage: s = ARP().natural_extension_part_tikz(1000, part=3)
             sage: view(s, tightpage=True)    # not tested
 
@@ -773,7 +773,7 @@ class _MCFAlgorithm_bonus_methods(object):
 
         A minute (1min 13s) for a picture with 10^7 points::
 
-            sage: from slabbe.mult_cont_frac_bonus import ARP
+            sage: from slabbe.mult_cont_frac import ARP
             sage: c = {}
             sage: c[1] = c[2] = c[3] = [0,0,0]
             sage: c[12] = c[13] = c[23] = c[21] = c[31] = c[32] = [255,0,0]
@@ -890,7 +890,7 @@ class _MCFAlgorithm_bonus_methods(object):
 
         BENCHMARK::
 
-            sage: from slabbe.mult_cont_frac_bonus import ARP
+            sage: from slabbe.mult_cont_frac import ARP
             sage: opt = dict(urange=(-.15,.25), vrange=(-.05,.05))
             sage: ARP().measure_evaluation(10^8, draw='right', ndivs=100, **opt) # optional long
             0.435...
@@ -927,7 +927,7 @@ class _MCFAlgorithm_bonus_methods(object):
 # MCF Algorithms
 ################
 
-def _algo_with_bonus(base):
+def _algo_with(base):
     r"""
     Return the MCF algorithm associated to some Cython base class including all
     the Python methods.
@@ -942,8 +942,8 @@ def _algo_with_bonus(base):
     EXAMPLES::
 
         sage: from slabbe.mult_cont_frac_pyx import Brun
-        sage: from slabbe.mult_cont_frac_bonus import _algo_with_bonus
-        sage: algo = _algo_with_bonus(Brun)
+        sage: from slabbe.mult_cont_frac import _algo_with
+        sage: algo = _algo_with(Brun)
         sage: algo
         Brun 3-dimensional continued fraction algorithm
         sage: algo.matrix_cocycle()
@@ -951,221 +951,221 @@ def _algo_with_bonus(base):
         defined by: Automaton with 6 states
     """
     class_name = base().class_name()
-    cls = dynamic_class(class_name, (base, _MCFAlgorithm_bonus_methods))
+    cls = dynamic_class(class_name, (base, _MCFAlgorithm_methods))
     return cls()
 def Brun():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import Brun
+        sage: from slabbe.mult_cont_frac import Brun
         sage: Brun()
         Brun 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.Brun)
+    return _algo_with(mult_cont_frac_pyx.Brun)
 def Reverse():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import Reverse
+        sage: from slabbe.mult_cont_frac import Reverse
         sage: Reverse()
         Reverse 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.Reverse)
+    return _algo_with(mult_cont_frac_pyx.Reverse)
 def ARP():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import ARP
+        sage: from slabbe.mult_cont_frac import ARP
         sage: ARP()
         Arnoux-Rauzy-Poincar\'e 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.ARP)
+    return _algo_with(mult_cont_frac_pyx.ARP)
 def ArnouxRauzy():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import ArnouxRauzy
+        sage: from slabbe.mult_cont_frac import ArnouxRauzy
         sage: ArnouxRauzy()
         ArnouxRauzy 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.ArnouxRauzy)
+    return _algo_with(mult_cont_frac_pyx.ArnouxRauzy)
 def Poincare():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import Poincare
+        sage: from slabbe.mult_cont_frac import Poincare
         sage: Poincare()
         Poincar\'e 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.Poincare)
+    return _algo_with(mult_cont_frac_pyx.Poincare)
 def Selmer():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import Selmer
+        sage: from slabbe.mult_cont_frac import Selmer
         sage: Selmer()
         Selmer 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.Selmer)
+    return _algo_with(mult_cont_frac_pyx.Selmer)
 def FullySubtractive():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import FullySubtractive
+        sage: from slabbe.mult_cont_frac import FullySubtractive
         sage: FullySubtractive()
         Fully Subtractive 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.FullySubtractive)
+    return _algo_with(mult_cont_frac_pyx.FullySubtractive)
 def Cassaigne():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import Cassaigne
+        sage: from slabbe.mult_cont_frac import Cassaigne
         sage: Cassaigne()
         Cassaigne 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.Cassaigne)
+    return _algo_with(mult_cont_frac_pyx.Cassaigne)
 def Sorted_Brun():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import Sorted_Brun
+        sage: from slabbe.mult_cont_frac import Sorted_Brun
         sage: Sorted_Brun()
         Sorted_Brun 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_Brun)
+    return _algo_with(mult_cont_frac_pyx.Sorted_Brun)
 def Sorted_BrunMulti():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import Sorted_BrunMulti
+        sage: from slabbe.mult_cont_frac import Sorted_BrunMulti
         sage: Sorted_BrunMulti()
         Sorted_BrunMulti 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_BrunMulti)
+    return _algo_with(mult_cont_frac_pyx.Sorted_BrunMulti)
 def Sorted_Selmer():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import Sorted_Selmer
+        sage: from slabbe.mult_cont_frac import Sorted_Selmer
         sage: Sorted_Selmer()
         Sorted_Selmer 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_Selmer)
+    return _algo_with(mult_cont_frac_pyx.Sorted_Selmer)
 def Sorted_Meester():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import Sorted_Meester
+        sage: from slabbe.mult_cont_frac import Sorted_Meester
         sage: Sorted_Meester()
         Sorted_Meester 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_Meester)
+    return _algo_with(mult_cont_frac_pyx.Sorted_Meester)
 def Sorted_ArnouxRauzy():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import Sorted_ArnouxRauzy
+        sage: from slabbe.mult_cont_frac import Sorted_ArnouxRauzy
         sage: Sorted_ArnouxRauzy()
         Sorted_ArnouxRauzy 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_ArnouxRauzy)
+    return _algo_with(mult_cont_frac_pyx.Sorted_ArnouxRauzy)
 def Sorted_ArnouxRauzyMulti():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import Sorted_ArnouxRauzyMulti
+        sage: from slabbe.mult_cont_frac import Sorted_ArnouxRauzyMulti
         sage: Sorted_ArnouxRauzyMulti()
         Sorted_ArnouxRauzyMulti 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_ArnouxRauzyMulti)
+    return _algo_with(mult_cont_frac_pyx.Sorted_ArnouxRauzyMulti)
 def Sorted_ARP():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import Sorted_ARP
+        sage: from slabbe.mult_cont_frac import Sorted_ARP
         sage: Sorted_ARP()
         Sorted_ARP 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_ARP)
+    return _algo_with(mult_cont_frac_pyx.Sorted_ARP)
 def Sorted_ARPMulti():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import Sorted_ARPMulti
+        sage: from slabbe.mult_cont_frac import Sorted_ARPMulti
         sage: Sorted_ARPMulti()
         Sorted_ARPMulti 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_ARPMulti)
+    return _algo_with(mult_cont_frac_pyx.Sorted_ARPMulti)
 def Sorted_Poincare():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import Sorted_Poincare
+        sage: from slabbe.mult_cont_frac import Sorted_Poincare
         sage: Sorted_Poincare()
         Sorted_Poincare 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_Poincare)
+    return _algo_with(mult_cont_frac_pyx.Sorted_Poincare)
 def Sorted_ARrevert():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import Sorted_ARrevert
+        sage: from slabbe.mult_cont_frac import Sorted_ARrevert
         sage: Sorted_ARrevert()
         Sorted_ARrevert 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_ARrevert)
+    return _algo_with(mult_cont_frac_pyx.Sorted_ARrevert)
 def Sorted_ARrevertMulti():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import Sorted_ARrevertMulti
+        sage: from slabbe.mult_cont_frac import Sorted_ARrevertMulti
         sage: Sorted_ARrevertMulti()
         Sorted_ARrevertMulti 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_ARrevertMulti)
+    return _algo_with(mult_cont_frac_pyx.Sorted_ARrevertMulti)
 def Sorted_ARMonteil():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import Sorted_ARMonteil
+        sage: from slabbe.mult_cont_frac import Sorted_ARMonteil
         sage: Sorted_ARMonteil()
         Sorted_ARMonteil 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_ARMonteil)
+    return _algo_with(mult_cont_frac_pyx.Sorted_ARMonteil)
 def Sorted_Delaunay():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import Sorted_Delaunay
+        sage: from slabbe.mult_cont_frac import Sorted_Delaunay
         sage: Sorted_Delaunay()
         Sorted_Delaunay 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.Sorted_Delaunay)
+    return _algo_with(mult_cont_frac_pyx.Sorted_Delaunay)
 def JacobiPerron():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import JacobiPerron
+        sage: from slabbe.mult_cont_frac import JacobiPerron
         sage: JacobiPerron()
         JacobiPerron 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.JacobiPerron)
+    return _algo_with(mult_cont_frac_pyx.JacobiPerron)
 def JacobiPerronAdditif():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import JacobiPerronAdditif
+        sage: from slabbe.mult_cont_frac import JacobiPerronAdditif
         sage: JacobiPerronAdditif()
         JacobiPerronAdditif 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.JacobiPerronAdditif)
+    return _algo_with(mult_cont_frac_pyx.JacobiPerronAdditif)
 def JacobiPerronAdditifv2():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_bonus import JacobiPerronAdditifv2
+        sage: from slabbe.mult_cont_frac import JacobiPerronAdditifv2
         sage: JacobiPerronAdditifv2()
         JacobiPerronAdditifv2 3-dimensional continued fraction algorithm
     """
-    return _algo_with_bonus(mult_cont_frac_pyx.JacobiPerronAdditifv2)
+    return _algo_with(mult_cont_frac_pyx.JacobiPerronAdditifv2)
