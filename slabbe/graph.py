@@ -1,86 +1,99 @@
+# -*- coding: utf-8 -*-
 r"""
 .. TODO::
 
     - Make the doctests more simple
 """
+#*****************************************************************************
+#       Copyright (C) 2016 Sébastien Labbé <slabqc@gmail.com>
+#
+#  Distributed under the terms of the GNU General Public License version 2 (GPLv2)
+#
+#  The full text of the GPLv2 is available at:
+#
+#                  http://www.gnu.org/licenses/
+#*****************************************************************************
+from collections import Counter
+import itertools
+from sage.graphs.digraph import DiGraph
 
 def projection_graph(G, proj_fn, filename=None, verbose=False):
     r"""
+    Return the image of a graph under a function on vertices.
+
+    INPUT:
+
+    - ``G`` -- graph
+    - ``proj_fn`` -- function
+    - ``filename`` -- integer (default:``None``), save the graph to this pdf
+      filename if filename is not None
+    - ``verbose`` -- bool (default:``False``), print a table of data about the
+      projection
+
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac import Brun
-        sage: algo = Brun()
-        sage: S = algo.substitutions()
-        sage: from slabbe.language import languages
-        sage: LBrun = languages.Brun()
-        sage: E1, E2, E3, E4, E5 = empty_word_extension_types()
-        sage: pairs = [(E1, 312), (E2, 312), (E3, 312), (E4, 321), (E5, 321)]
-        sage: from slabbe.bispecial_extension_type import rec_enum_set_under_language_joined_from_pairs
-        sage: R = rec_enum_set_under_language_joined_from_pairs(pairs, LBrun, S, keep_empty=False, label='previous', growth_limit=1)
-        sage: from slabbe.bispecial_extension_type import recursively_enumerated_set_to_digraph
-        sage: %time G = recursively_enumerated_set_to_digraph(R)
-        CPU times: user 15min 59s, sys: 5.07 s, total: 16min 4s
-        Wall time: 35min 17s
-        sage: G
-        Looped multi-digraph on 8341 vertices
-
-    ::
-
-        sage: f2 = lambda ext:(ext.left_valence(),len(ext.left_word_extensions()))
-        sage: f3 = lambda ext:(ext.left_valence(),len(ext.left_word_extensions()),ext.multiplicity())
-        sage: f4 = lambda ext:(ext.left_valence(),len(ext.left_word_extensions()),ext.multiplicity(),ext.is_ordinaire())
-        sage: map_f2 = lambda s:tuple(sorted(map(f2,s)))
-        sage: map_f3 = lambda s:tuple(sorted(map(f3,s)))
-        sage: map_f4 = lambda s:tuple(sorted(map(f4,s)))
-
-    ::
-
         sage: from slabbe.graph import projection_graph
-        sage: projection_graph(G, map_f2, key='2')
+        sage: g = graphs.PetersenGraph()
+        sage: g.vertices()
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        sage: f = lambda i: i % 5
+        sage: projection_graph(g, f)
+        Looped multi-digraph on 5 vertices
 
-    ::
+    With verbose information::
 
-        sage: f = lambda S:any(len(ext.left_word_extensions())>2 for ext in S)
-        sage: from slabbe.bispecial_extension_type import rec_enum_set_under_language_joined_from_pairs
-        sage: R = rec_enum_set_under_language_joined_from_pairs(pairs, LBrun, S, keep_empty=False, label='previous', growth_limit=1, filter_fn=f)
-        sage: R
-        A recursively enumerated set (breadth first search)
-        sage: from slabbe.bispecial_extension_type import recursively_enumerated_set_to_digraph
-        sage: G = recursively_enumerated_set_to_digraph(R)
-        sage: G
-        Looped multi-digraph on 453 vertices
-        sage: 2216+2541+1796+1220+120+453
-        8346
-        sage: projection_graph(G, map_f4, '4')
-         ((3, 5, 0, False),): 3, 
-         ((3, 5, 0, True),): 2, 
-         ((2, 4, 0, True),): 3,
-         ((3, 4, 0, False),): 2, 
-         ((2, 3, 0, True), (2, 3, 0, True)): 8}
-
-         ((2, 3, 0, True),): 14, 
-         ((3, 3, 0, False),): 18, 
-         ((3, 3, 0, True),): 12, 
-        {((2, 2, 0, True), (2, 3, 0, True)): 157, 
-         ((2, 2, 0, True), (3, 3, 0, True)): 12, 
-         ((2, 2, 0, True), (3, 3, 0, False)): 12, 
-         ((2, 2, -1, False), (2, 3, 1, False)): 43, 
-         ((2, 2, 0, True), (2, 2, 0, True), (2, 3, 0, True)): 131, 
-         ((2, 2, -1, False), (2, 2, 0, True), (2, 3, 1, False)): 36, 
+        sage: projection_graph(g, lambda i:i%4, verbose=True)
+          Number of vertices   Projected vertices
+        +--------------------+--------------------+
+          2                    3
+          2                    2
+          3                    1
+          3                    0
+        Looped multi-digraph on 4 vertices
     """
-    edges = set((proj_fn(A[0]),proj_fn(B[0])) for A,B,_ in G.edges())
+    edges = set((proj_fn(A),proj_fn(B)) for A,B,_ in G.edges())
     G_proj = DiGraph(edges, format='list_of_edges', loops=True, multiedges=True)
     if verbose:
-        d = dict(Counter(proj_fn(s[0]) for s in G.vertices()))
+        d = dict(Counter(proj_fn(s) for s in G.vertices()))
         rows = [(value, key) for key,value in d.iteritems()]
         rows.sort(reverse=True,key=lambda row:row[1])
-        print table(rows=rows)
+        header_row = ['Number of vertices', 'Projected vertices']
+        from sage.misc.table import table
+        print table(rows=rows, header_row=header_row)
     if filename:
+        from slabbe import TikzPicture
         print TikzPicture.from_graph(G_proj, prog='dot').pdf(filename)
     return G_proj
 
 def digraph_move_label_to_edge(G, label_function=None):
     r"""
+    Return a digraph with labels moved from the arrival vertices to
+    corresponding edges.
+
+    INPUT:
+
+    - ``G`` -- graph, whose vertices are tuples of the form (vertex, label)
+    - ``label_function`` -- function or None, a function to apply to each label
+
+    EXAMPLES::
+
+        sage: G = DiGraph()
+        sage: G.add_edges([((i, None), ((i+1)%10, 'plusone')) for i in range(10)])
+        sage: G.add_edges([((i, None), ((i+2)%10, 'plustwo')) for i in range(10)])
+        sage: G
+        Digraph on 30 vertices
+        sage: from slabbe.graph import digraph_move_label_to_edge
+        sage: digraph_move_label_to_edge(G)
+        Looped multi-digraph on 10 vertices
+
+    Using a function to modify the labels::
+
+        sage: f = lambda label:"A"+label
+        sage: GG = digraph_move_label_to_edge(G, label_function=f)
+        sage: GG
+        Looped multi-digraph on 10 vertices
+        sage: GG.edges()[0]
+        (0, 1, 'Aplusone')
     """
     if label_function:
         edges = [(u,v,label_function(label)) for ((u,_), (v,label), _) in G.edges()]
@@ -90,9 +103,29 @@ def digraph_move_label_to_edge(G, label_function=None):
 
 def induced_subgraph(G, filter):
     r"""
-    Removes vertices by keeping the adjacenjcies.
+    Return the induced subdigraph of a digraph keeping only vertices that are
+    map to ``True`` by the filter.
 
-    TODO:
+    INPUT:
+
+    - ``G`` -- graph
+    - ``filter`` -- function, a function from vertices to boolean
+
+    EXAMPLES::
+
+        sage: from slabbe.graph import induced_subgraph
+        sage: G = DiGraph()
+        sage: G.add_edges([((i, None), ((i+1)%10, 'plusone')) for i in range(10)])
+        sage: G.add_edges([((i, None), ((i+2)%10, 'plustwo')) for i in range(10)])
+        sage: G
+        Digraph on 30 vertices
+        sage: GG = induced_subgraph(G, lambda v: v[0]%2 == 0)
+        sage: GG
+        Digraph on 15 vertices
+        sage: GG.edges()[0]
+        ((0, None), (2, 'plustwo'), None)
+
+    .. TODO::
 
         simplify the edges aaaaa*aaa*aaa* to a* only
     """
