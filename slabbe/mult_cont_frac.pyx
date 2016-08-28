@@ -94,10 +94,6 @@ cdef struct PairPoint3d:
 
 cdef double SQRT3SUR2 = 0.866025403784439
 
-PGF_COLORS = ["red", "green", "blue", "cyan", "brown", "gray", "orange", "pink",
-"yellow", "black", "white", "darkgray", "lightgray",
-"lime", "olive", "magenta", "purple", "teal", "violet"]
-
 cdef class MCFAlgorithm(object):
     ########################################
     # METHODS IMPLEMENTED IN HERITED CLASSES
@@ -315,24 +311,34 @@ cdef class MCFAlgorithm(object):
     ######################
     def class_name(self):
         r"""
+        The name of the class.
+
+        .. NOTE::
+
+            This might not be the same as the name of the algorithm.
+
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Reverse, Brun
+            sage: from slabbe.mult_cont_frac import Reverse, Brun, ARP
             sage: Reverse().class_name()
             'Reverse'
             sage: Brun().class_name()
             'Brun'
+            sage: ARP().class_name()
+            'ARP'
         """
         return self.__class__.__name__
     def name(self):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Reverse, Brun
+            sage: from slabbe.mult_cont_frac import Reverse, Brun, ARP
             sage: Reverse().name()
             'Reverse'
             sage: Brun().name()
             'Brun'
+            sage: ARP().name()
+            "Arnoux-Rauzy-Poincar\\'e"
         """
         return self.class_name()
     def __repr__(self):

@@ -62,6 +62,16 @@ TODO:
     - When should two bispecial extension type be equal? In graphs, we sometimes
       prefer when they are all different...
 """
+#*****************************************************************************
+#       Copyright (C) 2010-2016 Sébastien Labbé <slabqc@gmail.com>
+#
+#  Distributed under the terms of the GNU General Public License version 2 (GPLv2)
+#
+#  The full text of the GPLv2 is available at:
+#
+#                  http://www.gnu.org/licenses/
+#*****************************************************************************
+
 from collections import defaultdict, Counter
 import itertools
 from sage.misc.classcall_metaclass import ClasscallMetaclass
@@ -415,7 +425,7 @@ class ExtensionType(object):
 
         ::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_bonus import Brun
             sage: S = Brun().substitutions()
             sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
             sage: data = [((3, 1), (2,)), ((1, 2), (3,)), ((3, 2), (3,)), ((2,
@@ -746,7 +756,7 @@ class ExtensionType(object):
         EXAMPLES::
 
             sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_bonus import Brun
             sage: S = Brun().substitutions()
             sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
             ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
@@ -762,16 +772,15 @@ class ExtensionType(object):
                  22            X
                  23    X
               m(w)=0, neutral, word: , ())}
-            sage: R.graded_component(1)
-            {(  E(w)   1   2   3
+            sage: sorted(R.graded_component(1))
+            [(  E(w)   1   2   3
+                 31    X   X   X
+                 23            X
+              m(w)=0, ord., word: 23, (123,)), (  E(w)   1   2   3
                  12    X   X   X
                  32            X
                  23    X
-              m(w)=0, ord., word: 3, (123,)), 
-              ( E(w)   1   2   3
-                 31    X   X   X
-                 23            X
-              m(w)=0, ord., word: 23, (123,))}
+              m(w)=0, ord., word: 3, (123,))]
             sage: [len(R.graded_component(i)) for i in range(9)]
             [1, 2, 2, 2, 2, 2, 2, 2, 3]
 
@@ -844,7 +853,7 @@ class ExtensionType(object):
         EXAMPLES::
 
             sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_bonus import Brun
             sage: S = Brun().substitutions()
             sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
             ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
@@ -909,7 +918,7 @@ class ExtensionType(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_bonus import Brun
             sage: from slabbe.bispecial_extension_type import ExtensionType
             sage: from slabbe.language import languages
             sage: algo = Brun()
@@ -924,7 +933,7 @@ class ExtensionType(object):
         ::
 
             sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_bonus import Brun
             sage: S = Brun().substitutions()
             sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
             ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
@@ -993,7 +1002,7 @@ class ExtensionType(object):
         EXAMPLES::
 
             sage: from slabbe.bispecial_extension_type import ExtensionType
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_bonus import Brun
             sage: from slabbe.language import languages
             sage: algo = Brun()
             sage: S = algo.substitutions()
@@ -1009,7 +1018,7 @@ class ExtensionType(object):
         ::
 
             sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_bonus import Brun
             sage: S = Brun().substitutions()
             sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
             ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
@@ -1048,7 +1057,7 @@ class ExtensionType(object):
         EXAMPLES::
 
             sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_bonus import Brun
             sage: S = Brun().substitutions()
             sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
             ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
@@ -1102,7 +1111,7 @@ class ExtensionType(object):
         EXAMPLES::
 
             sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_bonus import Brun
             sage: S = Brun().substitutions()
             sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
             ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
@@ -1144,7 +1153,7 @@ class ExtensionType(object):
         EXAMPLES::
 
             sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_bonus import Brun
             sage: S = Brun().substitutions()
             sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
             ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
@@ -1184,7 +1193,7 @@ class ExtensionType(object):
         EXAMPLES::
 
             sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_bonus import Brun
             sage: S = Brun().substitutions()
             sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
             ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
@@ -1222,7 +1231,7 @@ class ExtensionType(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_bonus import Brun
             sage: from slabbe.bispecial_extension_type import ExtensionType
             sage: from slabbe.language import languages
             sage: algo = Brun()
@@ -1265,7 +1274,7 @@ class ExtensionType(object):
 
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_bonus import Brun
             sage: from slabbe.bispecial_extension_type import ExtensionType
             sage: from slabbe.language import languages
             sage: algo = Brun()
@@ -1312,7 +1321,7 @@ class ExtensionType(object):
         EXAMPLES::
 
             sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_bonus import Brun
             sage: S = Brun().substitutions()
             sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
             ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
@@ -1358,7 +1367,7 @@ class ExtensionType(object):
         EXAMPLES::
 
             sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
-            sage: from slabbe.mult_cont_frac import Brun
+            sage: from slabbe.mult_cont_frac_bonus import Brun
             sage: S = Brun().substitutions()
             sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
             ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
@@ -2677,12 +2686,12 @@ def table_bispecial(word, k):
           0              1      strong
           1     0        0      ord.
           1     1        0      ord.
-          2     10       1      strong
           2     01       1      strong
-          3     101      -1     weak
+          2     10       1      strong
           3     010      -1     weak
-          4     1001     1      strong
+          3     101      -1     weak
           4     0110     1      strong
+          4     1001     1      strong
           6     100110   -1     weak
     """
     it = word.bispecial_factors_iterator()
@@ -2694,6 +2703,8 @@ def table_bispecial(word, k):
         info = ext.information()
         row = [w.length(), w, mw, info]
         rows.append(row)
+    rows.sort(key=lambda row:row[1])
+    rows.sort(key=lambda row:row[0])
     return table(rows=rows, header_row=['|w|', 'word', 'm(w)','info'])
 
 def recursively_enumerated_set_to_digraph(R, max_depth=float('inf')):
@@ -2738,7 +2749,7 @@ def remove_extension_types_subsets(extensions):
     EXAMPLES::
 
         sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
-        sage: from slabbe.mult_cont_frac import Brun
+        sage: from slabbe.mult_cont_frac_bonus import Brun
         sage: S = Brun().substitutions()
         sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
         ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
@@ -2807,7 +2818,7 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
 
         sage: from slabbe.bispecial_extension_type import rec_enum_set_under_language_joined_from_pairs
         sage: from slabbe.bispecial_extension_type import ExtensionType
-        sage: from slabbe.mult_cont_frac import Brun
+        sage: from slabbe.mult_cont_frac_bonus import Brun
         sage: from slabbe.language import languages
         sage: algo = Brun()
         sage: S = algo.substitutions()
@@ -2824,7 +2835,7 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
     ::
 
         sage: from slabbe.bispecial_extension_type import ExtensionTypeLong
-        sage: from slabbe.mult_cont_frac import Brun
+        sage: from slabbe.mult_cont_frac_bonus import Brun
         sage: S = Brun().substitutions()
         sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
         ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
@@ -2838,7 +2849,7 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
 
     ::
 
-        sage: from slabbe.mult_cont_frac import Brun
+        sage: from slabbe.mult_cont_frac_bonus import Brun
         sage: algo = Brun()
         sage: S = algo.substitutions()
         sage: from slabbe.language import languages
@@ -2859,7 +2870,7 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
 
     Testing the keep_unique option (not a good example apparently?)::
 
-        sage: from slabbe.mult_cont_frac import Brun
+        sage: from slabbe.mult_cont_frac_bonus import Brun
         sage: algo = Brun()
         sage: S = algo.substitutions()
         sage: from slabbe.language import languages

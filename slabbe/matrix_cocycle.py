@@ -745,7 +745,7 @@ class MatrixCocycle(object):
                 lines.append(r"\node at {} {{${}$}};".format(u, w))
         lines.append(r"\end{tikzpicture}")
         from slabbe import TikzPicture
-        return TikzPicture("\n".join(lines))
+        return TikzPicture("\n".join(lines), use_sage_preamble=False)
 
 #####################
 # Predefined Cocycles

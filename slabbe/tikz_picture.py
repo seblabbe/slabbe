@@ -26,24 +26,6 @@ Setting ``view=True``, which is the default, opens the pdf in a viewer.
     sage: t
     \documentclass[tikz]{standalone}
     \usepackage{amsmath}
-    \newcommand{\ZZ}{\Bold{Z}}
-    \newcommand{\NN}{\Bold{N}}
-    \newcommand{\RR}{\Bold{R}}
-    \newcommand{\CC}{\Bold{C}}
-    \newcommand{\QQ}{\Bold{Q}}
-    \newcommand{\QQbar}{\overline{\QQ}}
-    \newcommand{\GF}[1]{\Bold{F}_{#1}}
-    \newcommand{\Zp}[1]{\ZZ_{#1}}
-    \newcommand{\Qp}[1]{\QQ_{#1}}
-    \newcommand{\Zmod}[1]{\ZZ/#1\ZZ}
-    \newcommand{\CDF}{\Bold{C}}
-    \newcommand{\CIF}{\Bold{C}}
-    \newcommand{\CLF}{\Bold{C}}
-    \newcommand{\RDF}{\Bold{R}}
-    \newcommand{\RIF}{\Bold{I} \Bold{R}}
-    \newcommand{\RLF}{\Bold{R}}
-    \newcommand{\CFF}{\Bold{CFF}}
-    \newcommand{\Bold}[1]{\mathbf{#1}}
     \begin{document}
     \begin{tikzpicture}%
             [x={(0.249656cm, -0.577639cm)},
@@ -115,7 +97,7 @@ class TikzPicture(SageObject):
     - ``usetikzlibrary`` -- list of strings (default: ``[]``), tikz libraries
       to use.
     - ``macros`` -- list of strings (default: ``[]``), stuff you need for the picture.
-    - ``use_sage_preamble`` -- bool (default: ``True``), whether to include sage
+    - ``use_sage_preamble`` -- bool (default: ``False``), whether to include sage
       latex preamble and sage latex macros, that is, the content of
       :func:`sage.misc.latex.extra_preamble()`,
       :func:`sage.misc.latex.extra_macros()` and
@@ -141,11 +123,11 @@ class TikzPicture(SageObject):
         sage: macros = [r'\newcommand{\ZZ}{\mathbb{Z}}']
         sage: s = "\\begin{tikzpicture}\n\\draw (0,0) -- (1,1);\n\\end{tikzpicture}"
         sage: t = TikzPicture(s, standalone_options=options, usepackage=usepackage, 
-        ....:        usetikzlibrary=tikzlib, macros=macros, use_sage_preamble=False)
+        ....:        usetikzlibrary=tikzlib, macros=macros)
         sage: _ = t.pdf(view=False)   # long time (2s)
     """
     def __init__(self, code, standalone_options=None, usepackage=['amsmath'],
-            usetikzlibrary=None, macros=None, use_sage_preamble=True):
+            usetikzlibrary=None, macros=None, use_sage_preamble=False):
         r"""
         See the class documentation for full information.
 
@@ -250,10 +232,7 @@ class TikzPicture(SageObject):
             sage: t._latex_file_header_lines()[:6]
             ['\\documentclass[tikz]{standalone}',
              '\\standaloneconfig{border=4mm}',
-             '\\usepackage{tkz-graph}',
-             '\\newcommand{\\ZZ}{\\Bold{Z}}',
-             '\\newcommand{\\NN}{\\Bold{N}}',
-             '\\newcommand{\\RR}{\\Bold{R}}']
+             '\\usepackage{tkz-graph}']
         """
         lines = []
         lines.append(r"\documentclass[tikz]{standalone}")
@@ -275,7 +254,7 @@ class TikzPicture(SageObject):
             sage: from slabbe import TikzPicture
             sage: g = graphs.PetersenGraph()
             sage: s = latex(g)
-            sage: t = TikzPicture(s, usepackage=['tkz-graph'], use_sage_preamble=False)
+            sage: t = TikzPicture(s, usepackage=['tkz-graph'])
             sage: t
             \documentclass[tikz]{standalone}
             \usepackage{tkz-graph}
@@ -319,7 +298,7 @@ class TikzPicture(SageObject):
 
             sage: from slabbe import TikzPicture
             sage: s = "\\begin{tikzpicture}\n\\draw (0,0) -- (1,1);\n\\end{tikzpicture}"
-            sage: t = TikzPicture(s, use_sage_preamble=False)
+            sage: t = TikzPicture(s)
             sage: print(t)
             \documentclass[tikz]{standalone}
             \usepackage{amsmath}
