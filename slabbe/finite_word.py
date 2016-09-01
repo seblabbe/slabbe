@@ -26,6 +26,7 @@ EXAMPLES::
 from collections import Counter
 from sage.rings.rational_field import QQ
 from sage.functions.other import abs
+from random import randrange
 
 def discrepancy(self):
     r"""
@@ -74,3 +75,55 @@ def discrepancy(self):
         M = max(M, MM)
     return M
 
+def to_image(self, width=1000):
+    r"""
+    Creates an image from a word
+
+    INPUT:
+
+    - ``width`` -- integer, width of image
+
+    EXAMPLES::
+
+        sage: from slabbe.finite_word import to_image
+        sage: t = words.ThueMorseWord()
+        sage: img = to_image(t[:10000], width=100)
+        sage: img
+        <PIL.Image.Image image mode=RGB size=100x100 at 0x...>
+        sage: img.show()
+
+    ::
+
+        sage: W = FiniteWords(range(10))
+        sage: d = {a:W.random_element(7) for a in range(10)}
+        sage: m = WordMorphism(d, codomain=W)
+        sage: w = m.periodic_points()[0][0]
+
+    ::
+
+        sage: s = map(int, str(pi.n(digits=40001))[2:])
+        sage: len(s)
+        40000
+        sage: to_image(W(s), 200).show()
+    """
+    #http://stackoverflow.com/questions/434583/what-is-the-fastest-way-to-draw-an-image-from-discrete-pixel-values-in-python
+    import numpy as np
+    import scipy.misc as smp
+
+    height = self.length() // width
+
+    # Create a 1024x1024x3 array of 8 bit unsigned integers
+    data = np.zeros( (height,width,3), dtype=np.uint8 )
+    data += 255   # white as default color
+    alphabet = self.parent().alphabet()
+
+    color_dict={a:[randrange(256) for _ in range(3)] for a in alphabet}
+
+    for i,a in enumerate(self):
+        x = i % width
+        y = i // width
+        data[y,x] = color_dict[a]
+
+    img = smp.toimage( data )       # Create a PIL image
+    #img.show()                     # View in default viewer
+    return img
