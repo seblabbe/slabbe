@@ -46,11 +46,11 @@ def non_uniform_randint(L):
     EXEMPLES::
 
         sage: from slabbe.combinat import non_uniform_randint
-        sage: non_uniform_randint([2,3,5])
+        sage: non_uniform_randint([2,3,5])    # random
         1
-        sage: non_uniform_randint([2,3,5])
+        sage: non_uniform_randint([2,3,5])    # random
         2
-        sage: non_uniform_randint([2,3,5])
+        sage: non_uniform_randint([2,3,5])    # random
         2
         sage: from collections import Counter
         sage: L = [non_uniform_randint([2,3,5]) for _ in range(100000)]
@@ -161,7 +161,7 @@ def random_interior_point(self, a=10, integer=False):
         (21, 0, 0)
     """
     from sage.geometry.polyhedron.constructor import Polyhedron
-    L = self.vertices()
+    L = list(self.vertices())
     L.extend(a*random()*ray.vector() for ray in self.rays())
     P = Polyhedron(L)
     return random_interior_point_compact_polytope(P)
@@ -189,6 +189,7 @@ def random_interior_point_compact_polytope(self, integer=False):
         sage: random_interior_point_compact_polytope(p, integer=True) # random
         (30, 19, 9)
     """
+    assert self.is_compact(), "input is not compact"
     from sage.geometry.polyhedron.constructor import Polyhedron
     triangulation = self.triangulate()
     T = []
@@ -256,16 +257,17 @@ def integral_points_count_union_of_polytopes(L):
 
     EXEMPLES::
 
-	sage: P = Polyhedron(ieqs=[[0,1,0],[0,0,1],[9,-1,0],[9,0,-1]])
-	sage: Q = Polyhedron(ieqs=[[-5,1,0],[-5,0,1],[14,-1,0],[14,0,-1]])
-	sage: P.integral_points_count()   # optional -- latte_int
-	100
-	sage: Q.integral_points_count()   # optional -- latte_int
-	100
+        sage: P = Polyhedron(ieqs=[[0,1,0],[0,0,1],[9,-1,0],[9,0,-1]])
+        sage: Q = Polyhedron(ieqs=[[-5,1,0],[-5,0,1],[14,-1,0],[14,0,-1]])
+        sage: P.integral_points_count()   # optional -- latte_int
+        100
+        sage: Q.integral_points_count()   # optional -- latte_int
+        100
         sage: from slabbe.combinat import integral_points_count_union_of_polytopes
-	sage: integral_points_count_union_of_polytopes([P,Q])
-	175
+        sage: integral_points_count_union_of_polytopes([P,Q])
+        175
     """
+    from sage.combinat.subset import Subsets
     n = len(L)
     range_n = range(n)
     res = 0
@@ -292,22 +294,22 @@ def intersection_of_polytopes(L):
     EXEMPLES::
 
         sage: from slabbe.combinat import intersection_of_polytopes
-	sage: P = Polyhedron(ieqs=[[0,1,0],[0,0,1],[9,-1,0],[9,0,-1]])
-	sage: Q = Polyhedron(ieqs=[[-5,1,0],[-5,0,1],[14,-1,0],[14,0,-1]])
-	sage: I = intersection_of_polytopes([P,Q])
+        sage: P = Polyhedron(ieqs=[[0,1,0],[0,0,1],[9,-1,0],[9,0,-1]])
+        sage: Q = Polyhedron(ieqs=[[-5,1,0],[-5,0,1],[14,-1,0],[14,0,-1]])
+        sage: I = intersection_of_polytopes([P,Q])
         sage: I
-	A 2-dimensional polyhedron in QQ^2 defined as the convex hull of 4 vertices
-	sage: I.integral_points_count()
-	25
+        A 2-dimensional polyhedron in QQ^2 defined as the convex hull of 4 vertices
+        sage: I.integral_points_count()
+        25
 
     TESTS::
 
-	sage: intersection_of_polytopes(iter([P,Q]))
-	A 2-dimensional polyhedron in QQ^2 defined as the convex hull of 4 vertices
-	sage: intersection_of_polytopes(iter([]))
-	Traceback (most recent call last):
-	...
-	NotImplementedError: intersection of an empty list of polytopes not defined
+        sage: intersection_of_polytopes(iter([P,Q]))
+        A 2-dimensional polyhedron in QQ^2 defined as the convex hull of 4 vertices
+        sage: intersection_of_polytopes(iter([]))
+        Traceback (most recent call last):
+        ...
+        NotImplementedError: intersection of an empty list of polytopes not defined
     """
     it = iter(L)
     try:
