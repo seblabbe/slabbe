@@ -166,12 +166,15 @@ def random_interior_point(self, a=10, integer=False):
     P = Polyhedron(L)
     return random_interior_point_compact_polytope(P)
 
-def random_interior_point_compact_polytope(self, integer=False):
+def random_interior_point_compact_polytope(self, uniform='simplex', integer=False):
     r"""
     Return a random interior point of a compact polytope.
 
     INPUT:
 
+    - ``uniform`` -- ``'points'`` (slow) or ``'simplex'`` (fast), whether
+      to take the probability uniformly with respect to the set of integral
+      points or with respect to the simplexes.
     - ``integer`` -- bool, whether the output must be with integer
       coordinates
 
@@ -197,10 +200,14 @@ def random_interior_point_compact_polytope(self, integer=False):
         simplex_vertices = [self.Vrepresentation(i) for i in simplex_indices]
         simplex = Polyhedron(simplex_vertices)
         T.append(simplex)
-    v = [p.integral_points_count() for p in T]
-    i = non_uniform_randint(v)
+    if uniform == 'points':
+        v = [p.integral_points_count() for p in T] # slow
+        i = non_uniform_randint(v)
+    elif uniform == 'simplex':
+        i = randrange(len(T))
+    else:
+        raise ValueError('unknown value for uniform(={})'.format(uniform))
     return random_interior_point_simplex(T[i], integer=integer)
-
 def random_interior_point_simplex(self, integer=False):
     r"""
     Return a random interior point of a simplex.
