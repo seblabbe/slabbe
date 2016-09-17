@@ -220,7 +220,7 @@ class ChristoffelGraph(DiscreteSubset):
             m = matrix(ZZ, 4, [1,1,1,c,0,-a,0,c,-b,b,-a,0])
             me = m.echelon_form()
             if verbose:
-                print me
+                print(me)
             rows = me[1],me[2]
         elif way == 'LLL':
             dim = self.dimension()
@@ -246,14 +246,14 @@ class ChristoffelGraph(DiscreteSubset):
             V = va,vb,vc = vector((0,c,-b))
             rows = U,V
         else:
-            raise ValueError("unkonwn way")
+            raise ValueError("unknown way")
         R = matrix(rows)
         if sum(map(abs, R.minors(dim-1))) != sum(map(abs,self._v)):
-            print R
-            print R.minors(dim-1)
-            print sum(map(abs, R.minors(dim)))
-            print sum(map(abs,self._v))
-            raise Exception, "The result (=%s) is false " % rows
+            print(R)
+            print(R.minors(dim-1))
+            print(sum(map(abs, R.minors(dim))))
+            print(sum(map(abs,self._v)))
+            raise Exception("The result (=%s) is false " % rows)
         return rows
 
     def tikz_kernel(self, projmat=M3to2, scale=1, edges=True,
