@@ -80,7 +80,7 @@ The intersection of two discrete objects of the same dimension::
 
 A discrete tube (preimage of a discrete box by a matrix)::
 
-    sage: M3to2 = matrix(2,[-sqrt(3),sqrt(3),0,-1,-1,2],ring=RR)/2
+    sage: from slabbe import M3to2
     sage: M3to2
     [-0.866025403784439  0.866025403784439  0.000000000000000]
     [-0.500000000000000 -0.500000000000000   1.00000000000000]
@@ -131,16 +131,7 @@ from sage.plot.line import line
 from sage.plot.text import text
 from sage.plot.plot3d.platonic import cube
 from slabbe.tikz_picture import TikzPicture
-
-sqrt2 = sqrt(2)
-sqrt3 = sqrt(3)
-M2to3 = matrix(3,[-sqrt3,-1,sqrt3,-1,0,2],ring=RR)/3
-M3to2 = matrix(2,[-sqrt3,sqrt3,0,-1,-1,2],ring=RR)/2
-M4to2 = matrix(2,[-sqrt3,sqrt3,0,1,-1,-1,2,0],ring=RR)/2
-M4to3 = matrix([(1,  0, -1/sqrt2),
-                (-1, 0, -1/sqrt2),
-                (0,  1,  1/sqrt2),
-                (0, -1,  1/sqrt2)], ring=RR).transpose()
+from slabbe.matrices import M3to2
 
 ################################################
 # Convex boundary of a set of 2d points
