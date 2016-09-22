@@ -22,11 +22,6 @@ TODO:
 from sage.matrix.constructor import matrix
 import heapq
 
-M3to2 = projection_matrix(3, 2)
-M2to3 = projection_matrix(2, 3)
-M4to2 = projection_matrix(4, 2)
-M4to3 = projection_matrix(4, 3)
-
 def projection_matrix(dim_from=3, dim_to=2):
     r"""
     Return a projection matrix from R^d to R^l.
@@ -69,6 +64,11 @@ def projection_matrix(dim_from=3, dim_to=2):
     else:
         s = "for input dim_from={} and dim_to={}"
         raise NotImplementedError(s.format(dim_from, dim_to))
+
+M3to2 = projection_matrix(3, 2)
+M2to3 = projection_matrix(2, 3)
+M4to2 = projection_matrix(4, 2)
+M4to3 = projection_matrix(4, 3)
 
 def perron_right_eigenvector(M):
     r"""
