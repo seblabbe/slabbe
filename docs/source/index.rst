@@ -76,6 +76,7 @@ Dynamical systems
 
    matrix_cocycle
    mult_cont_frac
+   diophantine_approximation
    lyapunov
    markov_transformation
    matrices
