@@ -1,5 +1,8 @@
 from __future__ import print_function
 
+# Eventually, toward support of Python 3
+#from __future__ import division, absolute_import, print_function, unicode_literals
+
 # For sphinx to work, we first need to import the sage library
 from sage.all_cmdline import *
 
@@ -20,6 +23,8 @@ from bond_percolation import (BondPercolationSamples,
                              BondPercolationSample, 
                              PercolationProbability)
 from tikz_picture import TikzPicture
+
+from matrices import M3to2, M2to3, M4to2, M4to3
 
 # BUG (sometimes, cython code does not work properly)
 try:
