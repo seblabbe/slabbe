@@ -8,4 +8,7 @@ Multidimensional Continued Fraction Algorithms
    :undoc-members:
    :show-inheritance:
    
-
+.. automodule:: slabbe.mult_cont_frac_pyx
+   :members:
+   :undoc-members:
+   :show-inheritance:
