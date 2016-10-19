@@ -2669,7 +2669,7 @@ cdef class Modified(MCFAlgorithm):
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac_pyx import Modified, Brun
+        sage: from slabbe.mult_cont_frac_pyx import Modified, Brun, Reverse
         sage: algo = Modified(Brun(), {123:1.2})
         sage: algo
         Modified 3-dimensional continued fraction algorithm
@@ -2684,8 +2684,9 @@ cdef class Modified(MCFAlgorithm):
     For example::
 
         sage: f = lambda g: Modified(Brun(), {123:g}).lyapunov_exponents(n_iterations=1000000)[-1]
-        sage: plot(f, (0.95, 1.05), adaptive_recursion=1)
-        Launched png viewer for Graphics object consisting of 1 graphics primitive
+        sage: plot(f, (0.95, 1.05), adaptive_recursion=0)   # not tested
+        Graphics object consisting of 1 graphics primitive
+
 
     The motivation for this class is to study the constant in front of the not
     unimodular matrix for branch 4 in Reverse algorithm::
@@ -2702,8 +2703,8 @@ cdef class Modified(MCFAlgorithm):
     More systematically::
 
         sage: f = lambda g: Modified(Reverse(), {4:g}).lyapunov_exponents(n_iterations=1000000)[-1]
-        sage: plot(f, (0.95, 1.05), adaptive_recursion=0)
-        Launched png viewer for Graphics object consisting of 1 graphics primitive
+        sage: plot(f, (0.95, 1.05), adaptive_recursion=0)  # not tested
+        Graphics object consisting of 1 graphics primitive
     """
     cdef MCFAlgorithm _algo
     cdef dict _gamma

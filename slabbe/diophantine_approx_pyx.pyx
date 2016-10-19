@@ -10,7 +10,7 @@ function in Python code (diophantine_approximation.py)::
     sage: from slabbe.diophantine_approx_pyx import simultaneous_dioph_approx_pyx
     sage: from slabbe.diophantine_approx import simultaneous_dioph_approx
     sage: simultaneous_dioph_approx_pyx([e,pi], 203)     # 493 µs
-    ([1843, 2130, 678], 203.2394429340719)
+    ((1843, 2130, 678), 203.24)
     sage: simultaneous_dioph_approx([e,pi], 203)         # 905 ms
     ((1843, 2130, 678), 203.239442934072)
     sage: 905/493. * 1000
@@ -19,9 +19,9 @@ function in Python code (diophantine_approximation.py)::
 ::
 
     sage: simultaneous_dioph_approx_pyx([e,pi], 204)     # 2.25 ms
-    ([51892, 59973, 19090], 266.16775094991226)
+    ((51892, 59973, 19090), 266.17)
     sage: simultaneous_dioph_approx([e,pi], 204)         # 25s (not tested)
-    ((51892, 59973, 19090), 266.167750949912)
+    ((51892, 59973, 19090), 266.17)
     sage: 25 / 2.25 * 1000
     11111.1111111111
 
@@ -68,20 +68,20 @@ def simultaneous_dioph_approx_pyx(v, int Q, int start=1, int stop=-1):
 
         sage: from slabbe.diophantine_approx_pyx import simultaneous_dioph_approx_pyx
         sage: simultaneous_dioph_approx_pyx([e,pi], 2)
-        (3, 3, 1), 3.54964677830384)
+        ((3, 3, 1), 3.55)
         sage: simultaneous_dioph_approx_pyx([e,pi], 4)
-        (19, 22, 7), 35.7490143326079)
+        ((19, 22, 7), 35.75)
         sage: simultaneous_dioph_approx_pyx([e,pi], 35)
-        (19, 22, 7), 35.7490143326079)
+        ((19, 22, 7), 35.75)
         sage: simultaneous_dioph_approx_pyx([e,pi], 36)
-        (1843, 2130, 678), 203.239442934072)
+        ((1843, 2130, 678), 203.24)
         sage: simultaneous_dioph_approx_pyx([e,pi], 203)
-        (1843, 2130, 678), 203.239442934072)
+        ((1843, 2130, 678), 203.24)
 
     We can start the next computation at step 678::
 
         sage: simultaneous_dioph_approx_pyx([e,pi], 204, start=678)
-        (51892, 59973, 19090), 266.167750949912)
+        ((51892, 59973, 19090), 266.17)
 
     TESTS::
 
@@ -124,7 +124,7 @@ def simultaneous_dioph_approx_pyx(v, int Q, int start=1, int stop=-1):
             frac_q_v = [a-floor(a) for a in q_v]
             error = max((a if a < .5 else 1-a) for a in frac_q_v)
             sig_free(vdouble)
-            return tuple(p), 1./error
+            return tuple(p), round(1./error, 2)
     sig_free(vdouble)
     return None, None
 

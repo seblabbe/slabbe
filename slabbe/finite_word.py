@@ -90,7 +90,7 @@ def to_image(self, width=1000):
         sage: img = to_image(t[:10000], width=100)
         sage: img
         <PIL.Image.Image image mode=RGB size=100x100 at 0x...>
-        sage: img.show()
+        sage: img.show()    # not tested
 
     ::
 
@@ -104,7 +104,8 @@ def to_image(self, width=1000):
         sage: s = map(int, str(pi.n(digits=40001))[2:])
         sage: len(s)
         40000
-        sage: to_image(W(s), 200).show()
+        sage: img = to_image(W(s), 200)
+        sage: img.show()    # not tested
     """
     #http://stackoverflow.com/questions/434583/what-is-the-fastest-way-to-draw-an-image-from-discrete-pixel-values-in-python
     import numpy as np

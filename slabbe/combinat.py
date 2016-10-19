@@ -271,7 +271,7 @@ def integral_points_count_union_of_polytopes(L):
         sage: Q.integral_points_count()   # optional -- latte_int
         100
         sage: from slabbe.combinat import integral_points_count_union_of_polytopes
-        sage: integral_points_count_union_of_polytopes([P,Q])
+        sage: integral_points_count_union_of_polytopes([P,Q])  # optional -- latte_int
         175
     """
     from sage.combinat.subset import Subsets
@@ -306,7 +306,7 @@ def intersection_of_polytopes(L):
         sage: I = intersection_of_polytopes([P,Q])
         sage: I
         A 2-dimensional polyhedron in QQ^2 defined as the convex hull of 4 vertices
-        sage: I.integral_points_count()
+        sage: I.integral_points_count()      # optional -- latte_int
         25
 
     TESTS::
