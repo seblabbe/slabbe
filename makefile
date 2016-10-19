@@ -1,9 +1,7 @@
 all: install test
 
 install:
-	# python setup.py install
-	#sage -pip install --upgrade -v .
-	sage -pip install --upgrade --no-index .
+	sage -pip install --upgrade --no-index -v .
 
 develop:
 	# python setup.py develop

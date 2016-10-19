@@ -13,6 +13,9 @@ ext_modules = [
             sources = [path.join('slabbe','kolakoski_word_pyx.pyx')],),
         Extension('slabbe.mult_cont_frac_pyx',
             sources = [path.join('slabbe','mult_cont_frac_pyx.pyx')],
+            include_dirs=sage_include_directories()),
+        Extension('slabbe.diophantine_approx_pyx',
+            sources = [path.join('slabbe','diophantine_approx_pyx.pyx')],
             include_dirs=sage_include_directories())]
 
 
