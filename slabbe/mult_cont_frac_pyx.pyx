@@ -2665,6 +2665,90 @@ cdef class JacobiPerronAdditifv2(MCFAlgorithm):
 
         return R
 
+cdef class Modified(MCFAlgorithm):
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.mult_cont_frac_pyx import Modified, Brun
+        sage: algo = Modified(Brun(), {123:1.2})
+        sage: algo
+        Modified 3-dimensional continued fraction algorithm
+
+    ::
+
+        sage: TestSuite(algo).run()
+        sage: algo._test_dual_substitution_definition()
+        sage: algo._test_coherence()
+        sage: algo._test_definition()
+
+    For example::
+
+        sage: f = lambda g: Modified(Brun(), {123:g}).lyapunov_exponents(n_iterations=1000000)[-1]
+        sage: plot(f, (0.95, 1.05), adaptive_recursion=1)
+        Launched png viewer for Graphics object consisting of 1 graphics primitive
+
+    The motivation for this class is to study the constant in front of the not
+    unimodular matrix for branch 4 in Reverse algorithm::
+
+        sage: algo = Modified(Reverse(), {4:1})
+        sage: algo.lyapunov_exponents(n_iterations=1000000)
+        (0.407428273374779, -0.10394067692044444, 1.2551140500375464)
+        sage: algo = Modified(Reverse(), {4:2.^(1/3)})       # unimodular case
+        sage: algo.lyapunov_exponents(n_iterations=1000000)
+        (0.3629971890178995, -0.14441058920752092, 1.397828395305838)
+
+    Question: what is the 1-theta2/theta1 de l'algo Reverse?
+
+    More systematically::
+
+        sage: f = lambda g: Modified(Reverse(), {4:g}).lyapunov_exponents(n_iterations=1000000)[-1]
+        sage: plot(f, (0.95, 1.05), adaptive_recursion=0)
+        Launched png viewer for Graphics object consisting of 1 graphics primitive
+    """
+    cdef MCFAlgorithm _algo
+    cdef dict _gamma
+    def __init__(self, MCFAlgorithm, dict gamma):
+        self._algo = MCFAlgorithm
+        self._gamma = gamma
+
+    cdef PairPoint3d call(self, PairPoint3d P) except *:
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac_pyx import Modified, Brun
+            sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
+            sage: algo = Modified(Brun(), {132:1})
+            sage: E = algo(D)
+            sage: sorted(E.iteritems())
+            [('branch', 123),
+             ('u', 0.2),
+             ('v', 0.6),
+             ('w', 0.3),
+             ('x', 0.3),
+             ('y', 0.6),
+             ('z', 0.20000000000000007)]
+            sage: algo = Modified(Brun(), {123:2})
+            sage: E = algo(D)
+            sage: sorted(E.iteritems())
+            [('branch', 123),
+             ('u', 0.1),
+             ('v', 0.3),
+             ('w', 0.15),
+             ('x', 0.6),
+             ('y', 1.2),
+             ('z', 0.40000000000000013)]
+        """
+        P = self._algo.call(P)
+        if P.branch in self._gamma:
+            g = self._gamma[P.branch]
+            P.x *= g
+            P.y *= g
+            P.z *= g
+            P.u /= g
+            P.v /= g
+            P.w /= g
+        return P
+
 cdef inline PairPoint3d _Poincare(PairPoint3d P) except *:
     r"""
     EXAMPLES::
