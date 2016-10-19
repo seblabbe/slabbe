@@ -4,8 +4,8 @@ Simultaneous diophantine approximation
 
 EXAMPLES::
 
-    sage: from slabbe.diophantine_approximation import simultaneous_convergents
-    sage: it = simultaneous_convergents([e, pi])
+    sage: from slabbe.diophantine_approximation import dirichlet_convergents
+    sage: it = dirichlet_convergents([e, pi])
     sage: [next(it) for _ in range(10)]          # not tested (60s)
     [(3, 3, 1),                          oui 3
      (19, 22, 7),                        oui 6
@@ -84,6 +84,9 @@ TODO:
 #  the License, or (at your option) any later version.
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+import itertools
+from collections import defaultdict
+from bisect import bisect
 from sage.functions.other import floor
 from sage.misc.functional import round
 from sage.modules.free_module_element import vector
@@ -180,7 +183,7 @@ def simultaneous_diophantine_approximation(v, Q, start=1, verbose=False):
         raise RuntimeError('Did not find diophantine approximation of vector '
                 'v={} with parameter Q={}'.format(v, Q))
 
-def simultaneous_convergents(v):  
+def dirichlet_convergents(v):  
     r"""
     Return the sequence of convergents to a vector of real number according to
     Dirichlet theorem on simultaneous approximations.
@@ -195,8 +198,8 @@ def simultaneous_convergents(v):
 
     EXAMPLES::
 
-        sage: from slabbe.diophantine_approximation import simultaneous_convergents
-        sage: it = simultaneous_convergents([e, pi])
+        sage: from slabbe.diophantine_approximation import dirichlet_convergents
+        sage: it = dirichlet_convergents([e, pi])
         sage: next(it)
         (3, 3, 1)
         sage: next(it)
@@ -210,7 +213,7 @@ def simultaneous_convergents(v):
 
     Correspondance with continued fraction when d=1::
 
-        sage: it = simultaneous_convergents([e])
+        sage: it = dirichlet_convergents([e])
         sage: [next(it) for _ in range(10)]
         [(3, 1),
          (8, 3),
@@ -229,6 +232,7 @@ def simultaneous_convergents(v):
     start = 1
     while True:
         u,Q = simultaneous_diophantine_approximation(v, Q, start)
+        u.set_immutable()
         yield u
         Q = floor(Q) + 1
         start = u[-1]
@@ -300,7 +304,7 @@ def dirichlet_approx_dependance(v, n, verbose=False):
           4   (163067, 188461, 103904, 59989)   [29, 14, 1, 1]   (2, 4, 1, 1)
     """
     L = []
-    it = simultaneous_convergents(v)
+    it = dirichlet_convergents(v)
     rows = []
     for i in range(n):
         vi = next(it)
@@ -323,4 +327,118 @@ def dirichlet_approx_dependance(v, n, verbose=False):
         rows.append(row)
     header_row = ['i', 'vi', 'lin. rec.', 'remainder']
     return table(rows=rows, header_row=header_row)
+
+def mult_cont_frac_vs_dirichlet_dict(v, dirichlet, algos):
+    r"""
+    INPUT:
+
+    - ``v`` -- list of real numbers
+    - ``dirichlet`` -- list, first dirichlet approximations
+    - ``algos`` -- list, list of mult. cont. frac. algorithms
+
+    OUTPUT:
+
+        dict
+
+    EXAMPLES::
+
+        sage: v = [e, pi]
+        sage: it = dirichlet_convergents(v)
+        sage: dirichlet = [next(it) for _ in range(3)]
+        sage: mult_cont_frac_vs_dirichlet_dict([e,pi], dirichlet, [Brun(), ARP()])
+        {Arnoux-Rauzy-Poincar\'e 3-dimensional continued fraction algorithm:
+         defaultdict(<type 'list'>, {(19, 22, 7): [6, 7, 8, 9, 10, 11],
+         (3, 3, 1): [3], (1843, 2130, 678): [16, 17]}),
+         Brun 3-dimensional continued fraction algorithm:
+         defaultdict(<type 'list'>, {(19, 22, 7): [9, 10, 11, 12, 13,
+         14, 15, 16], (3, 3, 1): [4, 5], (1843, 2130, 678): [22, 23,
+         24, 25, 26, 27]})}
+
+     Or from precomputed Dirichlet approximations::
+
+        sage: dirichlet = [(3, 3, 1), (19, 22, 7), (1843, 2130, 678), (51892, 59973, 19090)]
+        sage: mult_cont_frac_vs_dirichlet_dict([e,pi], dirichlet, [Brun(), ARP()])
+        {Arnoux-Rauzy-Poincar\'e 3-dimensional continued fraction algorithm:
+         defaultdict(<type 'list'>, {(19, 22, 7): [6, 7, 8, 9, 10, 11],
+         (3, 3, 1): [3], (1843, 2130, 678): [16, 17]}),
+         Brun 3-dimensional continued fraction algorithm:
+         defaultdict(<type 'list'>, {(19, 22, 7): [9, 10, 11, 12, 13,
+         14, 15, 16], (3, 3, 1): [4, 5], (1843, 2130, 678): [22, 23,
+         24, 25, 26, 27]})}
+    """
+    dirichlet_set = set(tuple(u) for u in dirichlet)
+    MAX = max(u[-1] for u in dirichlet)
+    vv = list(v) + [1]
+    D = {}
+    for algo in algos:
+        D[algo] = defaultdict(list)
+        for i in itertools.count():
+            columns = algo.n_matrix(vv, i).columns()
+            if min(col[-1] for col in columns) > MAX:
+                break
+            for col in columns:
+                col = tuple(col)
+                if col in dirichlet_set:
+                    D[algo][col].append(i)
+    return D
+
+def mult_cont_frac_vs_dirichlet(v, dirichlet, algos):
+    r"""
+    Returns the indices i such that dirichlet approximations appears as columns
+    of the i-th matrix obtained from mult. dim. cont. frac. algorithms.
+
+    INPUT:
+
+    - ``v`` -- list of real numbers
+    - ``dirichlet`` -- list, first dirichlet approximations
+    - ``algos`` -- list, list of mult. cont. frac. algorithms
+
+    OUTPUT:
+
+    table
+
+    EXAMPLES::
+
+        sage: v = [e, pi]
+        sage: it = dirichlet_convergents(v)
+        sage: dirichlet = [next(it) for _ in range(3)]
+
+    Or from precomputed Dirichlet approximations::
+
+        sage: dirichlet = [(3, 3, 1), (19, 22, 7), (1843, 2130, 678), (51892, 59973, 19090), 
+                     (113018, 130618, 41577), (114861, 132748, 42255), (166753, 192721, 61345), 
+                 (446524, 516060, 164267), (1174662, 1357589, 432134), (3970510, 4588827, 1460669)]
+        sage: from slabbe.mult_cont_frac import Brun,ARP,Reverse,Selmer,Cassaigne
+        sage: algos = [Brun(), ARP(), Reverse(), Selmer(),Cassaigne()]
+        sage: mult_cont_frac_vs_dirichlet([e,pi], dirichlet, algos)
+          Dirichlet                     Brun       ARP        Reverse   Selmer     Cassaigne
+        +-----------------------------+----------+----------+---------+----------+-----------+
+          (3, 3, 1)                     [4, 5]     [3]        []        [8, 12]    []
+          (19, 22, 7)                   [9, 16]    [6, 11]    [7, 33]   [32]       [15, 25]
+          (1843, 2130, 678)             [22, 27]   [16, 17]   []        [44, 48]   [36, 39]
+          (51892, 59973, 19090)         []         []         []        [56]       []
+          (113018, 130618, 41577)       []         []         []        []         []
+          (114861, 132748, 42255)       [33, 35]   [22, 24]   []        [62, 66]   [51, 53]
+          (166753, 192721, 61345)       []         []         []        []         []
+          (446524, 516060, 164267)      [36]       [25]       []        []         [56, 57]
+          (1174662, 1357589, 432134)    [39, 44]   [26, 29]   []        [68]       [61, 66]
+          (3970510, 4588827, 1460669)   []         [28]       []        []         []
+    """
+    D = mult_cont_frac_vs_dirichlet_dict(v, dirichlet, algos)
+    rows = []
+    for v in dirichlet:
+        v = tuple(v)
+        row = [v] 
+        for algo in algos:
+            indices = D[algo][v]
+            if len(indices) > 1:
+                row.append([min(indices), max(indices)])
+            else:
+                row.append(indices)
+        rows.append(row)
+    header_row = ['Dirichlet'] + [algo.class_name() for algo in algos]
+    return table(rows=rows, header_row=header_row)
+
+
+
 
