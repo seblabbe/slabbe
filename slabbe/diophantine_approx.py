@@ -266,6 +266,52 @@ def dirichlet_convergents(v):
         Q = floor(Q) + 1
         start = u[-1]
 
+def simultaneous_dioph_approx_parallel(v, Q, start, step=10**6):
+    r"""
+    ..TODO::
+
+        optimize, what are the good input value for step? should we rather
+        consider the number of jobs? What should be the good number of jobs?
+        (twice the number of cpus?)
+
+    EXAMPLES::
+
+        sage: %time simultaneous_dioph_approx_pyx([e,pi], 20000, start=1)
+        CPU times: user 10.9 s, sys: 25.3 ms, total: 10.9 s
+        Wall time: 10.9 s
+        ((307498741, 355384705, 113122465), 31714.96)
+        sage: %time simultaneous_dioph_approx_parallel([e,pi], 20000, start=1)
+        CPU times: user 557 ms, sys: 4.87 s, total: 5.43 s
+        Wall time: 23.5 s
+        ((307498741, 355384705, 113122465), 31714.96)
+        sage: %time simultaneous_dioph_approx_parallel([e,pi], 20000, start=1, step=10^6)
+        CPU times: user 57.3 ms, sys: 428 ms, total: 485 ms
+        Wall time: 7.42 s
+        ((307498741, 355384705, 113122465), 31714.96)
+        sage: %time simultaneous_dioph_approx_parallel([e,pi], 20000, start=1, step=10^7)
+        CPU times: user 6.81 ms, sys: 45.6 ms, total: 52.4 ms
+        Wall time: 5.59 s
+        ((307498741, 355384705, 113122465), 31714.96)
+
+    """
+    from slabbe.diophantine_approx_pyx import simultaneous_dioph_approx_pyx
+    @parallel
+    def F(start, end):
+        return simultaneous_dioph_approx_pyx(v, Q, start, end)
+    d = len(v)
+    MAX = Q**d
+    starts = range(start, Q**d, step)
+    ends = starts[1:] + [MAX]
+    Z = zip(starts, ends)
+    print "number of jobs: {}".format(len(Z))
+    for (arg, kwds), output in F(Z):
+        if output[0] is None and output[1] is None:
+            continue
+        else:
+            # we currently ignore other result that we should maybe not ignore
+            return output
+
+
 def dirichlet_convergents_dependance(v, n, verbose=False):
     r"""
     INPUT:
