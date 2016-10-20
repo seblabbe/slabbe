@@ -4,8 +4,8 @@ Simultaneous diophantine approximation
 
 EXAMPLES::
 
-    sage: from slabbe.diophantine_approx import dirichlet_convergents
-    sage: it = dirichlet_convergents([e, pi])
+    sage: from slabbe.diophantine_approx import best_simultaneous_convergents
+    sage: it = best_simultaneous_convergents([e, pi])
     sage: dirichlet10 = [next(it) for _ in range(10)]
     sage: dirichlet10
     [(3, 3, 1),
@@ -89,16 +89,23 @@ expect a perfect MCF algorithm based on 3x3 matrices::
       6   (166753, 192721, 61345)    [1, 0, 1]     (0, 0, 0)
       7   (446524, 516060, 164267)   [2, 0, 1]     (0, 0, 0)
 
+BENCHMARKS::
+
+    sage: it = best_simultaneous_convergents([e,pi])
+    sage: %time L = [next(it) for _ in range(15)]   # not tested (4.66s)
+    sage: it = best_simultaneous_convergents([e,pi])
+    sage: %time L = [next(it) for _ in range(18)]   # not tested (52s)
+
 AUTHORS:
 
 - Sébastien Labbé, September 22, 2016
 - Sébastien Labbé, October 10, 2016
-- Sébastien Labbé (October 19, 2016), Cython improvements (10000x faster)
+- Sébastien Labbé, October 19, 2016, Cython improvements (10000x faster)
+- Sébastien Labbé, October 21, 2016, Parallelization of computations
 
 TODO:
 
-- Parallelize the computation of simultaneous approximations
-- How many of the dirichlet approximations are found by the MCF algos?
+- In general, how many of the dirichlet approximations are found by the MCF algos?
 """
 #*****************************************************************************
 #       Copyright (C) 2016 Sebastien Labbe <slabqc@gmail.com>
@@ -143,10 +150,10 @@ def frac(x):
 def distance_to_nearest_integer(x):
     raise NotImplementedError
 
-def simultaneous_dioph_approx(v, Q, start=1, verbose=False):
+def _best_simultaneous_convergents_upto(v, Q, start=1, verbose=False):
     r"""
-    Return a simultaneous diophantine approximation of vector ``v`` at distance
-    ``1/Q``.
+    Return the smallest best simultaneous diophantine approximation of vector
+    ``v`` at distance ``1/Q``.
 
     .. WARNING::
 
@@ -168,26 +175,26 @@ def simultaneous_dioph_approx(v, Q, start=1, verbose=False):
 
     EXAMPLES::
 
-        sage: from slabbe.diophantine_approx import simultaneous_dioph_approx
-        sage: simultaneous_dioph_approx([e,pi], 2)
+        sage: from slabbe.diophantine_approx import _best_simultaneous_convergents_upto
+        sage: _best_simultaneous_convergents_upto([e,pi], 2)
         ((3, 3, 1), 3.54964677830384)
-        sage: simultaneous_dioph_approx([e,pi], 4)
+        sage: _best_simultaneous_convergents_upto([e,pi], 4)
         ((19, 22, 7), 35.7490143326079)
-        sage: simultaneous_dioph_approx([e,pi], 35)
+        sage: _best_simultaneous_convergents_upto([e,pi], 35)
         ((19, 22, 7), 35.7490143326079)
-        sage: simultaneous_dioph_approx([e,pi], 36)
+        sage: _best_simultaneous_convergents_upto([e,pi], 36)
         ((1843, 2130, 678), 203.239442934072)
-        sage: simultaneous_dioph_approx([e,pi], 203)   # long time (1s)
+        sage: _best_simultaneous_convergents_upto([e,pi], 203)   # long time (1s)
         ((1843, 2130, 678), 203.239442934072)
 
     We can start the next computation at step 678::
 
-        sage: simultaneous_dioph_approx([e,pi], 204, start=678) # not tested (25s)
+        sage: _best_simultaneous_convergents_upto([e,pi], 204, start=678) # not tested (25s)
         ((51892, 59973, 19090), 266.167750949912)
 
     TESTS::
 
-        sage: simultaneous_dioph_approx([1,e,pi], 1)
+        sage: _best_simultaneous_convergents_upto([1,e,pi], 1)
         Traceback (most recent call last):
         ...
         ValueError: argument Q(=1) must be > 1
@@ -212,10 +219,64 @@ def simultaneous_dioph_approx(v, Q, start=1, verbose=False):
         raise RuntimeError('Did not find diophantine approximation of vector '
                 'v={} with parameter Q={}'.format(v, Q))
 
-def dirichlet_convergents(v):  
+def best_simultaneous_convergents_upto(v, Q, start=1):
     r"""
-    Return the sequence of convergents to a vector of real number according to
-    Dirichlet theorem on simultaneous approximations.
+    Return a list of all best simultaneous diophantine approximations p,q of vector
+    ``v`` at distance ``|qv-p|<=1/Q`` such that `1<=q<Q^d`.
+
+    INPUT:
+
+    - ``v`` -- list of real numbers
+    - ``Q`` -- real number, Q>1
+    - ``start`` -- integer (default: ``1``), starting value to check
+
+    EXAMPLES::
+
+        sage: from slabbe.diophantine_approx import best_simultaneous_convergents_upto
+        sage: best_simultaneous_convergents_upto([e,pi], 2)
+        [((3, 3, 1), 3.55)]
+        sage: best_simultaneous_convergents_upto([e,pi], 4)
+        [((19, 22, 7), 35.75)]
+        sage: best_simultaneous_convergents_upto([e,pi], 36, start=4**2)
+        [((1843, 2130, 678), 203.24)]
+        sage: best_simultaneous_convergents_upto([e,pi], 204, start=36**2)
+        [((51892, 59973, 19090), 266.17), ((113018, 130618, 41577), 279.19)]
+        sage: best_simultaneous_convergents_upto([e,pi], 280, start=204**2)
+        [((114861, 132748, 42255), 412.79), ((166753, 192721, 61345), 749.36)]
+        sage: best_simultaneous_convergents_upto([e,pi], 750, start=280**2)
+        [((446524, 516060, 164267), 896.47), ((1174662, 1357589, 432134), 2935.31)]
+        sage: best_simultaneous_convergents_upto([e,pi], 2936, start=750**2)
+        [((3970510, 4588827, 1460669), 3654.3),
+         ((21640489, 25010505, 7961091), 6257.09)]
+    """
+    from slabbe.diophantine_approx_pyx import good_simultaneous_convergents_upto
+    from sage.parallel.decorate import parallel
+    from sage.parallel.ncpus import ncpus
+    step = ncpus()
+    @parallel
+    def F(shift):
+        return good_simultaneous_convergents_upto(v, Q, start+shift, step=step)
+    shifts = range(step)
+    goods = []
+    for (arg, kwds), output in F(shifts):
+        goods.extend(output)
+    if not goods:
+        raise ValueError("Did not find an approximation p,q to v={} s.t.  |p-qv|<=1/Q"
+            " where Q={}".format(v,Q))
+    goods.sort()
+    sol = p, best_error_inv = goods[0]
+    bests = [sol]
+    # keep only the best ones
+    for p,error_inv in goods[1:]:
+        if error_inv > best_error_inv:
+            bests.append((p,error_inv))
+            best_error_inv = error_inv
+    return bests
+
+def best_simultaneous_convergents(v):  
+    r"""
+    Return an iterator of best convergents to a vector of real number according
+    to Dirichlet theorem on simultaneous approximations.
 
     INPUT:
 
@@ -227,22 +288,20 @@ def dirichlet_convergents(v):
 
     EXAMPLES::
 
-        sage: from slabbe.diophantine_approx import dirichlet_convergents
-        sage: it = dirichlet_convergents([e, pi])
-        sage: next(it)
-        (3, 3, 1)
-        sage: next(it)
-        (19, 22, 7)
-        sage: next(it)
-        (1843, 2130, 678)
-        sage: next(it)
-        (51892, 59973, 19090)
-        sage: next(it)
-        (113018, 130618, 41577)
+        sage: from slabbe.diophantine_approx import best_simultaneous_convergents
+        sage: it = best_simultaneous_convergents([e, pi])
+        sage: [next(it) for _ in range(5)]
+        [(3, 3, 1),
+         (19, 22, 7),
+         (1843, 2130, 678),
+         (51892, 59973, 19090),
+         (113018, 130618, 41577)]
+
+    TESTS:
 
     Correspondance with continued fraction when d=1::
 
-        sage: it = dirichlet_convergents([e])
+        sage: it = best_simultaneous_convergents([e])
         sage: [next(it) for _ in range(10)]
         [(3, 1),
          (8, 3),
@@ -257,60 +316,15 @@ def dirichlet_convergents(v):
         sage: continued_fraction(e).convergents()[:11].list()
         [2, 3, 8/3, 11/4, 19/7, 87/32, 106/39, 193/71, 1264/465, 1457/536, 2721/1001]
     """
-    from slabbe.diophantine_approx_pyx import simultaneous_dioph_approx_pyx
-    Q = 2
+    Q = 2.
     start = 1
-    while True:
-        u,Q = simultaneous_dioph_approx_pyx(v, Q, start)
-        yield u
-        Q = floor(Q) + 1
-        start = u[-1]
-
-def simultaneous_dioph_approx_parallel(v, Q, start, step=10**6):
-    r"""
-    ..TODO::
-
-        optimize, what are the good input value for step? should we rather
-        consider the number of jobs? What should be the good number of jobs?
-        (twice the number of cpus?)
-
-    EXAMPLES::
-
-        sage: %time simultaneous_dioph_approx_pyx([e,pi], 20000, start=1)
-        CPU times: user 10.9 s, sys: 25.3 ms, total: 10.9 s
-        Wall time: 10.9 s
-        ((307498741, 355384705, 113122465), 31714.96)
-        sage: %time simultaneous_dioph_approx_parallel([e,pi], 20000, start=1)
-        CPU times: user 557 ms, sys: 4.87 s, total: 5.43 s
-        Wall time: 23.5 s
-        ((307498741, 355384705, 113122465), 31714.96)
-        sage: %time simultaneous_dioph_approx_parallel([e,pi], 20000, start=1, step=10^6)
-        CPU times: user 57.3 ms, sys: 428 ms, total: 485 ms
-        Wall time: 7.42 s
-        ((307498741, 355384705, 113122465), 31714.96)
-        sage: %time simultaneous_dioph_approx_parallel([e,pi], 20000, start=1, step=10^7)
-        CPU times: user 6.81 ms, sys: 45.6 ms, total: 52.4 ms
-        Wall time: 5.59 s
-        ((307498741, 355384705, 113122465), 31714.96)
-
-    """
-    from slabbe.diophantine_approx_pyx import simultaneous_dioph_approx_pyx
-    @parallel
-    def F(start, end):
-        return simultaneous_dioph_approx_pyx(v, Q, start, end)
     d = len(v)
-    MAX = Q**d
-    starts = range(start, Q**d, step)
-    ends = starts[1:] + [MAX]
-    Z = zip(starts, ends)
-    print "number of jobs: {}".format(len(Z))
-    for (arg, kwds), output in F(Z):
-        if output[0] is None and output[1] is None:
-            continue
-        else:
-            # we currently ignore other result that we should maybe not ignore
-            return output
-
+    while True:
+        bests = best_simultaneous_convergents_upto(v, Q, start)
+        start = Q**d
+        for u,Q in bests:
+            yield u
+        Q += 0.001 # make sure we do not get the same again
 
 def dirichlet_convergents_dependance(v, n, verbose=False):
     r"""
@@ -338,7 +352,7 @@ def dirichlet_convergents_dependance(v, n, verbose=False):
 
     The last 3 seems enough::
 
-        sage: dirichlet_convergents_dependance([e,pi], 8)     # long (1 min 10s)
+        sage: dirichlet_convergents_dependance([e,pi], 8)
           i   vi                         lin. rec.     remainder
         +---+--------------------------+-------------+-----------+
           0   (3, 3, 1)                  []            (3, 3, 1)
@@ -352,25 +366,25 @@ def dirichlet_convergents_dependance(v, n, verbose=False):
 
     But not in this case::
 
-        sage: dirichlet_convergents_dependance([pi,sqrt(3)], 12)   # long (25s)
-          i    vi                       lin. rec.            remainder
-        +----+------------------------+--------------------+-----------+
-          0    (3, 2, 1)                []                   (3, 2, 1)
-          1    (22, 12, 7)              [6]                  (4, 0, 1)
-          2    (176, 97, 56)            [8, 0]               (0, 1, 0)
-          3    (223, 123, 71)           [1, 2, 1]            (0, 0, 0)
-          4    (399, 220, 127)          [1, 1]               (0, 0, 0)
-          5    (1442, 795, 459)         [3, 1, 0, 1]         (0, 0, 0)
-          6    (6390, 3523, 2034)       [4, 1, 1]            (0, 0, 0)
-          7    (26603, 14667, 8468)     [4, 0, 2, 1, 0, 1]   (0, 0, 0)
-          8    (32993, 18190, 10502)    [1, 1]               (0, 0, 0)
-          9    (40825, 22508, 12995)    [1, 0, 1, 1]         (0, 0, 0)
-          10   (73818, 40698, 23497)    [1, 1]               (0, 0, 0)
-          11   (114643, 63206, 36492)   [1, 1]               (0, 0, 0)
+        sage: dirichlet_convergents_dependance([pi,sqrt(3)], 12)
+          i    vi                      lin. rec.                  remainder
+        +----+-----------------------+--------------------------+-----------+
+          0    (3, 2, 1)               []                         (3, 2, 1)
+          1    (22, 12, 7)             [6]                        (4, 0, 1)
+          2    (47, 26, 15)            [2, 1]                     (0, 0, 0)
+          3    (69, 38, 22)            [1, 1]                     (0, 0, 0)
+          4    (176, 97, 56)           [2, 0, 1, 4]               (4, 1, 1)
+          5    (223, 123, 71)          [1, 0, 1]                  (0, 0, 0)
+          6    (399, 220, 127)         [1, 1]                     (0, 0, 0)
+          7    (1442, 795, 459)        [3, 1, 0, 0, 0, 1]         (0, 0, 0)
+          8    (6390, 3523, 2034)      [4, 1, 1]                  (0, 0, 0)
+          9    (26603, 14667, 8468)    [4, 0, 2, 1, 0, 0, 0, 1]   (0, 0, 0)
+          10   (32993, 18190, 10502)   [1, 1]                     (0, 0, 0)
+          11   (40825, 22508, 12995)   [1, 0, 1, 1]               (0, 0, 0)
 
     The v4 is not a lin. comb. of the previous four::
 
-        sage: dirichlet_convergents_dependance([e,pi,sqrt(3)], 5)     # long (44s)
+        sage: dirichlet_convergents_dependance([e,pi,sqrt(3)], 5)
           i   vi                                lin. rec.        remainder
         +---+---------------------------------+----------------+--------------+
           0   (3, 3, 2, 1)                      []               (3, 3, 2, 1)
@@ -380,7 +394,7 @@ def dirichlet_convergents_dependance(v, n, verbose=False):
           4   (163067, 188461, 103904, 59989)   [29, 14, 1, 1]   (2, 4, 1, 1)
     """
     L = []
-    it = dirichlet_convergents(v)
+    it = best_simultaneous_convergents(v)
     rows = []
     for i in range(n):
         vi = vector(next(it))
@@ -419,11 +433,11 @@ def mult_cont_frac_vs_dirichlet_dict(v, dirichlet, algos):
 
     EXAMPLES::
 
-        sage: from slabbe.diophantine_approx import dirichlet_convergents
+        sage: from slabbe.diophantine_approx import best_simultaneous_convergents
         sage: from slabbe.diophantine_approx import mult_cont_frac_vs_dirichlet_dict
         sage: from slabbe.mult_cont_frac import ARP, Brun
         sage: v = [e, pi]
-        sage: it = dirichlet_convergents(v)
+        sage: it = best_simultaneous_convergents(v)
         sage: dirichlet = [next(it) for _ in range(3)]
         sage: mult_cont_frac_vs_dirichlet_dict([e,pi], dirichlet, [Brun(), ARP()])
         {Arnoux-Rauzy-Poincar\'e 3-dimensional continued fraction algorithm:
@@ -479,20 +493,14 @@ def mult_cont_frac_vs_dirichlet(v, dirichlet, algos):
 
     EXAMPLES::
 
-        sage: from slabbe.diophantine_approx import dirichlet_convergents
-        sage: v = [e, pi]
-        sage: it = dirichlet_convergents(v)
-        sage: dirichlet = [next(it) for _ in range(3)]
-
-    Or from precomputed Dirichlet approximations::
-
+        sage: from slabbe.diophantine_approx import best_simultaneous_convergents
         sage: from slabbe.diophantine_approx import mult_cont_frac_vs_dirichlet
-        sage: dirichlet = [(3, 3, 1), (19, 22, 7), (1843, 2130, 678), (51892, 59973, 19090), 
-        ....:        (113018, 130618, 41577), (114861, 132748, 42255), (166753, 192721, 61345), 
-        ....:    (446524, 516060, 164267), (1174662, 1357589, 432134), (3970510, 4588827, 1460669)]
         sage: from slabbe.mult_cont_frac import Brun,ARP,Reverse,Selmer,Cassaigne
+        sage: v = [e, pi]
+        sage: it = best_simultaneous_convergents(v)
+        sage: dirichlet = [next(it) for _ in range(10)]
         sage: algos = [Brun(), ARP(), Reverse(), Selmer(),Cassaigne()]
-        sage: mult_cont_frac_vs_dirichlet([e,pi], dirichlet, algos)
+        sage: mult_cont_frac_vs_dirichlet(v, dirichlet, algos)
           Dirichlet                     Brun       ARP        Reverse   Selmer     Cassaigne
         +-----------------------------+----------+----------+---------+----------+-----------+
           (3, 3, 1)                     [4, 5]     [3]        []        [8, 12]    []
