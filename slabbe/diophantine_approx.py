@@ -92,7 +92,7 @@ expect a perfect MCF algorithm based on 3x3 matrices::
 But, looking further, it is not true anymore, because v_10 is not a greedy
 linear combination of the previous three::
 
-    sage: dirichlet_convergents_dependance([e,pi], 18)
+    sage: dirichlet_convergents_dependance([e,pi], 18)   # long time (7.4s)
       i    vi                                  lin. rec.         remainder
     +----+-----------------------------------+-----------------+-----------+
       0    (3, 3, 1)                           []                (3, 3, 1)
@@ -117,10 +117,30 @@ linear combination of the previous three::
 Remark: matrices of independant lines is 1 (with Thomas Garrity, 27oct 2016).
 He kind of have a proof of that...
 
-This gives a Value Error (look into this why)::
+This used to give a Value Error::
 
-    sage: dirichlet_convergents_dependance([e,pi], 19) # not tested
-
+    sage: dirichlet_convergents_dependance([e,pi], 19) # not tested (1min 12s)
+      i    vi                                     lin. rec.             remainder
+    +----+--------------------------------------+---------------------+-----------+
+      0    (3, 3, 1)                              []                    (3, 3, 1)
+      1    (19, 22, 7)                            [6]                   (1, 4, 1)
+      2    (1843, 2130, 678)                      [96, 6]               (1, 0, 0)
+      3    (51892, 59973, 19090)                  [28, 15, 1]           (0, 0, 0)
+      4    (113018, 130618, 41577)                [2, 5, 1]             (0, 0, 0)
+      5    (114861, 132748, 42255)                [1, 0, 1]             (0, 0, 0)
+      6    (166753, 192721, 61345)                [1, 0, 1]             (0, 0, 0)
+      7    (446524, 516060, 164267)               [2, 0, 1]             (0, 0, 0)
+      8    (1174662, 1357589, 432134)             [2, 1, 1]             (0, 0, 0)
+      9    (3970510, 4588827, 1460669)            [3, 1]                (0, 0, 0)
+      10   (21640489, 25010505, 7961091)          [5, 1, 1, 1]          (0, 0, 0)
+      11   (25610999, 29599332, 9421760)          [1, 1]                (0, 0, 0)
+      12   (47251488, 54609837, 17382851)         [1, 1]                (0, 0, 0)
+      13   (117318127, 135587768, 43158927)       [2, 0, 1, 0, 1]       (0, 0, 0)
+      14   (142929126, 165187100, 52580687)       [1, 0, 1]             (0, 0, 0)
+      15   (164569615, 190197605, 60541778)       [1, 0, 0, 0, 1]       (0, 0, 0)
+      16   (307498741, 355384705, 113122465)      [1, 1]                (0, 0, 0)
+      17   (779567097, 900967015, 286786708)      [2, 1]                (0, 0, 0)
+      18   (8457919940, 9775049397, 3111494861)   [10, 2, 0, 0, 0, 1]   (0, 0, 0)
 
 BENCHMARKS::
 
@@ -252,7 +272,7 @@ def _best_simultaneous_convergents_upto(v, Q, start=1, verbose=False):
         raise RuntimeError('Did not find diophantine approximation of vector '
                 'v={} with parameter Q={}'.format(v, Q))
 
-def best_simultaneous_convergents_upto(v, Q, start=1):
+def best_simultaneous_convergents_upto(v, Q, start=1, verbose=False):
     r"""
     Return a list of all best simultaneous diophantine approximations p,q of vector
     ``v`` at distance ``|qv-p|<=1/Q`` such that `1<=q<Q^d`.
@@ -262,25 +282,34 @@ def best_simultaneous_convergents_upto(v, Q, start=1):
     - ``v`` -- list of real numbers
     - ``Q`` -- real number, Q>1
     - ``start`` -- integer (default: ``1``), starting value to check
+    - ``verbose`` -- boolean (default: ``False``)
 
     EXAMPLES::
 
         sage: from slabbe.diophantine_approx import best_simultaneous_convergents_upto
         sage: best_simultaneous_convergents_upto([e,pi], 2)
-        [((3, 3, 1), 3.55)]
+        [((3, 3, 1), 3.549646778303845)]
         sage: best_simultaneous_convergents_upto([e,pi], 4)
-        [((19, 22, 7), 35.75)]
+        [((19, 22, 7), 35.74901433260719)]
         sage: best_simultaneous_convergents_upto([e,pi], 36, start=4**2)
-        [((1843, 2130, 678), 203.24)]
+        [((1843, 2130, 678), 203.23944293852406)]
         sage: best_simultaneous_convergents_upto([e,pi], 204, start=36**2)
-        [((51892, 59973, 19090), 266.17), ((113018, 130618, 41577), 279.19)]
+        [((51892, 59973, 19090), 266.16775098010373),
+         ((113018, 130618, 41577), 279.18598227531174)]
         sage: best_simultaneous_convergents_upto([e,pi], 280, start=204**2)
-        [((114861, 132748, 42255), 412.79), ((166753, 192721, 61345), 749.36)]
+        [((114861, 132748, 42255), 412.7859137824949),
+         ((166753, 192721, 61345), 749.3634909055199)]
         sage: best_simultaneous_convergents_upto([e,pi], 750, start=280**2)
-        [((446524, 516060, 164267), 896.47), ((1174662, 1357589, 432134), 2935.31)]
+        [((446524, 516060, 164267), 896.4734658499202),
+         ((1174662, 1357589, 432134), 2935.314937919726)]
         sage: best_simultaneous_convergents_upto([e,pi], 2936, start=750**2)
-        [((3970510, 4588827, 1460669), 3654.3),
-         ((21640489, 25010505, 7961091), 6257.09)]
+        [((3970510, 4588827, 1460669), 3654.2989332956854),
+         ((21640489, 25010505, 7961091), 6257.014011585661)]
+
+    TESTS::
+
+        sage: best_simultaneous_convergents_upto([e,pi], 102300.1, start=10^9) # not tested (1 min)
+        [((8457919940, 9775049397, 3111494861), 194686.19839453633)]
     """
     from slabbe.diophantine_approx_pyx import good_simultaneous_convergents_upto
     from sage.parallel.decorate import parallel
@@ -292,17 +321,29 @@ def best_simultaneous_convergents_upto(v, Q, start=1):
     shifts = range(step)
     goods = []
     for (arg, kwds), output in F(shifts):
-        goods.extend(output)
+        if output == 'NO DATA':
+            print ("problem with v={}, Q={}, start={}, shift={}"
+                " because output={}".format(v,Q,start,arg[0],output))
+        else:
+            goods.extend(output)
     if not goods:
         raise ValueError("Did not find an approximation p,q to v={} s.t.  |p-qv|<=1/Q"
             " where Q={}".format(v,Q))
     goods.sort()
-    sol = p, best_error_inv = goods[0]
-    bests = [sol]
+    bests = []
+    best_error_inv = 0
     # keep only the best ones
-    for p,error_inv in goods[1:]:
+    for q in goods:
+        q_v = [q*a for a in v]
+        frac_q_v = [a-floor(a) for a in q_v]
+        error = max((a if a < .5 else 1-a) for a in frac_q_v)
+        error_inv = 1. / error.n(digits=50)
+        if verbose:
+            print "q={}, error_inv={}, best_error_inv={}".format(q, error_inv, best_error_inv)
         if error_inv > best_error_inv:
-            bests.append((p,error_inv))
+            p = [round(a) for a in q_v]
+            p.append(q)
+            bests.append((tuple(p),error_inv))
             best_error_inv = error_inv
     return bests
 
