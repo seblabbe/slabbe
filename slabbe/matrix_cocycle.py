@@ -277,6 +277,34 @@ class MatrixCocycle(object):
         for w,m in self.n_matrices_iterator(n):
             yield w, m.eigenvalues()
 
+    def n_matrices_pinching_iterator(self,n):
+        r"""
+        Return the pinching matrices of level n.
+
+        EXAMPLES::
+
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: ARP = cocycles.ARP()
+	    sage: list(ARP.n_matrices_pinching_iterator(0))
+            []
+	    sage: list(ARP.n_matrices_pinching_iterator(1))
+            []
+	    sage: list(ARP.n_matrices_pinching_iterator(2))
+            []
+	    sage: L = list(ARP.n_matrices_pinching_iterator(3))
+	    sage: L[0]
+	    (
+			   [4 5 2]
+			   [2 3 1]
+	    word: 1,2,213, [1 1 1]
+	    )
+        """
+        for w,m in self.n_matrices_iterator(n):
+            p = m.charpoly()
+            d = p.discriminant()
+            if p.is_irreducible() and d > 0 and not d.is_square():
+                yield w, m
+
     def n_matrices_eigenvectors(self,n, verbose=False):
         r"""
         Return the left and right eigenvectors of the matrices of level n.
