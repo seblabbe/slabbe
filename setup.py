@@ -6,8 +6,6 @@ from Cython.Build import cythonize
 import Cython.Compiler.Options
 from sage.env import sage_include_directories
 
-Cython.Compiler.Options.old_style_globals = True
-
 ext_modules = [
         Extension('slabbe.kolakoski_word_pyx',
             sources = [path.join('slabbe','kolakoski_word_pyx.pyx')],),
@@ -17,7 +15,6 @@ ext_modules = [
         Extension('slabbe.diophantine_approx_pyx',
             sources = [path.join('slabbe','diophantine_approx_pyx.pyx')],
             include_dirs=sage_include_directories())]
-
 
 # Get the long description from the README file
 here = path.abspath(path.dirname(__file__))
