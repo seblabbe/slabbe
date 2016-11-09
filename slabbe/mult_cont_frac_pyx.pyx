@@ -60,6 +60,8 @@ Orbit in the simplex::
 
     - Trouver meilleur nom pour PointFiber + x + a (cotangent, bundle, fiber?)
 
+    - Should we sig_free some table of double P.x and P.a ??
+
 Question:
 
     - Comment factoriser le code sans utiliser les yield?
@@ -84,6 +86,7 @@ AUTHORS:
 from sage.misc.prandom import random
 
 include "cysignals/signals.pxi"   # ctrl-c interrupt block support
+include "cysignals/memory.pxi"
 
 cdef struct PairPoint:
     double* x
@@ -184,8 +187,8 @@ cdef class MCFAlgorithm(object):
             P = self.call(P)
 
             S.add(P.branch)
-        sage_free(P.x)
-        sage_free(P.a)
+        #sig_free(P.x)
+        #sig_free(P.a)
         return S
     ######################
     # TEST METHODS 
@@ -237,10 +240,10 @@ cdef class MCFAlgorithm(object):
                 m += 'OUTPUT: ({}, {}, {}, {}, {}, {})\n'.format(R.x[0],R.x[1],R.x[2],R.a[0],R.a[1],R.a[2])
                 raise Exception(m)
 
-        sage_free(P.x)
-        sage_free(P.a)
-        sage_free(R.x)
-        sage_free(R.a)
+        #sig_free(P.x)
+        #sig_free(P.a)
+        #sig_free(R.x)
+        #sig_free(R.a)
         return
 
     def _test_dual_substitution_definition(self):
@@ -329,10 +332,10 @@ cdef class MCFAlgorithm(object):
                 m += 'INPUT: ({}, {}, {}, {}, {}, {})\n'.format(P.x[0],P.x[1],P.x[2],P.a[0],P.a[1],P.a[2])
                 m += 'OUTPUT: ({}, {}, {}, {}, {}, {})\n'.format(R.x[0],R.x[1],R.x[2],R.a[0],R.a[1],R.a[2])
                 raise Exception(m)
-        sage_free(P.x)
-        sage_free(P.a)
-        sage_free(R.x)
-        sage_free(R.a)
+        #sig_free(P.x)
+        #sig_free(P.a)
+        #sig_free(R.x)
+        #sig_free(R.a)
         return
 
     ######################
@@ -479,8 +482,8 @@ cdef class MCFAlgorithm(object):
             # Normalize (x,y,z)
             s = P.x[0] + P.x[1] + P.x[2]
             P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
-        sage_free(P.x)
-        sage_free(P.a)
+        #sig_free(P.x)
+        #sig_free(P.a)
 
     def simplex_orbit_iterator(self, start=None, norm_xyz='sup', norm_uvw='1'):
         r"""
@@ -584,8 +587,8 @@ cdef class MCFAlgorithm(object):
             P.a[0] /= s; P.a[1] /= s; P.a[2] /= s
 
             yield (P.x[0], P.x[1], P.x[2]), (P.a[0], P.a[1], P.a[2]), P.branch
-        sage_free(P.x)
-        sage_free(P.a)
+        #sig_free(P.x)
+        #sig_free(P.a)
 
     def simplex_orbit_list(self, start=None, int n_iterations=100, 
                                  norm_xyz='1', norm_uvw='1'):
