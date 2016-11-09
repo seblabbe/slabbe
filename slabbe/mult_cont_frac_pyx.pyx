@@ -58,6 +58,8 @@ Orbit in the simplex::
       method on an instance variable.
       https://groups.google.com/d/topic/sage-support/DRI_s31D8ks/discussion
 
+    - Trouver meilleur nom pour PointFiber + x + a (cotangent, bundle, fiber?)
+
 Question:
 
     - Comment factoriser le code sans utiliser les yield?
@@ -83,14 +85,21 @@ from sage.misc.prandom import random
 
 include "cysignals/signals.pxi"   # ctrl-c interrupt block support
 
-cdef struct PairPoint3d:
-    double x
-    double y
-    double z
-    double u
-    double v
-    double w
+cdef struct PairPoint:
+    double* x
+    double* a
     int branch
+
+cdef PairPoint_to_dict(PairPoint P):
+    dd = dict(x=[],a=[])
+    for i in range(d):
+        dd['x'].append(P.x[i])
+    for i in range(d):
+        dd['a'].append(P.a[i])
+    dd['branch'] = P.branch
+    return dd
+
+cdef int d = 3
 
 cdef double SQRT3SUR2 = 0.866025403784439
 
@@ -98,7 +107,7 @@ cdef class MCFAlgorithm(object):
     ########################################
     # METHODS IMPLEMENTED IN HERITED CLASSES
     ########################################
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         This method must be implemented in the inherited classes.
 
@@ -157,7 +166,9 @@ cdef class MCFAlgorithm(object):
             {1, 2, 3, 123, 132, 213, 231, 312, 321}
         """
         cdef unsigned int i         # loop counter
-        cdef PairPoint3d P
+        cdef PairPoint P
+        P.x = <double*>check_allocarray(d, sizeof(double))
+        P.a = <double*>check_allocarray(d, sizeof(double))
         S = set()
         # Loop
         for i from 0 <= i < n_iterations:
@@ -166,13 +177,15 @@ cdef class MCFAlgorithm(object):
             sig_check()
 
             # random initial values
-            P.x = random(); P.y = random(); P.z = random();
-            P.u = random(); P.v = random(); P.w = random();
+            P.x[0] = random(); P.x[1] = random(); P.x[2] = random();
+            P.a[0] = random(); P.a[1] = random(); P.a[2] = random();
 
             # Apply Algo
             P = self.call(P)
 
             S.add(P.branch)
+        sage_free(P.x)
+        sage_free(P.a)
         return S
     ######################
     # TEST METHODS 
@@ -191,7 +204,11 @@ cdef class MCFAlgorithm(object):
         cdef double s,t             # temporary variables
         cdef unsigned int i         # loop counter
 
-        cdef PairPoint3d P, R
+        cdef PairPoint P, R
+        P.x = <double*>check_allocarray(d, sizeof(double))
+        P.a = <double*>check_allocarray(d, sizeof(double))
+        R.x = <double*>check_allocarray(d, sizeof(double))
+        R.a = <double*>check_allocarray(d, sizeof(double))
 
         # Loop
         for i from 0 <= i < n_iterations:
@@ -200,26 +217,30 @@ cdef class MCFAlgorithm(object):
             sig_check()
 
             # random initial values
-            P.x = random(); P.y = random(); P.z = random();
-            P.u = random(); P.v = random(); P.w = random();
-            s = P.x*P.u + P.y*P.v + P.z*P.w
+            P.x[0] = random(); P.x[1] = random(); P.x[2] = random();
+            P.a[0] = random(); P.a[1] = random(); P.a[2] = random();
+            s = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2]
 
             # Apply Algo
             try:
                 R = self.call(P)
             except ValueError:
                 continue
-            t = R.x*R.u + R.y*R.v + R.z*R.w
+            t = R.x[0]*R.a[0] + R.x[1]*R.a[1] + R.x[2]*R.a[2]
 
             if not abs(s - t) < 0.0000001:
                 m = 'This algo does not preserve the scalar product\n'
                 m += '{} != {}\n'.format(s,t)
                 m += 'The problem is on branch {}\n'.format(R.branch)
                 m += 'on the {}-th iteration\n'.format(i)
-                m += 'INPUT: ({}, {}, {}, {}, {}, {})\n'.format(P.x,P.y,P.z,P.u,P.v,P.w)
-                m += 'OUTPUT: ({}, {}, {}, {}, {}, {})\n'.format(R.x,R.y,R.z,R.u,R.v,R.w)
+                m += 'INPUT: ({}, {}, {}, {}, {}, {})\n'.format(P.x[0],P.x[1],P.x[2],P.a[0],P.a[1],P.a[2])
+                m += 'OUTPUT: ({}, {}, {}, {}, {}, {})\n'.format(R.x[0],R.x[1],R.x[2],R.a[0],R.a[1],R.a[2])
                 raise Exception(m)
 
+        sage_free(P.x)
+        sage_free(P.a)
+        sage_free(R.x)
+        sage_free(R.a)
         return
 
     def _test_dual_substitution_definition(self):
@@ -256,7 +277,11 @@ cdef class MCFAlgorithm(object):
         """
         from sage.modules.free_module_element import vector
         cdef unsigned int i         # loop counter
-        cdef PairPoint3d P, R
+        cdef PairPoint P, R
+        P.x = <double*>check_allocarray(d, sizeof(double))
+        P.a = <double*>check_allocarray(d, sizeof(double))
+        R.x = <double*>check_allocarray(d, sizeof(double))
+        R.a = <double*>check_allocarray(d, sizeof(double))
 
         A = dict((k,s.incidence_matrix()) for k,s in self.substitutions().iteritems())
 
@@ -267,8 +292,8 @@ cdef class MCFAlgorithm(object):
             sig_check()
 
             # random initial values
-            P.x = random(); P.y = random(); P.z = random();
-            P.u = random(); P.v = random(); P.w = random();
+            P.x[0] = random(); P.x[1] = random(); P.x[2] = random();
+            P.a[0] = random(); P.a[1] = random(); P.a[2] = random();
 
             # Apply Algo
             try:
@@ -279,31 +304,35 @@ cdef class MCFAlgorithm(object):
             M = A[R.branch]
 
             # Check the algo
-            s = M * vector((R.x, R.y, R.z))
-            t = vector((P.x, P.y, P.z))
+            s = M * vector((R.x[0], R.x[1], R.x[2]))
+            t = vector((P.x[0], P.x[1], P.x[2]))
             if not abs(s - t) < 0.0000001:
                 m = 'Incoherence between the definition of algo \n'
                 m += 'and the associated substitutions.\n'
                 m += '{} != {}\n'.format(s,t)
                 m += 'The problem is on branch {}\n'.format(R.branch)
                 m += 'on the {}-th iteration\n'.format(i)
-                m += 'INPUT: ({}, {}, {}, {}, {}, {})\n'.format(P.x,P.y,P.z,P.u,P.v,P.w)
-                m += 'OUTPUT: ({}, {}, {}, {}, {}, {})\n'.format(R.x,R.y,R.z,R.u,R.v,R.w)
+                m += 'INPUT: ({}, {}, {}, {}, {}, {})\n'.format(P.x[0],P.x[1],P.x[2],P.a[0],P.a[1],P.a[2])
+                m += 'OUTPUT: ({}, {}, {}, {}, {}, {})\n'.format(R.x[0],R.x[1],R.x[2],R.a[0],R.a[1],R.a[2])
                 raise Exception(m)
 
             # Check the dual coordinates
             Mt = M.transpose()
-            s = Mt * vector((P.u, P.v, P.w))
-            t = vector((R.u, R.v, R.w))
+            s = Mt * vector((P.a[0], P.a[1], P.a[2]))
+            t = vector((R.a[0], R.a[1], R.a[2]))
             if not abs(s - t) < 0.0000001:
                 m = 'Incoherence between the definition of algo (dual) \n'
                 m += 'and the associated substitutions.\n'
                 m += '{} != {}\n'.format(s,t)
                 m += 'The problem is on branch {}\n'.format(R.branch)
                 m += 'on the {}-th iteration\n'.format(i)
-                m += 'INPUT: ({}, {}, {}, {}, {}, {})\n'.format(P.x,P.y,P.z,P.u,P.v,P.w)
-                m += 'OUTPUT: ({}, {}, {}, {}, {}, {})\n'.format(R.x,R.y,R.z,R.u,R.v,R.w)
+                m += 'INPUT: ({}, {}, {}, {}, {}, {})\n'.format(P.x[0],P.x[1],P.x[2],P.a[0],P.a[1],P.a[2])
+                m += 'OUTPUT: ({}, {}, {}, {}, {}, {})\n'.format(R.x[0],R.x[1],R.x[2],R.a[0],R.a[1],R.a[2])
                 raise Exception(m)
+        sage_free(P.x)
+        sage_free(P.a)
+        sage_free(R.x)
+        sage_free(R.a)
         return
 
     ######################
@@ -353,32 +382,34 @@ cdef class MCFAlgorithm(object):
         """
         return "{} 3-dimensional continued fraction algorithm".format(self.name())
 
-    def __call__(self, PairPoint3d P):
-        r"""
-        Wrapper for the cdef call method.
+    #def __call__(self, PairPoint P):
+    #    r"""
+    #    Wrapper for the cdef call method.
 
-        EXAMPLES::
+    #    EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_pyx import Brun
-            sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = Brun()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 123),
-             ('u', 0.2),
-             ('v', 0.6),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.6),
-             ('z', 0.20000000000000007)]
+    #        sage: from slabbe.mult_cont_frac_pyx import Brun
+    #        sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
+    #        sage: E = Brun()(D)
+    #        sage: sorted(E.iteritems())
+    #        [('branch', 123),
+    #         ('u', 0.2),
+    #         ('v', 0.6),
+    #         ('w', 0.3),
+    #         ('x', 0.3),
+    #         ('y', 0.6),
+    #         ('z', 0.20000000000000007)]
 
-        ::
+    #    ::
 
-            sage: D = {'x':3,'y':6,'z':8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: D = Brun()(D); D
-            {'branch': 123, 'u': 0.2, 'v': 0.6, 'w': 0.3, 'x': 3.0, 'y': 6.0, 'z': 2.0}
+    #        sage: D = {'x':3,'y':6,'z':8,'u':.2,'v':.3,'w':.3,'branch':999}
+    #        sage: D = Brun()(D); D
+    #        {'branch': 123, 'u': 0.2, 'v': 0.6, 'w': 0.3, 'x': 3.0, 'y': 6.0, 'z': 2.0}
 
-        """
-        return self.call(P)
+    #    """
+    #    pass
+    #    #P = self.call(P)
+    #    return PairPoint_to_dict(P)
     def __richcmp__(self, other, op):
         r"""
         INPUT:
@@ -428,15 +459,17 @@ cdef class MCFAlgorithm(object):
 
         """
         cdef double s             # temporary variables
-        cdef PairPoint3d P
+        cdef PairPoint P
+        P.x = <double*>check_allocarray(d, sizeof(double))
+        P.a = <double*>check_allocarray(d, sizeof(double))
 
         # initial values
-        P.x, P.y, P.z = start
-        P.u = random(); P.v = random(); P.w = random();
+        P.x[0], P.x[1], P.x[2] = start
+        P.a[0] = random(); P.a[1] = random(); P.a[2] = random();
 
         # Normalize (x,y,z)
-        s = P.x + P.y + P.z
-        P.x /= s; P.y /= s; P.z /= s
+        s = P.x[0] + P.x[1] + P.x[2]
+        P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
 
         # Loop
         while True:
@@ -444,8 +477,10 @@ cdef class MCFAlgorithm(object):
             yield P.branch
 
             # Normalize (x,y,z)
-            s = P.x + P.y + P.z
-            P.x /= s; P.y /= s; P.z /= s
+            s = P.x[0] + P.x[1] + P.x[2]
+            P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
+        sage_free(P.x)
+        sage_free(P.a)
 
     def simplex_orbit_iterator(self, start=None, norm_xyz='sup', norm_uvw='1'):
         r"""
@@ -507,18 +542,20 @@ cdef class MCFAlgorithm(object):
 
         """
         cdef double s           # temporary variables
-        cdef PairPoint3d P
+        cdef PairPoint P
+        P.x = <double*>check_allocarray(d, sizeof(double))
+        P.a = <double*>check_allocarray(d, sizeof(double))
         if start is None:
-            P.x = random(); P.y = random(); P.z = random()
+            P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
         else:
-            P.x = start[0]; P.y = start[1]; P.z = start[2]
-        P.u = 1./3
-        P.v = 1./3
-        P.w = 1./3
+            P.x[0] = start[0]; P.x[1] = start[1]; P.x[2] = start[2]
+        P.a[0] = 1./3
+        P.a[1] = 1./3
+        P.a[2] = 1./3
 
         # Normalize (x,y,z)
-        s = P.x + P.y + P.z
-        P.x /= s; P.y /= s; P.z /= s
+        s = P.x[0] + P.x[1] + P.x[2]
+        P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
 
         # Loop
         while True:
@@ -528,25 +565,27 @@ cdef class MCFAlgorithm(object):
 
             # Normalize (xnew,ynew,znew)
             if norm_xyz == '1':
-                s = P.x + P.y + P.z # norm 1
+                s = P.x[0] + P.x[1] + P.x[2] # norm 1
             elif norm_xyz == 'sup':
-                s = max(P.x, P.y, P.z) # norm sup
+                s = max(P.x[0], P.x[1], P.x[2]) # norm sup
             else:
                 raise ValueError("Unknown value for norm_xyz(=%s)" %norm_xyz)
-            P.x /= s; P.y /= s; P.z /= s
+            P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
 
             # Normalize (unew,vnew,wnew)
             if norm_uvw == '1':
-                s = P.u + P.v + P.w    # norm 1
+                s = P.a[0] + P.a[1] + P.a[2]    # norm 1
             elif norm_uvw == 'sup':
-                s = max(P.u, P.v, P.w) # norm sup
+                s = max(P.a[0], P.a[1], P.a[2]) # norm sup
             elif norm_uvw == 'hypersurface':
-                s = P.x*P.u + P.y*P.v + P.z*P.w # hypersurface
+                s = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2] # hypersurface
             else:
                 raise ValueError("Unknown value for norm_uvw(=%s)" %norm_uvw)
-            P.u /= s; P.v /= s; P.w /= s
+            P.a[0] /= s; P.a[1] /= s; P.a[2] /= s
 
-            yield (P.x, P.y, P.z), (P.u, P.v, P.w), P.branch
+            yield (P.x[0], P.x[1], P.x[2]), (P.a[0], P.a[1], P.a[2]), P.branch
+        sage_free(P.x)
+        sage_free(P.a)
 
     def simplex_orbit_list(self, start=None, int n_iterations=100, 
                                  norm_xyz='1', norm_uvw='1'):
@@ -591,19 +630,21 @@ cdef class MCFAlgorithm(object):
 
         """
         cdef double s           # temporary variables
-        cdef PairPoint3d P
+        cdef PairPoint P
+        P.x = <double*>check_allocarray(d, sizeof(double))
+        P.a = <double*>check_allocarray(d, sizeof(double))
         cdef int i
         if start is None:
-            P.x = random(); P.y = random(); P.z = random()
+            P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
         else:
-            P.x = start[0]; P.y = start[1]; P.z = start[2]
-        P.u = 1./3
-        P.v = 1./3
-        P.w = 1./3
+            P.x[0] = start[0]; P.x[1] = start[1]; P.x[2] = start[2]
+        P.a[0] = 1./3
+        P.a[1] = 1./3
+        P.a[2] = 1./3
 
         # Normalize (x,y,z)
-        s = P.x + P.y + P.z
-        P.x /= s; P.y /= s; P.z /= s
+        s = P.x[0] + P.x[1] + P.x[2]
+        P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
 
         L = []
 
@@ -618,25 +659,25 @@ cdef class MCFAlgorithm(object):
 
             # Normalize (xnew,ynew,znew)
             if norm_xyz == '1':
-                s = P.x + P.y + P.z # norm 1
+                s = P.x[0] + P.x[1] + P.x[2] # norm 1
             elif norm_xyz == 'sup':
-                s = max(P.x, P.y, P.z) # norm sup
+                s = max(P.x[0], P.x[1], P.x[2]) # norm sup
             else:
                 raise ValueError("Unknown value for norm_xyz(=%s)" %norm_xyz)
-            P.x /= s; P.y /= s; P.z /= s
+            P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
 
             # Normalize (unew,vnew,wnew)
             if norm_uvw == '1':
-                s = P.u + P.v + P.w    # norm 1
+                s = P.a[0] + P.a[1] + P.a[2]    # norm 1
             elif norm_uvw == 'sup':
-                s = max(P.u, P.v, P.w) # norm sup
+                s = max(P.a[0], P.a[1], P.a[2]) # norm sup
             elif norm_uvw == 'hypersurface':
-                s = P.x*P.u + P.y*P.v + P.z*P.w # hypersurface
+                s = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2] # hypersurface
             else:
                 raise ValueError("Unknown value for norm_uvw(=%s)" %norm_uvw)
-            P.u /= s; P.v /= s; P.w /= s
+            P.a[0] /= s; P.a[1] /= s; P.a[2] /= s
 
-            L.append( (P.x, P.y, P.z, P.u, P.v, P.w, P.branch))
+            L.append( (P.x[0], P.x[1], P.x[2], P.a[0], P.a[1], P.a[2], P.branch))
 
         return L
 
@@ -731,7 +772,9 @@ cdef class MCFAlgorithm(object):
         """
         cdef double s,x,y,u,v           # temporary variables
         s = x = y = u = v = 0           # initialize to avoid a warning
-        cdef PairPoint3d P
+        cdef PairPoint P
+        P.x = <double*>check_allocarray(d, sizeof(double))
+        P.a = <double*>check_allocarray(d, sizeof(double))
         cdef int previous_branch
         cdef int xa,ya,ua,va
         cdef int i
@@ -740,12 +783,12 @@ cdef class MCFAlgorithm(object):
         cdef double ulen = umax - umin
         cdef double vlen = vmax - vmin
         if start is None:
-            P.x = random(); P.y = random(); P.z = random()
+            P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
         else:
-            P.x = start[0]; P.y = start[1]; P.z = start[2]
-        P.u = 1./3
-        P.v = 1./3
-        P.w = 1./3
+            P.x[0] = start[0]; P.x[1] = start[1]; P.x[2] = start[2]
+        P.a[0] = 1./3
+        P.a[1] = 1./3
+        P.a[2] = 1./3
 
         if ndivs and float('inf') in [-xmin, -ymin, -umin, -vmin, xmax, ymax, umax, vmax]:
             raise ValueError("when ndivs is specified, you must provide a"
@@ -753,8 +796,8 @@ cdef class MCFAlgorithm(object):
                     " and vmax")
 
         # Normalize (x,y,z)
-        s = P.x + P.y + P.z
-        P.x /= s; P.y /= s; P.z /= s
+        s = P.x[0] + P.x[1] + P.x[2]
+        P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
 
         L = []
 
@@ -769,38 +812,38 @@ cdef class MCFAlgorithm(object):
 
             # Normalize (xnew,ynew,znew)
             if norm_xyz == '1':
-                s = P.x + P.y + P.z # norm 1
+                s = P.x[0] + P.x[1] + P.x[2] # norm 1
             elif norm_xyz == 'sup':
-                s = max(P.x, P.y, P.z) # norm sup
+                s = max(P.x[0], P.x[1], P.x[2]) # norm sup
             else:
                 raise ValueError("Unknown value for norm_xyz(=%s)" %norm_xyz)
-            P.x /= s; P.y /= s; P.z /= s
+            P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
 
             # Normalize (unew,vnew,wnew)
             if norm_uvw == '1':
-                s = P.u + P.v + P.w    # norm 1
+                s = P.a[0] + P.a[1] + P.a[2]    # norm 1
             elif norm_uvw == 'sup':
-                s = max(P.u, P.v, P.w) # norm sup
+                s = max(P.a[0], P.a[1], P.a[2]) # norm sup
             elif norm_uvw == 'hypersurface':
-                s = P.x*P.u + P.y*P.v + P.z*P.w # hypersurface
+                s = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2] # hypersurface
             else:
                 raise ValueError("Unknown value for norm_uvw(=%s)" %norm_uvw)
-            P.u /= s; P.v /= s; P.w /= s
+            P.a[0] /= s; P.a[1] /= s; P.a[2] /= s
 
             # Projection
             if norm_xyz == '1':
-                x = -SQRT3SUR2 * P.x + SQRT3SUR2 * P.y
-                y = -.5 * P.x -.5 * P.y + P.z
+                x = -SQRT3SUR2 * P.x[0] + SQRT3SUR2 * P.x[1]
+                y = -.5 * P.x[0] -.5 * P.x[1] + P.x[2]
             elif norm_xyz == 'sup':
-                x = P.x
-                y = P.y
+                x = P.x[0]
+                y = P.x[1]
 
             if norm_uvw == '1':
-                u = -SQRT3SUR2 * P.u + SQRT3SUR2 * P.v
-                v = -.5 * P.u -.5 * P.v + P.w
+                u = -SQRT3SUR2 * P.a[0] + SQRT3SUR2 * P.a[1]
+                v = -.5 * P.a[0] -.5 * P.a[1] + P.a[2]
             elif norm_uvw == 'sup':
-                u = P.u
-                v = P.v
+                u = P.a[0]
+                v = P.a[1]
 
             # Apply Algo
             previous_branch = P.branch
@@ -856,21 +899,23 @@ cdef class MCFAlgorithm(object):
             ((1.0, 1.0, 0.0), (45.0, 14.0, 4.0), 312)
             ((1.0, 0.0, 0.0), (59.0, 14.0, 4.0), 312)
         """
-        cdef PairPoint3d P
+        cdef PairPoint P
+        P.x = <double*>check_allocarray(d, sizeof(double))
+        P.a = <double*>check_allocarray(d, sizeof(double))
         if start is None:
-            P.x = random(); P.y = random(); P.z = random()
+            P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
         else:
-            P.x = start[0]; P.y = start[1]; P.z = start[2]
-        P.u = 1
-        P.v = 1
-        P.w = 1
+            P.x[0] = start[0]; P.x[1] = start[1]; P.x[2] = start[2]
+        P.a[0] = 1
+        P.a[1] = 1
+        P.a[2] = 1
 
         # Loop
         while True:
             sig_check() # Check for Keyboard interupt
             # Apply Algo
             P = self.call(P)
-            yield (P.x, P.y, P.z), (P.u, P.v, P.w), P.branch
+            yield (P.x[0], P.x[1], P.x[2]), (P.a[0], P.a[1], P.a[2]), P.branch
     def cone_orbit_list(self, start=None, int n_iterations=100):
         r"""
         INPUT:
@@ -895,15 +940,17 @@ cdef class MCFAlgorithm(object):
             Check for a fixed point stop then.
 
         """
-        cdef PairPoint3d P
+        cdef PairPoint P
+        P.x = <double*>check_allocarray(d, sizeof(double))
+        P.a = <double*>check_allocarray(d, sizeof(double))
         cdef int i
         if start is None:
-            P.x = random(); P.y = random(); P.z = random()
+            P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
         else:
-            P.x = start[0]; P.y = start[1]; P.z = start[2]
-        P.u = 1
-        P.v = 1
-        P.w = 1
+            P.x[0] = start[0]; P.x[1] = start[1]; P.x[2] = start[2]
+        P.a[0] = 1
+        P.a[1] = 1
+        P.a[2] = 1
 
         L = []
 
@@ -911,7 +958,7 @@ cdef class MCFAlgorithm(object):
         for i from 0 <= i < n_iterations:
             sig_check() # Check for Keyboard interupt
             P = self.call(P)
-            L.append( (P.x, P.y, P.z, P.u, P.v, P.w, P.branch))
+            L.append( (P.x[0], P.x[1], P.x[2], P.a[0], P.a[1], P.a[2], P.branch))
         return L
 
     def image(self, start, n_iterations=1):
@@ -939,18 +986,20 @@ cdef class MCFAlgorithm(object):
             sage: Brun().image((10, 21, 37), 10)
             (1.0, 1.0, 0.0)
         """
-        cdef PairPoint3d P
+        cdef PairPoint P
+        P.x = <double*>check_allocarray(d, sizeof(double))
+        P.a = <double*>check_allocarray(d, sizeof(double))
         cdef int i
-        P.x = start[0]; P.y = start[1]; P.z = start[2]
-        P.u = 1
-        P.v = 1
-        P.w = 1
+        P.x[0] = start[0]; P.x[1] = start[1]; P.x[2] = start[2]
+        P.a[0] = 1
+        P.a[1] = 1
+        P.a[2] = 1
 
         # Loop
         for i from 0 <= i < n_iterations:
             sig_check() # Check for Keyboard interupt
             P = self.call(P)
-        return (P.x, P.y, P.z)
+        return (P.x[0], P.x[1], P.x[2])
 
     def _invariant_measure_dict(self, int n_iterations, int ndivs, v=None,
             str norm='1', verbose=False):
@@ -1023,23 +1072,25 @@ cdef class MCFAlgorithm(object):
             for i from 0 <= i <= ndivs:
                 C[i][j] = 0
 
-        cdef PairPoint3d P
-        P.x = random()
-        P.y = random()
-        P.z = random()
-        P.u = .3
-        P.v = .3
-        P.w = .3
+        cdef PairPoint P
+        P.x = <double*>check_allocarray(d, sizeof(double))
+        P.a = <double*>check_allocarray(d, sizeof(double))
+        P.x[0] = random()
+        P.x[1] = random()
+        P.x[2] = random()
+        P.a[0] = .3
+        P.a[1] = .3
+        P.a[2] = .3
         P.branch = 999
 
         # Order (x,y,z)
-        if P.y > P.z: P.z,P.y = P.y,P.z
-        if P.x > P.z: P.x,P.y,P.z = P.y,P.z,P.x
-        elif P.x > P.y: P.x,P.y = P.y,P.x
+        if P.x[1] > P.x[2]: P.x[2],P.x[1] = P.x[1],P.x[2]
+        if P.x[0] > P.x[2]: P.x[0],P.x[1],P.x[2] = P.x[1],P.x[2],P.x[0]
+        elif P.x[0] > P.x[1]: P.x[0],P.x[1] = P.x[1],P.x[0]
 
         # Normalize (x,y,z)
-        s = P.x + P.y + P.z
-        P.x /= s; P.y /= s; P.z /= s
+        s = P.x[0] + P.x[1] + P.x[2]
+        P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
 
         for i from 0 <= i < n_iterations:
 
@@ -1051,20 +1102,20 @@ cdef class MCFAlgorithm(object):
 
             # Normalize (xnew,ynew,znew)
             if norm== '1':
-                s = P.x + P.y + P.z # norm 1
+                s = P.x[0] + P.x[1] + P.x[2] # norm 1
             elif norm== 'sup':
-                s = max(P.x, P.y, P.z) # norm sup
+                s = max(P.x[0], P.x[1], P.x[2]) # norm sup
             else:
                 raise ValueError("Unknown value for norm(=%s)" %norm)
-            P.x /= s; P.y /= s; P.z /= s
+            P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
 
             # Increase by one the counter for that part
-            X = int(P.x*ndivs)
-            Y = int(P.y*ndivs)
+            X = int(P.x[0]*ndivs)
+            Y = int(P.x[1]*ndivs)
             C[X][Y] += 1
 
             if verbose:
-                print P.x,P.y,P.z
+                print P.x[0],P.x[1],P.x[2]
                 print X,Y
 
         # Translate the counter into a python dict
@@ -1128,13 +1179,17 @@ cdef class MCFAlgorithm(object):
         s = x + y + z
         x /= s; y /= s; z /= s
 
-        cdef PairPoint3d P,R
-        P.x = x
-        P.y = y
-        P.z = z
-        P.u = u
-        P.v = v
-        P.w = w
+        cdef PairPoint P,R
+        P.x = <double*>check_allocarray(d, sizeof(double))
+        P.a = <double*>check_allocarray(d, sizeof(double))
+        R.x = <double*>check_allocarray(d, sizeof(double))
+        R.a = <double*>check_allocarray(d, sizeof(double))
+        P.x[0] = x
+        P.x[1] = y
+        P.x[2] = z
+        P.a[0] = u
+        P.a[1] = v
+        P.a[2] = w
 
         import collections
         domain_right = collections.defaultdict(list)
@@ -1152,53 +1207,53 @@ cdef class MCFAlgorithm(object):
             R = self.call(P)
 
             if verbose:
-                print("x=%f, y=%f, z=%f" % (R.x,R.y,R.z))
+                print("x=%f, y=%f, z=%f" % (R.x[0],R.x[1],R.x[2]))
                 #print("u=%f, v=%f, w=%f" % (u,v,w))
                 #s = x*u + y*v + z*w
                 #print("scal prod <(x,y,z),(u,v,w)> = %f (after algo)" % s)
 
             # Normalize (xnew,ynew,znew)
             if norm_xyz == '1':
-                s = R.x + R.y + R.z # norm 1
+                s = R.x[0] + R.x[1] + R.x[2] # norm 1
             elif norm_xyz == 'sup':
-                s = max(R.x, R.y, R.z) # norm sup
+                s = max(R.x[0], R.x[1], R.x[2]) # norm sup
             else:
                 raise ValueError("Unknown value for norm_xyz(=%s)" %norm_xyz)
-            R.x /= s; R.y /= s; R.z /= s
+            R.x[0] /= s; R.x[1] /= s; R.x[2] /= s
 
             # Normalize (unew,vnew,wnew)
             if norm_uvw == '1':
-                s = R.u + R.v + R.w    # norm 1
+                s = R.a[0] + R.a[1] + R.a[2]    # norm 1
             elif norm_uvw == 'sup':
-                s = max(R.u, R.v, R.w) # norm sup
+                s = max(R.a[0], R.a[1], R.a[2]) # norm sup
             elif norm_uvw == 'hypersurface':
-                s = R.x*R.u + R.y*R.v + R.z*R.w # hypersurface
+                s = R.x[0]*R.a[0] + R.x[1]*R.a[1] + R.x[2]*R.a[2] # hypersurface
             else:
                 raise ValueError("Unknown value for norm_uvw(=%s)" %norm_uvw)
-            R.u /= s; R.v /= s; R.w /= s
+            R.a[0] /= s; R.a[1] /= s; R.a[2] /= s
 
             # Projection
             if norm_xyz == '1':
-                s = -SQRT3SUR2 * P.x + SQRT3SUR2 * P.y
-                t = -.5 * P.x -.5 * P.y + P.z
+                s = -SQRT3SUR2 * P.x[0] + SQRT3SUR2 * P.x[1]
+                t = -.5 * P.x[0] -.5 * P.x[1] + P.x[2]
                 domain_left[R.branch].append((s,t))
-                s = -SQRT3SUR2 * R.x + SQRT3SUR2 * R.y
-                t = -.5 * R.x -.5 * R.y + R.z
+                s = -SQRT3SUR2 * R.x[0] + SQRT3SUR2 * R.x[1]
+                t = -.5 * R.x[0] -.5 * R.x[1] + R.x[2]
                 image_left[R.branch].append((s,t))
             elif norm_xyz == 'sup':
-                domain_left[R.branch].append((P.x,P.y))
-                image_left[R.branch].append((R.x,R.y))
+                domain_left[R.branch].append((P.x[0],P.x[1]))
+                image_left[R.branch].append((R.x[0],R.x[1]))
 
             if norm_uvw == '1':
-                s = -SQRT3SUR2 * P.u + SQRT3SUR2 * P.v
-                t = -.5 * P.u -.5 * P.v + P.w
+                s = -SQRT3SUR2 * P.a[0] + SQRT3SUR2 * P.a[1]
+                t = -.5 * P.a[0] -.5 * P.a[1] + P.a[2]
                 domain_right[R.branch].append((s,t))
-                s = -SQRT3SUR2 * R.u + SQRT3SUR2 * R.v
-                t = -.5 * R.u -.5 * R.v + R.w
+                s = -SQRT3SUR2 * R.a[0] + SQRT3SUR2 * R.a[1]
+                t = -.5 * R.a[0] -.5 * R.a[1] + R.a[2]
                 image_right[R.branch].append((s,t))
             elif norm_uvw == 'sup':
-                domain_right[R.branch].append((P.u,P.v))
-                image_right[R.branch].append((R.u,R.v))
+                domain_right[R.branch].append((P.a[0],P.a[1]))
+                image_right[R.branch].append((R.a[0],R.a[1]))
 
             P = R
 
@@ -1288,13 +1343,15 @@ cdef class MCFAlgorithm(object):
             s = x*u + y*v + z*w
             print("scal prod <(x,y,z),(u,v,w)> = %f" % s)
 
-        cdef PairPoint3d P
-        P.x = x
-        P.y = y
-        P.z = z
-        P.u = u
-        P.v = v
-        P.w = w
+        cdef PairPoint P
+        P.x = <double*>check_allocarray(d, sizeof(double))
+        P.a = <double*>check_allocarray(d, sizeof(double))
+        P.x[0] = x
+        P.x[1] = y
+        P.x[2] = z
+        P.a[0] = u
+        P.a[1] = v
+        P.a[2] = w
 
         # Loop
         for i from 0 <= i < n_iterations:
@@ -1306,36 +1363,36 @@ cdef class MCFAlgorithm(object):
             P = self.call(P)
 
             if verbose:
-                print("x=%f, y=%f, z=%f" % (P.x,P.y,P.z))
-                print("u=%f, v=%f, w=%f" % (P.u,P.v,P.w))
-                s = P.x*P.u + P.y*P.v + P.z*P.w
+                print("x=%f, y=%f, z=%f" % (P.x[0],P.x[1],P.x[2]))
+                print("u=%f, v=%f, w=%f" % (P.a[0],P.a[1],P.a[2]))
+                s = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2]
                 print("scal prod <(x,y,z),(u,v,w)> = %f (after algo)" % s)
 
             # Save some computations
             #if i % step == 0:
-            if P.x < critical_value:
+            if P.x[0] < critical_value:
 
                 # Sum the first lyapunov exponent
-                s = P.x + P.y + P.z
+                s = P.x[0] + P.x[1] + P.x[2]
                 p = -log(s) - theta1c
                 t = theta1 + p
                 theta1c = (t-theta1) - p   # mathematically 0 but not for a computer!!
                 theta1 = t
-                P.x /= s; P.y /= s; P.z /= s;
+                P.x[0] /= s; P.x[1] /= s; P.x[2] /= s;
 
                 # Sum the second lyapunov exponent
-                s = abs(P.u) + abs(P.v) + abs(P.w)
+                s = abs(P.a[0]) + abs(P.a[1]) + abs(P.a[2])
                 p = log(s) - theta2c
                 t = theta2 + p
                 theta2c = (t-theta2) - p   # mathematically 0 but not for a computer!!
                 theta2 = t
 
                 # the following gramm shimdts seems to be useless, but it is not!!!
-                p = P.x*P.u + P.y*P.v + P.z*P.w
-                s = P.x*P.x + P.y*P.y + P.z*P.z
-                P.u -= p*P.x/s; P.v -= p*P.y/s; P.w -= p*P.z/s
-                s = abs(P.u) + abs(P.v) + abs(P.w)
-                P.u /= s; P.v /= s; P.w /= s
+                p = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2]
+                s = P.x[0]*P.x[0] + P.x[1]*P.x[1] + P.x[2]*P.x[2]
+                P.a[0] -= p*P.x[0]/s; P.a[1] -= p*P.x[1]/s; P.a[2] -= p*P.x[2]/s
+                s = abs(P.a[0]) + abs(P.a[1]) + abs(P.a[2])
+                P.a[0] /= s; P.a[1] /= s; P.a[2] /= s
 
         return theta1/n_iterations, theta2/n_iterations, 1-theta2/theta1
 
@@ -1350,7 +1407,7 @@ cdef class Brun(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -1366,32 +1423,33 @@ cdef class Brun(MCFAlgorithm):
              ('y', 0.6),
              ('z', 0.20000000000000007)]
         """
-        if P.x <= P.y <= P.z:
-            P.z -= P.y
-            P.v += P.w
+        if P.x[0] <= P.x[1] <= P.x[2]:
+            P.x[2] -= P.x[1]
+            P.a[1] += P.a[2]
             P.branch = 123
-        elif P.x <= P.z <= P.y:
-            P.y -= P.z
-            P.w += P.v
+        elif P.x[0] <= P.x[2] <= P.x[1]:
+            P.x[1] -= P.x[2]
+            P.a[2] += P.a[1]
             P.branch = 132
-        elif P.y <= P.z <= P.x:
-            P.x -= P.z
-            P.w += P.u
+        elif P.x[1] <= P.x[2] <= P.x[0]:
+            P.x[0] -= P.x[2]
+            P.a[2] += P.a[0]
             P.branch = 231
-        elif P.y <= P.x <= P.z:
-            P.z -= P.x
-            P.u += P.w
+        elif P.x[1] <= P.x[0] <= P.x[2]:
+            P.x[2] -= P.x[0]
+            P.a[0] += P.a[2]
             P.branch = 213
-        elif P.z <= P.x <= P.y:
-            P.y -= P.x
-            P.u += P.v
+        elif P.x[2] <= P.x[0] <= P.x[1]:
+            P.x[1] -= P.x[0]
+            P.a[0] += P.a[1]
             P.branch = 312
-        elif P.z <= P.y <= P.x:
-            P.x -= P.y
-            P.v += P.u
+        elif P.x[2] <= P.x[1] <= P.x[0]:
+            P.x[0] -= P.x[1]
+            P.a[1] += P.a[0]
             P.branch = 321
         else:
-            raise ValueError('limit case: reach set of measure zero: {}'.format(P))
+            dd = PairPoint_to_dict(P)
+            raise ValueError('limit case: reach set of measure zero: {}'.format(dd))
         return P
 
     def substitutions(self):
@@ -1447,7 +1505,7 @@ cdef class Reverse(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -1463,40 +1521,42 @@ cdef class Reverse(MCFAlgorithm):
              ('y', 0.25),
              ('z', 0.04999999999999993)]
         """
-        cdef PairPoint3d R
-        if P.x + P.y < P.z:
-            P.z -= P.x + P.y
-            P.v += P.w
-            P.u += P.w
+        cdef PairPoint R
+        R.x = <double*>check_allocarray(d, sizeof(double))
+        R.a = <double*>check_allocarray(d, sizeof(double))
+        if P.x[0] + P.x[1] < P.x[2]:
+            P.x[2] -= P.x[0] + P.x[1]
+            P.a[1] += P.a[2]
+            P.a[0] += P.a[2]
             P.branch = 3
             return P
-        elif P.x + P.z < P.y:
-            P.y -= P.x + P.z
-            P.w += P.v
-            P.u += P.v
+        elif P.x[0] + P.x[2] < P.x[1]:
+            P.x[1] -= P.x[0] + P.x[2]
+            P.a[2] += P.a[1]
+            P.a[0] += P.a[1]
             P.branch = 2
             return P
-        elif P.y + P.z < P.x:
-            P.x -= P.y + P.z
-            P.v += P.u
-            P.w += P.u
+        elif P.x[1] + P.x[2] < P.x[0]:
+            P.x[0] -= P.x[1] + P.x[2]
+            P.a[1] += P.a[0]
+            P.a[2] += P.a[0]
             P.branch = 1
             return P
         else:
-            # R.x = 0.629960524947437 * (-P.x + P.y + P.z)
-            # R.y = 0.629960524947437 * ( P.x - P.y + P.z)
-            # R.z = 0.629960524947437 * ( P.x + P.y - P.z)
+            # R.x[0] = 0.629960524947437 * (-P.x[0] + P.x[1] + P.x[2])
+            # R.x[1] = 0.629960524947437 * ( P.x[0] - P.x[1] + P.x[2])
+            # R.x[2] = 0.629960524947437 * ( P.x[0] + P.x[1] - P.x[2])
             # # 0.793700525984100 = 1/2*4^(1/3)
             # # 0.629960524947437 = 1/4*4^(2/3)
-            # R.u = 0.793700525984100 * (P.v + P.w)
-            # R.v = 0.793700525984100 * (P.u + P.w)
-            # R.w = 0.793700525984100 * (P.u + P.v)
-            R.x = 0.5 * (-P.x + P.y + P.z)
-            R.y = 0.5 * ( P.x - P.y + P.z)
-            R.z = 0.5 * ( P.x + P.y - P.z)
-            R.u = P.v + P.w
-            R.v = P.u + P.w
-            R.w = P.u + P.v
+            # R.a[0] = 0.793700525984100 * (P.a[1] + P.a[2])
+            # R.a[1] = 0.793700525984100 * (P.a[0] + P.a[2])
+            # R.a[2] = 0.793700525984100 * (P.a[0] + P.a[1])
+            R.x[0] = 0.5 * (-P.x[0] + P.x[1] + P.x[2])
+            R.x[1] = 0.5 * ( P.x[0] - P.x[1] + P.x[2])
+            R.x[2] = 0.5 * ( P.x[0] + P.x[1] - P.x[2])
+            R.a[0] = P.a[1] + P.a[2]
+            R.a[1] = P.a[0] + P.a[2]
+            R.a[2] = P.a[0] + P.a[1]
             R.branch = 4
             return R
 
@@ -1545,7 +1605,7 @@ cdef class ARP(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -1561,22 +1621,22 @@ cdef class ARP(MCFAlgorithm):
              ('y', 0.3),
              ('z', 0.20000000000000007)]
         """
-        if P.x + P.y < P.z:
-            P.z -= P.x + P.y
-            P.v += P.w
-            P.u += P.w
+        if P.x[0] + P.x[1] < P.x[2]:
+            P.x[2] -= P.x[0] + P.x[1]
+            P.a[1] += P.a[2]
+            P.a[0] += P.a[2]
             P.branch = 3
             return P
-        elif P.x + P.z < P.y:
-            P.y -= P.x + P.z
-            P.w += P.v
-            P.u += P.v
+        elif P.x[0] + P.x[2] < P.x[1]:
+            P.x[1] -= P.x[0] + P.x[2]
+            P.a[2] += P.a[1]
+            P.a[0] += P.a[1]
             P.branch = 2
             return P
-        elif P.y + P.z < P.x:
-            P.x -= P.y + P.z
-            P.v += P.u
-            P.w += P.u
+        elif P.x[1] + P.x[2] < P.x[0]:
+            P.x[0] -= P.x[1] + P.x[2]
+            P.a[1] += P.a[0]
+            P.a[2] += P.a[0]
             P.branch = 1
             return P
         else:
@@ -1657,7 +1717,7 @@ cdef class ArnouxRauzy(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -1682,26 +1742,27 @@ cdef class ArnouxRauzy(MCFAlgorithm):
              ('y', 0.2),
              ('z', 0.30000000000000004)]
         """
-        if P.x + P.y < P.z:
-            P.z -= P.x + P.y
-            P.v += P.w
-            P.u += P.w
+        if P.x[0] + P.x[1] < P.x[2]:
+            P.x[2] -= P.x[0] + P.x[1]
+            P.a[1] += P.a[2]
+            P.a[0] += P.a[2]
             P.branch = 3
             return P
-        elif P.x + P.z < P.y:
-            P.y -= P.x + P.z
-            P.w += P.v
-            P.u += P.v
+        elif P.x[0] + P.x[2] < P.x[1]:
+            P.x[1] -= P.x[0] + P.x[2]
+            P.a[2] += P.a[1]
+            P.a[0] += P.a[1]
             P.branch = 2
             return P
-        elif P.y + P.z < P.x:
-            P.x -= P.y + P.z
-            P.v += P.u
-            P.w += P.u
+        elif P.x[1] + P.x[2] < P.x[0]:
+            P.x[0] -= P.x[1] + P.x[2]
+            P.a[1] += P.a[0]
+            P.a[2] += P.a[0]
             P.branch = 1
             return P
         else:
-            raise ValueError('Arnoux is not defined on {}'.format(P))
+            dd = PairPoint_to_dict(P)
+            raise ValueError('Arnoux is not defined on {}'.format(dd))
 
     def substitutions(self):
         r"""
@@ -1743,7 +1804,7 @@ cdef class Poincare(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -1824,7 +1885,7 @@ cdef class Selmer(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -1840,32 +1901,33 @@ cdef class Selmer(MCFAlgorithm):
              ('y', 0.6),
              ('z', 0.5)]
         """
-        if P.x <= P.y <= P.z:
-            P.z -= P.x
-            P.u += P.w
+        if P.x[0] <= P.x[1] <= P.x[2]:
+            P.x[2] -= P.x[0]
+            P.a[0] += P.a[2]
             P.branch = 123
-        elif P.x <= P.z <= P.y:
-            P.y -= P.x
-            P.u += P.v
+        elif P.x[0] <= P.x[2] <= P.x[1]:
+            P.x[1] -= P.x[0]
+            P.a[0] += P.a[1]
             P.branch = 132
-        elif P.y <= P.z <= P.x:
-            P.x -= P.y
-            P.v += P.u
+        elif P.x[1] <= P.x[2] <= P.x[0]:
+            P.x[0] -= P.x[1]
+            P.a[1] += P.a[0]
             P.branch = 231
-        elif P.y <= P.x <= P.z:
-            P.z -= P.y
-            P.v += P.w
+        elif P.x[1] <= P.x[0] <= P.x[2]:
+            P.x[2] -= P.x[1]
+            P.a[1] += P.a[2]
             P.branch = 213
-        elif P.z <= P.x <= P.y:
-            P.y -= P.z
-            P.w += P.v
+        elif P.x[2] <= P.x[0] <= P.x[1]:
+            P.x[1] -= P.x[2]
+            P.a[2] += P.a[1]
             P.branch = 312
-        elif P.z <= P.y <= P.x:
-            P.x -= P.z
-            P.w += P.u
+        elif P.x[2] <= P.x[1] <= P.x[0]:
+            P.x[0] -= P.x[2]
+            P.a[2] += P.a[0]
             P.branch = 321
         else:
-            raise ValueError('limit case: reach set of measure zero: {}'.format(P))
+            dd = PairPoint_to_dict(P)
+            raise ValueError('limit case: reach set of measure zero: {}'.format(dd))
         return P
 
     def substitutions(self):
@@ -1921,7 +1983,7 @@ cdef class FullySubtractive(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -1937,23 +1999,24 @@ cdef class FullySubtractive(MCFAlgorithm):
              ('y', 0.3),
              ('z', 0.5)]
         """
-        if P.x <= P.y and P.x <= P.z:
-            P.y -= P.x
-            P.z -= P.x
-            P.u += P.v + P.w
+        if P.x[0] <= P.x[1] and P.x[0] <= P.x[2]:
+            P.x[1] -= P.x[0]
+            P.x[2] -= P.x[0]
+            P.a[0] += P.a[1] + P.a[2]
             P.branch = 1
-        elif P.y <= P.x and P.y <= P.z:
-            P.x -= P.y
-            P.z -= P.y
-            P.v += P.u + P.w
+        elif P.x[1] <= P.x[0] and P.x[1] <= P.x[2]:
+            P.x[0] -= P.x[1]
+            P.x[2] -= P.x[1]
+            P.a[1] += P.a[0] + P.a[2]
             P.branch = 2
-        elif P.z <= P.x and P.z <= P.y:
-            P.x -= P.z
-            P.y -= P.z
-            P.w += P.u + P.v
+        elif P.x[2] <= P.x[0] and P.x[2] <= P.x[1]:
+            P.x[0] -= P.x[2]
+            P.x[1] -= P.x[2]
+            P.a[2] += P.a[0] + P.a[1]
             P.branch = 3
         else:
-            raise ValueError('limit case: reach set of measure zero: {}'.format(P))
+            dd = PairPoint_to_dict(P)
+            raise ValueError('limit case: reach set of measure zero: {}'.format(dd))
         return P
 
     def name(self):
@@ -2007,7 +2070,7 @@ cdef class Cassaigne(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         This algorithm was provided by Julien Cassaigne during a meeting of
         the ANR DynA3S on October 12, 2015 held in Paris. It is inspired
@@ -2029,26 +2092,27 @@ cdef class Cassaigne(MCFAlgorithm):
              ('z', 0.5)]
         """
         cdef double tmp
-        if P.x >= P.z :
-            P.x -= P.z
-            tmp = P.y
-            P.y = P.z
-            P.z = tmp
-            tmp = P.v
-            P.v = P.u + P.w
-            P.w = tmp
+        if P.x[0] >= P.x[2] :
+            P.x[0] -= P.x[2]
+            tmp = P.x[1]
+            P.x[1] = P.x[2]
+            P.x[2] = tmp
+            tmp = P.a[1]
+            P.a[1] = P.a[0] + P.a[2]
+            P.a[2] = tmp
             P.branch = 1
-        elif P.x < P.z :
-            P.z -= P.x
-            tmp = P.y
-            P.y = P.x
-            P.x = tmp
-            tmp = P.v
-            P.v = P.u + P.w
-            P.u = tmp
+        elif P.x[0] < P.x[2] :
+            P.x[2] -= P.x[0]
+            tmp = P.x[1]
+            P.x[1] = P.x[0]
+            P.x[0] = tmp
+            tmp = P.a[1]
+            P.a[1] = P.a[0] + P.a[2]
+            P.a[0] = tmp
             P.branch = 2
         else:
-            raise ValueError('limit case: reach set of measure zero: {}'.format(P))
+            dd = PairPoint_to_dict(P)
+            raise ValueError('limit case: reach set of measure zero: {}'.format(dd))
         return P
 
     def substitutions(self):
@@ -2078,7 +2142,7 @@ cdef class Cassaigne(MCFAlgorithm):
                 2:  WordMorphism({1: [2], 2: [1], 3: [2,3]})}
 
 cdef class Sorted_Brun(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2115,13 +2179,13 @@ cdef class Sorted_Brun(MCFAlgorithm):
              ('z', 0.5)]
 
         """
-        P.z -= P.y
-        P.v += P.w
+        P.x[2] -= P.x[1]
+        P.a[1] += P.a[2]
         P.branch = 100
         return Sort(P)
 
 cdef class Sorted_BrunMulti(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2137,14 +2201,14 @@ cdef class Sorted_BrunMulti(MCFAlgorithm):
              ('y', 0.3),
              ('z', 0.3)]
         """
-        cdef int m = <int>(P.z / P.y)
-        P.z -= m*P.y
-        P.v += m*P.w
+        cdef int m = <int>(P.x[2] / P.x[1])
+        P.x[2] -= m*P.x[1]
+        P.a[1] += m*P.a[2]
         P.branch = 100
         return Sort(P)
 
 cdef class Sorted_Selmer(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2160,13 +2224,13 @@ cdef class Sorted_Selmer(MCFAlgorithm):
              ('y', 0.3),
              ('z', 0.6000000000000001)]
         """
-        P.z -= P.x
-        P.u += P.w
+        P.x[2] -= P.x[0]
+        P.a[0] += P.a[2]
         P.branch = 100
         return Sort(P)
 
 cdef class Sorted_Meester(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2183,14 +2247,14 @@ cdef class Sorted_Meester(MCFAlgorithm):
              ('z', 0.5)]
         """
         # Apply the algo
-        P.y -= P.x
-        P.z -= P.x
-        P.u += P.v + P.w
+        P.x[1] -= P.x[0]
+        P.x[2] -= P.x[0]
+        P.a[0] += P.a[1] + P.a[2]
         P.branch = 100
         return Sort(P)
 
 cdef class Sorted_ArnouxRauzy(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2221,33 +2285,35 @@ cdef class Sorted_ArnouxRauzy(MCFAlgorithm):
 
         """
         #Arnoux-Rauzy
-        cdef PairPoint3d R
-        R.x = P.x
-        R.y = P.y
-        R.z = P.z - (P.x + P.y)
-        R.u = P.u + P.w
-        R.v = P.v + P.w
-        R.w = P.w
+        cdef PairPoint R
+        R.x = <double*>check_allocarray(d, sizeof(double))
+        R.a = <double*>check_allocarray(d, sizeof(double))
+        R.x[0] = P.x[0]
+        R.x[1] = P.x[1]
+        R.x[2] = P.x[2] - (P.x[0] + P.x[1])
+        R.a[0] = P.a[0] + P.a[2]
+        R.a[1] = P.a[1] + P.a[2]
+        R.a[2] = P.a[2]
         R.branch = 100
         return Sort(R)
 
 cdef class Sorted_ArnouxRauzyMulti(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
         """
         #Arnoux-Rauzy Multi
         cdef int m
-        m = <int>(P.z / (P.x + P.y))
-        P.z -= m * (P.x + P.y)
-        P.v += m * P.w;
-        P.u += m * P.w;
+        m = <int>(P.x[2] / (P.x[0] + P.x[1]))
+        P.x[2] -= m * (P.x[0] + P.x[1])
+        P.a[1] += m * P.a[2];
+        P.a[0] += m * P.a[2];
         P.branch = 100
         return Sort(P)
 
 cdef class Sorted_ARP(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2277,13 +2343,13 @@ cdef class Sorted_ARP(MCFAlgorithm):
              ('z', 0.39999999999999997)]
         """
         # Apply the algo
-        if P.z > P.x + P.y:
+        if P.x[2] > P.x[0] + P.x[1]:
             return _Sorted_ArnouxRauzy(P)
         else:
             return _Sorted_Poincare(P)
 
 cdef class Sorted_ARPMulti(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2300,13 +2366,13 @@ cdef class Sorted_ARPMulti(MCFAlgorithm):
              ('z', 0.30000000000000004)]
         """
         # Apply the algo
-        if P.z > P.x + P.y:
+        if P.x[2] > P.x[0] + P.x[1]:
             return _Sorted_ArnouxRauzyMulti(P)
         else:
             return _Sorted_Poincare(P)
 
 cdef class Sorted_Poincare(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2336,18 +2402,20 @@ cdef class Sorted_Poincare(MCFAlgorithm):
 
         """
         # Apply the algo
-        cdef PairPoint3d R
-        R.x = P.x
-        R.y = P.y - P.x
-        R.z = P.z - P.y
-        R.u = P.u + P.v + P.w
-        R.v = P.v + P.w
-        R.w = P.w
+        cdef PairPoint R
+        R.x = <double*>check_allocarray(d, sizeof(double))
+        R.a = <double*>check_allocarray(d, sizeof(double))
+        R.x[0] = P.x[0]
+        R.x[1] = P.x[1] - P.x[0]
+        R.x[2] = P.x[2] - P.x[1]
+        R.a[0] = P.a[0] + P.a[1] + P.a[2]
+        R.a[1] = P.a[1] + P.a[2]
+        R.a[2] = P.a[2]
         R.branch = 200
         return Sort(R)
 
 cdef class Sorted_ARrevert(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2363,45 +2431,47 @@ cdef class Sorted_ARrevert(MCFAlgorithm):
              ('y', 0.3),
              ('z', 0.3)]
         """
-        cdef PairPoint3d R
-        cdef double z_x_y = P.z - P.x - P.y
-        if z_x_y > P.y:
-            R.x = P.x
-            R.y = P.y
-            R.z = z_x_y
-            R.u = P.u + P.w
-            R.v = P.v + P.w
-            R.w = P.w
+        cdef PairPoint R
+        R.x = <double*>check_allocarray(d, sizeof(double))
+        R.a = <double*>check_allocarray(d, sizeof(double))
+        cdef double z_x_y = P.x[2] - P.x[0] - P.x[1]
+        if z_x_y > P.x[1]:
+            R.x[0] = P.x[0]
+            R.x[1] = P.x[1]
+            R.x[2] = z_x_y
+            R.a[0] = P.a[0] + P.a[2]
+            R.a[1] = P.a[1] + P.a[2]
+            R.a[2] = P.a[2]
             R.branch = 100
-        elif z_x_y > P.x:
-            R.x = P.x
-            R.y = z_x_y
-            R.z = P.y
-            R.u = P.u + P.w
-            R.v = P.w
-            R.w = P.v + P.w
+        elif z_x_y > P.x[0]:
+            R.x[0] = P.x[0]
+            R.x[1] = z_x_y
+            R.x[2] = P.x[1]
+            R.a[0] = P.a[0] + P.a[2]
+            R.a[1] = P.a[2]
+            R.a[2] = P.a[1] + P.a[2]
             R.branch = 200
         elif z_x_y > 0:
-            R.x = z_x_y
-            R.y = P.x
-            R.z = P.y
-            R.u = P.w
-            R.v = P.u + P.w
-            R.w = P.v + P.w
+            R.x[0] = z_x_y
+            R.x[1] = P.x[0]
+            R.x[2] = P.x[1]
+            R.a[0] = P.a[2]
+            R.a[1] = P.a[0] + P.a[2]
+            R.a[2] = P.a[1] + P.a[2]
             R.branch = 300
         else:
             # Revert
-            R.x = (P.x + P.y - P.z)/2
-            R.y = (P.x - P.y + P.z)/2
-            R.z = (-P.x + P.y + P.z)/2
-            R.u = P.u + P.v
-            R.v = P.u + P.w
-            R.w = P.v + P.w
+            R.x[0] = (P.x[0] + P.x[1] - P.x[2])/2
+            R.x[1] = (P.x[0] - P.x[1] + P.x[2])/2
+            R.x[2] = (-P.x[0] + P.x[1] + P.x[2])/2
+            R.a[0] = P.a[0] + P.a[1]
+            R.a[1] = P.a[0] + P.a[2]
+            R.a[2] = P.a[1] + P.a[2]
             R.branch = 400
         return R
 
 cdef class Sorted_ARrevertMulti(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2417,46 +2487,48 @@ cdef class Sorted_ARrevertMulti(MCFAlgorithm):
              ('y', 0.3),
              ('z', 0.3)]
         """
-        cdef PairPoint3d R
-        cdef int m = <int>(P.z / (P.x + P.y))
-        cdef double z_mxy = P.z - m * (P.x + P.y)
+        cdef PairPoint R
+        R.x = <double*>check_allocarray(d, sizeof(double))
+        R.a = <double*>check_allocarray(d, sizeof(double))
+        cdef int m = <int>(P.x[2] / (P.x[0] + P.x[1]))
+        cdef double z_mxy = P.x[2] - m * (P.x[0] + P.x[1])
         if m == 0:
             # Revert
-            R.x = (P.x + P.y - P.z)/2
-            R.y = (P.x - P.y + P.z)/2
-            R.z = (-P.x + P.y + P.z)/2
-            R.u = P.u + P.v
-            R.v = P.u + P.w
-            R.w = P.v + P.w
+            R.x[0] = (P.x[0] + P.x[1] - P.x[2])/2
+            R.x[1] = (P.x[0] - P.x[1] + P.x[2])/2
+            R.x[2] = (-P.x[0] + P.x[1] + P.x[2])/2
+            R.a[0] = P.a[0] + P.a[1]
+            R.a[1] = P.a[0] + P.a[2]
+            R.a[2] = P.a[1] + P.a[2]
             R.branch = 100
-        elif z_mxy > P.y:
-            R.x = P.x
-            R.y = P.y
-            R.z = z_mxy
-            R.u = P.u + m*P.w
-            R.v = P.v + m*P.w
-            R.w = P.w
+        elif z_mxy > P.x[1]:
+            R.x[0] = P.x[0]
+            R.x[1] = P.x[1]
+            R.x[2] = z_mxy
+            R.a[0] = P.a[0] + m*P.a[2]
+            R.a[1] = P.a[1] + m*P.a[2]
+            R.a[2] = P.a[2]
             R.branch = 200
-        elif z_mxy > P.x:
-            R.x = P.x
-            R.y = z_mxy
-            R.z = P.y
-            R.u = P.u + m*P.w
-            R.v = P.w
-            R.w = P.v + m*P.w
+        elif z_mxy > P.x[0]:
+            R.x[0] = P.x[0]
+            R.x[1] = z_mxy
+            R.x[2] = P.x[1]
+            R.a[0] = P.a[0] + m*P.a[2]
+            R.a[1] = P.a[2]
+            R.a[2] = P.a[1] + m*P.a[2]
             R.branch = 300
         else:
-            R.x = z_mxy
-            R.y = P.x
-            R.z = P.y
-            R.u = P.w
-            R.v = P.u + m*P.w
-            R.w = P.v + m*P.w
+            R.x[0] = z_mxy
+            R.x[1] = P.x[0]
+            R.x[2] = P.x[1]
+            R.a[0] = P.a[2]
+            R.a[1] = P.a[0] + m*P.a[2]
+            R.a[2] = P.a[1] + m*P.a[2]
             R.branch = 400
         return R
 
 cdef class Sorted_ARMonteil(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2472,31 +2544,33 @@ cdef class Sorted_ARMonteil(MCFAlgorithm):
              ('y', 0.3),
              ('z', 0.3)]
         """
-        cdef PairPoint3d R
+        cdef PairPoint R
+        R.x = <double*>check_allocarray(d, sizeof(double))
+        R.a = <double*>check_allocarray(d, sizeof(double))
 
         # Apply the algo
-        if P.z > P.x + P.y:
+        if P.x[2] > P.x[0] + P.x[1]:
             # Arnoux-Rauzy
-            R.z = P.z - P.y - P.x
-            R.x = P.x
-            R.y = P.y
-            R.u = P.u + P.w
-            R.v = P.v + P.w
-            R.w = P.w
+            R.x[2] = P.x[2] - P.x[1] - P.x[0]
+            R.x[0] = P.x[0]
+            R.x[1] = P.x[1]
+            R.a[0] = P.a[0] + P.a[2]
+            R.a[1] = P.a[1] + P.a[2]
+            R.a[2] = P.a[2]
             R.branch = 100
         else:
             # Monteil
-            R.x = P.x + P.y - P.z
-            R.y = -P.x + P.z
-            R.z = -P.y + P.z
-            R.u = P.u + P.v + P.w
-            R.v = P.v + P.w
-            R.w = P.u + P.w
+            R.x[0] = P.x[0] + P.x[1] - P.x[2]
+            R.x[1] = -P.x[0] + P.x[2]
+            R.x[2] = -P.x[1] + P.x[2]
+            R.a[0] = P.a[0] + P.a[1] + P.a[2]
+            R.a[1] = P.a[1] + P.a[2]
+            R.a[2] = P.a[0] + P.a[2]
             R.branch = 200
 
         return Sort(R)
 cdef class Sorted_Delaunay(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         Donné par Xavier Provençal (inspiré de en fait) le 3 février 2014.
 
@@ -2514,22 +2588,24 @@ cdef class Sorted_Delaunay(MCFAlgorithm):
              ('y', 0.3),
              ('z', 0.8)]
         """
-        cdef PairPoint3d R
+        cdef PairPoint R
+        R.x = <double*>check_allocarray(d, sizeof(double))
+        R.a = <double*>check_allocarray(d, sizeof(double))
         # Apply the algo
-        if P.z > P.x + P.y:
+        if P.x[2] > P.x[0] + P.x[1]:
             # Genre de semi revert
-            R.x = P.x
-            R.y = P.y - P.x
-            R.z = P.x - P.y + P.z
-            R.u = P.u + P.v
-            R.v = P.v + P.w
-            R.w = P.w
+            R.x[0] = P.x[0]
+            R.x[1] = P.x[1] - P.x[0]
+            R.x[2] = P.x[0] - P.x[1] + P.x[2]
+            R.a[0] = P.a[0] + P.a[1]
+            R.a[1] = P.a[1] + P.a[2]
+            R.a[2] = P.a[2]
             R.branch = 200
             return Sort(R)
         else:
             return _Sorted_Meester(P)
 cdef class JacobiPerron(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2545,34 +2621,36 @@ cdef class JacobiPerron(MCFAlgorithm):
              ('y', 0.20000000000000007),
              ('z', 0.3)]
         """
-        cdef PairPoint3d R
+        cdef PairPoint R
+        R.x = <double*>check_allocarray(d, sizeof(double))
+        R.a = <double*>check_allocarray(d, sizeof(double))
         cdef int m,n                # temporary integer variables
         cdef double r,s,t           # temporary variables
 
         R.branch = 100
 
         # Apply the algo
-        m = int(P.z / P.x)
-        n = int(P.y / P.x)
-        t = P.z - m*P.x
-        s = P.y - n*P.x
-        r = P.x
+        m = int(P.x[2] / P.x[0])
+        n = int(P.x[1] / P.x[0])
+        t = P.x[2] - m*P.x[0]
+        s = P.x[1] - n*P.x[0]
+        r = P.x[0]
 
-        R.z = r
-        R.y = t
-        R.x = s
+        R.x[2] = r
+        R.x[1] = t
+        R.x[0] = s
 
-        t = P.w
-        s = P.v
-        r = m*P.w + n*P.v + P.u
+        t = P.a[2]
+        s = P.a[1]
+        r = m*P.a[2] + n*P.a[1] + P.a[0]
 
-        R.w = r
-        R.v = t
-        R.u = s
+        R.a[2] = r
+        R.a[1] = t
+        R.a[0] = s
 
         return R
 cdef class JacobiPerronAdditif(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2588,37 +2666,39 @@ cdef class JacobiPerronAdditif(MCFAlgorithm):
              ('y', 0.3),
              ('z', 0.5)]
         """
-        cdef PairPoint3d R
+        cdef PairPoint R
+        R.x = <double*>check_allocarray(d, sizeof(double))
+        R.a = <double*>check_allocarray(d, sizeof(double))
         # Apply the algo
-        if P.x < P.y:
+        if P.x[0] < P.x[1]:
             R.branch = 100
-            R.x = P.x
-            R.y = P.y - P.x
-            R.z = P.z
-            R.u = P.u + P.v
-            R.v = P.v
-            R.w = P.w
-        elif P.x < P.z:
+            R.x[0] = P.x[0]
+            R.x[1] = P.x[1] - P.x[0]
+            R.x[2] = P.x[2]
+            R.a[0] = P.a[0] + P.a[1]
+            R.a[1] = P.a[1]
+            R.a[2] = P.a[2]
+        elif P.x[0] < P.x[2]:
             R.branch = 200
-            R.x = P.x
-            R.y = P.y
-            R.z = P.z - P.x
-            R.u = P.u + P.w
-            R.v = P.v
-            R.w = P.w
-        elif P.x > P.y and P.x > P.z:
+            R.x[0] = P.x[0]
+            R.x[1] = P.x[1]
+            R.x[2] = P.x[2] - P.x[0]
+            R.a[0] = P.a[0] + P.a[2]
+            R.a[1] = P.a[1]
+            R.a[2] = P.a[2]
+        elif P.x[0] > P.x[1] and P.x[0] > P.x[2]:
             R.branch = 300
-            R.x = P.y
-            R.y = P.z
-            R.z = P.x
-            R.u = P.v
-            R.v = P.w
-            R.w = P.u
+            R.x[0] = P.x[1]
+            R.x[1] = P.x[2]
+            R.x[2] = P.x[0]
+            R.a[0] = P.a[1]
+            R.a[1] = P.a[2]
+            R.a[2] = P.a[0]
         else:
-            raise ValueError("jacobi not defined for (x,y,z)=(%s,%s,%s)"%(P.x,P.y,P.z))
+            raise ValueError("jacobi not defined for (x,y,z)=(%s,%s,%s)"%(P.x[0],P.x[1],P.x[2]))
         return R
 cdef class JacobiPerronAdditifv2(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2634,34 +2714,36 @@ cdef class JacobiPerronAdditifv2(MCFAlgorithm):
              ('y', 0.3),
              ('z', 0.5)]
         """
-        cdef PairPoint3d R
+        cdef PairPoint R
+        R.x = <double*>check_allocarray(d, sizeof(double))
+        R.a = <double*>check_allocarray(d, sizeof(double))
         # Apply the algo
-        if P.x < P.y:
+        if P.x[0] < P.x[1]:
             R.branch = 100
-            R.x = P.x
-            R.y = P.y - P.x
-            R.z = P.z - P.x
-            R.u = P.u + P.v + P.w
-            R.v = P.v
-            R.w = P.w
-        elif P.x < P.z:
+            R.x[0] = P.x[0]
+            R.x[1] = P.x[1] - P.x[0]
+            R.x[2] = P.x[2] - P.x[0]
+            R.a[0] = P.a[0] + P.a[1] + P.a[2]
+            R.a[1] = P.a[1]
+            R.a[2] = P.a[2]
+        elif P.x[0] < P.x[2]:
             R.branch = 200
-            R.x = P.x
-            R.y = P.y
-            R.z = P.z - P.x
-            R.u = P.u + P.w
-            R.v = P.v
-            R.w = P.w
-        elif P.x > P.y and P.x > P.z:
+            R.x[0] = P.x[0]
+            R.x[1] = P.x[1]
+            R.x[2] = P.x[2] - P.x[0]
+            R.a[0] = P.a[0] + P.a[2]
+            R.a[1] = P.a[1]
+            R.a[2] = P.a[2]
+        elif P.x[0] > P.x[1] and P.x[0] > P.x[2]:
             R.branch = 300
-            R.x = P.y
-            R.y = P.z
-            R.z = P.x
-            R.u = P.v
-            R.v = P.w
-            R.w = P.u
+            R.x[0] = P.x[1]
+            R.x[1] = P.x[2]
+            R.x[2] = P.x[0]
+            R.a[0] = P.a[1]
+            R.a[1] = P.a[2]
+            R.a[2] = P.a[0]
         else:
-            raise ValueError("jacobi not defined for (x,y,z)=(%s,%s,%s)"%(P.x,P.y,P.z))
+            raise ValueError("jacobi not defined for (x,y,z)=(%s,%s,%s)"%(P.x[0],P.x[1],P.x[2]))
 
         return R
 
@@ -2712,7 +2794,7 @@ cdef class Modified(MCFAlgorithm):
         self._algo = MCFAlgorithm
         self._gamma = gamma
 
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef PairPoint call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2742,159 +2824,167 @@ cdef class Modified(MCFAlgorithm):
         P = self._algo.call(P)
         if P.branch in self._gamma:
             g = self._gamma[P.branch]
-            P.x *= g
-            P.y *= g
-            P.z *= g
-            P.u /= g
-            P.v /= g
-            P.w /= g
+            P.x[0] *= g
+            P.x[1] *= g
+            P.x[2] *= g
+            P.a[0] /= g
+            P.a[1] /= g
+            P.a[2] /= g
         return P
 
-cdef inline PairPoint3d _Poincare(PairPoint3d P) except *:
+cdef inline PairPoint _Poincare(PairPoint P) except *:
     r"""
     EXAMPLES::
 
     """
-    cdef PairPoint3d R
-    if P.x <= P.y <= P.z:
-        R.x = P.x
-        R.y = P.y - P.x
-        R.z = P.z - P.y
-        R.u = P.u + P.v + P.w
-        R.v = P.v + P.w
-        R.w = P.w
+    cdef PairPoint R
+    R.x = <double*>check_allocarray(d, sizeof(double))
+    R.a = <double*>check_allocarray(d, sizeof(double))
+    if P.x[0] <= P.x[1] <= P.x[2]:
+        R.x[0] = P.x[0]
+        R.x[1] = P.x[1] - P.x[0]
+        R.x[2] = P.x[2] - P.x[1]
+        R.a[0] = P.a[0] + P.a[1] + P.a[2]
+        R.a[1] = P.a[1] + P.a[2]
+        R.a[2] = P.a[2]
         R.branch = 123
-    elif P.x <= P.z <= P.y:
-        R.x = P.x
-        R.y = P.y - P.z
-        R.z = P.z - P.x
-        R.u = P.u + P.v + P.w
-        R.v = P.v
-        R.w = P.v + P.w
+    elif P.x[0] <= P.x[2] <= P.x[1]:
+        R.x[0] = P.x[0]
+        R.x[1] = P.x[1] - P.x[2]
+        R.x[2] = P.x[2] - P.x[0]
+        R.a[0] = P.a[0] + P.a[1] + P.a[2]
+        R.a[1] = P.a[1]
+        R.a[2] = P.a[1] + P.a[2]
         R.branch = 132
-    elif P.y <= P.x <= P.z:
-        R.x = P.x - P.y
-        R.y = P.y
-        R.z = P.z - P.x
-        R.u = P.u       + P.w
-        R.v = P.u + P.v + P.w
-        R.w = P.w
+    elif P.x[1] <= P.x[0] <= P.x[2]:
+        R.x[0] = P.x[0] - P.x[1]
+        R.x[1] = P.x[1]
+        R.x[2] = P.x[2] - P.x[0]
+        R.a[0] = P.a[0]       + P.a[2]
+        R.a[1] = P.a[0] + P.a[1] + P.a[2]
+        R.a[2] = P.a[2]
         R.branch = 213
-    elif P.z <= P.x <= P.y:
-        R.x = P.x - P.z
-        R.y = P.y - P.x
-        R.z = P.z
-        R.u = P.u + P.v
-        R.v = P.v
-        R.w = P.u + P.v + P.w
+    elif P.x[2] <= P.x[0] <= P.x[1]:
+        R.x[0] = P.x[0] - P.x[2]
+        R.x[1] = P.x[1] - P.x[0]
+        R.x[2] = P.x[2]
+        R.a[0] = P.a[0] + P.a[1]
+        R.a[1] = P.a[1]
+        R.a[2] = P.a[0] + P.a[1] + P.a[2]
         R.branch = 312
-    elif P.y <= P.z <= P.x:
-        R.x = P.x - P.z
-        R.y = P.y
-        R.z = P.z - P.y
-        R.u = P.u
-        R.v = P.u + P.v + P.w
-        R.w = P.u + P.w
+    elif P.x[1] <= P.x[2] <= P.x[0]:
+        R.x[0] = P.x[0] - P.x[2]
+        R.x[1] = P.x[1]
+        R.x[2] = P.x[2] - P.x[1]
+        R.a[0] = P.a[0]
+        R.a[1] = P.a[0] + P.a[1] + P.a[2]
+        R.a[2] = P.a[0] + P.a[2]
         R.branch = 231
-    elif P.z <= P.y <= P.x:
-        R.x = P.x - P.y
-        R.y = P.y - P.z
-        R.z = P.z
-        R.u = P.u
-        R.v = P.u + P.v
-        R.w = P.u + P.v + P.w
+    elif P.x[2] <= P.x[1] <= P.x[0]:
+        R.x[0] = P.x[0] - P.x[1]
+        R.x[1] = P.x[1] - P.x[2]
+        R.x[2] = P.x[2]
+        R.a[0] = P.a[0]
+        R.a[1] = P.a[0] + P.a[1]
+        R.a[2] = P.a[0] + P.a[1] + P.a[2]
         R.branch = 321
     else:
-        raise ValueError('limit case: reach set of measure zero: {}'.format(P))
+        dd = PairPoint_to_dict(P)
+        raise ValueError('limit case: reach set of measure zero: {}'.format(dd))
     return R
 
-cdef inline PairPoint3d _Sorted_ArnouxRauzy(PairPoint3d P):
+cdef inline PairPoint _Sorted_ArnouxRauzy(PairPoint P):
     r"""
     EXAMPLES::
 
     """
     #Arnoux-Rauzy
-    cdef PairPoint3d R
-    R.x = P.x
-    R.y = P.y
-    R.z = P.z - (P.x + P.y)
-    R.u = P.u + P.w
-    R.v = P.v + P.w
-    R.w = P.w
+    cdef PairPoint R
+    R.x = <double*>check_allocarray(d, sizeof(double))
+    R.a = <double*>check_allocarray(d, sizeof(double))
+    R.x[0] = P.x[0]
+    R.x[1] = P.x[1]
+    R.x[2] = P.x[2] - (P.x[0] + P.x[1])
+    R.a[0] = P.a[0] + P.a[2]
+    R.a[1] = P.a[1] + P.a[2]
+    R.a[2] = P.a[2]
     R.branch = 100
     return Sort(R)
 
-cdef inline PairPoint3d _Sorted_ArnouxRauzyMulti(PairPoint3d P):
+cdef inline PairPoint _Sorted_ArnouxRauzyMulti(PairPoint P):
     r"""
     EXAMPLES::
 
     """
     #Arnoux-Rauzy Multi
     cdef int m
-    m = <int>(P.z / (P.x + P.y))
-    P.z -= m * (P.x + P.y)
-    P.v += m * P.w;
-    P.u += m * P.w;
+    m = <int>(P.x[2] / (P.x[0] + P.x[1]))
+    P.x[2] -= m * (P.x[0] + P.x[1])
+    P.a[1] += m * P.a[2];
+    P.a[0] += m * P.a[2];
     P.branch = 100
     return Sort(P)
 
-cdef inline PairPoint3d _Sorted_Poincare(PairPoint3d P):
+cdef inline PairPoint _Sorted_Poincare(PairPoint P):
     r"""
     EXAMPLES::
 
     """
     # Apply the algo
-    cdef PairPoint3d R
-    R.x = P.x
-    R.y = P.y - P.x
-    R.z = P.z - P.y
-    R.u = P.u + P.v + P.w
-    R.v = P.v + P.w
-    R.w = P.w
+    cdef PairPoint R
+    R.x = <double*>check_allocarray(d, sizeof(double))
+    R.a = <double*>check_allocarray(d, sizeof(double))
+    R.x[0] = P.x[0]
+    R.x[1] = P.x[1] - P.x[0]
+    R.x[2] = P.x[2] - P.x[1]
+    R.a[0] = P.a[0] + P.a[1] + P.a[2]
+    R.a[1] = P.a[1] + P.a[2]
+    R.a[2] = P.a[2]
     R.branch = 200
     return Sort(R)
-cdef inline PairPoint3d _Sorted_Meester(PairPoint3d P):
+
+cdef inline PairPoint _Sorted_Meester(PairPoint P):
     r"""
     EXAMPLES::
 
     """
     # Apply the algo
-    P.y -= P.x
-    P.z -= P.x
-    P.u += P.v + P.w
+    P.x[1] -= P.x[0]
+    P.x[2] -= P.x[0]
+    P.a[0] += P.a[1] + P.a[2]
     P.branch = 100
     return Sort(P)
 
 
-cdef inline PairPoint3d Sort(PairPoint3d P):
+cdef inline PairPoint Sort(PairPoint P):
     r"""
     EXAMPLES::
 
     """
     cdef double tmp
-    if P.x > P.y:
-        tmp = P.x
-        P.x = P.y
-        P.y = tmp
-        tmp = P.u
-        P.u = P.v
-        P.v = tmp
+    if P.x[0] > P.x[1]:
+        tmp = P.x[0]
+        P.x[0] = P.x[1]
+        P.x[1] = tmp
+        tmp = P.a[0]
+        P.a[0] = P.a[1]
+        P.a[1] = tmp
         P.branch += 1
-    if P.y > P.z:
-        tmp = P.y
-        P.y = P.z
-        P.z = tmp
-        tmp = P.v
-        P.v = P.w
-        P.w = tmp
+    if P.x[1] > P.x[2]:
+        tmp = P.x[1]
+        P.x[1] = P.x[2]
+        P.x[2] = tmp
+        tmp = P.a[1]
+        P.a[1] = P.a[2]
+        P.a[2] = tmp
         P.branch += 2
-    if P.x > P.y:
-        tmp = P.x
-        P.x = P.y
-        P.y = tmp
-        tmp = P.u
-        P.u = P.v
-        P.v = tmp
+    if P.x[0] > P.x[1]:
+        tmp = P.x[0]
+        P.x[0] = P.x[1]
+        P.x[1] = tmp
+        tmp = P.a[0]
+        P.a[0] = P.a[1]
+        P.a[1] = tmp
         P.branch += 4
     return P
 
