@@ -1,6 +1,5 @@
 from setuptools import setup, Extension
-# To use a consistent encoding
-from codecs import open
+from codecs import open # To use a consistent encoding
 from os import path
 from Cython.Build import cythonize
 import Cython.Compiler.Options
@@ -24,7 +23,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 setup(name='slabbe',
     version=open("VERSION").read().strip(),
     description="Sebastien Labbe's Research code",
-    long_description=open('README.rst').read(),
+    long_description=long_description,
     classifiers=[
       # How mature is this project? Common values are
       #   3 - Alpha
