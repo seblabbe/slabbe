@@ -62,6 +62,11 @@ Orbit in the simplex::
 
     - Should we sig_free some table of double P.x and P.a ??
 
+    - Create memory inside algorithms to perform computations...
+
+    - cdef PairPoint call(self, PairPoint P) -> cdef int call(self, PairPoint P):
+      returns the branch instead
+
 Question:
 
     - Comment factoriser le code sans utiliser les yield?
@@ -88,7 +93,47 @@ from sage.misc.prandom import random
 include "cysignals/signals.pxi"   # ctrl-c interrupt block support
 include "cysignals/memory.pxi"
 
-cdef struct PairPoint:
+cdef class PairPoint:
+    cdef double* x
+    cdef double* a
+    cdef int branch
+    cdef int dim
+    def __cinit__(self, x, a, branch):
+        dim = len(x)
+        self.x = <double*>check_allocarray(dim, sizeof(double))
+        self.a = <double*>check_allocarray(dim, sizeof(double))
+        self.branch = branch
+        self.dim = dim
+
+    def __init__(self, x, a, branch):
+        cdef int i
+        for i in range(self.dim):
+            self.x[i] = x[i]
+        for i in range(self.dim):
+            self.a[i] = a[i]
+
+    def to_dict(self):
+        cdef int i
+        return dict(x=[self.x[i] for i in range(self.dim)],
+                    a=[self.a[i] for i in range(self.dim)],
+                    branch=self.branch)
+
+    def __repr__(self):
+        return repr(self.to_dict())
+
+    def sort(self):
+        r"""
+        man 3 qsort::
+
+        void
+        qsort(void *base, size_t nel, size_t width,
+            int (*compar)(const void *, const void *));
+
+        + google
+        """
+        raise NotImplementedError
+
+cdef struct PairPointOld:
     double* x
     double* a
     int branch
@@ -110,7 +155,7 @@ cdef class MCFAlgorithm(object):
     ########################################
     # METHODS IMPLEMENTED IN HERITED CLASSES
     ########################################
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         This method must be implemented in the inherited classes.
 
@@ -169,9 +214,7 @@ cdef class MCFAlgorithm(object):
             {1, 2, 3, 123, 132, 213, 231, 312, 321}
         """
         cdef unsigned int i         # loop counter
-        cdef PairPoint P
-        P.x = <double*>check_allocarray(d, sizeof(double))
-        P.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
         S = set()
         # Loop
         for i from 0 <= i < n_iterations:
@@ -207,11 +250,8 @@ cdef class MCFAlgorithm(object):
         cdef double s,t             # temporary variables
         cdef unsigned int i         # loop counter
 
-        cdef PairPoint P, R
-        P.x = <double*>check_allocarray(d, sizeof(double))
-        P.a = <double*>check_allocarray(d, sizeof(double))
-        R.x = <double*>check_allocarray(d, sizeof(double))
-        R.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
 
         # Loop
         for i from 0 <= i < n_iterations:
@@ -280,11 +320,8 @@ cdef class MCFAlgorithm(object):
         """
         from sage.modules.free_module_element import vector
         cdef unsigned int i         # loop counter
-        cdef PairPoint P, R
-        P.x = <double*>check_allocarray(d, sizeof(double))
-        P.a = <double*>check_allocarray(d, sizeof(double))
-        R.x = <double*>check_allocarray(d, sizeof(double))
-        R.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
 
         A = dict((k,s.incidence_matrix()) for k,s in self.substitutions().iteritems())
 
@@ -312,7 +349,7 @@ cdef class MCFAlgorithm(object):
             if not abs(s - t) < 0.0000001:
                 m = 'Incoherence between the definition of algo \n'
                 m += 'and the associated substitutions.\n'
-                m += '{} != {}\n'.format(s,t)
+                m += 'M * v_{{n+1}} = {} !=\nv_n = {}\n'.format(s,t)
                 m += 'The problem is on branch {}\n'.format(R.branch)
                 m += 'on the {}-th iteration\n'.format(i)
                 m += 'INPUT: ({}, {}, {}, {}, {}, {})\n'.format(P.x[0],P.x[1],P.x[2],P.a[0],P.a[1],P.a[2])
@@ -462,9 +499,7 @@ cdef class MCFAlgorithm(object):
 
         """
         cdef double s             # temporary variables
-        cdef PairPoint P
-        P.x = <double*>check_allocarray(d, sizeof(double))
-        P.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
 
         # initial values
         P.x[0], P.x[1], P.x[2] = start
@@ -545,9 +580,7 @@ cdef class MCFAlgorithm(object):
 
         """
         cdef double s           # temporary variables
-        cdef PairPoint P
-        P.x = <double*>check_allocarray(d, sizeof(double))
-        P.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
         if start is None:
             P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
         else:
@@ -633,9 +666,7 @@ cdef class MCFAlgorithm(object):
 
         """
         cdef double s           # temporary variables
-        cdef PairPoint P
-        P.x = <double*>check_allocarray(d, sizeof(double))
-        P.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
         cdef int i
         if start is None:
             P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
@@ -775,9 +806,7 @@ cdef class MCFAlgorithm(object):
         """
         cdef double s,x,y,u,v           # temporary variables
         s = x = y = u = v = 0           # initialize to avoid a warning
-        cdef PairPoint P
-        P.x = <double*>check_allocarray(d, sizeof(double))
-        P.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
         cdef int previous_branch
         cdef int xa,ya,ua,va
         cdef int i
@@ -902,9 +931,7 @@ cdef class MCFAlgorithm(object):
             ((1.0, 1.0, 0.0), (45.0, 14.0, 4.0), 312)
             ((1.0, 0.0, 0.0), (59.0, 14.0, 4.0), 312)
         """
-        cdef PairPoint P
-        P.x = <double*>check_allocarray(d, sizeof(double))
-        P.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
         if start is None:
             P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
         else:
@@ -943,9 +970,7 @@ cdef class MCFAlgorithm(object):
             Check for a fixed point stop then.
 
         """
-        cdef PairPoint P
-        P.x = <double*>check_allocarray(d, sizeof(double))
-        P.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
         cdef int i
         if start is None:
             P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
@@ -989,9 +1014,7 @@ cdef class MCFAlgorithm(object):
             sage: Brun().image((10, 21, 37), 10)
             (1.0, 1.0, 0.0)
         """
-        cdef PairPoint P
-        P.x = <double*>check_allocarray(d, sizeof(double))
-        P.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
         cdef int i
         P.x[0] = start[0]; P.x[1] = start[1]; P.x[2] = start[2]
         P.a[0] = 1
@@ -1075,9 +1098,7 @@ cdef class MCFAlgorithm(object):
             for i from 0 <= i <= ndivs:
                 C[i][j] = 0
 
-        cdef PairPoint P
-        P.x = <double*>check_allocarray(d, sizeof(double))
-        P.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
         P.x[0] = random()
         P.x[1] = random()
         P.x[2] = random()
@@ -1182,11 +1203,8 @@ cdef class MCFAlgorithm(object):
         s = x + y + z
         x /= s; y /= s; z /= s
 
-        cdef PairPoint P,R
-        P.x = <double*>check_allocarray(d, sizeof(double))
-        P.a = <double*>check_allocarray(d, sizeof(double))
-        R.x = <double*>check_allocarray(d, sizeof(double))
-        R.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
         P.x[0] = x
         P.x[1] = y
         P.x[2] = z
@@ -1346,9 +1364,7 @@ cdef class MCFAlgorithm(object):
             s = x*u + y*v + z*w
             print("scal prod <(x,y,z),(u,v,w)> = %f" % s)
 
-        cdef PairPoint P
-        P.x = <double*>check_allocarray(d, sizeof(double))
-        P.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
         P.x[0] = x
         P.x[1] = y
         P.x[2] = z
@@ -1410,7 +1426,7 @@ cdef class Brun(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -1508,7 +1524,7 @@ cdef class Reverse(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -1524,9 +1540,7 @@ cdef class Reverse(MCFAlgorithm):
              ('y', 0.25),
              ('z', 0.04999999999999993)]
         """
-        cdef PairPoint R
-        R.x = <double*>check_allocarray(d, sizeof(double))
-        R.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
         if P.x[0] + P.x[1] < P.x[2]:
             P.x[2] -= P.x[0] + P.x[1]
             P.a[1] += P.a[2]
@@ -1608,7 +1622,7 @@ cdef class ARP(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -1720,7 +1734,7 @@ cdef class ArnouxRauzy(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -1807,7 +1821,7 @@ cdef class Poincare(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -1888,7 +1902,7 @@ cdef class Selmer(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -1986,7 +2000,7 @@ cdef class FullySubtractive(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -2073,7 +2087,7 @@ cdef class Cassaigne(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         This algorithm was provided by Julien Cassaigne during a meeting of
         the ANR DynA3S on October 12, 2015 held in Paris. It is inspired
@@ -2145,7 +2159,7 @@ cdef class Cassaigne(MCFAlgorithm):
                 2:  WordMorphism({1: [2], 2: [1], 3: [2,3]})}
 
 cdef class Sorted_Brun(MCFAlgorithm):
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -2188,7 +2202,7 @@ cdef class Sorted_Brun(MCFAlgorithm):
         return Sort(P)
 
 cdef class Sorted_BrunMulti(MCFAlgorithm):
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -2211,7 +2225,7 @@ cdef class Sorted_BrunMulti(MCFAlgorithm):
         return Sort(P)
 
 cdef class Sorted_Selmer(MCFAlgorithm):
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -2233,7 +2247,7 @@ cdef class Sorted_Selmer(MCFAlgorithm):
         return Sort(P)
 
 cdef class Sorted_Meester(MCFAlgorithm):
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -2257,7 +2271,7 @@ cdef class Sorted_Meester(MCFAlgorithm):
         return Sort(P)
 
 cdef class Sorted_ArnouxRauzy(MCFAlgorithm):
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -2288,9 +2302,7 @@ cdef class Sorted_ArnouxRauzy(MCFAlgorithm):
 
         """
         #Arnoux-Rauzy
-        cdef PairPoint R
-        R.x = <double*>check_allocarray(d, sizeof(double))
-        R.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
         R.x[0] = P.x[0]
         R.x[1] = P.x[1]
         R.x[2] = P.x[2] - (P.x[0] + P.x[1])
@@ -2301,7 +2313,7 @@ cdef class Sorted_ArnouxRauzy(MCFAlgorithm):
         return Sort(R)
 
 cdef class Sorted_ArnouxRauzyMulti(MCFAlgorithm):
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -2316,7 +2328,7 @@ cdef class Sorted_ArnouxRauzyMulti(MCFAlgorithm):
         return Sort(P)
 
 cdef class Sorted_ARP(MCFAlgorithm):
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -2352,7 +2364,7 @@ cdef class Sorted_ARP(MCFAlgorithm):
             return _Sorted_Poincare(P)
 
 cdef class Sorted_ARPMulti(MCFAlgorithm):
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -2375,7 +2387,7 @@ cdef class Sorted_ARPMulti(MCFAlgorithm):
             return _Sorted_Poincare(P)
 
 cdef class Sorted_Poincare(MCFAlgorithm):
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -2405,9 +2417,7 @@ cdef class Sorted_Poincare(MCFAlgorithm):
 
         """
         # Apply the algo
-        cdef PairPoint R
-        R.x = <double*>check_allocarray(d, sizeof(double))
-        R.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
         R.x[0] = P.x[0]
         R.x[1] = P.x[1] - P.x[0]
         R.x[2] = P.x[2] - P.x[1]
@@ -2418,7 +2428,7 @@ cdef class Sorted_Poincare(MCFAlgorithm):
         return Sort(R)
 
 cdef class Sorted_ARrevert(MCFAlgorithm):
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -2434,9 +2444,7 @@ cdef class Sorted_ARrevert(MCFAlgorithm):
              ('y', 0.3),
              ('z', 0.3)]
         """
-        cdef PairPoint R
-        R.x = <double*>check_allocarray(d, sizeof(double))
-        R.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
         cdef double z_x_y = P.x[2] - P.x[0] - P.x[1]
         if z_x_y > P.x[1]:
             R.x[0] = P.x[0]
@@ -2474,7 +2482,7 @@ cdef class Sorted_ARrevert(MCFAlgorithm):
         return R
 
 cdef class Sorted_ARrevertMulti(MCFAlgorithm):
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -2490,9 +2498,7 @@ cdef class Sorted_ARrevertMulti(MCFAlgorithm):
              ('y', 0.3),
              ('z', 0.3)]
         """
-        cdef PairPoint R
-        R.x = <double*>check_allocarray(d, sizeof(double))
-        R.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
         cdef int m = <int>(P.x[2] / (P.x[0] + P.x[1]))
         cdef double z_mxy = P.x[2] - m * (P.x[0] + P.x[1])
         if m == 0:
@@ -2531,7 +2537,7 @@ cdef class Sorted_ARrevertMulti(MCFAlgorithm):
         return R
 
 cdef class Sorted_ARMonteil(MCFAlgorithm):
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -2547,9 +2553,7 @@ cdef class Sorted_ARMonteil(MCFAlgorithm):
              ('y', 0.3),
              ('z', 0.3)]
         """
-        cdef PairPoint R
-        R.x = <double*>check_allocarray(d, sizeof(double))
-        R.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
 
         # Apply the algo
         if P.x[2] > P.x[0] + P.x[1]:
@@ -2573,7 +2577,7 @@ cdef class Sorted_ARMonteil(MCFAlgorithm):
 
         return Sort(R)
 cdef class Sorted_Delaunay(MCFAlgorithm):
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         Donné par Xavier Provençal (inspiré de en fait) le 3 février 2014.
 
@@ -2591,9 +2595,7 @@ cdef class Sorted_Delaunay(MCFAlgorithm):
              ('y', 0.3),
              ('z', 0.8)]
         """
-        cdef PairPoint R
-        R.x = <double*>check_allocarray(d, sizeof(double))
-        R.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
         # Apply the algo
         if P.x[2] > P.x[0] + P.x[1]:
             # Genre de semi revert
@@ -2608,7 +2610,7 @@ cdef class Sorted_Delaunay(MCFAlgorithm):
         else:
             return _Sorted_Meester(P)
 cdef class JacobiPerron(MCFAlgorithm):
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -2624,9 +2626,7 @@ cdef class JacobiPerron(MCFAlgorithm):
              ('y', 0.20000000000000007),
              ('z', 0.3)]
         """
-        cdef PairPoint R
-        R.x = <double*>check_allocarray(d, sizeof(double))
-        R.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
         cdef int m,n                # temporary integer variables
         cdef double r,s,t           # temporary variables
 
@@ -2653,7 +2653,7 @@ cdef class JacobiPerron(MCFAlgorithm):
 
         return R
 cdef class JacobiPerronAdditif(MCFAlgorithm):
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -2669,9 +2669,7 @@ cdef class JacobiPerronAdditif(MCFAlgorithm):
              ('y', 0.3),
              ('z', 0.5)]
         """
-        cdef PairPoint R
-        R.x = <double*>check_allocarray(d, sizeof(double))
-        R.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
         # Apply the algo
         if P.x[0] < P.x[1]:
             R.branch = 100
@@ -2701,7 +2699,7 @@ cdef class JacobiPerronAdditif(MCFAlgorithm):
             raise ValueError("jacobi not defined for (x,y,z)=(%s,%s,%s)"%(P.x[0],P.x[1],P.x[2]))
         return R
 cdef class JacobiPerronAdditifv2(MCFAlgorithm):
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -2717,9 +2715,7 @@ cdef class JacobiPerronAdditifv2(MCFAlgorithm):
              ('y', 0.3),
              ('z', 0.5)]
         """
-        cdef PairPoint R
-        R.x = <double*>check_allocarray(d, sizeof(double))
-        R.a = <double*>check_allocarray(d, sizeof(double))
+        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
         # Apply the algo
         if P.x[0] < P.x[1]:
             R.branch = 100
@@ -2797,7 +2793,7 @@ cdef class Modified(MCFAlgorithm):
         self._algo = MCFAlgorithm
         self._gamma = gamma
 
-    cdef PairPoint call(self, PairPoint P) except *:
+    cdef PairPoint call(self, PairPoint P):
         r"""
         EXAMPLES::
 
@@ -2835,14 +2831,12 @@ cdef class Modified(MCFAlgorithm):
             P.a[2] /= g
         return P
 
-cdef inline PairPoint _Poincare(PairPoint P) except *:
+cdef inline PairPoint _Poincare(PairPoint P):
     r"""
     EXAMPLES::
 
     """
-    cdef PairPoint R
-    R.x = <double*>check_allocarray(d, sizeof(double))
-    R.a = <double*>check_allocarray(d, sizeof(double))
+    cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
     if P.x[0] <= P.x[1] <= P.x[2]:
         R.x[0] = P.x[0]
         R.x[1] = P.x[1] - P.x[0]
@@ -2902,9 +2896,7 @@ cdef inline PairPoint _Sorted_ArnouxRauzy(PairPoint P):
 
     """
     #Arnoux-Rauzy
-    cdef PairPoint R
-    R.x = <double*>check_allocarray(d, sizeof(double))
-    R.a = <double*>check_allocarray(d, sizeof(double))
+    cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
     R.x[0] = P.x[0]
     R.x[1] = P.x[1]
     R.x[2] = P.x[2] - (P.x[0] + P.x[1])
@@ -2934,9 +2926,7 @@ cdef inline PairPoint _Sorted_Poincare(PairPoint P):
 
     """
     # Apply the algo
-    cdef PairPoint R
-    R.x = <double*>check_allocarray(d, sizeof(double))
-    R.a = <double*>check_allocarray(d, sizeof(double))
+    cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
     R.x[0] = P.x[0]
     R.x[1] = P.x[1] - P.x[0]
     R.x[2] = P.x[2] - P.x[1]
