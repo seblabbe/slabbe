@@ -38,7 +38,8 @@ setup(name='slabbe',
     keywords='sagemath combinatorics discrete geometry symbolic dynamics',
     author='Sebastien Labbe',
     author_email='slabbe@ulg.ac.be',
-    install_requires=['cython','cysignals'],
+    #install_requires=['cython','cysignals'], # this causes update of cysignals
+                                              # which forces recompilation of all cython files!
     #url='http://www.slabbe.org/Sage',
     url='http://github.com/seblabbe/slabbe',
     license = "GPLv2+",
