@@ -64,6 +64,8 @@ Orbit in the simplex::
 
     - Create memory inside algorithms to perform computations...
 
+    - See the TODO in the file
+
 Question:
 
     - Comment factoriser le code sans utiliser les yield?
@@ -93,30 +95,41 @@ include "cysignals/memory.pxi"
 cdef class PairPoint:
     cdef double* x
     cdef double* a
-    cdef int branch
     cdef int dim
-    def __cinit__(self, x, a, branch):
-        dim = len(x)
-        self.x = <double*>check_allocarray(dim, sizeof(double))
-        self.a = <double*>check_allocarray(dim, sizeof(double))
-        self.branch = branch
-        self.dim = dim
+    def __cinit__(self, x, a):
+        self.dim = len(x)
+        self.x = <double*>check_allocarray(self.dim, sizeof(double))
+        self.a = <double*>check_allocarray(self.dim, sizeof(double))
 
-    def __init__(self, x, a, branch):
+    def __init__(self, x, a):
         cdef int i
         for i in range(self.dim):
             self.x[i] = x[i]
         for i in range(self.dim):
             self.a[i] = a[i]
 
+    def __dealloc__(self):
+        sig_free(self.x)
+        sig_free(self.a)
+
     def to_dict(self):
         cdef int i
         return dict(x=[self.x[i] for i in range(self.dim)],
-                    a=[self.a[i] for i in range(self.dim)],
-                    branch=self.branch)
+                    a=[self.a[i] for i in range(self.dim)])
+    def to_tuple(self):
+        cdef int i
+        return (tuple(self.x[i] for i in range(self.dim)),
+                tuple(self.a[i] for i in range(self.dim)))
 
     def __repr__(self):
-        return repr(self.to_dict())
+        r"""
+        EXAMPLES::
+
+             sage: from slabbe.mult_cont_frac_pyx import PairPoint
+             sage: PairPoint(range(5), range(5))
+             ((0.0, 1.0, 2.0, 3.0, 4.0), (0.0, 1.0, 2.0, 3.0, 4.0))
+        """
+        return repr(self.to_tuple())
 
     def sort(self):
         r"""
@@ -130,6 +143,21 @@ cdef class PairPoint:
         """
         raise NotImplementedError
 
+    cdef PairPoint copy(self):
+        r"""
+        """
+        cdef int i
+        return PairPoint(x=[self.x[i] for i in range(self.dim)],
+                         a=[self.a[i] for i in range(self.dim)])
+
+    cdef copy_inplace(self, PairPoint P):
+        cdef int i
+        assert self.dim == P.dim, "dimension inconsistencies"
+        for i in range(self.dim):
+            self.x[i] = P.x[i]
+        for i in range(self.dim):
+            self.a[i] = P.a[i]
+
     cdef normalize(self):
         raise NotImplementedError
     cdef dot_product(self):
@@ -141,11 +169,6 @@ cdef class PairPoint:
     cdef projection3to2(self):
         raise NotImplementedError
 
-cdef struct PairPointOld:
-    double* x
-    double* a
-    int branch
-
 cdef int d = 3
 
 cdef double SQRT3SUR2 = 0.866025403784439
@@ -154,7 +177,7 @@ cdef class MCFAlgorithm(object):
     ########################################
     # METHODS IMPLEMENTED IN HERITED CLASSES
     ########################################
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         This method must be implemented in the inherited classes.
 
@@ -213,7 +236,7 @@ cdef class MCFAlgorithm(object):
             {1, 2, 3, 123, 132, 213, 231, 312, 321}
         """
         cdef unsigned int i         # loop counter
-        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
         cdef int branch
         S = set()
         # Loop
@@ -250,8 +273,8 @@ cdef class MCFAlgorithm(object):
         cdef double s,t             # temporary variables
         cdef unsigned int i         # loop counter
 
-        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
-        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
 
         cdef int branch
 
@@ -266,7 +289,7 @@ cdef class MCFAlgorithm(object):
             P.a[0] = random(); P.a[1] = random(); P.a[2] = random();
             s = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2]
 
-            R = copy(P)
+            R = P.copy()
 
             # Apply Algo
             try:
@@ -324,8 +347,8 @@ cdef class MCFAlgorithm(object):
         """
         from sage.modules.free_module_element import vector
         cdef unsigned int i         # loop counter
-        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
-        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
         cdef int branch
 
         A = dict((k,s.incidence_matrix()) for k,s in self.substitutions().iteritems())
@@ -340,7 +363,7 @@ cdef class MCFAlgorithm(object):
             P.x[0] = random(); P.x[1] = random(); P.x[2] = random();
             P.a[0] = random(); P.a[1] = random(); P.a[2] = random();
             
-            R = copy(P)  # TODO is the copy needed here?
+            R = P.copy()  # TODO is the copy needed here?
 
             # Apply Algo
             try:
@@ -439,25 +462,18 @@ cdef class MCFAlgorithm(object):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
             sage: Brun()(P)
-            123
-            sage: P
-            [('u', 0.2),
-             ('v', 0.6),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.6),
-             ('z', 0.20000000000000007)]
+            ((0.3, 0.6, 0.20000000000000007), (0.2, 0.6, 0.3))
 
         ::
 
             sage: P = PairPoint([3,6,8], [.2,.3,.3])
             sage: Brun()(P)
-            123
-            sage: P
-            {'branch': 123, 'u': 0.2, 'v': 0.6, 'w': 0.3, 'x': 3.0, 'y': 6.0, 'z': 2.0}
+            ((3.0, 6.0, 2.0), (0.2, 0.6, 0.3))
         """
-        self.call(P)
-        return P
+        # TODO should __call__ return a copy or changes P?
+        cdef PairPoint R = P.copy()
+        self.call(R)
+        return R
 
     def __richcmp__(self, other, op):
         r"""
@@ -508,7 +524,7 @@ cdef class MCFAlgorithm(object):
 
         """
         cdef double s             # temporary variables
-        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
         cdef int branch
 
         # initial values
@@ -521,7 +537,7 @@ cdef class MCFAlgorithm(object):
 
         # Loop
         while True:
-            branch self.call(P)
+            branch = self.call(P)
             yield branch
 
             # Normalize (x,y,z)
@@ -590,7 +606,7 @@ cdef class MCFAlgorithm(object):
 
         """
         cdef double s           # temporary variables
-        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
         cdef int branch
         if start is None:
             P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
@@ -608,7 +624,7 @@ cdef class MCFAlgorithm(object):
         while True:
 
             # Apply Algo
-            branch self.call(P)
+            branch = self.call(P)
 
             # Normalize (xnew,ynew,znew)
             if norm_xyz == '1':
@@ -630,7 +646,7 @@ cdef class MCFAlgorithm(object):
                 raise ValueError("Unknown value for norm_uvw(=%s)" %norm_uvw)
             P.a[0] /= s; P.a[1] /= s; P.a[2] /= s
 
-            yield (P.x[0], P.x[1], P.x[2]), (P.a[0], P.a[1], P.a[2]), P.branch
+            yield (P.x[0], P.x[1], P.x[2]), (P.a[0], P.a[1], P.a[2]), branch
         #sig_free(P.x)
         #sig_free(P.a)
 
@@ -677,7 +693,7 @@ cdef class MCFAlgorithm(object):
 
         """
         cdef double s           # temporary variables
-        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
         cdef int i
         cdef int branch
         if start is None:
@@ -818,7 +834,7 @@ cdef class MCFAlgorithm(object):
         """
         cdef double s,x,y,u,v           # temporary variables
         s = x = y = u = v = 0           # initialize to avoid a warning
-        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
         cdef int branch
         cdef int previous_branch
         cdef int xa,ya,ua,va
@@ -945,7 +961,7 @@ cdef class MCFAlgorithm(object):
             ((1.0, 0.0, 0.0), (59.0, 14.0, 4.0), 312)
         """
         cdef int branch
-        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
         if start is None:
             P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
         else:
@@ -984,7 +1000,7 @@ cdef class MCFAlgorithm(object):
             Check for a fixed point stop then.
 
         """
-        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
         cdef int branch, i
         if start is None:
             P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
@@ -1028,7 +1044,7 @@ cdef class MCFAlgorithm(object):
             sage: Brun().image((10, 21, 37), 10)
             (1.0, 1.0, 0.0)
         """
-        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
         cdef int i, branch
         P.x[0] = start[0]; P.x[1] = start[1]; P.x[2] = start[2]
         P.a[0] = 1
@@ -1113,14 +1129,13 @@ cdef class MCFAlgorithm(object):
             for i from 0 <= i <= ndivs:
                 C[i][j] = 0
 
-        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
         P.x[0] = random()
         P.x[1] = random()
         P.x[2] = random()
         P.a[0] = .3
         P.a[1] = .3
         P.a[2] = .3
-        P.branch = 999
 
         # Order (x,y,z)
         if P.x[1] > P.x[2]: P.x[2],P.x[1] = P.x[1],P.x[2]
@@ -1219,8 +1234,8 @@ cdef class MCFAlgorithm(object):
         s = x + y + z
         x /= s; y /= s; z /= s
 
-        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
-        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
         P.x[0] = x
         P.x[1] = y
         P.x[2] = z
@@ -1292,7 +1307,7 @@ cdef class MCFAlgorithm(object):
                 domain_right[branch].append((P.a[0],P.a[1]))
                 image_right[branch].append((R.a[0],R.a[1]))
 
-            P = R
+            P.copy_inplace(R)
 
         return domain_left, image_left, domain_right, image_right
 
@@ -1381,7 +1396,7 @@ cdef class MCFAlgorithm(object):
             s = x*u + y*v + z*w
             print("scal prod <(x,y,z),(u,v,w)> = %f" % s)
 
-        cdef PairPoint P = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
         P.x[0] = x
         P.x[1] = y
         P.x[2] = z
@@ -1443,7 +1458,7 @@ cdef class Brun(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -1451,15 +1466,7 @@ cdef class Brun(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
             sage: Brun()(P)
-            123
-            sage: P
-            [('branch', 123),
-             ('u', 0.2),
-             ('v', 0.6),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.6),
-             ('z', 0.20000000000000007)]
+            ((0.3, 0.6, 0.20000000000000007), (0.2, 0.6, 0.3))
         """
         if P.x[0] <= P.x[1] <= P.x[2]:
             P.x[2] -= P.x[1]
@@ -1487,7 +1494,6 @@ cdef class Brun(MCFAlgorithm):
             return 321
         else:
             raise ValueError('limit case: reach set of measure zero: {}'.format(P))
-        return P
 
     def substitutions(self):
         r"""
@@ -1542,7 +1548,7 @@ cdef class Reverse(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -1550,17 +1556,9 @@ cdef class Reverse(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
             sage: Reverse()(P)
-            4
-            sage: P
-            [('branch', 4),
-             ('u', 0.6),
-             ('v', 0.5),
-             ('w', 0.5),
-             ('x', 0.55),
-             ('y', 0.25),
-             ('z', 0.04999999999999993)]
+            ((0.55, 0.25, 0.04999999999999993), (0.6, 0.5, 0.5))
         """
-        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
         if P.x[0] + P.x[1] < P.x[2]:
             P.x[2] -= P.x[0] + P.x[1]
             P.a[1] += P.a[2]
@@ -1591,7 +1589,7 @@ cdef class Reverse(MCFAlgorithm):
             R.a[0] = P.a[1] + P.a[2]
             R.a[1] = P.a[0] + P.a[2]
             R.a[2] = P.a[0] + P.a[1]
-            P = R
+            P.copy_inplace(R)
             return 4
 
     def substitutions(self):
@@ -1639,7 +1637,7 @@ cdef class ARP(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -1647,15 +1645,7 @@ cdef class ARP(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
             sage: ARP()(P)
-            123
-            sage: P
-            [('branch', 123),
-             ('u', 0.8),
-             ('v', 0.6),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.3),
-             ('z', 0.20000000000000007)]
+            ((0.3, 0.3, 0.20000000000000007), (0.8, 0.6, 0.3))
         """
         if P.x[0] + P.x[1] < P.x[2]:
             P.x[2] -= P.x[0] + P.x[1]
@@ -1750,7 +1740,7 @@ cdef class ArnouxRauzy(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -1758,26 +1748,16 @@ cdef class ArnouxRauzy(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
             sage: ArnouxRauzy()(P)
-            4
-            sage: P
             Traceback (most recent call last):
             ...
             ValueError: Arnoux is not defined on 
-            {'branch': 999, 'u': 0.2, 'w': 0.3, 'v': 0.3, 'y': 0.6, 'x': 0.3, 'z': 0.8}
+            ((0.3, 0.6, 0.8), (0.2, 0.3, 0.3))
 
         :: 
 
             sage: P = PairPoint([.3,.2,.8], [.2,.3,.3])
             sage: ArnouxRauzy()(P)
-            3
-            sage: P
-            [('branch', 3),
-             ('u', 0.5),
-             ('v', 0.6),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.2),
-             ('z', 0.30000000000000004)]
+            ((0.3, 0.2, 0.30000000000000004), (0.5, 0.6, 0.3))
         """
         if P.x[0] + P.x[1] < P.x[2]:
             P.x[2] -= P.x[0] + P.x[1]
@@ -1837,7 +1817,7 @@ cdef class Poincare(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -1845,15 +1825,7 @@ cdef class Poincare(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
             sage: Poincare()(P)
-            123
-            sage: P
-            [('branch', 123),
-             ('u', 0.8),
-             ('v', 0.6),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.3),
-             ('z', 0.20000000000000007)]
+            ((0.3, 0.3, 0.20000000000000007), (0.8, 0.6, 0.3))
         """
         return _Poincare(P)
 
@@ -1920,7 +1892,7 @@ cdef class Selmer(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -1928,15 +1900,7 @@ cdef class Selmer(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
             sage: Selmer()(P)
-            123
-            sage: P
-            [('branch', 123),
-             ('u', 0.5),
-             ('v', 0.3),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.6),
-             ('z', 0.5)]
+            ((0.3, 0.6, 0.5), (0.5, 0.3, 0.3))
         """
         if P.x[0] <= P.x[1] <= P.x[2]:
             P.x[2] -= P.x[0]
@@ -2018,7 +1982,7 @@ cdef class FullySubtractive(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2026,15 +1990,7 @@ cdef class FullySubtractive(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
             sage: FullySubtractive()(P)
-            1
-            sage: P
-            [('branch', 1),
-             ('u', 0.8),
-             ('v', 0.3),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.3),
-             ('z', 0.5)]
+            ((0.3, 0.3, 0.5), (0.8, 0.3, 0.3))
         """
         if P.x[0] <= P.x[1] and P.x[0] <= P.x[2]:
             P.x[1] -= P.x[0]
@@ -2105,7 +2061,7 @@ cdef class Cassaigne(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         This algorithm was provided by Julien Cassaigne during a meeting of
         the ANR DynA3S on October 12, 2015 held in Paris. It is inspired
@@ -2118,15 +2074,7 @@ cdef class Cassaigne(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
             sage: Cassaigne()(P)
-            2
-            sage: P
-            [('branch', 2),
-             ('u', 0.3),
-             ('v', 0.5),
-             ('w', 0.3),
-             ('x', 0.6),
-             ('y', 0.3),
-             ('z', 0.5)]
+            ((0.6, 0.3, 0.5), (0.3, 0.5, 0.3))
         """
         cdef double tmp
         if P.x[0] >= P.x[2] :
@@ -2177,7 +2125,7 @@ cdef class Cassaigne(MCFAlgorithm):
                 2:  WordMorphism({1: [2], 2: [1], 3: [2,3]})}
 
 cdef class Sorted_Brun(MCFAlgorithm):
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2185,37 +2133,20 @@ cdef class Sorted_Brun(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
             sage: Sorted_Brun()(P)
-            106
-            sage: P
+            ((0.20000000000000007, 0.3, 0.6), (0.3, 0.2, 0.6))
 
         ::
 
             sage: P = PairPoint([.3,.45,.8], [.2,.3,.3])
             sage: D = {'x':.3,'y':.45,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
             sage: Sorted_Brun()(P)
-            102
-            sage: P
-            [('branch', 102),
-             ('u', 0.2),
-             ('v', 0.3),
-             ('w', 0.6),
-             ('x', 0.3),
-             ('y', 0.35000000000000003),
-             ('z', 0.45)]
+            ((0.3, 0.35000000000000003, 0.45), (0.2, 0.3, 0.6))
 
          ::
 
             sage: P = PairPoint([.3,.3,.8], [.2,.3,.3])
             sage: Sorted_Brun()(P)
-            100
-            sage: P
-            [('branch', 100),
-             ('u', 0.2),
-             ('v', 0.6),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.3),
-             ('z', 0.5)]
+            ((0.3, 0.3, 0.5), (0.2, 0.6, 0.3))
 
         """
         P.x[2] -= P.x[1]
@@ -2224,7 +2155,7 @@ cdef class Sorted_Brun(MCFAlgorithm):
         return 100
 
 cdef class Sorted_BrunMulti(MCFAlgorithm):
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2232,14 +2163,7 @@ cdef class Sorted_BrunMulti(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.3,.8], [.2,.3,.3])
             sage: Sorted_BrunMulti()(P)
-            106
-            sage: P
-            [('u', 0.3),
-             ('v', 0.2),
-             ('w', 0.8999999999999999),
-             ('x', 0.20000000000000007),
-             ('y', 0.3),
-             ('z', 0.3)]
+            ((0.20000000000000007, 0.3, 0.3), (0.3, 0.2, 0.8999999999999999))
         """
         cdef int m = <int>(P.x[2] / P.x[1])
         P.x[2] -= m*P.x[1]
@@ -2248,7 +2172,7 @@ cdef class Sorted_BrunMulti(MCFAlgorithm):
         return 100
 
 cdef class Sorted_Selmer(MCFAlgorithm):
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2256,15 +2180,7 @@ cdef class Sorted_Selmer(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
             sage: Sorted_Selmer()(P)
-            100
-            sage: P
-            [('branch', 100),
-             ('u', 0.5),
-             ('v', 0.3),
-             ('w', 0.3),
-             ('x', 0.2),
-             ('y', 0.3),
-             ('z', 0.6000000000000001)]
+            ((0.2, 0.3, 0.6000000000000001), (0.5, 0.3, 0.3))
         """
         P.x[2] -= P.x[0]
         P.a[0] += P.a[2]
@@ -2272,7 +2188,7 @@ cdef class Sorted_Selmer(MCFAlgorithm):
         return 100
 
 cdef class Sorted_Meester(MCFAlgorithm):
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2280,15 +2196,7 @@ cdef class Sorted_Meester(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
             sage: Sorted_Meester()(P)
-            103
-            sage: P
-            [('branch', 103),
-             ('u', 0.3),
-             ('v', 0.3),
-             ('w', 0.8),
-             ('x', 0.09999999999999998),
-             ('y', 0.30000000000000004),
-             ('z', 0.5)]
+            ((0.09999999999999998, 0.30000000000000004, 0.5), (0.3, 0.3, 0.8))
         """
         # Apply the algo
         P.x[1] -= P.x[0]
@@ -2298,7 +2206,7 @@ cdef class Sorted_Meester(MCFAlgorithm):
         return 100
 
 cdef class Sorted_ArnouxRauzy(MCFAlgorithm):
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2306,33 +2214,17 @@ cdef class Sorted_ArnouxRauzy(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
             sage: Sorted_ArnouxRauzy()(P)
-            106
-            sage: P
-            [('branch', 106),
-             ('u', 0.4),
-             ('v', 0.6000000000000001),
-             ('w', 0.7),
-             ('x', 0.10000000000000009),
-             ('y', 0.3),
-             ('z', 0.4)]
+            ((0.10000000000000009, 0.3, 0.4), (0.4, 0.6000000000000001, 0.7))
 
         ::
 
             sage: P = PairPoint([.3,.7,.8], [.2,.3,.4])
             sage: Sorted_ArnouxRauzy()(P)
-            106
-            sage: P
-            [('branch', 106),
-             ('u', 0.4),
-             ('v', 0.6000000000000001),
-             ('w', 0.7),
-             ('x', -0.19999999999999996),
-             ('y', 0.3),
-             ('z', 0.7)]
+            ((-0.19999999999999996, 0.3, 0.7), (0.4, 0.6000000000000001, 0.7))
 
         """
         #Arnoux-Rauzy
-        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
         R.x[0] = P.x[0]
         R.x[1] = P.x[1]
         R.x[2] = P.x[2] - (P.x[0] + P.x[1])
@@ -2343,7 +2235,7 @@ cdef class Sorted_ArnouxRauzy(MCFAlgorithm):
         return 100
 
 cdef class Sorted_ArnouxRauzyMulti(MCFAlgorithm):
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2358,7 +2250,7 @@ cdef class Sorted_ArnouxRauzyMulti(MCFAlgorithm):
         return 100
 
 cdef class Sorted_ARP(MCFAlgorithm):
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2366,29 +2258,13 @@ cdef class Sorted_ARP(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.4,.8], [.2,.3,.4])
             sage: Sorted_ARP()(P)
-            106
-            sage: P
-            [('branch', 106),
-             ('u', 0.4),
-             ('v', 0.6000000000000001),
-             ('w', 0.7),
-             ('x', 0.10000000000000009),
-             ('y', 0.3),
-             ('z', 0.4)]
+            ((0.10000000000000009, 0.3, 0.4), (0.4, 0.6000000000000001, 0.7))
 
         ::
 
             sage: P = PairPoint([.3,.7,.8], [.2,.3,.4])
             sage: Sorted_ARP()(P)
-            206
-            sage: P
-            [('branch', 206),
-             ('u', 0.4),
-             ('v', 0.9),
-             ('w', 0.7),
-             ('x', 0.10000000000000009),
-             ('y', 0.3),
-             ('z', 0.39999999999999997)]
+            ((0.10000000000000009, 0.3, 0.39999999999999997), (0.4, 0.9, 0.7))
         """
         # Apply the algo
         if P.x[2] > P.x[0] + P.x[1]:
@@ -2397,23 +2273,15 @@ cdef class Sorted_ARP(MCFAlgorithm):
             return _Sorted_Poincare(P)
 
 cdef class Sorted_ARPMulti(MCFAlgorithm):
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Sorted_ARPMulti
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.5,.8], [.2,.3,.3])
-            sage: Sorted_ARPMulti
-            201
-            sage: P
-            [('branch', 201),
-             ('u', 0.6),
-             ('v', 0.8),
-             ('w', 0.3),
-             ('x', 0.2),
-             ('y', 0.3),
-             ('z', 0.30000000000000004)]
+            sage: Sorted_ARPMulti()(P)
+            ((0.2, 0.3, 0.30000000000000004), (0.6, 0.8, 0.2))
         """
         # Apply the algo
         if P.x[2] > P.x[0] + P.x[1]:
@@ -2422,7 +2290,7 @@ cdef class Sorted_ARPMulti(MCFAlgorithm):
             return _Sorted_Poincare(P)
 
 cdef class Sorted_Poincare(MCFAlgorithm):
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2430,19 +2298,11 @@ cdef class Sorted_Poincare(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.7,.8], [.2,.3,.4])
             sage: Sorted_Poincare()(P)
-            206
-            sage: P
-            [('branch', 206),
-             ('u', 0.4),
-             ('v', 0.9),
-             ('w', 0.7),
-             ('x', 0.10000000000000009),
-             ('y', 0.3),
-             ('z', 0.39999999999999997)]
+            ((0.10000000000000009, 0.3, 0.39999999999999997), (0.4, 0.9, 0.7))
 
         """
         # Apply the algo
-        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
         R.x[0] = P.x[0]
         R.x[1] = P.x[1] - P.x[0]
         R.x[2] = P.x[2] - P.x[1]
@@ -2453,7 +2313,7 @@ cdef class Sorted_Poincare(MCFAlgorithm):
         return 200
 
 cdef class Sorted_ARrevert(MCFAlgorithm):
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2461,17 +2321,9 @@ cdef class Sorted_ARrevert(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.3,.8], [.2,.3,.3])
             sage: Sorted_ARrevert()(P)
-            300
-            sage: P
-            [('branch', 300),
-             ('u', 0.3),
-             ('v', 0.5),
-             ('w', 0.6),
-             ('x', 0.2),
-             ('y', 0.3),
-             ('z', 0.3)]
+            ((0.2, 0.3, 0.3), (0.3, 0.5, 0.6))
         """
-        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
         cdef double z_x_y = P.x[2] - P.x[0] - P.x[1]
         if z_x_y > P.x[1]:
             R.x[0] = P.x[0]
@@ -2480,7 +2332,7 @@ cdef class Sorted_ARrevert(MCFAlgorithm):
             R.a[0] = P.a[0] + P.a[2]
             R.a[1] = P.a[1] + P.a[2]
             R.a[2] = P.a[2]
-            P = R
+            P.copy_inplace(R)
             return 100
         elif z_x_y > P.x[0]:
             R.x[0] = P.x[0]
@@ -2489,7 +2341,7 @@ cdef class Sorted_ARrevert(MCFAlgorithm):
             R.a[0] = P.a[0] + P.a[2]
             R.a[1] = P.a[2]
             R.a[2] = P.a[1] + P.a[2]
-            P = R
+            P.copy_inplace(R)
             return 200
         elif z_x_y > 0:
             R.x[0] = z_x_y
@@ -2498,7 +2350,7 @@ cdef class Sorted_ARrevert(MCFAlgorithm):
             R.a[0] = P.a[2]
             R.a[1] = P.a[0] + P.a[2]
             R.a[2] = P.a[1] + P.a[2]
-            P = R
+            P.copy_inplace(R)
             return 300
         else:
             # Revert
@@ -2508,11 +2360,11 @@ cdef class Sorted_ARrevert(MCFAlgorithm):
             R.a[0] = P.a[0] + P.a[1]
             R.a[1] = P.a[0] + P.a[2]
             R.a[2] = P.a[1] + P.a[2]
-            P = R
+            P.copy_inplace(R)
             return 400
 
 cdef class Sorted_ARrevertMulti(MCFAlgorithm):
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2520,17 +2372,9 @@ cdef class Sorted_ARrevertMulti(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.3,.8], [.2,.3,.3])
             sage: Sorted_ARrevertMulti()(P)
-            400
-            sage: P
-            [('branch', 400),
-             ('u', 0.3),
-             ('v', 0.5),
-             ('w', 0.6),
-             ('x', 0.20000000000000007),
-             ('y', 0.3),
-             ('z', 0.3)]
+            ((0.20000000000000007, 0.3, 0.3), (0.3, 0.5, 0.6))
         """
-        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
         cdef int m = <int>(P.x[2] / (P.x[0] + P.x[1]))
         cdef double z_mxy = P.x[2] - m * (P.x[0] + P.x[1])
         if m == 0:
@@ -2541,7 +2385,7 @@ cdef class Sorted_ARrevertMulti(MCFAlgorithm):
             R.a[0] = P.a[0] + P.a[1]
             R.a[1] = P.a[0] + P.a[2]
             R.a[2] = P.a[1] + P.a[2]
-            P = R
+            P.copy_inplace(R)
             return 100
         elif z_mxy > P.x[1]:
             R.x[0] = P.x[0]
@@ -2550,7 +2394,7 @@ cdef class Sorted_ARrevertMulti(MCFAlgorithm):
             R.a[0] = P.a[0] + m*P.a[2]
             R.a[1] = P.a[1] + m*P.a[2]
             R.a[2] = P.a[2]
-            P = R
+            P.copy_inplace(R)
             return 200
         elif z_mxy > P.x[0]:
             R.x[0] = P.x[0]
@@ -2559,7 +2403,7 @@ cdef class Sorted_ARrevertMulti(MCFAlgorithm):
             R.a[0] = P.a[0] + m*P.a[2]
             R.a[1] = P.a[2]
             R.a[2] = P.a[1] + m*P.a[2]
-            P = R
+            P.copy_inplace(R)
             return 300
         else:
             R.x[0] = z_mxy
@@ -2568,29 +2412,21 @@ cdef class Sorted_ARrevertMulti(MCFAlgorithm):
             R.a[0] = P.a[2]
             R.a[1] = P.a[0] + m*P.a[2]
             R.a[2] = P.a[1] + m*P.a[2]
-            P = R
+            P.copy_inplace(R)
             return 400
 
 cdef class Sorted_ARMonteil(MCFAlgorithm):
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Sorted_ARMonteil
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.3,.8], [.2,.3,.3])
-            sage: Sorted_ARMonteil
-            106
-            sage: P
-            [('branch', 106),
-             ('u', 0.3),
-             ('v', 0.5),
-             ('w', 0.6),
-             ('x', 0.2),
-             ('y', 0.3),
-             ('z', 0.3)]
+            sage: Sorted_ARMonteil()(P)
+            ((0.2, 0.3, 0.3), (0.3, 0.5, 0.6))
         """
-        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
 
         # Apply the algo
         if P.x[2] > P.x[0] + P.x[1]:
@@ -2615,7 +2451,7 @@ cdef class Sorted_ARMonteil(MCFAlgorithm):
             return 200
 
 cdef class Sorted_Delaunay(MCFAlgorithm):
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         Donné par Xavier Provençal (inspiré de en fait) le 3 février 2014.
 
@@ -2625,17 +2461,9 @@ cdef class Sorted_Delaunay(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.3,.8], [.2,.3,.3])
             sage: Sorted_Delaunay()(P)
-            201
-            sage: P
-            [('branch', 201),
-             ('u', 0.6),
-             ('v', 0.5),
-             ('w', 0.3),
-             ('x', 0.0),
-             ('y', 0.3),
-             ('z', 0.8)]
+            ((0.0, 0.3, 0.8), (0.6, 0.5, 0.3))
         """
-        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
         # Apply the algo
         if P.x[2] > P.x[0] + P.x[1]:
             # Genre de semi revert
@@ -2650,7 +2478,7 @@ cdef class Sorted_Delaunay(MCFAlgorithm):
         else:
             return _Sorted_Meester(P)
 cdef class JacobiPerron(MCFAlgorithm):
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2658,15 +2486,7 @@ cdef class JacobiPerron(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.3,.8], [.2,.3,.3])
             sage: JacobiPerron()(P)
-            100
-            sage: P
-            [('branch', 100),
-             ('u', 0.3),
-             ('v', 0.3),
-             ('w', 1.0999999999999999),
-             ('x', 0.0),
-             ('y', 0.20000000000000007),
-             ('z', 0.3)]
+            ((0.0, 0.20000000000000007, 0.3), (0.3, 0.3, 1.0999999999999999))
         """
         cdef int m,n                # temporary integer variables
         cdef double r,s,t           # temporary variables
@@ -2692,7 +2512,7 @@ cdef class JacobiPerron(MCFAlgorithm):
 
         return 100
 cdef class JacobiPerronAdditif(MCFAlgorithm):
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2700,17 +2520,9 @@ cdef class JacobiPerronAdditif(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.3,.8], [.2,.3,.3])
             sage: JacobiPerronAdditif()(P)
-            200
-            sage: P
-            [('branch', 200),
-             ('u', 0.5),
-             ('v', 0.3),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.3),
-             ('z', 0.5)]
+            ((0.3, 0.3, 0.5), (0.5, 0.3, 0.3))
         """
-        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
         # Apply the algo
         if P.x[0] < P.x[1]:
             R.x[0] = P.x[0]
@@ -2719,7 +2531,7 @@ cdef class JacobiPerronAdditif(MCFAlgorithm):
             R.a[0] = P.a[0] + P.a[1]
             R.a[1] = P.a[1]
             R.a[2] = P.a[2]
-            P = R
+            P.copy_inplace(R)
             return 100
         elif P.x[0] < P.x[2]:
             R.x[0] = P.x[0]
@@ -2728,7 +2540,7 @@ cdef class JacobiPerronAdditif(MCFAlgorithm):
             R.a[0] = P.a[0] + P.a[2]
             R.a[1] = P.a[1]
             R.a[2] = P.a[2]
-            P = R
+            P.copy_inplace(R)
             return 200
         elif P.x[0] > P.x[1] and P.x[0] > P.x[2]:
             R.x[0] = P.x[1]
@@ -2737,12 +2549,12 @@ cdef class JacobiPerronAdditif(MCFAlgorithm):
             R.a[0] = P.a[1]
             R.a[1] = P.a[2]
             R.a[2] = P.a[0]
-            P = R
+            P.copy_inplace(R)
             return 300
         else:
             raise ValueError("jacobi not defined for (x,y,z)=(%s,%s,%s)"%(P.x[0],P.x[1],P.x[2]))
 cdef class JacobiPerronAdditifv2(MCFAlgorithm):
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2750,17 +2562,9 @@ cdef class JacobiPerronAdditifv2(MCFAlgorithm):
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.3,.8], [.2,.3,.3])
             sage: JacobiPerronAdditifv2()(P)
-            200
-            sage: P
-            [('branch', 200),
-             ('u', 0.5),
-             ('v', 0.3),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.3),
-             ('z', 0.5)]
+            ((0.3, 0.3, 0.5), (0.5, 0.3, 0.3))
         """
-        cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
         # Apply the algo
         if P.x[0] < P.x[1]:
             R.x[0] = P.x[0]
@@ -2769,7 +2573,7 @@ cdef class JacobiPerronAdditifv2(MCFAlgorithm):
             R.a[0] = P.a[0] + P.a[1] + P.a[2]
             R.a[1] = P.a[1]
             R.a[2] = P.a[2]
-            P = R
+            P.copy_inplace(R)
             return 100
         elif P.x[0] < P.x[2]:
             R.x[0] = P.x[0]
@@ -2778,7 +2582,7 @@ cdef class JacobiPerronAdditifv2(MCFAlgorithm):
             R.a[0] = P.a[0] + P.a[2]
             R.a[1] = P.a[1]
             R.a[2] = P.a[2]
-            P = R
+            P.copy_inplace(R)
             return 200
         elif P.x[0] > P.x[1] and P.x[0] > P.x[2]:
             R.x[0] = P.x[1]
@@ -2787,7 +2591,7 @@ cdef class JacobiPerronAdditifv2(MCFAlgorithm):
             R.a[0] = P.a[1]
             R.a[1] = P.a[2]
             R.a[2] = P.a[0]
-            P = R
+            P.copy_inplace(R)
             return 300
         else:
             raise ValueError("jacobi not defined for (x,y,z)=(%s,%s,%s)"%(P.x[0],P.x[1],P.x[2]))
@@ -2839,7 +2643,7 @@ cdef class Modified(MCFAlgorithm):
         self._algo = MCFAlgorithm
         self._gamma = gamma
 
-    cdef int call(self, PairPoint P):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
@@ -2848,30 +2652,14 @@ cdef class Modified(MCFAlgorithm):
             sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
             sage: algo = Modified(Brun(), {132:1})
             sage: algo(P)
-            123
-            sage: P
-            [('branch', 123),
-             ('u', 0.2),
-             ('v', 0.6),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.6),
-             ('z', 0.20000000000000007)]
+            ((0.3, 0.6, 0.20000000000000007), (0.2, 0.6, 0.3))
 
         ::
 
             sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
             sage: algo = Modified(Brun(), {123:2})
             sage: algo(P)
-            123
-            sage: P
-            [('branch', 123),
-             ('u', 0.1),
-             ('v', 0.3),
-             ('w', 0.15),
-             ('x', 0.6),
-             ('y', 1.2),
-             ('z', 0.40000000000000013)]
+            ((0.6, 1.2, 0.40000000000000013), (0.1, 0.3, 0.15))
         """
         cdef int branch
         branch = self._algo.call(P)
@@ -2885,12 +2673,12 @@ cdef class Modified(MCFAlgorithm):
             P.a[2] /= g
         return branch
 
-cdef inline PairPoint _Poincare(PairPoint P):
+cdef inline int _Poincare(PairPoint P):
     r"""
     EXAMPLES::
 
     """
-    cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
+    cdef PairPoint R = PairPoint([0]*d, [0]*d)
     if P.x[0] <= P.x[1] <= P.x[2]:
         R.x[0] = P.x[0]
         R.x[1] = P.x[1] - P.x[0]
@@ -2898,7 +2686,7 @@ cdef inline PairPoint _Poincare(PairPoint P):
         R.a[0] = P.a[0] + P.a[1] + P.a[2]
         R.a[1] = P.a[1] + P.a[2]
         R.a[2] = P.a[2]
-        P = R
+        P.copy_inplace(R)
         return 123
     elif P.x[0] <= P.x[2] <= P.x[1]:
         R.x[0] = P.x[0]
@@ -2907,7 +2695,7 @@ cdef inline PairPoint _Poincare(PairPoint P):
         R.a[0] = P.a[0] + P.a[1] + P.a[2]
         R.a[1] = P.a[1]
         R.a[2] = P.a[1] + P.a[2]
-        P = R
+        P.copy_inplace(R)
         return 132
     elif P.x[1] <= P.x[0] <= P.x[2]:
         R.x[0] = P.x[0] - P.x[1]
@@ -2916,7 +2704,7 @@ cdef inline PairPoint _Poincare(PairPoint P):
         R.a[0] = P.a[0]       + P.a[2]
         R.a[1] = P.a[0] + P.a[1] + P.a[2]
         R.a[2] = P.a[2]
-        P = R
+        P.copy_inplace(R)
         return 213
     elif P.x[2] <= P.x[0] <= P.x[1]:
         R.x[0] = P.x[0] - P.x[2]
@@ -2925,7 +2713,7 @@ cdef inline PairPoint _Poincare(PairPoint P):
         R.a[0] = P.a[0] + P.a[1]
         R.a[1] = P.a[1]
         R.a[2] = P.a[0] + P.a[1] + P.a[2]
-        P = R
+        P.copy_inplace(R)
         return 312
     elif P.x[1] <= P.x[2] <= P.x[0]:
         R.x[0] = P.x[0] - P.x[2]
@@ -2934,7 +2722,7 @@ cdef inline PairPoint _Poincare(PairPoint P):
         R.a[0] = P.a[0]
         R.a[1] = P.a[0] + P.a[1] + P.a[2]
         R.a[2] = P.a[0] + P.a[2]
-        P = R
+        P.copy_inplace(R)
         return 231
     elif P.x[2] <= P.x[1] <= P.x[0]:
         R.x[0] = P.x[0] - P.x[1]
@@ -2943,18 +2731,18 @@ cdef inline PairPoint _Poincare(PairPoint P):
         R.a[0] = P.a[0]
         R.a[1] = P.a[0] + P.a[1]
         R.a[2] = P.a[0] + P.a[1] + P.a[2]
-        P = R
+        P.copy_inplace(R)
         return 321
     else:
         raise ValueError('limit case: reach set of measure zero: {}'.format(P))
 
-cdef inline PairPoint _Sorted_ArnouxRauzy(PairPoint P):
+cdef inline int _Sorted_ArnouxRauzy(PairPoint P):
     r"""
     EXAMPLES::
 
     """
     #Arnoux-Rauzy
-    cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
+    cdef PairPoint R = PairPoint([0]*d, [0]*d)
     R.x[0] = P.x[0]
     R.x[1] = P.x[1]
     R.x[2] = P.x[2] - (P.x[0] + P.x[1])
@@ -2964,7 +2752,7 @@ cdef inline PairPoint _Sorted_ArnouxRauzy(PairPoint P):
     Sort(R)
     return 100
 
-cdef inline PairPoint _Sorted_ArnouxRauzyMulti(PairPoint P):
+cdef inline int _Sorted_ArnouxRauzyMulti(PairPoint P):
     r"""
     EXAMPLES::
 
@@ -2978,13 +2766,13 @@ cdef inline PairPoint _Sorted_ArnouxRauzyMulti(PairPoint P):
     Sort(P)
     return 100
 
-cdef inline PairPoint _Sorted_Poincare(PairPoint P):
+cdef inline int _Sorted_Poincare(PairPoint P):
     r"""
     EXAMPLES::
 
     """
     # Apply the algo
-    cdef PairPoint R = PairPoint([0]*d, [0]*d, 0)
+    cdef PairPoint R = PairPoint([0]*d, [0]*d)
     R.x[0] = P.x[0]
     R.x[1] = P.x[1] - P.x[0]
     R.x[2] = P.x[2] - P.x[1]
@@ -2994,7 +2782,7 @@ cdef inline PairPoint _Sorted_Poincare(PairPoint P):
     Sort(R)
     return 200
 
-cdef inline PairPoint _Sorted_Meester(PairPoint P):
+cdef inline int _Sorted_Meester(PairPoint P):
     r"""
     EXAMPLES::
 
