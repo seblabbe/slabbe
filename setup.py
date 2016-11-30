@@ -1,12 +1,9 @@
 from setuptools import setup, Extension
-# To use a consistent encoding
-from codecs import open
+from codecs import open # To use a consistent encoding
 from os import path
 from Cython.Build import cythonize
 import Cython.Compiler.Options
 from sage.env import sage_include_directories
-
-Cython.Compiler.Options.old_style_globals = True
 
 ext_modules = [
         Extension('slabbe.kolakoski_word_pyx',
@@ -18,7 +15,6 @@ ext_modules = [
             sources = [path.join('slabbe','diophantine_approx_pyx.pyx')],
             include_dirs=sage_include_directories())]
 
-
 # Get the long description from the README file
 here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
@@ -27,7 +23,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 setup(name='slabbe',
     version=open("VERSION").read().strip(),
     description="Sebastien Labbe's Research code",
-    long_description=open('README.rst').read(),
+    long_description=long_description,
     classifiers=[
       # How mature is this project? Common values are
       #   3 - Alpha
@@ -42,7 +38,8 @@ setup(name='slabbe',
     keywords='sagemath combinatorics discrete geometry symbolic dynamics',
     author='Sebastien Labbe',
     author_email='slabbe@ulg.ac.be',
-    install_requires=['cython','cysignals'],
+    #install_requires=['cython','cysignals'], # this causes update of cysignals
+                                              # which forces recompilation of all cython files!
     #url='http://www.slabbe.org/Sage',
     url='http://github.com/seblabbe/slabbe',
     license = "GPLv2+",

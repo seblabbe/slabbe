@@ -16,3 +16,7 @@ slabbe/*.c
 
 # Documentation
 docs/build
+
+# IPython checkpoints
+demos/.ipynb_checkpoints/
+
