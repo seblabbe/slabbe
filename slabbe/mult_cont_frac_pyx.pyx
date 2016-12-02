@@ -51,34 +51,34 @@ With slabbe-0.3.b1, 62.2 ms on my machine.
 With slabbe-0.3.b2, 43.2 ms on my machine::
 
     sage: from slabbe.mult_cont_frac_pyx import Brun
-    sage: Brun().lyapunov_exponents(n_iterations=1000000)  # tolerance 0.003
+    sage: %time Brun().lyapunov_exponents(n_iterations=1000000)  # tolerance 0.003
     (0.3049429393152174, -0.1120652699014143, 1.367495867105725)
 
 With slabbe-0.2 or earlier, 3.71s at liafa, 4.58s on my machine.
 With slabbe-0.3.b1, 3.93s on my machine.
 With slabbe-0.3.b2, 2.81s on my machine::
 
-    sage: Brun().lyapunov_exponents(n_iterations=67000000) # tolerance 0.001
+    sage: %time Brun().lyapunov_exponents(n_iterations=67000000) # tolerance 0.001
     (0.30456433843239084, -0.1121770192467067, 1.36831961293987303)
 
 With slabbe-0.3.b1, 74ms on my machine.
 With slabbe-0.3.b2, 56ms on my machine::
 
     sage: from slabbe.mult_cont_frac_pyx import ARP
-    sage: ARP().lyapunov_exponents(n_iterations=10^6)  # tolerance 0.003
+    sage: %time ARP().lyapunov_exponents(n_iterations=10^6)  # tolerance 0.003
     (0.443493194984839, -0.17269097306340797, 1.3893881011394358)
 
 With slabbe-0.3.b1, 4.83 s on my machine:
 With slabbe-0.3.b2, 3.57 s on my machine::
 
-    sage: ARP().lyapunov_exponents(n_iterations=67*10^6)   # not tested too long
+    sage: %time ARP().lyapunov_exponents(n_iterations=67*10^6)   # not tested too long
     (0.44296596371477626, -0.17222952278277034, 1.3888098339168744)
 
 With slabbe-0.2 or earlier, 660 ms on my machine.
-With slabbe-0.3.b1, 615 ms on my machine (maybe this test could be made much
+With slabbe-0.3.b1, 663 ms on my machine (maybe this test could be made much
 faster without using list...)::
 
-    sage: L = Brun().simplex_orbit_list(n_iterations=10^6)   # long
+    sage: %time L = Brun().simplex_orbit_list(n_iterations=10^6)   # long
 
 .. TODO::
 
@@ -96,9 +96,11 @@ faster without using list...)::
 
     - Trouver meilleur nom pour PointFiber + x + a (cotangent, bundle, fiber?)
 
-    - Create memory inside algorithms to perform computations...
+    - Create memory inside algorithms (or points?) to perform computations...
 
     - See the TODO in the file
+
+    - Move more methods into the PairPoint class
 
 Question:
 
@@ -231,6 +233,85 @@ cdef class PairPoint:
         for i in range(self.dim):
             self.a[i] = P.a[i]
 
+    cdef double norm_x(self, int p=1):
+        r"""
+        Return the p-norm of vector x
+
+        INPUT:
+
+        - ``p`` -- integer, 0 or 1
+
+        OUTPUT:
+
+            double
+        """
+        if p == 1: # 1-norm
+            return self.x[0] + self.x[1] + self.x[2]
+        elif p == 0: # sup norm
+            return max(self.x[0], self.x[1], self.x[2])
+        else:
+            raise ValueError("Unknown value for p(={})".format(p))
+
+    cdef double norm_a(self, int p=1):
+        r"""
+        Return the p-norm of vector a
+
+        INPUT:
+
+        - ``p`` -- integer, 0 or 1
+
+        OUTPUT:
+
+            double
+
+        .. TODO:: 
+
+            How to deal with the scalar product case?
+        """
+        if p == 1: # 1-norm
+            return self.a[0] + self.a[1] + self.a[2]
+        elif p == 0: # sup norm
+            return max(self.a[0], self.a[1], self.a[2])
+        elif p == -1: # hypersurface
+            return self.x[0]*self.a[0] + self.x[1]*self.a[1] + self.x[2]*self.a[2]
+        else:
+            raise ValueError("Unknown value for p(={})".format(p))
+
+    cdef normalize_x(self, int p=1):
+        r"""
+        Normalize vector x
+
+        INPUT:
+
+        - ``p`` -- integer, 0 or 1
+        """
+        self._tmp = self.norm_x(p=p)
+        self.x[0] /= self._tmp
+        self.x[1] /= self._tmp
+        self.x[2] /= self._tmp
+
+    cdef normalize_a(self, int p=1):
+        r"""
+        Normalize vector a
+
+        INPUT:
+
+        - ``p`` -- integer, 0 or 1
+        """
+        self._tmp = self.norm_a(p=p)
+        self.a[0] /= self._tmp
+        self.a[1] /= self._tmp
+        self.a[2] /= self._tmp
+
+    cdef dot_product(self):
+        raise NotImplementedError
+    cdef gramm_schmidt(self):
+        raise NotImplementedError
+    cdef act_by_diagonal_matrix(self):
+        raise NotImplementedError
+    cdef projection3to2(self):
+        raise NotImplementedError
+
     cdef int _Poincare(self):
         r"""
         EXAMPLES::
@@ -307,24 +388,6 @@ cdef class PairPoint:
         self.a[0] += self.a[1] + self.a[2]
         self.sort()
         return 100
-
-    cdef normalize_x(self):
-        r"""
-        Normalize self.x
-        """
-        s = self.x[0] + self.x[1] + self.x[2]
-        self.x[0] /= s
-        self.x[1] /= s
-        self.x[2] /= s
-
-    cdef dot_product(self):
-        raise NotImplementedError
-    cdef gramm_schmidt(self):
-        raise NotImplementedError
-    cdef act_by_diagonal_matrix(self):
-        raise NotImplementedError
-    cdef projection3to2(self):
-        raise NotImplementedError
 
 cdef int d = 3
 
@@ -670,37 +733,24 @@ cdef class MCFAlgorithm(object):
             [123, 2, 1, 123, 1, 231, 3, 3, 3, 3, 123, 1, 1, 1, 231, 2, 321, 2, 3, 312]
 
         """
-        cdef double s             # temporary variables
-        cdef PairPoint P = PairPoint([0]*d, [0]*d)
+        cdef PairPoint P = PairPoint(start, [0]*d)
         cdef int branch
 
-        # initial values
-        P.x[0], P.x[1], P.x[2] = start
-        P.a[0] = random(); P.a[1] = random(); P.a[2] = random();
-
-        # Normalize (x,y,z)
-        s = P.x[0] + P.x[1] + P.x[2]
-        P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
-
-        # Loop
         while True:
             branch = self.call(P)
             yield branch
+            P.normalize_x()
 
-            # Normalize (x,y,z)
-            s = P.x[0] + P.x[1] + P.x[2]
-            P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
-
-    def simplex_orbit_iterator(self, start=None, norm_xyz='sup', norm_uvw='1'):
+    def simplex_orbit_iterator(self, start=None, int norm_xyz=0, int norm_uvw=1):
         r"""
         INPUT:
 
         - ``start`` - initial vector (default: ``None``), if None, then
           initial point is random
-        - ``norm_xyz`` -- string (default: ``'sup'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit of points `(x,y,z)` of the algo
-        - ``norm_uvw`` -- string (default: ``'sup'``), either ``'sup'`` or
-          ``'1'`` or ``'hypersurfac'``, the norm used for the orbit of dual
+        - ``norm_xyz`` -- integer (default: ``0``), either ``0`` or ``1``, the
+          norm used for the orbit of points `(x,y,z)` of the algo
+        - ``norm_uvw`` -- integer (default: ``1``), either ``0`` or
+          ``1`` or ``'hypersurfac'``, the norm used for the orbit of dual
           coordinates `(u,v,w)`.
 
         NOTE:
@@ -734,7 +784,7 @@ cdef class MCFAlgorithm(object):
         ::
 
             sage: from slabbe.mult_cont_frac_pyx import Brun
-            sage: it = Brun().simplex_orbit_iterator((.414578,.571324,.65513), norm_xyz='1')
+            sage: it = Brun().simplex_orbit_iterator((.414578,.571324,.65513), norm_xyz=1)
             sage: for _ in range(4): next(it)
             ((0.3875618393056797, 0.5340934161472103, 0.07834474454711005),
              (0.25, 0.5, 0.25),
@@ -761,9 +811,7 @@ cdef class MCFAlgorithm(object):
         P.a[1] = 1./3
         P.a[2] = 1./3
 
-        # Normalize (x,y,z)
-        s = P.x[0] + P.x[1] + P.x[2]
-        P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
+        P.normalize_x()
 
         # Loop
         while True:
@@ -771,40 +819,23 @@ cdef class MCFAlgorithm(object):
             # Apply Algo
             branch = self.call(P)
 
-            # Normalize (xnew,ynew,znew)
-            if norm_xyz == '1':
-                s = P.x[0] + P.x[1] + P.x[2] # norm 1
-            elif norm_xyz == 'sup':
-                s = max(P.x[0], P.x[1], P.x[2]) # norm sup
-            else:
-                raise ValueError("Unknown value for norm_xyz(=%s)" %norm_xyz)
-            P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
-
-            # Normalize (unew,vnew,wnew)
-            if norm_uvw == '1':
-                s = P.a[0] + P.a[1] + P.a[2]    # norm 1
-            elif norm_uvw == 'sup':
-                s = max(P.a[0], P.a[1], P.a[2]) # norm sup
-            elif norm_uvw == 'hypersurface':
-                s = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2] # hypersurface
-            else:
-                raise ValueError("Unknown value for norm_uvw(=%s)" %norm_uvw)
-            P.a[0] /= s; P.a[1] /= s; P.a[2] /= s
+            P.normalize_x(p=norm_xyz)
+            P.normalize_a(p=norm_uvw)
 
             yield (P.x[0], P.x[1], P.x[2]), (P.a[0], P.a[1], P.a[2]), branch
 
     def simplex_orbit_list(self, start=None, int n_iterations=100, 
-                                 norm_xyz='1', norm_uvw='1'):
+                                 int norm_xyz=1, int norm_uvw=1):
         r"""
         INPUT:
 
         - ``start`` - initial vector (default: ``None``), if None, then
           initial point is random
         - ``n_iterations`` - integer, number of iterations
-        - ``norm_xyz`` -- string (default: ``'sup'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit of points `(x,y,z)` of the algo
-        - ``norm_uvw`` -- string (default: ``'sup'``), either ``'sup'`` or
-          ``'1'`` or ``'hypersurfac'``, the norm used for the orbit of dual
+        - ``norm_xyz`` -- integer (default: ``1``), either ``0`` or ``1``, the
+          norm used for the orbit of points `(x,y,z)` of the algo
+        - ``norm_uvw`` -- integer (default: ``1``), either ``0`` or
+          ``1`` or ``'hypersurfac'``, the norm used for the orbit of dual
           coordinates `(u,v,w)`.
 
         OUTPUT:
@@ -847,9 +878,7 @@ cdef class MCFAlgorithm(object):
         P.a[1] = 1./3
         P.a[2] = 1./3
 
-        # Normalize (x,y,z)
-        s = P.x[0] + P.x[1] + P.x[2]
-        P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
+        P.normalize_x(p=norm_xyz)
 
         L = []
 
@@ -862,32 +891,15 @@ cdef class MCFAlgorithm(object):
             # Apply Algo
             branch = self.call(P)
 
-            # Normalize (xnew,ynew,znew)
-            if norm_xyz == '1':
-                s = P.x[0] + P.x[1] + P.x[2] # norm 1
-            elif norm_xyz == 'sup':
-                s = max(P.x[0], P.x[1], P.x[2]) # norm sup
-            else:
-                raise ValueError("Unknown value for norm_xyz(=%s)" %norm_xyz)
-            P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
-
-            # Normalize (unew,vnew,wnew)
-            if norm_uvw == '1':
-                s = P.a[0] + P.a[1] + P.a[2]    # norm 1
-            elif norm_uvw == 'sup':
-                s = max(P.a[0], P.a[1], P.a[2]) # norm sup
-            elif norm_uvw == 'hypersurface':
-                s = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2] # hypersurface
-            else:
-                raise ValueError("Unknown value for norm_uvw(=%s)" %norm_uvw)
-            P.a[0] /= s; P.a[1] /= s; P.a[2] /= s
+            P.normalize_x(p=norm_xyz)
+            P.normalize_a(p=norm_uvw)
 
             L.append( (P.x[0], P.x[1], P.x[2], P.a[0], P.a[1], P.a[2], branch))
 
         return L
 
     def simplex_orbit_filtered_list(self, start=None, int n_iterations=100,
-            norm_xyz='1', norm_uvw='1',
+            int norm_xyz=1, int norm_uvw=1,
             double xmin=-float('inf'), double xmax=float('inf'),
             double ymin=-float('inf'), double ymax=float('inf'),
             double umin=-float('inf'), double umax=float('inf'),
@@ -901,10 +913,10 @@ cdef class MCFAlgorithm(object):
         - ``start`` - initial vector (default: ``None``), if None, then
           initial point is random
         - ``n_iterations`` - integer, number of iterations
-        - ``norm_xyz`` -- string (default: ``'sup'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit of points `(x,y,z)` of the algo
-        - ``norm_uvw`` -- string (default: ``'sup'``), either ``'sup'`` or
-          ``'1'`` or ``'hypersurfac'``, the norm used for the orbit of dual
+        - ``norm_xyz`` -- integer (default: ``1``), either ``0`` or ``1``, the
+          norm used for the orbit of points `(x,y,z)` of the algo
+        - ``norm_uvw`` -- integer (default: ``1``), either ``0`` or
+          ``1`` or ``'hypersurfac'``, the norm used for the orbit of dual
           coordinates `(u,v,w)`.
         - ``xmin`` - double
         - ``ymin`` - double
@@ -954,7 +966,7 @@ cdef class MCFAlgorithm(object):
 
         ::
 
-            sage: Brun().simplex_orbit_filtered_list(n_iterations=3, norm_xyz='1',ndivs=1000)
+            sage: Brun().simplex_orbit_filtered_list(n_iterations=3, norm_xyz=1,ndivs=1000)
             Traceback (most recent call last):
             ...
             ValueError: when ndivs is specified, you must provide a value
@@ -963,7 +975,7 @@ cdef class MCFAlgorithm(object):
         ::
 
             sage: Brun().simplex_orbit_filtered_list(n_iterations=7,  # random
-            ....:       norm_xyz='1', ndivs=100,
+            ....:       norm_xyz=1, ndivs=100,
             ....:       xmin=-.866, xmax=.866, ymin=-.5, ymax=1.,
             ....:       umin=-.866, umax=.866, vmin=-.5, vmax=1.)
             [(30, 47, 50, 50, 132, 213),
@@ -999,9 +1011,7 @@ cdef class MCFAlgorithm(object):
                     " value for xmin, xmax, ymin, ymax, umin, umax, vmin"
                     " and vmax")
 
-        # Normalize (x,y,z)
-        s = P.x[0] + P.x[1] + P.x[2]
-        P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
+        P.normalize_x()
 
         L = []
 
@@ -1014,31 +1024,14 @@ cdef class MCFAlgorithm(object):
             # Check for Keyboard interupt
             sig_check()
 
-            # Normalize (xnew,ynew,znew)
-            if norm_xyz == '1':
-                s = P.x[0] + P.x[1] + P.x[2] # norm 1
-            elif norm_xyz == 'sup':
-                s = max(P.x[0], P.x[1], P.x[2]) # norm sup
-            else:
-                raise ValueError("Unknown value for norm_xyz(=%s)" %norm_xyz)
-            P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
-
-            # Normalize (unew,vnew,wnew)
-            if norm_uvw == '1':
-                s = P.a[0] + P.a[1] + P.a[2]    # norm 1
-            elif norm_uvw == 'sup':
-                s = max(P.a[0], P.a[1], P.a[2]) # norm sup
-            elif norm_uvw == 'hypersurface':
-                s = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2] # hypersurface
-            else:
-                raise ValueError("Unknown value for norm_uvw(=%s)" %norm_uvw)
-            P.a[0] /= s; P.a[1] /= s; P.a[2] /= s
+            P.normalize_x(p=norm_xyz)
+            P.normalize_a(p=norm_uvw)
 
             # Projection
-            if norm_xyz == '1':
+            if norm_xyz == 1:
                 x = -SQRT3SUR2 * P.x[0] + SQRT3SUR2 * P.x[1]
                 y = -.5 * P.x[0] -.5 * P.x[1] + P.x[2]
-            elif norm_xyz == 'sup':
+            elif norm_xyz == 0:
                 x = P.x[0]
                 y = P.x[1]
 
@@ -1201,15 +1194,15 @@ cdef class MCFAlgorithm(object):
         return (P.x[0], P.x[1], P.x[2])
 
     def _invariant_measure_dict(self, int n_iterations, int ndivs, v=None,
-            str norm='1', verbose=False):
+            int norm=1, verbose=False):
         r"""
         INPUT:
 
         - ``n_iterations`` - integer, number of iterations
         - ``ndvis`` - integer (less than or equal to 256), number of divisions per dimension
         - ``v`` - initial vector (default: ``None``)
-        - ``norm`` -- string (default: ``'sup'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit of the algo
+        - ``norm`` -- integer (default: ``1``), either ``0`` or ``1``, the p-norm
+          used for the orbit of the algo
         - ``verbose`` -- bool (default: ``False``)
 
         OUTPUT:
@@ -1272,39 +1265,16 @@ cdef class MCFAlgorithm(object):
             for i from 0 <= i <= ndivs:
                 C[i][j] = 0
 
-        cdef PairPoint P = PairPoint([0]*d, [0]*d)
-        P.x[0] = random()
-        P.x[1] = random()
-        P.x[2] = random()
-        P.a[0] = .3
-        P.a[1] = .3
-        P.a[2] = .3
-
-        # Order (x,y,z)
-        if P.x[1] > P.x[2]: P.x[2],P.x[1] = P.x[1],P.x[2]
-        if P.x[0] > P.x[2]: P.x[0],P.x[1],P.x[2] = P.x[1],P.x[2],P.x[0]
-        elif P.x[0] > P.x[1]: P.x[0],P.x[1] = P.x[1],P.x[0]
-
-        # Normalize (x,y,z)
-        s = P.x[0] + P.x[1] + P.x[2]
-        P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
+        cdef PairPoint P = PairPoint([random() for i in range(d)], [0.3]*d)
+        P.sort()
+        P.normalize_x(p=norm)
 
         for i from 0 <= i < n_iterations:
 
-            # Check for Keyboard interupt
-            sig_check()
+            sig_check()            # Check for Keyboard interupt
+            branch = self.call(P)  # Apply Algo
 
-            # Apply Algo
-            branch = self.call(P)
-
-            # Normalize (xnew,ynew,znew)
-            if norm== '1':
-                s = P.x[0] + P.x[1] + P.x[2] # norm 1
-            elif norm== 'sup':
-                s = max(P.x[0], P.x[1], P.x[2]) # norm sup
-            else:
-                raise ValueError("Unknown value for norm(=%s)" %norm)
-            P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
+            P.normalize_x(p=norm)
 
             # Increase by one the counter for that part
             X = int(P.x[0]*ndivs)
@@ -1324,16 +1294,16 @@ cdef class MCFAlgorithm(object):
                     D[(i,j)] = c
         return D
 
-    def _natural_extention_dict(self, int n_iterations, norm_xyz='sup',
-            norm_uvw='1', verbose=False):
+    def _natural_extention_dict(self, int n_iterations, int norm_xyz=0,
+            int norm_uvw=1, verbose=False):
         r"""
         INPUT:
 
         - ``n_iterations`` -- integer
-        - ``norm_xyz`` -- string (default: ``'sup'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit of points `(x,y,z)` of the algo
-        - ``norm_uvw`` -- string (default: ``'sup'``), either ``'sup'`` or
-          ``'1'`` or ``'hypersurfac'``, the norm used for the orbit of dual
+        - ``norm_xyz`` -- integer (default: ``0``), either ``0`` or ``1``, the
+          norm used for the orbit of points `(x,y,z)` of the algo
+        - ``norm_uvw`` -- integer (default: ``1``), either ``0`` or
+          ``1`` or ``'hypersurfac'``, the norm used for the orbit of dual
           coordinates `(u,v,w)`.
         - ``verbose`` -- bool (default: ``False``)
 
@@ -1364,22 +1334,10 @@ cdef class MCFAlgorithm(object):
         cdef double u_new,v_new,w_new
         cdef int branch
 
-        # random initial values
-        x = random(); y = random(); z = random();
-        u = 1./3; v = 1./3; w = 1./3;
-
-        # Order (x,y,z)
-        if y > z: z,y = y,z
-        if x > z: x,y,z = y,z,x
-        elif x > y: x,y = y,x
-
-        # Normalize (x,y,z)
-        s = x + y + z
-        x /= s; y /= s; z /= s
-
-        cdef PairPoint P = PairPoint([x,y,z], [u,v,w])
-        cdef PairPoint R = PairPoint([0]*d, [0]*d)
-        R.copy_inplace(P)
+        cdef PairPoint P = PairPoint([random() for i in range(d)], [1/3.]*d)
+        P.sort()
+        P.normalize_x(1)
+        cdef PairPoint R = P.copy()
 
         import collections
         domain_right = collections.defaultdict(list)
@@ -1402,38 +1360,18 @@ cdef class MCFAlgorithm(object):
                 #s = x*u + y*v + z*w
                 #print("scal prod <(x,y,z),(u,v,w)> = %f (after algo)" % s)
 
-            # Normalize (xnew,ynew,znew)
-            if norm_xyz == '1':
-                s = R.x[0] + R.x[1] + R.x[2] # norm 1
-            elif norm_xyz == 'sup':
-                s = max(R.x[0], R.x[1], R.x[2]) # norm sup
-            else:
-                raise ValueError("Unknown value for norm_xyz(=%s)" %norm_xyz)
-            if s == 0:
-                raise ValueError("s(={}) is zero problem after {}-th iteration"
-                        " for point {}".format(s, i, R))
-            R.x[0] /= s; R.x[1] /= s; R.x[2] /= s
-
-            # Normalize (unew,vnew,wnew)
-            if norm_uvw == '1':
-                s = R.a[0] + R.a[1] + R.a[2]    # norm 1
-            elif norm_uvw == 'sup':
-                s = max(R.a[0], R.a[1], R.a[2]) # norm sup
-            elif norm_uvw == 'hypersurface':
-                s = R.x[0]*R.a[0] + R.x[1]*R.a[1] + R.x[2]*R.a[2] # hypersurface
-            else:
-                raise ValueError("Unknown value for norm_uvw(=%s)" %norm_uvw)
-            R.a[0] /= s; R.a[1] /= s; R.a[2] /= s
+            R.normalize_x(p=norm_xyz)
+            R.normalize_a(p=norm_uvw)
 
             # Projection
-            if norm_xyz == '1':
+            if norm_xyz == 1:
                 s = -SQRT3SUR2 * P.x[0] + SQRT3SUR2 * P.x[1]
                 t = -.5 * P.x[0] -.5 * P.x[1] + P.x[2]
                 domain_left[branch].append((s,t))
                 s = -SQRT3SUR2 * R.x[0] + SQRT3SUR2 * R.x[1]
                 t = -.5 * R.x[0] -.5 * R.x[1] + R.x[2]
                 image_left[branch].append((s,t))
-            elif norm_xyz == 'sup':
+            elif norm_xyz == 0:
                 domain_left[branch].append((P.x[0],P.x[1]))
                 image_left[branch].append((R.x[0],R.x[1]))
 
