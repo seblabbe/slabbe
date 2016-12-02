@@ -60,8 +60,6 @@ Orbit in the simplex::
 
     - Trouver meilleur nom pour PointFiber + x + a (cotangent, bundle, fiber?)
 
-    - Should we sig_free some table of double P.x and P.a ??
-
     - Create memory inside algorithms to perform computations...
 
     - See the TODO in the file
@@ -276,8 +274,6 @@ cdef class MCFAlgorithm(object):
             branch = self.call(P)
 
             S.add(branch)
-        #sig_free(P.x)
-        #sig_free(P.a)
         return S
     ######################
     # TEST METHODS 
@@ -330,10 +326,6 @@ cdef class MCFAlgorithm(object):
                 m += 'OUTPUT: {}\n'.format(R)
                 raise Exception(m)
 
-        #sig_free(P.x)
-        #sig_free(P.a)
-        #sig_free(R.x)
-        #sig_free(R.a)
         return
 
     def _test_dual_substitution_definition(self):
@@ -422,10 +414,6 @@ cdef class MCFAlgorithm(object):
                 m += 'INPUT: {}\n'.format(P)
                 m += 'OUTPUT: {}\n'.format(R)
                 raise Exception(m)
-        #sig_free(P.x)
-        #sig_free(P.a)
-        #sig_free(R.x)
-        #sig_free(R.a)
         return
 
     ######################
@@ -566,8 +554,6 @@ cdef class MCFAlgorithm(object):
             # Normalize (x,y,z)
             s = P.x[0] + P.x[1] + P.x[2]
             P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
-        #sig_free(P.x)
-        #sig_free(P.a)
 
     def simplex_orbit_iterator(self, start=None, norm_xyz='sup', norm_uvw='1'):
         r"""
@@ -670,8 +656,6 @@ cdef class MCFAlgorithm(object):
             P.a[0] /= s; P.a[1] /= s; P.a[2] /= s
 
             yield (P.x[0], P.x[1], P.x[2]), (P.a[0], P.a[1], P.a[2]), branch
-        #sig_free(P.x)
-        #sig_free(P.a)
 
     def simplex_orbit_list(self, start=None, int n_iterations=100, 
                                  norm_xyz='1', norm_uvw='1'):
