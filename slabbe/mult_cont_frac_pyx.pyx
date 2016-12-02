@@ -44,6 +44,38 @@ Orbit in the simplex::
       0.22222222222222224,
       321)]
 
+BENCHMARKS::
+
+With slabbe-0.2 or earlier, 68.6 ms on my machine.
+With slabbe-0.3.b1, 43.2 ms on my machine::
+
+    sage: from slabbe.mult_cont_frac_pyx import Brun
+    sage: Brun().lyapunov_exponents(n_iterations=1000000)  # tolerance 0.003
+    (0.3049429393152174, -0.1120652699014143, 1.367495867105725)
+
+With slabbe-0.2 or earlier, 3.71s at liafa, 4.58s on my machine.
+With slabbe-0.3.b1, 2.81s on my machine::
+
+    sage: Brun().lyapunov_exponents(n_iterations=67000000) # tolerance 0.001
+    (0.30456433843239084, -0.1121770192467067, 1.36831961293987303)
+
+With slabbe-0.3.b1, 323ms on my machine::
+
+    sage: from slabbe.mult_cont_frac_pyx import ARP
+    sage: ARP().lyapunov_exponents(n_iterations=10^6)  # tolerance 0.003
+    (0.4458519981984982, -0.1734745598513802, 1.389085527377512)
+
+With slabbe-0.3.b1, 20.7 s on my machine::
+
+    sage: ARP().lyapunov_exponents(n_iterations=67*10^6)   # not tested too long
+    (0.44296596371477626, -0.17222952278277034, 1.3888098339168744)
+
+With slabbe-0.2 or earlier, 660 ms on my machine.
+With slabbe-0.3.b1, 615 ms on my machine (maybe this test could be made much
+faster without using list...)::
+
+    sage: L = Brun().simplex_orbit_list(n_iterations=10^6)   # long
+
 .. TODO::
 
     - Ajout les algo de reuteneaour, nogueira, autres?
@@ -675,15 +707,15 @@ cdef class MCFAlgorithm(object):
 
             list
 
-        BENCHMARK:
+        .. NOTE::
 
-        It could be 10 times faster because 10^6 iterations can be done in
-        about 60ms on this machine. But for drawing images, it does not
-        matter to be 10 times slower::
+            It could be 10 times faster because 10^6 iterations can be done in
+            about 60ms on this machine. But for drawing images, it does not
+            matter to be 10 times slower::
 
-            sage: %time L = Brun().simplex_orbit_list(10^6)   # not tested
-            CPU times: user 376 ms, sys: 267 ms, total: 643 ms
-            Wall time: 660 ms
+                sage: %time L = Brun().simplex_orbit_list(10^6)   # not tested
+                CPU times: user 376 ms, sys: 267 ms, total: 643 ms
+                Wall time: 660 ms
 
         EXAMPLES::
 
@@ -1341,23 +1373,11 @@ cdef class MCFAlgorithm(object):
             the code of this method was translated from C to cython. The C
             version is from Vincent Delecroix.
 
-        EXAMPLES:
-
-        Some benchmarks (on my machine)::
+        EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Brun
-            sage: Brun().lyapunov_exponents(n_iterations=1000000)  # 68.6 ms # tolerance 0.003
+            sage: Brun().lyapunov_exponents(n_iterations=1000000)  # tolerance 0.003
             (0.3049429393152174, -0.1120652699014143, 1.367495867105725)
-
-        Cython code on liafa is as fast as C on my machine::
-
-            sage: Brun().lyapunov_exponents(n_iterations=67000000) # 3.71s # tolerance 0.001
-            (0.30452120021265766, -0.11212586210856369, 1.36820379674801734)
-
-        Cython code on my machine is almost as fast as C on my machine::
-
-            sage: Brun().lyapunov_exponents(n_iterations=67000000) # 4.58 s # tolerance 0.001
-            (0.30456433843239084, -0.1121770192467067, 1.36831961293987303)
 
         """
         from math import log
