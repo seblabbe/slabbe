@@ -44,28 +44,32 @@ Orbit in the simplex::
       0.22222222222222224,
       321)]
 
-BENCHMARKS::
+BENCHMARKS:
 
 With slabbe-0.2 or earlier, 68.6 ms on my machine.
-With slabbe-0.3.b1, 43.2 ms on my machine::
+With slabbe-0.3.b1, 62.2 ms on my machine.
+With slabbe-0.3.b2, 43.2 ms on my machine::
 
     sage: from slabbe.mult_cont_frac_pyx import Brun
     sage: Brun().lyapunov_exponents(n_iterations=1000000)  # tolerance 0.003
     (0.3049429393152174, -0.1120652699014143, 1.367495867105725)
 
 With slabbe-0.2 or earlier, 3.71s at liafa, 4.58s on my machine.
-With slabbe-0.3.b1, 2.81s on my machine::
+With slabbe-0.3.b1, 3.93s on my machine.
+With slabbe-0.3.b2, 2.81s on my machine::
 
     sage: Brun().lyapunov_exponents(n_iterations=67000000) # tolerance 0.001
     (0.30456433843239084, -0.1121770192467067, 1.36831961293987303)
 
-With slabbe-0.3.b1, 323ms on my machine::
+With slabbe-0.3.b1, 74ms on my machine.
+With slabbe-0.3.b2, 323ms on my machine::
 
     sage: from slabbe.mult_cont_frac_pyx import ARP
     sage: ARP().lyapunov_exponents(n_iterations=10^6)  # tolerance 0.003
     (0.4458519981984982, -0.1734745598513802, 1.389085527377512)
 
-With slabbe-0.3.b1, 20.7 s on my machine::
+With slabbe-0.3.b1, 4.83 s on my machine:
+With slabbe-0.3.b2, 20.7 s on my machine::
 
     sage: ARP().lyapunov_exponents(n_iterations=67*10^6)   # not tested too long
     (0.44296596371477626, -0.17222952278277034, 1.3888098339168744)
