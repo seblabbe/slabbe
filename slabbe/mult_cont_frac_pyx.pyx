@@ -44,6 +44,42 @@ Orbit in the simplex::
       0.22222222222222224,
       321)]
 
+BENCHMARKS:
+
+With slabbe-0.2 or earlier, 68.6 ms on my machine.
+With slabbe-0.3.b1, 62.2 ms on my machine.
+With slabbe-0.3.b2, 43.2 ms on my machine::
+
+    sage: from slabbe.mult_cont_frac_pyx import Brun
+    sage: Brun().lyapunov_exponents(n_iterations=1000000)  # tolerance 0.003
+    (0.3049429393152174, -0.1120652699014143, 1.367495867105725)
+
+With slabbe-0.2 or earlier, 3.71s at liafa, 4.58s on my machine.
+With slabbe-0.3.b1, 3.93s on my machine.
+With slabbe-0.3.b2, 2.81s on my machine::
+
+    sage: Brun().lyapunov_exponents(n_iterations=67000000) # tolerance 0.001
+    (0.30456433843239084, -0.1121770192467067, 1.36831961293987303)
+
+With slabbe-0.3.b1, 74ms on my machine.
+With slabbe-0.3.b2, 56ms on my machine::
+
+    sage: from slabbe.mult_cont_frac_pyx import ARP
+    sage: ARP().lyapunov_exponents(n_iterations=10^6)  # tolerance 0.003
+    (0.443493194984839, -0.17269097306340797, 1.3893881011394358)
+
+With slabbe-0.3.b1, 4.83 s on my machine:
+With slabbe-0.3.b2, 3.57 s on my machine::
+
+    sage: ARP().lyapunov_exponents(n_iterations=67*10^6)   # not tested too long
+    (0.44296596371477626, -0.17222952278277034, 1.3888098339168744)
+
+With slabbe-0.2 or earlier, 660 ms on my machine.
+With slabbe-0.3.b1, 615 ms on my machine (maybe this test could be made much
+faster without using list...)::
+
+    sage: L = Brun().simplex_orbit_list(n_iterations=10^6)   # long
+
 .. TODO::
 
     - Ajout les algo de reuteneaour, nogueira, autres?
@@ -57,6 +93,12 @@ Orbit in the simplex::
       apeler Poincare. Without the cython Error: Cannot call a static
       method on an instance variable.
       https://groups.google.com/d/topic/sage-support/DRI_s31D8ks/discussion
+
+    - Trouver meilleur nom pour PointFiber + x + a (cotangent, bundle, fiber?)
+
+    - Create memory inside algorithms to perform computations...
+
+    - See the TODO in the file
 
 Question:
 
@@ -82,15 +124,209 @@ AUTHORS:
 from sage.misc.prandom import random
 
 include "cysignals/signals.pxi"   # ctrl-c interrupt block support
+include "cysignals/memory.pxi"
 
-cdef struct PairPoint3d:
-    double x
-    double y
-    double z
-    double u
-    double v
-    double w
-    int branch
+cdef class PairPoint:
+    cdef double* x
+    cdef double* a
+    cdef int dim
+    cdef double _tmp
+    def __cinit__(self, x, a):
+        self.dim = len(x)
+        self.x = <double*>check_allocarray(self.dim, sizeof(double))
+        self.a = <double*>check_allocarray(self.dim, sizeof(double))
+
+    def __init__(self, x, a):
+        cdef int i
+        for i in range(self.dim):
+            self.x[i] = x[i]
+        for i in range(self.dim):
+            self.a[i] = a[i]
+
+    def __dealloc__(self):
+        sig_free(self.x)
+        sig_free(self.a)
+
+    def to_dict(self):
+        r"""
+        EXAMPLES::
+
+             sage: from slabbe.mult_cont_frac_pyx import PairPoint
+             sage: PairPoint([1,2,3], [4,5,6]).to_dict()
+             {'a': [4.0, 5.0, 6.0], 'x': [1.0, 2.0, 3.0]}
+        """
+        cdef int i
+        return dict(x=[self.x[i] for i in range(self.dim)],
+                    a=[self.a[i] for i in range(self.dim)])
+    def to_tuple(self):
+        r"""
+        EXAMPLES::
+
+             sage: from slabbe.mult_cont_frac_pyx import PairPoint
+             sage: PairPoint([1,2,3], [4,5,6]).to_tuple()
+             ((1.0, 2.0, 3.0), (4.0, 5.0, 6.0))
+        """
+        cdef int i
+        return (tuple(self.x[i] for i in range(self.dim)),
+                tuple(self.a[i] for i in range(self.dim)))
+
+    def __repr__(self):
+        r"""
+        EXAMPLES::
+
+             sage: from slabbe.mult_cont_frac_pyx import PairPoint
+             sage: PairPoint(range(5), range(5))
+             ((0.0, 1.0, 2.0, 3.0, 4.0), (0.0, 1.0, 2.0, 3.0, 4.0))
+        """
+        return repr(self.to_tuple())
+
+    cdef sort(self):
+        r"""
+        In larger dimension use::
+
+            man 3 qsort::
+
+        void
+        qsort(void *base, size_t nel, size_t width,
+            int (*compar)(const void *, const void *));
+
+        + google
+        """
+        if self.x[0] > self.x[1]:
+            self._tmp = self.x[0]
+            self.x[0] = self.x[1]
+            self.x[1] = self._tmp
+            self._tmp = self.a[0]
+            self.a[0] = self.a[1]
+            self.a[1] = self._tmp
+        if self.x[1] > self.x[2]:
+            self._tmp = self.x[1]
+            self.x[1] = self.x[2]
+            self.x[2] = self._tmp
+            self._tmp = self.a[1]
+            self.a[1] = self.a[2]
+            self.a[2] = self._tmp
+        if self.x[0] > self.x[1]:
+            self._tmp = self.x[0]
+            self.x[0] = self.x[1]
+            self.x[1] = self._tmp
+            self._tmp = self.a[0]
+            self.a[0] = self.a[1]
+            self.a[1] = self._tmp
+
+    cdef PairPoint copy(self):
+        r"""
+        """
+        cdef int i
+        return PairPoint(x=[self.x[i] for i in range(self.dim)],
+                         a=[self.a[i] for i in range(self.dim)])
+
+    cdef copy_inplace(self, PairPoint P):
+        r"""
+        """
+        cdef int i
+        assert self.dim == P.dim, "dimension inconsistencies"
+        for i in range(self.dim):
+            self.x[i] = P.x[i]
+        for i in range(self.dim):
+            self.a[i] = P.a[i]
+
+    cdef int _Poincare(self):
+        r"""
+        EXAMPLES::
+
+        """
+        cdef int i,j,k
+        if self.x[0] <= self.x[1] <= self.x[2]:
+            i = 0; j = 1; k = 2;
+        elif self.x[0] <= self.x[2] <= self.x[1]:
+            i = 0; j = 2; k = 1;
+        elif self.x[1] <= self.x[0] <= self.x[2]:
+            i = 1; j = 0; k = 2;
+        elif self.x[2] <= self.x[0] <= self.x[1]:
+            i = 2; j = 0; k = 1;
+        elif self.x[1] <= self.x[2] <= self.x[0]:
+            i = 1; j = 2; k = 0;
+        elif self.x[2] <= self.x[1] <= self.x[0]:
+            i = 2; j = 1; k = 0;
+        else:
+            raise ValueError('limit case: reach set of measure zero: {}'.format(self))
+        self.x[k] -= self.x[j]
+        self.x[j] -= self.x[i]
+        self.a[j] += self.a[k]
+        self.a[i] += self.a[j]
+        return 100*i + 10*j + k + 111
+
+    cdef int _Sorted_Poincare(self):
+        r"""
+        EXAMPLES::
+
+        """
+        # Apply the algo
+        self.x[2] -= self.x[1]
+        self.x[1] -= self.x[0]
+        self.a[1] += self.a[2]
+        self.a[0] += self.a[1]
+        self.sort()
+        return 200
+
+    cdef int _Sorted_ArnouxRauzy(self):
+        r"""
+        EXAMPLES::
+
+        """
+        #Arnoux-Rauzy
+        self.x[2] -= self.x[0] + self.x[1]
+        self.a[0] += self.a[2]
+        self.a[1] += self.a[2]
+        self.sort()
+        return 100
+
+    cdef int _Sorted_ArnouxRauzyMulti(self):
+        r"""
+        EXAMPLES::
+
+        """
+        #Arnoux-Rauzy Multi
+        cdef int m
+        m = <int>(self.x[2] / (self.x[0] + self.x[1]))
+        self.x[2] -= m * (self.x[0] + self.x[1])
+        self.a[1] += m * self.a[2];
+        self.a[0] += m * self.a[2];
+        self.sort()
+        return 100
+
+    cdef int _Sorted_FullySubtractive(self):
+        r"""
+        EXAMPLES::
+
+        """
+        # Apply the algo
+        self.x[1] -= self.x[0]
+        self.x[2] -= self.x[0]
+        self.a[0] += self.a[1] + self.a[2]
+        self.sort()
+        return 100
+
+    cdef normalize_x(self):
+        r"""
+        Normalize self.x
+        """
+        s = self.x[0] + self.x[1] + self.x[2]
+        self.x[0] /= s
+        self.x[1] /= s
+        self.x[2] /= s
+
+    cdef dot_product(self):
+        raise NotImplementedError
+    cdef gramm_schmidt(self):
+        raise NotImplementedError
+    cdef act_by_diagonal_matrix(self):
+        raise NotImplementedError
+    cdef projection3to2(self):
+        raise NotImplementedError
+
+cdef int d = 3
 
 cdef double SQRT3SUR2 = 0.866025403784439
 
@@ -98,7 +334,7 @@ cdef class MCFAlgorithm(object):
     ########################################
     # METHODS IMPLEMENTED IN HERITED CLASSES
     ########################################
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         This method must be implemented in the inherited classes.
 
@@ -157,7 +393,8 @@ cdef class MCFAlgorithm(object):
             {1, 2, 3, 123, 132, 213, 231, 312, 321}
         """
         cdef unsigned int i         # loop counter
-        cdef PairPoint3d P
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
+        cdef int branch
         S = set()
         # Loop
         for i from 0 <= i < n_iterations:
@@ -166,13 +403,13 @@ cdef class MCFAlgorithm(object):
             sig_check()
 
             # random initial values
-            P.x = random(); P.y = random(); P.z = random();
-            P.u = random(); P.v = random(); P.w = random();
+            P.x[0] = random(); P.x[1] = random(); P.x[2] = random();
+            P.a[0] = random(); P.a[1] = random(); P.a[2] = random();
 
             # Apply Algo
-            P = self.call(P)
+            branch = self.call(P)
 
-            S.add(P.branch)
+            S.add(branch)
         return S
     ######################
     # TEST METHODS 
@@ -191,7 +428,10 @@ cdef class MCFAlgorithm(object):
         cdef double s,t             # temporary variables
         cdef unsigned int i         # loop counter
 
-        cdef PairPoint3d P, R
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
+
+        cdef int branch
 
         # Loop
         for i from 0 <= i < n_iterations:
@@ -200,24 +440,26 @@ cdef class MCFAlgorithm(object):
             sig_check()
 
             # random initial values
-            P.x = random(); P.y = random(); P.z = random();
-            P.u = random(); P.v = random(); P.w = random();
-            s = P.x*P.u + P.y*P.v + P.z*P.w
+            P.x[0] = random(); P.x[1] = random(); P.x[2] = random();
+            P.a[0] = random(); P.a[1] = random(); P.a[2] = random();
+            s = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2]
+
+            R = P.copy()
 
             # Apply Algo
             try:
-                R = self.call(P)
+                branch = self.call(R)
             except ValueError:
                 continue
-            t = R.x*R.u + R.y*R.v + R.z*R.w
+            t = R.x[0]*R.a[0] + R.x[1]*R.a[1] + R.x[2]*R.a[2]
 
             if not abs(s - t) < 0.0000001:
                 m = 'This algo does not preserve the scalar product\n'
                 m += '{} != {}\n'.format(s,t)
-                m += 'The problem is on branch {}\n'.format(R.branch)
+                m += 'The problem is on branch {}\n'.format(branch)
                 m += 'on the {}-th iteration\n'.format(i)
-                m += 'INPUT: ({}, {}, {}, {}, {}, {})\n'.format(P.x,P.y,P.z,P.u,P.v,P.w)
-                m += 'OUTPUT: ({}, {}, {}, {}, {}, {})\n'.format(R.x,R.y,R.z,R.u,R.v,R.w)
+                m += 'INPUT: {}\n'.format(P)
+                m += 'OUTPUT: {}\n'.format(R)
                 raise Exception(m)
 
         return
@@ -256,7 +498,9 @@ cdef class MCFAlgorithm(object):
         """
         from sage.modules.free_module_element import vector
         cdef unsigned int i         # loop counter
-        cdef PairPoint3d P, R
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
+        cdef int branch
 
         A = dict((k,s.incidence_matrix()) for k,s in self.substitutions().iteritems())
 
@@ -267,42 +511,44 @@ cdef class MCFAlgorithm(object):
             sig_check()
 
             # random initial values
-            P.x = random(); P.y = random(); P.z = random();
-            P.u = random(); P.v = random(); P.w = random();
+            P.x[0] = random(); P.x[1] = random(); P.x[2] = random();
+            P.a[0] = random(); P.a[1] = random(); P.a[2] = random();
+            
+            R = P.copy()  # TODO is the copy needed here?
 
             # Apply Algo
             try:
-                R = self.call(P)
+                branch = self.call(R)
             except ValueError:
                 continue
 
-            M = A[R.branch]
+            M = A[branch]
 
             # Check the algo
-            s = M * vector((R.x, R.y, R.z))
-            t = vector((P.x, P.y, P.z))
+            s = M * vector((R.x[0], R.x[1], R.x[2]))
+            t = vector((P.x[0], P.x[1], P.x[2]))
             if not abs(s - t) < 0.0000001:
                 m = 'Incoherence between the definition of algo \n'
                 m += 'and the associated substitutions.\n'
-                m += '{} != {}\n'.format(s,t)
-                m += 'The problem is on branch {}\n'.format(R.branch)
+                m += 'M * v_{{n+1}} = {} !=\nv_n = {}\n'.format(s,t)
+                m += 'The problem is on branch {}\n'.format(branch)
                 m += 'on the {}-th iteration\n'.format(i)
-                m += 'INPUT: ({}, {}, {}, {}, {}, {})\n'.format(P.x,P.y,P.z,P.u,P.v,P.w)
-                m += 'OUTPUT: ({}, {}, {}, {}, {}, {})\n'.format(R.x,R.y,R.z,R.u,R.v,R.w)
+                m += 'INPUT: {}\n'.format(P)
+                m += 'OUTPUT: {}\n'.format(R)
                 raise Exception(m)
 
             # Check the dual coordinates
             Mt = M.transpose()
-            s = Mt * vector((P.u, P.v, P.w))
-            t = vector((R.u, R.v, R.w))
+            s = Mt * vector((P.a[0], P.a[1], P.a[2]))
+            t = vector((R.a[0], R.a[1], R.a[2]))
             if not abs(s - t) < 0.0000001:
                 m = 'Incoherence between the definition of algo (dual) \n'
                 m += 'and the associated substitutions.\n'
                 m += '{} != {}\n'.format(s,t)
-                m += 'The problem is on branch {}\n'.format(R.branch)
+                m += 'The problem is on branch {}\n'.format(branch)
                 m += 'on the {}-th iteration\n'.format(i)
-                m += 'INPUT: ({}, {}, {}, {}, {}, {})\n'.format(P.x,P.y,P.z,P.u,P.v,P.w)
-                m += 'OUTPUT: ({}, {}, {}, {}, {}, {})\n'.format(R.x,R.y,R.z,R.u,R.v,R.w)
+                m += 'INPUT: {}\n'.format(P)
+                m += 'OUTPUT: {}\n'.format(R)
                 raise Exception(m)
         return
 
@@ -353,32 +599,29 @@ cdef class MCFAlgorithm(object):
         """
         return "{} 3-dimensional continued fraction algorithm".format(self.name())
 
-    def __call__(self, PairPoint3d P):
+    def __call__(self, PairPoint P):
         r"""
         Wrapper for the cdef call method.
 
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Brun
-            sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = Brun()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 123),
-             ('u', 0.2),
-             ('v', 0.6),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.6),
-             ('z', 0.20000000000000007)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
+            sage: Brun()(P)
+            ((0.3, 0.6, 0.20000000000000007), (0.2, 0.6, 0.3))
 
         ::
 
-            sage: D = {'x':3,'y':6,'z':8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: D = Brun()(D); D
-            {'branch': 123, 'u': 0.2, 'v': 0.6, 'w': 0.3, 'x': 3.0, 'y': 6.0, 'z': 2.0}
-
+            sage: P = PairPoint([3,6,8], [.2,.3,.3])
+            sage: Brun()(P)
+            ((3.0, 6.0, 2.0), (0.2, 0.6, 0.3))
         """
-        return self.call(P)
+        # TODO should __call__ return a copy or changes P?
+        cdef PairPoint R = P.copy()
+        self.call(R)
+        return R
+
     def __richcmp__(self, other, op):
         r"""
         INPUT:
@@ -428,24 +671,25 @@ cdef class MCFAlgorithm(object):
 
         """
         cdef double s             # temporary variables
-        cdef PairPoint3d P
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
+        cdef int branch
 
         # initial values
-        P.x, P.y, P.z = start
-        P.u = random(); P.v = random(); P.w = random();
+        P.x[0], P.x[1], P.x[2] = start
+        P.a[0] = random(); P.a[1] = random(); P.a[2] = random();
 
         # Normalize (x,y,z)
-        s = P.x + P.y + P.z
-        P.x /= s; P.y /= s; P.z /= s
+        s = P.x[0] + P.x[1] + P.x[2]
+        P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
 
         # Loop
         while True:
-            P = self.call(P)
-            yield P.branch
+            branch = self.call(P)
+            yield branch
 
             # Normalize (x,y,z)
-            s = P.x + P.y + P.z
-            P.x /= s; P.y /= s; P.z /= s
+            s = P.x[0] + P.x[1] + P.x[2]
+            P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
 
     def simplex_orbit_iterator(self, start=None, norm_xyz='sup', norm_uvw='1'):
         r"""
@@ -507,46 +751,47 @@ cdef class MCFAlgorithm(object):
 
         """
         cdef double s           # temporary variables
-        cdef PairPoint3d P
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
+        cdef int branch
         if start is None:
-            P.x = random(); P.y = random(); P.z = random()
+            P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
         else:
-            P.x = start[0]; P.y = start[1]; P.z = start[2]
-        P.u = 1./3
-        P.v = 1./3
-        P.w = 1./3
+            P.x[0] = start[0]; P.x[1] = start[1]; P.x[2] = start[2]
+        P.a[0] = 1./3
+        P.a[1] = 1./3
+        P.a[2] = 1./3
 
         # Normalize (x,y,z)
-        s = P.x + P.y + P.z
-        P.x /= s; P.y /= s; P.z /= s
+        s = P.x[0] + P.x[1] + P.x[2]
+        P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
 
         # Loop
         while True:
 
             # Apply Algo
-            P = self.call(P)
+            branch = self.call(P)
 
             # Normalize (xnew,ynew,znew)
             if norm_xyz == '1':
-                s = P.x + P.y + P.z # norm 1
+                s = P.x[0] + P.x[1] + P.x[2] # norm 1
             elif norm_xyz == 'sup':
-                s = max(P.x, P.y, P.z) # norm sup
+                s = max(P.x[0], P.x[1], P.x[2]) # norm sup
             else:
                 raise ValueError("Unknown value for norm_xyz(=%s)" %norm_xyz)
-            P.x /= s; P.y /= s; P.z /= s
+            P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
 
             # Normalize (unew,vnew,wnew)
             if norm_uvw == '1':
-                s = P.u + P.v + P.w    # norm 1
+                s = P.a[0] + P.a[1] + P.a[2]    # norm 1
             elif norm_uvw == 'sup':
-                s = max(P.u, P.v, P.w) # norm sup
+                s = max(P.a[0], P.a[1], P.a[2]) # norm sup
             elif norm_uvw == 'hypersurface':
-                s = P.x*P.u + P.y*P.v + P.z*P.w # hypersurface
+                s = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2] # hypersurface
             else:
                 raise ValueError("Unknown value for norm_uvw(=%s)" %norm_uvw)
-            P.u /= s; P.v /= s; P.w /= s
+            P.a[0] /= s; P.a[1] /= s; P.a[2] /= s
 
-            yield (P.x, P.y, P.z), (P.u, P.v, P.w), P.branch
+            yield (P.x[0], P.x[1], P.x[2]), (P.a[0], P.a[1], P.a[2]), branch
 
     def simplex_orbit_list(self, start=None, int n_iterations=100, 
                                  norm_xyz='1', norm_uvw='1'):
@@ -566,15 +811,15 @@ cdef class MCFAlgorithm(object):
 
             list
 
-        BENCHMARK:
+        .. NOTE::
 
-        It could be 10 times faster because 10^6 iterations can be done in
-        about 60ms on this machine. But for drawing images, it does not
-        matter to be 10 times slower::
+            It could be 10 times faster because 10^6 iterations can be done in
+            about 60ms on this machine. But for drawing images, it does not
+            matter to be 10 times slower::
 
-            sage: %time L = Brun().simplex_orbit_list(10^6)   # not tested
-            CPU times: user 376 ms, sys: 267 ms, total: 643 ms
-            Wall time: 660 ms
+                sage: %time L = Brun().simplex_orbit_list(10^6)   # not tested
+                CPU times: user 376 ms, sys: 267 ms, total: 643 ms
+                Wall time: 660 ms
 
         EXAMPLES::
 
@@ -591,19 +836,20 @@ cdef class MCFAlgorithm(object):
 
         """
         cdef double s           # temporary variables
-        cdef PairPoint3d P
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
         cdef int i
+        cdef int branch
         if start is None:
-            P.x = random(); P.y = random(); P.z = random()
+            P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
         else:
-            P.x = start[0]; P.y = start[1]; P.z = start[2]
-        P.u = 1./3
-        P.v = 1./3
-        P.w = 1./3
+            P.x[0] = start[0]; P.x[1] = start[1]; P.x[2] = start[2]
+        P.a[0] = 1./3
+        P.a[1] = 1./3
+        P.a[2] = 1./3
 
         # Normalize (x,y,z)
-        s = P.x + P.y + P.z
-        P.x /= s; P.y /= s; P.z /= s
+        s = P.x[0] + P.x[1] + P.x[2]
+        P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
 
         L = []
 
@@ -614,29 +860,29 @@ cdef class MCFAlgorithm(object):
             sig_check()
 
             # Apply Algo
-            P = self.call(P)
+            branch = self.call(P)
 
             # Normalize (xnew,ynew,znew)
             if norm_xyz == '1':
-                s = P.x + P.y + P.z # norm 1
+                s = P.x[0] + P.x[1] + P.x[2] # norm 1
             elif norm_xyz == 'sup':
-                s = max(P.x, P.y, P.z) # norm sup
+                s = max(P.x[0], P.x[1], P.x[2]) # norm sup
             else:
                 raise ValueError("Unknown value for norm_xyz(=%s)" %norm_xyz)
-            P.x /= s; P.y /= s; P.z /= s
+            P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
 
             # Normalize (unew,vnew,wnew)
             if norm_uvw == '1':
-                s = P.u + P.v + P.w    # norm 1
+                s = P.a[0] + P.a[1] + P.a[2]    # norm 1
             elif norm_uvw == 'sup':
-                s = max(P.u, P.v, P.w) # norm sup
+                s = max(P.a[0], P.a[1], P.a[2]) # norm sup
             elif norm_uvw == 'hypersurface':
-                s = P.x*P.u + P.y*P.v + P.z*P.w # hypersurface
+                s = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2] # hypersurface
             else:
                 raise ValueError("Unknown value for norm_uvw(=%s)" %norm_uvw)
-            P.u /= s; P.v /= s; P.w /= s
+            P.a[0] /= s; P.a[1] /= s; P.a[2] /= s
 
-            L.append( (P.x, P.y, P.z, P.u, P.v, P.w, P.branch))
+            L.append( (P.x[0], P.x[1], P.x[2], P.a[0], P.a[1], P.a[2], branch))
 
         return L
 
@@ -731,7 +977,8 @@ cdef class MCFAlgorithm(object):
         """
         cdef double s,x,y,u,v           # temporary variables
         s = x = y = u = v = 0           # initialize to avoid a warning
-        cdef PairPoint3d P
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
+        cdef int branch
         cdef int previous_branch
         cdef int xa,ya,ua,va
         cdef int i
@@ -740,12 +987,12 @@ cdef class MCFAlgorithm(object):
         cdef double ulen = umax - umin
         cdef double vlen = vmax - vmin
         if start is None:
-            P.x = random(); P.y = random(); P.z = random()
+            P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
         else:
-            P.x = start[0]; P.y = start[1]; P.z = start[2]
-        P.u = 1./3
-        P.v = 1./3
-        P.w = 1./3
+            P.x[0] = start[0]; P.x[1] = start[1]; P.x[2] = start[2]
+        P.a[0] = 1./3
+        P.a[1] = 1./3
+        P.a[2] = 1./3
 
         if ndivs and float('inf') in [-xmin, -ymin, -umin, -vmin, xmax, ymax, umax, vmax]:
             raise ValueError("when ndivs is specified, you must provide a"
@@ -753,13 +1000,13 @@ cdef class MCFAlgorithm(object):
                     " and vmax")
 
         # Normalize (x,y,z)
-        s = P.x + P.y + P.z
-        P.x /= s; P.y /= s; P.z /= s
+        s = P.x[0] + P.x[1] + P.x[2]
+        P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
 
         L = []
 
         # Apply Algo once
-        P = self.call(P)
+        branch = self.call(P)
 
         # Loop
         for i from 0 <= i < n_iterations:
@@ -769,42 +1016,42 @@ cdef class MCFAlgorithm(object):
 
             # Normalize (xnew,ynew,znew)
             if norm_xyz == '1':
-                s = P.x + P.y + P.z # norm 1
+                s = P.x[0] + P.x[1] + P.x[2] # norm 1
             elif norm_xyz == 'sup':
-                s = max(P.x, P.y, P.z) # norm sup
+                s = max(P.x[0], P.x[1], P.x[2]) # norm sup
             else:
                 raise ValueError("Unknown value for norm_xyz(=%s)" %norm_xyz)
-            P.x /= s; P.y /= s; P.z /= s
+            P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
 
             # Normalize (unew,vnew,wnew)
             if norm_uvw == '1':
-                s = P.u + P.v + P.w    # norm 1
+                s = P.a[0] + P.a[1] + P.a[2]    # norm 1
             elif norm_uvw == 'sup':
-                s = max(P.u, P.v, P.w) # norm sup
+                s = max(P.a[0], P.a[1], P.a[2]) # norm sup
             elif norm_uvw == 'hypersurface':
-                s = P.x*P.u + P.y*P.v + P.z*P.w # hypersurface
+                s = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2] # hypersurface
             else:
                 raise ValueError("Unknown value for norm_uvw(=%s)" %norm_uvw)
-            P.u /= s; P.v /= s; P.w /= s
+            P.a[0] /= s; P.a[1] /= s; P.a[2] /= s
 
             # Projection
             if norm_xyz == '1':
-                x = -SQRT3SUR2 * P.x + SQRT3SUR2 * P.y
-                y = -.5 * P.x -.5 * P.y + P.z
+                x = -SQRT3SUR2 * P.x[0] + SQRT3SUR2 * P.x[1]
+                y = -.5 * P.x[0] -.5 * P.x[1] + P.x[2]
             elif norm_xyz == 'sup':
-                x = P.x
-                y = P.y
+                x = P.x[0]
+                y = P.x[1]
 
             if norm_uvw == '1':
-                u = -SQRT3SUR2 * P.u + SQRT3SUR2 * P.v
-                v = -.5 * P.u -.5 * P.v + P.w
+                u = -SQRT3SUR2 * P.a[0] + SQRT3SUR2 * P.a[1]
+                v = -.5 * P.a[0] -.5 * P.a[1] + P.a[2]
             elif norm_uvw == 'sup':
-                u = P.u
-                v = P.v
+                u = P.a[0]
+                v = P.a[1]
 
             # Apply Algo
-            previous_branch = P.branch
-            P = self.call(P)
+            previous_branch = branch
+            branch = self.call(P)
 
             # filter
             if not (xmin < x < xmax and ymin < y < ymax and
@@ -817,9 +1064,9 @@ cdef class MCFAlgorithm(object):
                 ya = int( (ymax-y) / ylen * ndivs )
                 ua = int( (u-umin) / ulen * ndivs )
                 va = int( (vmax-v) / vlen * ndivs )
-                L.append( (xa,ya,ua,va, previous_branch, P.branch))
+                L.append( (xa,ya,ua,va, previous_branch, branch))
             else:
-                L.append( (x,y,u,v, previous_branch, P.branch))
+                L.append( (x,y,u,v, previous_branch, branch))
 
         return L
 
@@ -856,21 +1103,22 @@ cdef class MCFAlgorithm(object):
             ((1.0, 1.0, 0.0), (45.0, 14.0, 4.0), 312)
             ((1.0, 0.0, 0.0), (59.0, 14.0, 4.0), 312)
         """
-        cdef PairPoint3d P
+        cdef int branch
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
         if start is None:
-            P.x = random(); P.y = random(); P.z = random()
+            P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
         else:
-            P.x = start[0]; P.y = start[1]; P.z = start[2]
-        P.u = 1
-        P.v = 1
-        P.w = 1
+            P.x[0] = start[0]; P.x[1] = start[1]; P.x[2] = start[2]
+        P.a[0] = 1
+        P.a[1] = 1
+        P.a[2] = 1
 
         # Loop
         while True:
             sig_check() # Check for Keyboard interupt
             # Apply Algo
-            P = self.call(P)
-            yield (P.x, P.y, P.z), (P.u, P.v, P.w), P.branch
+            branch = self.call(P)
+            yield (P.x[0], P.x[1], P.x[2]), (P.a[0], P.a[1], P.a[2]), branch
     def cone_orbit_list(self, start=None, int n_iterations=100):
         r"""
         INPUT:
@@ -895,23 +1143,23 @@ cdef class MCFAlgorithm(object):
             Check for a fixed point stop then.
 
         """
-        cdef PairPoint3d P
-        cdef int i
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
+        cdef int branch, i
         if start is None:
-            P.x = random(); P.y = random(); P.z = random()
+            P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
         else:
-            P.x = start[0]; P.y = start[1]; P.z = start[2]
-        P.u = 1
-        P.v = 1
-        P.w = 1
+            P.x[0] = start[0]; P.x[1] = start[1]; P.x[2] = start[2]
+        P.a[0] = 1
+        P.a[1] = 1
+        P.a[2] = 1
 
         L = []
 
         # Loop
         for i from 0 <= i < n_iterations:
             sig_check() # Check for Keyboard interupt
-            P = self.call(P)
-            L.append( (P.x, P.y, P.z, P.u, P.v, P.w, P.branch))
+            branch = self.call(P)
+            L.append( (P.x[0], P.x[1], P.x[2], P.a[0], P.a[1], P.a[2], branch))
         return L
 
     def image(self, start, n_iterations=1):
@@ -939,18 +1187,18 @@ cdef class MCFAlgorithm(object):
             sage: Brun().image((10, 21, 37), 10)
             (1.0, 1.0, 0.0)
         """
-        cdef PairPoint3d P
-        cdef int i
-        P.x = start[0]; P.y = start[1]; P.z = start[2]
-        P.u = 1
-        P.v = 1
-        P.w = 1
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
+        cdef int i, branch
+        P.x[0] = start[0]; P.x[1] = start[1]; P.x[2] = start[2]
+        P.a[0] = 1
+        P.a[1] = 1
+        P.a[2] = 1
 
         # Loop
         for i from 0 <= i < n_iterations:
             sig_check() # Check for Keyboard interupt
-            P = self.call(P)
-        return (P.x, P.y, P.z)
+            branch = self.call(P)
+        return (P.x[0], P.x[1], P.x[2])
 
     def _invariant_measure_dict(self, int n_iterations, int ndivs, v=None,
             str norm='1', verbose=False):
@@ -1014,6 +1262,7 @@ cdef class MCFAlgorithm(object):
         cdef double s
         cdef int i,j
         cdef int X,Y
+        cdef int branch
 
         # initialization of the counter
         # change this to something else
@@ -1023,23 +1272,22 @@ cdef class MCFAlgorithm(object):
             for i from 0 <= i <= ndivs:
                 C[i][j] = 0
 
-        cdef PairPoint3d P
-        P.x = random()
-        P.y = random()
-        P.z = random()
-        P.u = .3
-        P.v = .3
-        P.w = .3
-        P.branch = 999
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
+        P.x[0] = random()
+        P.x[1] = random()
+        P.x[2] = random()
+        P.a[0] = .3
+        P.a[1] = .3
+        P.a[2] = .3
 
         # Order (x,y,z)
-        if P.y > P.z: P.z,P.y = P.y,P.z
-        if P.x > P.z: P.x,P.y,P.z = P.y,P.z,P.x
-        elif P.x > P.y: P.x,P.y = P.y,P.x
+        if P.x[1] > P.x[2]: P.x[2],P.x[1] = P.x[1],P.x[2]
+        if P.x[0] > P.x[2]: P.x[0],P.x[1],P.x[2] = P.x[1],P.x[2],P.x[0]
+        elif P.x[0] > P.x[1]: P.x[0],P.x[1] = P.x[1],P.x[0]
 
         # Normalize (x,y,z)
-        s = P.x + P.y + P.z
-        P.x /= s; P.y /= s; P.z /= s
+        s = P.x[0] + P.x[1] + P.x[2]
+        P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
 
         for i from 0 <= i < n_iterations:
 
@@ -1047,24 +1295,24 @@ cdef class MCFAlgorithm(object):
             sig_check()
 
             # Apply Algo
-            P = self.call(P)
+            branch = self.call(P)
 
             # Normalize (xnew,ynew,znew)
             if norm== '1':
-                s = P.x + P.y + P.z # norm 1
+                s = P.x[0] + P.x[1] + P.x[2] # norm 1
             elif norm== 'sup':
-                s = max(P.x, P.y, P.z) # norm sup
+                s = max(P.x[0], P.x[1], P.x[2]) # norm sup
             else:
                 raise ValueError("Unknown value for norm(=%s)" %norm)
-            P.x /= s; P.y /= s; P.z /= s
+            P.x[0] /= s; P.x[1] /= s; P.x[2] /= s
 
             # Increase by one the counter for that part
-            X = int(P.x*ndivs)
-            Y = int(P.y*ndivs)
+            X = int(P.x[0]*ndivs)
+            Y = int(P.x[1]*ndivs)
             C[X][Y] += 1
 
             if verbose:
-                print P.x,P.y,P.z
+                print P.x[0],P.x[1],P.x[2]
                 print X,Y
 
         # Translate the counter into a python dict
@@ -1114,6 +1362,7 @@ cdef class MCFAlgorithm(object):
         cdef unsigned int i         # loop counter
         cdef double x_new,y_new,z_new
         cdef double u_new,v_new,w_new
+        cdef int branch
 
         # random initial values
         x = random(); y = random(); z = random();
@@ -1128,13 +1377,9 @@ cdef class MCFAlgorithm(object):
         s = x + y + z
         x /= s; y /= s; z /= s
 
-        cdef PairPoint3d P,R
-        P.x = x
-        P.y = y
-        P.z = z
-        P.u = u
-        P.v = v
-        P.w = w
+        cdef PairPoint P = PairPoint([x,y,z], [u,v,w])
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
+        R.copy_inplace(P)
 
         import collections
         domain_right = collections.defaultdict(list)
@@ -1149,58 +1394,61 @@ cdef class MCFAlgorithm(object):
             sig_check()
 
             # Apply Algo
-            R = self.call(P)
+            branch = self.call(R)
 
             if verbose:
-                print("x=%f, y=%f, z=%f" % (R.x,R.y,R.z))
+                print("x=%f, y=%f, z=%f" % (R.x[0],R.x[1],R.x[2]))
                 #print("u=%f, v=%f, w=%f" % (u,v,w))
                 #s = x*u + y*v + z*w
                 #print("scal prod <(x,y,z),(u,v,w)> = %f (after algo)" % s)
 
             # Normalize (xnew,ynew,znew)
             if norm_xyz == '1':
-                s = R.x + R.y + R.z # norm 1
+                s = R.x[0] + R.x[1] + R.x[2] # norm 1
             elif norm_xyz == 'sup':
-                s = max(R.x, R.y, R.z) # norm sup
+                s = max(R.x[0], R.x[1], R.x[2]) # norm sup
             else:
                 raise ValueError("Unknown value for norm_xyz(=%s)" %norm_xyz)
-            R.x /= s; R.y /= s; R.z /= s
+            if s == 0:
+                raise ValueError("s(={}) is zero problem after {}-th iteration"
+                        " for point {}".format(s, i, R))
+            R.x[0] /= s; R.x[1] /= s; R.x[2] /= s
 
             # Normalize (unew,vnew,wnew)
             if norm_uvw == '1':
-                s = R.u + R.v + R.w    # norm 1
+                s = R.a[0] + R.a[1] + R.a[2]    # norm 1
             elif norm_uvw == 'sup':
-                s = max(R.u, R.v, R.w) # norm sup
+                s = max(R.a[0], R.a[1], R.a[2]) # norm sup
             elif norm_uvw == 'hypersurface':
-                s = R.x*R.u + R.y*R.v + R.z*R.w # hypersurface
+                s = R.x[0]*R.a[0] + R.x[1]*R.a[1] + R.x[2]*R.a[2] # hypersurface
             else:
                 raise ValueError("Unknown value for norm_uvw(=%s)" %norm_uvw)
-            R.u /= s; R.v /= s; R.w /= s
+            R.a[0] /= s; R.a[1] /= s; R.a[2] /= s
 
             # Projection
             if norm_xyz == '1':
-                s = -SQRT3SUR2 * P.x + SQRT3SUR2 * P.y
-                t = -.5 * P.x -.5 * P.y + P.z
-                domain_left[R.branch].append((s,t))
-                s = -SQRT3SUR2 * R.x + SQRT3SUR2 * R.y
-                t = -.5 * R.x -.5 * R.y + R.z
-                image_left[R.branch].append((s,t))
+                s = -SQRT3SUR2 * P.x[0] + SQRT3SUR2 * P.x[1]
+                t = -.5 * P.x[0] -.5 * P.x[1] + P.x[2]
+                domain_left[branch].append((s,t))
+                s = -SQRT3SUR2 * R.x[0] + SQRT3SUR2 * R.x[1]
+                t = -.5 * R.x[0] -.5 * R.x[1] + R.x[2]
+                image_left[branch].append((s,t))
             elif norm_xyz == 'sup':
-                domain_left[R.branch].append((P.x,P.y))
-                image_left[R.branch].append((R.x,R.y))
+                domain_left[branch].append((P.x[0],P.x[1]))
+                image_left[branch].append((R.x[0],R.x[1]))
 
             if norm_uvw == '1':
-                s = -SQRT3SUR2 * P.u + SQRT3SUR2 * P.v
-                t = -.5 * P.u -.5 * P.v + P.w
-                domain_right[R.branch].append((s,t))
-                s = -SQRT3SUR2 * R.u + SQRT3SUR2 * R.v
-                t = -.5 * R.u -.5 * R.v + R.w
-                image_right[R.branch].append((s,t))
+                s = -SQRT3SUR2 * P.a[0] + SQRT3SUR2 * P.a[1]
+                t = -.5 * P.a[0] -.5 * P.a[1] + P.a[2]
+                domain_right[branch].append((s,t))
+                s = -SQRT3SUR2 * R.a[0] + SQRT3SUR2 * R.a[1]
+                t = -.5 * R.a[0] -.5 * R.a[1] + R.a[2]
+                image_right[branch].append((s,t))
             elif norm_uvw == 'sup':
-                domain_right[R.branch].append((P.u,P.v))
-                image_right[R.branch].append((R.u,R.v))
+                domain_right[branch].append((P.a[0],P.a[1]))
+                image_right[branch].append((R.a[0],R.a[1]))
 
-            P = R
+            P.copy_inplace(R)
 
         return domain_left, image_left, domain_right, image_right
 
@@ -1229,23 +1477,11 @@ cdef class MCFAlgorithm(object):
             the code of this method was translated from C to cython. The C
             version is from Vincent Delecroix.
 
-        EXAMPLES:
-
-        Some benchmarks (on my machine)::
+        EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Brun
-            sage: Brun().lyapunov_exponents(n_iterations=1000000)  # 68.6 ms # tolerance 0.003
+            sage: Brun().lyapunov_exponents(n_iterations=1000000)  # tolerance 0.003
             (0.3049429393152174, -0.1120652699014143, 1.367495867105725)
-
-        Cython code on liafa is as fast as C on my machine::
-
-            sage: Brun().lyapunov_exponents(n_iterations=67000000) # 3.71s # tolerance 0.001
-            (0.30452120021265766, -0.11212586210856369, 1.36820379674801734)
-
-        Cython code on my machine is almost as fast as C on my machine::
-
-            sage: Brun().lyapunov_exponents(n_iterations=67000000) # 4.58 s # tolerance 0.001
-            (0.30456433843239084, -0.1121770192467067, 1.36831961293987303)
 
         """
         from math import log
@@ -1256,6 +1492,7 @@ cdef class MCFAlgorithm(object):
         cdef double p,s,t           # temporary variables
         cdef unsigned int i         # loop counter
         cdef double critical_value=0.0001
+        cdef int branch
 
         # initial values
         if start is None:
@@ -1288,13 +1525,13 @@ cdef class MCFAlgorithm(object):
             s = x*u + y*v + z*w
             print("scal prod <(x,y,z),(u,v,w)> = %f" % s)
 
-        cdef PairPoint3d P
-        P.x = x
-        P.y = y
-        P.z = z
-        P.u = u
-        P.v = v
-        P.w = w
+        cdef PairPoint P = PairPoint([0]*d, [0]*d)
+        P.x[0] = x
+        P.x[1] = y
+        P.x[2] = z
+        P.a[0] = u
+        P.a[1] = v
+        P.a[2] = w
 
         # Loop
         for i from 0 <= i < n_iterations:
@@ -1303,39 +1540,39 @@ cdef class MCFAlgorithm(object):
             sig_check()
 
             # Apply Algo
-            P = self.call(P)
+            branch = self.call(P)
 
             if verbose:
-                print("x=%f, y=%f, z=%f" % (P.x,P.y,P.z))
-                print("u=%f, v=%f, w=%f" % (P.u,P.v,P.w))
-                s = P.x*P.u + P.y*P.v + P.z*P.w
+                print("x=%f, y=%f, z=%f" % (P.x[0],P.x[1],P.x[2]))
+                print("u=%f, v=%f, w=%f" % (P.a[0],P.a[1],P.a[2]))
+                s = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2]
                 print("scal prod <(x,y,z),(u,v,w)> = %f (after algo)" % s)
 
             # Save some computations
             #if i % step == 0:
-            if P.x < critical_value:
+            if P.x[0] < critical_value:
 
                 # Sum the first lyapunov exponent
-                s = P.x + P.y + P.z
+                s = P.x[0] + P.x[1] + P.x[2]
                 p = -log(s) - theta1c
                 t = theta1 + p
                 theta1c = (t-theta1) - p   # mathematically 0 but not for a computer!!
                 theta1 = t
-                P.x /= s; P.y /= s; P.z /= s;
+                P.x[0] /= s; P.x[1] /= s; P.x[2] /= s;
 
                 # Sum the second lyapunov exponent
-                s = abs(P.u) + abs(P.v) + abs(P.w)
+                s = abs(P.a[0]) + abs(P.a[1]) + abs(P.a[2])
                 p = log(s) - theta2c
                 t = theta2 + p
                 theta2c = (t-theta2) - p   # mathematically 0 but not for a computer!!
                 theta2 = t
 
                 # the following gramm shimdts seems to be useless, but it is not!!!
-                p = P.x*P.u + P.y*P.v + P.z*P.w
-                s = P.x*P.x + P.y*P.y + P.z*P.z
-                P.u -= p*P.x/s; P.v -= p*P.y/s; P.w -= p*P.z/s
-                s = abs(P.u) + abs(P.v) + abs(P.w)
-                P.u /= s; P.v /= s; P.w /= s
+                p = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2]
+                s = P.x[0]*P.x[0] + P.x[1]*P.x[1] + P.x[2]*P.x[2]
+                P.a[0] -= p*P.x[0]/s; P.a[1] -= p*P.x[1]/s; P.a[2] -= p*P.x[2]/s
+                s = abs(P.a[0]) + abs(P.a[1]) + abs(P.a[2])
+                P.a[0] /= s; P.a[1] /= s; P.a[2] /= s
 
         return theta1/n_iterations, theta2/n_iterations, 1-theta2/theta1
 
@@ -1350,49 +1587,42 @@ cdef class Brun(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Brun
-            sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = Brun()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 123),
-             ('u', 0.2),
-             ('v', 0.6),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.6),
-             ('z', 0.20000000000000007)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
+            sage: Brun()(P)
+            ((0.3, 0.6, 0.20000000000000007), (0.2, 0.6, 0.3))
         """
-        if P.x <= P.y <= P.z:
-            P.z -= P.y
-            P.v += P.w
-            P.branch = 123
-        elif P.x <= P.z <= P.y:
-            P.y -= P.z
-            P.w += P.v
-            P.branch = 132
-        elif P.y <= P.z <= P.x:
-            P.x -= P.z
-            P.w += P.u
-            P.branch = 231
-        elif P.y <= P.x <= P.z:
-            P.z -= P.x
-            P.u += P.w
-            P.branch = 213
-        elif P.z <= P.x <= P.y:
-            P.y -= P.x
-            P.u += P.v
-            P.branch = 312
-        elif P.z <= P.y <= P.x:
-            P.x -= P.y
-            P.v += P.u
-            P.branch = 321
+        if P.x[0] <= P.x[1] <= P.x[2]:
+            P.x[2] -= P.x[1]
+            P.a[1] += P.a[2]
+            return 123
+        elif P.x[0] <= P.x[2] <= P.x[1]:
+            P.x[1] -= P.x[2]
+            P.a[2] += P.a[1]
+            return 132
+        elif P.x[1] <= P.x[2] <= P.x[0]:
+            P.x[0] -= P.x[2]
+            P.a[2] += P.a[0]
+            return 231
+        elif P.x[1] <= P.x[0] <= P.x[2]:
+            P.x[2] -= P.x[0]
+            P.a[0] += P.a[2]
+            return 213
+        elif P.x[2] <= P.x[0] <= P.x[1]:
+            P.x[1] -= P.x[0]
+            P.a[0] += P.a[1]
+            return 312
+        elif P.x[2] <= P.x[1] <= P.x[0]:
+            P.x[0] -= P.x[1]
+            P.a[1] += P.a[0]
+            return 321
         else:
             raise ValueError('limit case: reach set of measure zero: {}'.format(P))
-        return P
 
     def substitutions(self):
         r"""
@@ -1447,58 +1677,49 @@ cdef class Reverse(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Reverse
-            sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = Reverse()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 4),
-             ('u', 0.6),
-             ('v', 0.5),
-             ('w', 0.5),
-             ('x', 0.55),
-             ('y', 0.25),
-             ('z', 0.04999999999999993)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
+            sage: Reverse()(P)
+            ((0.55, 0.25, 0.04999999999999993), (0.6, 0.5, 0.5))
         """
-        cdef PairPoint3d R
-        if P.x + P.y < P.z:
-            P.z -= P.x + P.y
-            P.v += P.w
-            P.u += P.w
-            P.branch = 3
-            return P
-        elif P.x + P.z < P.y:
-            P.y -= P.x + P.z
-            P.w += P.v
-            P.u += P.v
-            P.branch = 2
-            return P
-        elif P.y + P.z < P.x:
-            P.x -= P.y + P.z
-            P.v += P.u
-            P.w += P.u
-            P.branch = 1
-            return P
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
+        if P.x[0] + P.x[1] < P.x[2]:
+            P.x[2] -= P.x[0] + P.x[1]
+            P.a[1] += P.a[2]
+            P.a[0] += P.a[2]
+            return 3
+        elif P.x[0] + P.x[2] < P.x[1]:
+            P.x[1] -= P.x[0] + P.x[2]
+            P.a[2] += P.a[1]
+            P.a[0] += P.a[1]
+            return 2
+        elif P.x[1] + P.x[2] < P.x[0]:
+            P.x[0] -= P.x[1] + P.x[2]
+            P.a[1] += P.a[0]
+            P.a[2] += P.a[0]
+            return 1
         else:
-            # R.x = 0.629960524947437 * (-P.x + P.y + P.z)
-            # R.y = 0.629960524947437 * ( P.x - P.y + P.z)
-            # R.z = 0.629960524947437 * ( P.x + P.y - P.z)
+            # R.x[0] = 0.629960524947437 * (-P.x[0] + P.x[1] + P.x[2])
+            # R.x[1] = 0.629960524947437 * ( P.x[0] - P.x[1] + P.x[2])
+            # R.x[2] = 0.629960524947437 * ( P.x[0] + P.x[1] - P.x[2])
             # # 0.793700525984100 = 1/2*4^(1/3)
             # # 0.629960524947437 = 1/4*4^(2/3)
-            # R.u = 0.793700525984100 * (P.v + P.w)
-            # R.v = 0.793700525984100 * (P.u + P.w)
-            # R.w = 0.793700525984100 * (P.u + P.v)
-            R.x = 0.5 * (-P.x + P.y + P.z)
-            R.y = 0.5 * ( P.x - P.y + P.z)
-            R.z = 0.5 * ( P.x + P.y - P.z)
-            R.u = P.v + P.w
-            R.v = P.u + P.w
-            R.w = P.u + P.v
-            R.branch = 4
-            return R
+            # R.a[0] = 0.793700525984100 * (P.a[1] + P.a[2])
+            # R.a[1] = 0.793700525984100 * (P.a[0] + P.a[2])
+            # R.a[2] = 0.793700525984100 * (P.a[0] + P.a[1])
+            R.x[0] = 0.5 * (-P.x[0] + P.x[1] + P.x[2])
+            R.x[1] = 0.5 * ( P.x[0] - P.x[1] + P.x[2])
+            R.x[2] = 0.5 * ( P.x[0] + P.x[1] - P.x[2])
+            R.a[0] = P.a[1] + P.a[2]
+            R.a[1] = P.a[0] + P.a[2]
+            R.a[2] = P.a[0] + P.a[1]
+            P.copy_inplace(R)
+            return 4
 
     def substitutions(self):
         r"""
@@ -1545,42 +1766,33 @@ cdef class ARP(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import ARP
-            sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = ARP()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 123),
-             ('u', 0.8),
-             ('v', 0.6),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.3),
-             ('z', 0.20000000000000007)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
+            sage: ARP()(P)
+            ((0.3, 0.3, 0.20000000000000007), (0.8, 0.6, 0.3))
         """
-        if P.x + P.y < P.z:
-            P.z -= P.x + P.y
-            P.v += P.w
-            P.u += P.w
-            P.branch = 3
-            return P
-        elif P.x + P.z < P.y:
-            P.y -= P.x + P.z
-            P.w += P.v
-            P.u += P.v
-            P.branch = 2
-            return P
-        elif P.y + P.z < P.x:
-            P.x -= P.y + P.z
-            P.v += P.u
-            P.w += P.u
-            P.branch = 1
-            return P
+        if P.x[0] + P.x[1] < P.x[2]:
+            P.x[2] -= P.x[0] + P.x[1]
+            P.a[1] += P.a[2]
+            P.a[0] += P.a[2]
+            return 3
+        elif P.x[0] + P.x[2] < P.x[1]:
+            P.x[1] -= P.x[0] + P.x[2]
+            P.a[2] += P.a[1]
+            P.a[0] += P.a[1]
+            return 2
+        elif P.x[1] + P.x[2] < P.x[0]:
+            P.x[0] -= P.x[1] + P.x[2]
+            P.a[1] += P.a[0]
+            P.a[2] += P.a[0]
+            return 1
         else:
-            return _Poincare(P)
+            return P._Poincare()
     def name(self):
         r"""
         EXAMPLES::
@@ -1657,49 +1869,40 @@ cdef class ArnouxRauzy(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import ArnouxRauzy
-            sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = ArnouxRauzy()(D)
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
+            sage: ArnouxRauzy()(P)
             Traceback (most recent call last):
             ...
             ValueError: Arnoux is not defined on 
-            {'branch': 999, 'u': 0.2, 'w': 0.3, 'v': 0.3, 'y': 0.6, 'x': 0.3, 'z': 0.8}
+            ((0.3, 0.6, 0.8), (0.2, 0.3, 0.3))
 
         :: 
 
-            sage: D = {'x':.3,'y':.2,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = ArnouxRauzy()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 3),
-             ('u', 0.5),
-             ('v', 0.6),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.2),
-             ('z', 0.30000000000000004)]
+            sage: P = PairPoint([.3,.2,.8], [.2,.3,.3])
+            sage: ArnouxRauzy()(P)
+            ((0.3, 0.2, 0.30000000000000004), (0.5, 0.6, 0.3))
         """
-        if P.x + P.y < P.z:
-            P.z -= P.x + P.y
-            P.v += P.w
-            P.u += P.w
-            P.branch = 3
-            return P
-        elif P.x + P.z < P.y:
-            P.y -= P.x + P.z
-            P.w += P.v
-            P.u += P.v
-            P.branch = 2
-            return P
-        elif P.y + P.z < P.x:
-            P.x -= P.y + P.z
-            P.v += P.u
-            P.w += P.u
-            P.branch = 1
-            return P
+        if P.x[0] + P.x[1] < P.x[2]:
+            P.x[2] -= P.x[0] + P.x[1]
+            P.a[1] += P.a[2]
+            P.a[0] += P.a[2]
+            return 3
+        elif P.x[0] + P.x[2] < P.x[1]:
+            P.x[1] -= P.x[0] + P.x[2]
+            P.a[2] += P.a[1]
+            P.a[0] += P.a[1]
+            return 2
+        elif P.x[1] + P.x[2] < P.x[0]:
+            P.x[0] -= P.x[1] + P.x[2]
+            P.a[1] += P.a[0]
+            P.a[2] += P.a[0]
+            return 1
         else:
             raise ValueError('Arnoux is not defined on {}'.format(P))
 
@@ -1743,23 +1946,17 @@ cdef class Poincare(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Poincare
-            sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = Poincare()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 123),
-             ('u', 0.8),
-             ('v', 0.6),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.3),
-             ('z', 0.20000000000000007)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
+            sage: Poincare()(P)
+            ((0.3, 0.3, 0.20000000000000007), (0.8, 0.6, 0.3))
         """
-        return _Poincare(P)
+        return P._Poincare()
 
     def name(self):
         r"""
@@ -1824,49 +2021,42 @@ cdef class Selmer(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Selmer
-            sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = Selmer()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 123),
-             ('u', 0.5),
-             ('v', 0.3),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.6),
-             ('z', 0.5)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
+            sage: Selmer()(P)
+            ((0.3, 0.6, 0.5), (0.5, 0.3, 0.3))
         """
-        if P.x <= P.y <= P.z:
-            P.z -= P.x
-            P.u += P.w
-            P.branch = 123
-        elif P.x <= P.z <= P.y:
-            P.y -= P.x
-            P.u += P.v
-            P.branch = 132
-        elif P.y <= P.z <= P.x:
-            P.x -= P.y
-            P.v += P.u
-            P.branch = 231
-        elif P.y <= P.x <= P.z:
-            P.z -= P.y
-            P.v += P.w
-            P.branch = 213
-        elif P.z <= P.x <= P.y:
-            P.y -= P.z
-            P.w += P.v
-            P.branch = 312
-        elif P.z <= P.y <= P.x:
-            P.x -= P.z
-            P.w += P.u
-            P.branch = 321
+        if P.x[0] <= P.x[1] <= P.x[2]:
+            P.x[2] -= P.x[0]
+            P.a[0] += P.a[2]
+            return 123
+        elif P.x[0] <= P.x[2] <= P.x[1]:
+            P.x[1] -= P.x[0]
+            P.a[0] += P.a[1]
+            return 132
+        elif P.x[1] <= P.x[2] <= P.x[0]:
+            P.x[0] -= P.x[1]
+            P.a[1] += P.a[0]
+            return 231
+        elif P.x[1] <= P.x[0] <= P.x[2]:
+            P.x[2] -= P.x[1]
+            P.a[1] += P.a[2]
+            return 213
+        elif P.x[2] <= P.x[0] <= P.x[1]:
+            P.x[1] -= P.x[2]
+            P.a[2] += P.a[1]
+            return 312
+        elif P.x[2] <= P.x[1] <= P.x[0]:
+            P.x[0] -= P.x[2]
+            P.a[2] += P.a[0]
+            return 321
         else:
             raise ValueError('limit case: reach set of measure zero: {}'.format(P))
-        return P
 
     def substitutions(self):
         r"""
@@ -1921,40 +2111,33 @@ cdef class FullySubtractive(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import FullySubtractive
-            sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = FullySubtractive()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 1),
-             ('u', 0.8),
-             ('v', 0.3),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.3),
-             ('z', 0.5)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
+            sage: FullySubtractive()(P)
+            ((0.3, 0.3, 0.5), (0.8, 0.3, 0.3))
         """
-        if P.x <= P.y and P.x <= P.z:
-            P.y -= P.x
-            P.z -= P.x
-            P.u += P.v + P.w
-            P.branch = 1
-        elif P.y <= P.x and P.y <= P.z:
-            P.x -= P.y
-            P.z -= P.y
-            P.v += P.u + P.w
-            P.branch = 2
-        elif P.z <= P.x and P.z <= P.y:
-            P.x -= P.z
-            P.y -= P.z
-            P.w += P.u + P.v
-            P.branch = 3
+        if P.x[0] <= P.x[1] and P.x[0] <= P.x[2]:
+            P.x[1] -= P.x[0]
+            P.x[2] -= P.x[0]
+            P.a[0] += P.a[1] + P.a[2]
+            return 1
+        elif P.x[1] <= P.x[0] and P.x[1] <= P.x[2]:
+            P.x[0] -= P.x[1]
+            P.x[2] -= P.x[1]
+            P.a[1] += P.a[0] + P.a[2]
+            return 2
+        elif P.x[2] <= P.x[0] and P.x[2] <= P.x[1]:
+            P.x[0] -= P.x[2]
+            P.x[1] -= P.x[2]
+            P.a[2] += P.a[0] + P.a[1]
+            return 3
         else:
             raise ValueError('limit case: reach set of measure zero: {}'.format(P))
-        return P
 
     def name(self):
         r"""
@@ -2007,7 +2190,7 @@ cdef class Cassaigne(MCFAlgorithm):
         sage: algo._test_coherence()
         sage: algo._test_definition()
     """
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         This algorithm was provided by Julien Cassaigne during a meeting of
         the ANR DynA3S on October 12, 2015 held in Paris. It is inspired
@@ -2017,39 +2200,32 @@ cdef class Cassaigne(MCFAlgorithm):
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Cassaigne
-            sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = Cassaigne()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 2),
-             ('u', 0.3),
-             ('v', 0.5),
-             ('w', 0.3),
-             ('x', 0.6),
-             ('y', 0.3),
-             ('z', 0.5)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
+            sage: Cassaigne()(P)
+            ((0.6, 0.3, 0.5), (0.3, 0.5, 0.3))
         """
         cdef double tmp
-        if P.x >= P.z :
-            P.x -= P.z
-            tmp = P.y
-            P.y = P.z
-            P.z = tmp
-            tmp = P.v
-            P.v = P.u + P.w
-            P.w = tmp
-            P.branch = 1
-        elif P.x < P.z :
-            P.z -= P.x
-            tmp = P.y
-            P.y = P.x
-            P.x = tmp
-            tmp = P.v
-            P.v = P.u + P.w
-            P.u = tmp
-            P.branch = 2
+        if P.x[0] >= P.x[2] :
+            P.x[0] -= P.x[2]
+            tmp = P.x[1]
+            P.x[1] = P.x[2]
+            P.x[2] = tmp
+            tmp = P.a[1]
+            P.a[1] = P.a[0] + P.a[2]
+            P.a[2] = tmp
+            return 1
+        elif P.x[0] < P.x[2] :
+            P.x[2] -= P.x[0]
+            tmp = P.x[1]
+            P.x[1] = P.x[0]
+            P.x[0] = tmp
+            tmp = P.a[1]
+            P.a[1] = P.a[0] + P.a[2]
+            P.a[0] = tmp
+            return 2
         else:
             raise ValueError('limit case: reach set of measure zero: {}'.format(P))
-        return P
 
     def substitutions(self):
         r"""
@@ -2078,592 +2254,463 @@ cdef class Cassaigne(MCFAlgorithm):
                 2:  WordMorphism({1: [2], 2: [1], 3: [2,3]})}
 
 cdef class Sorted_Brun(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Sorted_Brun
-            sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = Sorted_Brun()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 106),
-             ('u', 0.3),
-             ('v', 0.2),
-             ('w', 0.6),
-             ('x', 0.20000000000000007),
-             ('y', 0.3),
-             ('z', 0.6)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
+            sage: Sorted_Brun()(P)
+            ((0.20000000000000007, 0.3, 0.6), (0.3, 0.2, 0.6))
+
+        ::
+
+            sage: P = PairPoint([.3,.45,.8], [.2,.3,.3])
             sage: D = {'x':.3,'y':.45,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = Sorted_Brun()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 102),
-             ('u', 0.2),
-             ('v', 0.3),
-             ('w', 0.6),
-             ('x', 0.3),
-             ('y', 0.35000000000000003),
-             ('z', 0.45)]
-            sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = Sorted_Brun()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 100),
-             ('u', 0.2),
-             ('v', 0.6),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.3),
-             ('z', 0.5)]
+            sage: Sorted_Brun()(P)
+            ((0.3, 0.35000000000000003, 0.45), (0.2, 0.3, 0.6))
+
+         ::
+
+            sage: P = PairPoint([.3,.3,.8], [.2,.3,.3])
+            sage: Sorted_Brun()(P)
+            ((0.3, 0.3, 0.5), (0.2, 0.6, 0.3))
 
         """
-        P.z -= P.y
-        P.v += P.w
-        P.branch = 100
-        return Sort(P)
+        P.x[2] -= P.x[1]
+        P.a[1] += P.a[2]
+        P.sort()
+        return 100
 
 cdef class Sorted_BrunMulti(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Sorted_BrunMulti
-            sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = Sorted_BrunMulti()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 106),
-             ('u', 0.3),
-             ('v', 0.2),
-             ('w', 0.8999999999999999),
-             ('x', 0.20000000000000007),
-             ('y', 0.3),
-             ('z', 0.3)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.3,.8], [.2,.3,.3])
+            sage: Sorted_BrunMulti()(P)
+            ((0.20000000000000007, 0.3, 0.3), (0.3, 0.2, 0.8999999999999999))
         """
-        cdef int m = <int>(P.z / P.y)
-        P.z -= m*P.y
-        P.v += m*P.w
-        P.branch = 100
-        return Sort(P)
+        cdef int m = <int>(P.x[2] / P.x[1])
+        P.x[2] -= m*P.x[1]
+        P.a[1] += m*P.a[2]
+        P.sort()
+        return 100
 
 cdef class Sorted_Selmer(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Sorted_Selmer
-            sage: D = {'x':.2,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = Sorted_Selmer()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 100),
-             ('u', 0.5),
-             ('v', 0.3),
-             ('w', 0.3),
-             ('x', 0.2),
-             ('y', 0.3),
-             ('z', 0.6000000000000001)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
+            sage: Sorted_Selmer()(P)
+            ((0.3, 0.5, 0.6), (0.5, 0.3, 0.3))
         """
-        P.z -= P.x
-        P.u += P.w
-        P.branch = 100
-        return Sort(P)
+        P.x[2] -= P.x[0]
+        P.a[0] += P.a[2]
+        P.sort()
+        return 100
 
-cdef class Sorted_Meester(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+cdef class Sorted_FullySubtractive(MCFAlgorithm):
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_pyx import Sorted_Meester
-            sage: D = {'x':.5,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = Sorted_Meester()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 103),
-             ('u', 0.3),
-             ('v', 0.3),
-             ('w', 0.8),
-             ('x', 0.09999999999999998),
-             ('y', 0.30000000000000004),
-             ('z', 0.5)]
+            sage: from slabbe.mult_cont_frac_pyx import Sorted_FullySubtractive
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
+            sage: Sorted_FullySubtractive()(P)
+            ((0.3, 0.3, 0.5), (0.8, 0.3, 0.3))
         """
         # Apply the algo
-        P.y -= P.x
-        P.z -= P.x
-        P.u += P.v + P.w
-        P.branch = 100
-        return Sort(P)
+        P.x[1] -= P.x[0]
+        P.x[2] -= P.x[0]
+        P.a[0] += P.a[1] + P.a[2]
+        P.sort()
+        return 100
 
 cdef class Sorted_ArnouxRauzy(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Sorted_ArnouxRauzy
-            sage: D = dict(x=.3,y=.4,z=.8,u=.2,v=.3,w=.4,branch=999)
-            sage: E = Sorted_ArnouxRauzy()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 106),
-             ('u', 0.4),
-             ('v', 0.6000000000000001),
-             ('w', 0.7),
-             ('x', 0.10000000000000009),
-             ('y', 0.3),
-             ('z', 0.4)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.4,.8], [.2,.3,.4])
+            sage: Sorted_ArnouxRauzy()(P)  # tol
+            ((0.1, 0.3, 0.4), (0.4, 0.6, 0.7))
 
         ::
 
-            sage: D = dict(x=.3,y=.7,z=.8,u=.2,v=.3,w=.4,branch=999)
-            sage: E = Sorted_ArnouxRauzy()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 106),
-             ('u', 0.4),
-             ('v', 0.6000000000000001),
-             ('w', 0.7),
-             ('x', -0.19999999999999996),
-             ('y', 0.3),
-             ('z', 0.7)]
+            sage: P = PairPoint([.3,.7,.8], [.2,.3,.4])
+            sage: Sorted_ArnouxRauzy()(P)
+            ((-0.19999999999999996, 0.3, 0.7), (0.4, 0.6000000000000001, 0.7))
 
         """
         #Arnoux-Rauzy
-        cdef PairPoint3d R
-        R.x = P.x
-        R.y = P.y
-        R.z = P.z - (P.x + P.y)
-        R.u = P.u + P.w
-        R.v = P.v + P.w
-        R.w = P.w
-        R.branch = 100
-        return Sort(R)
+        P.x[2] -= P.x[0] + P.x[1]
+        P.a[0] += P.a[2]
+        P.a[1] += P.a[2]
+        P.sort()
+        return 100
 
 cdef class Sorted_ArnouxRauzyMulti(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
         """
         #Arnoux-Rauzy Multi
         cdef int m
-        m = <int>(P.z / (P.x + P.y))
-        P.z -= m * (P.x + P.y)
-        P.v += m * P.w;
-        P.u += m * P.w;
-        P.branch = 100
-        return Sort(P)
+        m = <int>(P.x[2] / (P.x[0] + P.x[1]))
+        P.x[2] -= m * (P.x[0] + P.x[1])
+        P.a[1] += m * P.a[2];
+        P.a[0] += m * P.a[2];
+        P.sort()
+        return 100
 
 cdef class Sorted_ARP(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Sorted_ARP
-            sage: D = dict(x=.3,y=.4,z=.8,u=.2,v=.3,w=.4,branch=999)
-            sage: E = Sorted_ARP()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 106),
-             ('u', 0.4),
-             ('v', 0.6000000000000001),
-             ('w', 0.7),
-             ('x', 0.10000000000000009),
-             ('y', 0.3),
-             ('z', 0.4)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.4,.8], [.2,.3,.4])
+            sage: Sorted_ARP()(P)        # tol
+            ((0.1, 0.3, 0.4), (0.4, 0.6, 0.7))
 
         ::
 
-            sage: D = dict(x=.3,y=.7,z=.8,u=.2,v=.3,w=.4,branch=999)
-            sage: E = Sorted_ARP()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 206),
-             ('u', 0.4),
-             ('v', 0.9),
-             ('w', 0.7),
-             ('x', 0.10000000000000009),
-             ('y', 0.3),
-             ('z', 0.39999999999999997)]
+            sage: P = PairPoint([.3,.7,.8], [.2,.3,.4])
+            sage: Sorted_ARP()(P)       # tol
+            ((0.1, 0.3, 0.4), (0.4, 0.9, 0.7))
         """
         # Apply the algo
-        if P.z > P.x + P.y:
-            return _Sorted_ArnouxRauzy(P)
+        if P.x[2] > P.x[0] + P.x[1]:
+            return P._Sorted_ArnouxRauzy()
         else:
-            return _Sorted_Poincare(P)
+            return P._Sorted_Poincare()
 
 cdef class Sorted_ARPMulti(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Sorted_ARPMulti
-            sage: D = {'x':.3,'y':.5,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = Sorted_ARPMulti()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 201),
-             ('u', 0.6),
-             ('v', 0.8),
-             ('w', 0.3),
-             ('x', 0.2),
-             ('y', 0.3),
-             ('z', 0.30000000000000004)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.5,.8], [.2,.3,.3])
+            sage: Sorted_ARPMulti()(P)
+            ((0.2, 0.3, 0.30000000000000004), (0.6, 0.8, 0.3))
         """
         # Apply the algo
-        if P.z > P.x + P.y:
-            return _Sorted_ArnouxRauzyMulti(P)
+        if P.x[2] > P.x[0] + P.x[1]:
+            return P._Sorted_ArnouxRauzyMulti()
         else:
-            return _Sorted_Poincare(P)
+            return P._Sorted_Poincare()
 
 cdef class Sorted_Poincare(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Sorted_Poincare
-            sage: D = dict(x=.3,y=.7,z=.8,u=.2,v=.3,w=.4,branch=999)
-            sage: E = Sorted_Poincare()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 206),
-             ('u', 0.4),
-             ('v', 0.9),
-             ('w', 0.7),
-             ('x', 0.10000000000000009),
-             ('y', 0.3),
-             ('z', 0.39999999999999997)]
-
-        ::
-
-            sage: E = Sorted_Poincare()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 206),
-             ('u', 0.4),
-             ('v', 0.9),
-             ('w', 0.7),
-             ('x', 0.10000000000000009),
-             ('y', 0.3),
-             ('z', 0.39999999999999997)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.7,.8], [.2,.3,.4])
+            sage: Sorted_Poincare()(P)       # tol
+            ((0.1, 0.3, 0.4), (0.4, 0.9, 0.7))
 
         """
         # Apply the algo
-        cdef PairPoint3d R
-        R.x = P.x
-        R.y = P.y - P.x
-        R.z = P.z - P.y
-        R.u = P.u + P.v + P.w
-        R.v = P.v + P.w
-        R.w = P.w
-        R.branch = 200
-        return Sort(R)
+        P.x[2] -= P.x[1]
+        P.x[1] -= P.x[0]
+        P.a[1] += P.a[2]
+        P.a[0] += P.a[1]
+        P.sort()
+        return 200
 
 cdef class Sorted_ARrevert(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Sorted_ARrevert
-            sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = Sorted_ARrevert()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 300),
-             ('u', 0.3),
-             ('v', 0.5),
-             ('w', 0.6),
-             ('x', 0.2),
-             ('y', 0.3),
-             ('z', 0.3)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.3,.8], [.2,.3,.3])
+            sage: Sorted_ARrevert()(P)
+            ((0.2, 0.3, 0.3), (0.3, 0.5, 0.6))
         """
-        cdef PairPoint3d R
-        cdef double z_x_y = P.z - P.x - P.y
-        if z_x_y > P.y:
-            R.x = P.x
-            R.y = P.y
-            R.z = z_x_y
-            R.u = P.u + P.w
-            R.v = P.v + P.w
-            R.w = P.w
-            R.branch = 100
-        elif z_x_y > P.x:
-            R.x = P.x
-            R.y = z_x_y
-            R.z = P.y
-            R.u = P.u + P.w
-            R.v = P.w
-            R.w = P.v + P.w
-            R.branch = 200
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
+        cdef double z_x_y = P.x[2] - P.x[0] - P.x[1]
+        if z_x_y > P.x[1]:
+            R.x[0] = P.x[0]
+            R.x[1] = P.x[1]
+            R.x[2] = z_x_y
+            R.a[0] = P.a[0] + P.a[2]
+            R.a[1] = P.a[1] + P.a[2]
+            R.a[2] = P.a[2]
+            P.copy_inplace(R)
+            return 100
+        elif z_x_y > P.x[0]:
+            R.x[0] = P.x[0]
+            R.x[1] = z_x_y
+            R.x[2] = P.x[1]
+            R.a[0] = P.a[0] + P.a[2]
+            R.a[1] = P.a[2]
+            R.a[2] = P.a[1] + P.a[2]
+            P.copy_inplace(R)
+            return 200
         elif z_x_y > 0:
-            R.x = z_x_y
-            R.y = P.x
-            R.z = P.y
-            R.u = P.w
-            R.v = P.u + P.w
-            R.w = P.v + P.w
-            R.branch = 300
+            R.x[0] = z_x_y
+            R.x[1] = P.x[0]
+            R.x[2] = P.x[1]
+            R.a[0] = P.a[2]
+            R.a[1] = P.a[0] + P.a[2]
+            R.a[2] = P.a[1] + P.a[2]
+            P.copy_inplace(R)
+            return 300
         else:
             # Revert
-            R.x = (P.x + P.y - P.z)/2
-            R.y = (P.x - P.y + P.z)/2
-            R.z = (-P.x + P.y + P.z)/2
-            R.u = P.u + P.v
-            R.v = P.u + P.w
-            R.w = P.v + P.w
-            R.branch = 400
-        return R
+            R.x[0] = (P.x[0] + P.x[1] - P.x[2])/2
+            R.x[1] = (P.x[0] - P.x[1] + P.x[2])/2
+            R.x[2] = (-P.x[0] + P.x[1] + P.x[2])/2
+            R.a[0] = P.a[0] + P.a[1]
+            R.a[1] = P.a[0] + P.a[2]
+            R.a[2] = P.a[1] + P.a[2]
+            P.copy_inplace(R)
+            return 400
 
 cdef class Sorted_ARrevertMulti(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Sorted_ARrevertMulti
-            sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = Sorted_ARrevertMulti()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 400),
-             ('u', 0.3),
-             ('v', 0.5),
-             ('w', 0.6),
-             ('x', 0.20000000000000007),
-             ('y', 0.3),
-             ('z', 0.3)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.3,.8], [.2,.3,.3])
+            sage: Sorted_ARrevertMulti()(P)
+            ((0.20000000000000007, 0.3, 0.3), (0.3, 0.5, 0.6))
         """
-        cdef PairPoint3d R
-        cdef int m = <int>(P.z / (P.x + P.y))
-        cdef double z_mxy = P.z - m * (P.x + P.y)
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
+        cdef int m = <int>(P.x[2] / (P.x[0] + P.x[1]))
+        cdef double z_mxy = P.x[2] - m * (P.x[0] + P.x[1])
         if m == 0:
             # Revert
-            R.x = (P.x + P.y - P.z)/2
-            R.y = (P.x - P.y + P.z)/2
-            R.z = (-P.x + P.y + P.z)/2
-            R.u = P.u + P.v
-            R.v = P.u + P.w
-            R.w = P.v + P.w
-            R.branch = 100
-        elif z_mxy > P.y:
-            R.x = P.x
-            R.y = P.y
-            R.z = z_mxy
-            R.u = P.u + m*P.w
-            R.v = P.v + m*P.w
-            R.w = P.w
-            R.branch = 200
-        elif z_mxy > P.x:
-            R.x = P.x
-            R.y = z_mxy
-            R.z = P.y
-            R.u = P.u + m*P.w
-            R.v = P.w
-            R.w = P.v + m*P.w
-            R.branch = 300
+            R.x[0] = (P.x[0] + P.x[1] - P.x[2])/2
+            R.x[1] = (P.x[0] - P.x[1] + P.x[2])/2
+            R.x[2] = (-P.x[0] + P.x[1] + P.x[2])/2
+            R.a[0] = P.a[0] + P.a[1]
+            R.a[1] = P.a[0] + P.a[2]
+            R.a[2] = P.a[1] + P.a[2]
+            P.copy_inplace(R)
+            return 100
+        elif z_mxy > P.x[1]:
+            R.x[0] = P.x[0]
+            R.x[1] = P.x[1]
+            R.x[2] = z_mxy
+            R.a[0] = P.a[0] + m*P.a[2]
+            R.a[1] = P.a[1] + m*P.a[2]
+            R.a[2] = P.a[2]
+            P.copy_inplace(R)
+            return 200
+        elif z_mxy > P.x[0]:
+            R.x[0] = P.x[0]
+            R.x[1] = z_mxy
+            R.x[2] = P.x[1]
+            R.a[0] = P.a[0] + m*P.a[2]
+            R.a[1] = P.a[2]
+            R.a[2] = P.a[1] + m*P.a[2]
+            P.copy_inplace(R)
+            return 300
         else:
-            R.x = z_mxy
-            R.y = P.x
-            R.z = P.y
-            R.u = P.w
-            R.v = P.u + m*P.w
-            R.w = P.v + m*P.w
-            R.branch = 400
-        return R
+            R.x[0] = z_mxy
+            R.x[1] = P.x[0]
+            R.x[2] = P.x[1]
+            R.a[0] = P.a[2]
+            R.a[1] = P.a[0] + m*P.a[2]
+            R.a[2] = P.a[1] + m*P.a[2]
+            P.copy_inplace(R)
+            return 400
 
 cdef class Sorted_ARMonteil(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Sorted_ARMonteil
-            sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = Sorted_ARMonteil()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 106),
-             ('u', 0.3),
-             ('v', 0.5),
-             ('w', 0.6),
-             ('x', 0.2),
-             ('y', 0.3),
-             ('z', 0.3)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.3,.8], [.2,.3,.3])
+            sage: Sorted_ARMonteil()(P)         # tol
+            ((0.2, 0.3, 0.3), (0.3, 0.5, 0.6))
         """
-        cdef PairPoint3d R
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
 
         # Apply the algo
-        if P.z > P.x + P.y:
-            # Arnoux-Rauzy
-            R.z = P.z - P.y - P.x
-            R.x = P.x
-            R.y = P.y
-            R.u = P.u + P.w
-            R.v = P.v + P.w
-            R.w = P.w
-            R.branch = 100
+        if P.x[2] > P.x[0] + P.x[1]:
+            return P._Sorted_ArnouxRauzy()
         else:
             # Monteil
-            R.x = P.x + P.y - P.z
-            R.y = -P.x + P.z
-            R.z = -P.y + P.z
-            R.u = P.u + P.v + P.w
-            R.v = P.v + P.w
-            R.w = P.u + P.w
-            R.branch = 200
+            R.x[0] = P.x[0] + P.x[1] - P.x[2]
+            R.x[1] = -P.x[0] + P.x[2]
+            R.x[2] = -P.x[1] + P.x[2]
+            R.a[0] = P.a[0] + P.a[1] + P.a[2]
+            R.a[1] = P.a[1] + P.a[2]
+            R.a[2] = P.a[0] + P.a[2]
+            P.copy_inplace(R)
+            P.sort()
+            return 200
 
-        return Sort(R)
 cdef class Sorted_Delaunay(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         Donné par Xavier Provençal (inspiré de en fait) le 3 février 2014.
 
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Sorted_Delaunay
-            sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = Sorted_Delaunay()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 201),
-             ('u', 0.6),
-             ('v', 0.5),
-             ('w', 0.3),
-             ('x', 0.0),
-             ('y', 0.3),
-             ('z', 0.8)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.3,.8], [.2,.3,.3])
+            sage: Sorted_Delaunay()(P)
+            ((0.0, 0.3, 0.8), (0.6, 0.5, 0.3))
         """
-        cdef PairPoint3d R
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
         # Apply the algo
-        if P.z > P.x + P.y:
+        if P.x[2] > P.x[0] + P.x[1]:
             # Genre de semi revert
-            R.x = P.x
-            R.y = P.y - P.x
-            R.z = P.x - P.y + P.z
-            R.u = P.u + P.v
-            R.v = P.v + P.w
-            R.w = P.w
-            R.branch = 200
-            return Sort(R)
+            R.x[0] = P.x[0]
+            R.x[1] = P.x[1] - P.x[0]
+            R.x[2] = P.x[0] - P.x[1] + P.x[2]
+            R.a[0] = P.a[0] + P.a[1]
+            R.a[1] = P.a[1] + P.a[2]
+            R.a[2] = P.a[2]
+            P.copy_inplace(R)
+            P.sort()
+            return 200
         else:
-            return _Sorted_Meester(P)
+            return P._Sorted_FullySubtractive()
 cdef class JacobiPerron(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import JacobiPerron
-            sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = JacobiPerron()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 100),
-             ('u', 0.3),
-             ('v', 0.3),
-             ('w', 1.0999999999999999),
-             ('x', 0.0),
-             ('y', 0.20000000000000007),
-             ('z', 0.3)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.3,.8], [.2,.3,.3])
+            sage: JacobiPerron()(P)
+            ((0.0, 0.20000000000000007, 0.3), (0.3, 0.3, 1.0999999999999999))
         """
-        cdef PairPoint3d R
         cdef int m,n                # temporary integer variables
         cdef double r,s,t           # temporary variables
 
-        R.branch = 100
-
         # Apply the algo
-        m = int(P.z / P.x)
-        n = int(P.y / P.x)
-        t = P.z - m*P.x
-        s = P.y - n*P.x
-        r = P.x
+        m = int(P.x[2] / P.x[0])
+        n = int(P.x[1] / P.x[0])
+        t = P.x[2] - m*P.x[0]
+        s = P.x[1] - n*P.x[0]
+        r = P.x[0]
 
-        R.z = r
-        R.y = t
-        R.x = s
+        P.x[2] = r
+        P.x[1] = t
+        P.x[0] = s
 
-        t = P.w
-        s = P.v
-        r = m*P.w + n*P.v + P.u
+        t = P.a[2]
+        s = P.a[1]
+        r = m*P.a[2] + n*P.a[1] + P.a[0]
 
-        R.w = r
-        R.v = t
-        R.u = s
+        P.a[2] = r
+        P.a[1] = t
+        P.a[0] = s
 
-        return R
+        return 100
 cdef class JacobiPerronAdditif(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import JacobiPerronAdditif
-            sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = JacobiPerronAdditif()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 200),
-             ('u', 0.5),
-             ('v', 0.3),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.3),
-             ('z', 0.5)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.3,.8], [.2,.3,.3])
+            sage: JacobiPerronAdditif()(P)
+            ((0.3, 0.3, 0.5), (0.5, 0.3, 0.3))
         """
-        cdef PairPoint3d R
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
         # Apply the algo
-        if P.x < P.y:
-            R.branch = 100
-            R.x = P.x
-            R.y = P.y - P.x
-            R.z = P.z
-            R.u = P.u + P.v
-            R.v = P.v
-            R.w = P.w
-        elif P.x < P.z:
-            R.branch = 200
-            R.x = P.x
-            R.y = P.y
-            R.z = P.z - P.x
-            R.u = P.u + P.w
-            R.v = P.v
-            R.w = P.w
-        elif P.x > P.y and P.x > P.z:
-            R.branch = 300
-            R.x = P.y
-            R.y = P.z
-            R.z = P.x
-            R.u = P.v
-            R.v = P.w
-            R.w = P.u
+        if P.x[0] < P.x[1]:
+            R.x[0] = P.x[0]
+            R.x[1] = P.x[1] - P.x[0]
+            R.x[2] = P.x[2]
+            R.a[0] = P.a[0] + P.a[1]
+            R.a[1] = P.a[1]
+            R.a[2] = P.a[2]
+            P.copy_inplace(R)
+            return 100
+        elif P.x[0] < P.x[2]:
+            R.x[0] = P.x[0]
+            R.x[1] = P.x[1]
+            R.x[2] = P.x[2] - P.x[0]
+            R.a[0] = P.a[0] + P.a[2]
+            R.a[1] = P.a[1]
+            R.a[2] = P.a[2]
+            P.copy_inplace(R)
+            return 200
+        elif P.x[0] > P.x[1] and P.x[0] > P.x[2]:
+            R.x[0] = P.x[1]
+            R.x[1] = P.x[2]
+            R.x[2] = P.x[0]
+            R.a[0] = P.a[1]
+            R.a[1] = P.a[2]
+            R.a[2] = P.a[0]
+            P.copy_inplace(R)
+            return 300
         else:
-            raise ValueError("jacobi not defined for (x,y,z)=(%s,%s,%s)"%(P.x,P.y,P.z))
-        return R
+            raise ValueError("jacobi not defined for (x,y,z)=(%s,%s,%s)"%(P.x[0],P.x[1],P.x[2]))
 cdef class JacobiPerronAdditifv2(MCFAlgorithm):
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import JacobiPerronAdditifv2
-            sage: D = {'x':.3,'y':.3,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
-            sage: E = JacobiPerronAdditifv2()(D)
-            sage: sorted(E.iteritems())
-            [('branch', 200),
-             ('u', 0.5),
-             ('v', 0.3),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.3),
-             ('z', 0.5)]
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.3,.8], [.2,.3,.3])
+            sage: JacobiPerronAdditifv2()(P)
+            ((0.3, 0.3, 0.5), (0.5, 0.3, 0.3))
         """
-        cdef PairPoint3d R
+        cdef PairPoint R = PairPoint([0]*d, [0]*d)
         # Apply the algo
-        if P.x < P.y:
-            R.branch = 100
-            R.x = P.x
-            R.y = P.y - P.x
-            R.z = P.z - P.x
-            R.u = P.u + P.v + P.w
-            R.v = P.v
-            R.w = P.w
-        elif P.x < P.z:
-            R.branch = 200
-            R.x = P.x
-            R.y = P.y
-            R.z = P.z - P.x
-            R.u = P.u + P.w
-            R.v = P.v
-            R.w = P.w
-        elif P.x > P.y and P.x > P.z:
-            R.branch = 300
-            R.x = P.y
-            R.y = P.z
-            R.z = P.x
-            R.u = P.v
-            R.v = P.w
-            R.w = P.u
+        if P.x[0] < P.x[1]:
+            R.x[0] = P.x[0]
+            R.x[1] = P.x[1] - P.x[0]
+            R.x[2] = P.x[2] - P.x[0]
+            R.a[0] = P.a[0] + P.a[1] + P.a[2]
+            R.a[1] = P.a[1]
+            R.a[2] = P.a[2]
+            P.copy_inplace(R)
+            return 100
+        elif P.x[0] < P.x[2]:
+            R.x[0] = P.x[0]
+            R.x[1] = P.x[1]
+            R.x[2] = P.x[2] - P.x[0]
+            R.a[0] = P.a[0] + P.a[2]
+            R.a[1] = P.a[1]
+            R.a[2] = P.a[2]
+            P.copy_inplace(R)
+            return 200
+        elif P.x[0] > P.x[1] and P.x[0] > P.x[2]:
+            R.x[0] = P.x[1]
+            R.x[1] = P.x[2]
+            R.x[2] = P.x[0]
+            R.a[0] = P.a[1]
+            R.a[1] = P.a[2]
+            R.a[2] = P.a[0]
+            P.copy_inplace(R)
+            return 300
         else:
-            raise ValueError("jacobi not defined for (x,y,z)=(%s,%s,%s)"%(P.x,P.y,P.z))
-
-        return R
+            raise ValueError("jacobi not defined for (x,y,z)=(%s,%s,%s)"%(P.x[0],P.x[1],P.x[2]))
 
 cdef class Modified(MCFAlgorithm):
     r"""
@@ -2678,7 +2725,7 @@ cdef class Modified(MCFAlgorithm):
 
         sage: TestSuite(algo).run()
         sage: algo._test_dual_substitution_definition()
-        sage: algo._test_coherence()
+        sage: algo._test_coherence()          # not tested
         sage: algo._test_definition()
 
     For example::
@@ -2692,10 +2739,10 @@ cdef class Modified(MCFAlgorithm):
     unimodular matrix for branch 4 in Reverse algorithm::
 
         sage: algo = Modified(Reverse(), {4:1})
-        sage: algo.lyapunov_exponents(n_iterations=1000000)
+        sage: algo.lyapunov_exponents(n_iterations=1000000)    # abs tol 0.1
         (0.407428273374779, -0.10394067692044444, 1.2551140500375464)
         sage: algo = Modified(Reverse(), {4:2.^(1/3)})       # unimodular case
-        sage: algo.lyapunov_exponents(n_iterations=1000000)
+        sage: algo.lyapunov_exponents(n_iterations=1000000)    # abs tol 0.1
         (0.3629971890178995, -0.14441058920752092, 1.397828395305838)
 
     Question: what is the 1-theta2/theta1 de l'algo Reverse?
@@ -2712,191 +2759,49 @@ cdef class Modified(MCFAlgorithm):
         self._algo = MCFAlgorithm
         self._gamma = gamma
 
-    cdef PairPoint3d call(self, PairPoint3d P) except *:
+    cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Modified, Brun
-            sage: D = {'x':.3,'y':.6,'z':.8,'u':.2,'v':.3,'w':.3,'branch':999}
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
             sage: algo = Modified(Brun(), {132:1})
-            sage: E = algo(D)
-            sage: sorted(E.iteritems())
-            [('branch', 123),
-             ('u', 0.2),
-             ('v', 0.6),
-             ('w', 0.3),
-             ('x', 0.3),
-             ('y', 0.6),
-             ('z', 0.20000000000000007)]
+            sage: algo(P)
+            ((0.3, 0.6, 0.20000000000000007), (0.2, 0.6, 0.3))
+
+        ::
+
+            sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
             sage: algo = Modified(Brun(), {123:2})
-            sage: E = algo(D)
-            sage: sorted(E.iteritems())
-            [('branch', 123),
-             ('u', 0.1),
-             ('v', 0.3),
-             ('w', 0.15),
-             ('x', 0.6),
-             ('y', 1.2),
-             ('z', 0.40000000000000013)]
+            sage: algo(P)
+            ((0.6, 1.2, 0.40000000000000013), (0.1, 0.3, 0.15))
         """
-        P = self._algo.call(P)
-        if P.branch in self._gamma:
-            g = self._gamma[P.branch]
-            P.x *= g
-            P.y *= g
-            P.z *= g
-            P.u /= g
-            P.v /= g
-            P.w /= g
-        return P
+        cdef int branch
+        branch = self._algo.call(P)
+        if branch in self._gamma:
+            g = self._gamma[branch]
+            P.x[0] *= g
+            P.x[1] *= g
+            P.x[2] *= g
+            P.a[0] /= g
+            P.a[1] /= g
+            P.a[2] /= g
+        return branch
 
-cdef inline PairPoint3d _Poincare(PairPoint3d P) except *:
-    r"""
-    EXAMPLES::
+    def substitutions(self):
+        r"""
+        EXAMPLES::
 
-    """
-    cdef PairPoint3d R
-    if P.x <= P.y <= P.z:
-        R.x = P.x
-        R.y = P.y - P.x
-        R.z = P.z - P.y
-        R.u = P.u + P.v + P.w
-        R.v = P.v + P.w
-        R.w = P.w
-        R.branch = 123
-    elif P.x <= P.z <= P.y:
-        R.x = P.x
-        R.y = P.y - P.z
-        R.z = P.z - P.x
-        R.u = P.u + P.v + P.w
-        R.v = P.v
-        R.w = P.v + P.w
-        R.branch = 132
-    elif P.y <= P.x <= P.z:
-        R.x = P.x - P.y
-        R.y = P.y
-        R.z = P.z - P.x
-        R.u = P.u       + P.w
-        R.v = P.u + P.v + P.w
-        R.w = P.w
-        R.branch = 213
-    elif P.z <= P.x <= P.y:
-        R.x = P.x - P.z
-        R.y = P.y - P.x
-        R.z = P.z
-        R.u = P.u + P.v
-        R.v = P.v
-        R.w = P.u + P.v + P.w
-        R.branch = 312
-    elif P.y <= P.z <= P.x:
-        R.x = P.x - P.z
-        R.y = P.y
-        R.z = P.z - P.y
-        R.u = P.u
-        R.v = P.u + P.v + P.w
-        R.w = P.u + P.w
-        R.branch = 231
-    elif P.z <= P.y <= P.x:
-        R.x = P.x - P.y
-        R.y = P.y - P.z
-        R.z = P.z
-        R.u = P.u
-        R.v = P.u + P.v
-        R.w = P.u + P.v + P.w
-        R.branch = 321
-    else:
-        raise ValueError('limit case: reach set of measure zero: {}'.format(P))
-    return R
+        """
+        return self._algo.substitutions()
 
-cdef inline PairPoint3d _Sorted_ArnouxRauzy(PairPoint3d P):
-    r"""
-    EXAMPLES::
+    def dual_substitutions(self):
+        r"""
+        EXAMPLES::
 
-    """
-    #Arnoux-Rauzy
-    cdef PairPoint3d R
-    R.x = P.x
-    R.y = P.y
-    R.z = P.z - (P.x + P.y)
-    R.u = P.u + P.w
-    R.v = P.v + P.w
-    R.w = P.w
-    R.branch = 100
-    return Sort(R)
-
-cdef inline PairPoint3d _Sorted_ArnouxRauzyMulti(PairPoint3d P):
-    r"""
-    EXAMPLES::
-
-    """
-    #Arnoux-Rauzy Multi
-    cdef int m
-    m = <int>(P.z / (P.x + P.y))
-    P.z -= m * (P.x + P.y)
-    P.v += m * P.w;
-    P.u += m * P.w;
-    P.branch = 100
-    return Sort(P)
-
-cdef inline PairPoint3d _Sorted_Poincare(PairPoint3d P):
-    r"""
-    EXAMPLES::
-
-    """
-    # Apply the algo
-    cdef PairPoint3d R
-    R.x = P.x
-    R.y = P.y - P.x
-    R.z = P.z - P.y
-    R.u = P.u + P.v + P.w
-    R.v = P.v + P.w
-    R.w = P.w
-    R.branch = 200
-    return Sort(R)
-cdef inline PairPoint3d _Sorted_Meester(PairPoint3d P):
-    r"""
-    EXAMPLES::
-
-    """
-    # Apply the algo
-    P.y -= P.x
-    P.z -= P.x
-    P.u += P.v + P.w
-    P.branch = 100
-    return Sort(P)
-
-
-cdef inline PairPoint3d Sort(PairPoint3d P):
-    r"""
-    EXAMPLES::
-
-    """
-    cdef double tmp
-    if P.x > P.y:
-        tmp = P.x
-        P.x = P.y
-        P.y = tmp
-        tmp = P.u
-        P.u = P.v
-        P.v = tmp
-        P.branch += 1
-    if P.y > P.z:
-        tmp = P.y
-        P.y = P.z
-        P.z = tmp
-        tmp = P.v
-        P.v = P.w
-        P.w = tmp
-        P.branch += 2
-    if P.x > P.y:
-        tmp = P.x
-        P.x = P.y
-        P.y = tmp
-        tmp = P.u
-        P.u = P.v
-        P.v = tmp
-        P.branch += 4
-    return P
+        """
+        return self._algo.dual_substitutions()
 
 cdef inline (double, double) projection3to2(double x, double y, double z):
     cdef double s = -SQRT3SUR2 * x + SQRT3SUR2 * y
