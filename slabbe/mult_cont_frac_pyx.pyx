@@ -62,14 +62,14 @@ With slabbe-0.3.b2, 2.81s on my machine::
     (0.30456433843239084, -0.1121770192467067, 1.36831961293987303)
 
 With slabbe-0.3.b1, 74ms on my machine.
-With slabbe-0.3.b2, 323ms on my machine::
+With slabbe-0.3.b2, 56ms on my machine::
 
     sage: from slabbe.mult_cont_frac_pyx import ARP
     sage: ARP().lyapunov_exponents(n_iterations=10^6)  # tolerance 0.003
-    (0.4458519981984982, -0.1734745598513802, 1.389085527377512)
+    (0.443493194984839, -0.17269097306340797, 1.3893881011394358)
 
 With slabbe-0.3.b1, 4.83 s on my machine:
-With slabbe-0.3.b2, 20.7 s on my machine::
+With slabbe-0.3.b2, 3.57 s on my machine::
 
     sage: ARP().lyapunov_exponents(n_iterations=67*10^6)   # not tested too long
     (0.44296596371477626, -0.17222952278277034, 1.3888098339168744)
@@ -148,10 +148,24 @@ cdef class PairPoint:
         sig_free(self.a)
 
     def to_dict(self):
+        r"""
+        EXAMPLES::
+
+             sage: from slabbe.mult_cont_frac_pyx import PairPoint
+             sage: PairPoint([1,2,3], [4,5,6]).to_dict()
+             {'a': [4.0, 5.0, 6.0], 'x': [1.0, 2.0, 3.0]}
+        """
         cdef int i
         return dict(x=[self.x[i] for i in range(self.dim)],
                     a=[self.a[i] for i in range(self.dim)])
     def to_tuple(self):
+        r"""
+        EXAMPLES::
+
+             sage: from slabbe.mult_cont_frac_pyx import PairPoint
+             sage: PairPoint([1,2,3], [4,5,6]).to_tuple()
+             ((1.0, 2.0, 3.0), (4.0, 5.0, 6.0))
+        """
         cdef int i
         return (tuple(self.x[i] for i in range(self.dim)),
                 tuple(self.a[i] for i in range(self.dim)))
@@ -208,6 +222,8 @@ cdef class PairPoint:
                          a=[self.a[i] for i in range(self.dim)])
 
     cdef copy_inplace(self, PairPoint P):
+        r"""
+        """
         cdef int i
         assert self.dim == P.dim, "dimension inconsistencies"
         for i in range(self.dim):
@@ -215,8 +231,92 @@ cdef class PairPoint:
         for i in range(self.dim):
             self.a[i] = P.a[i]
 
-    cdef normalize(self):
-        raise NotImplementedError
+    cdef int _Poincare(self):
+        r"""
+        EXAMPLES::
+
+        """
+        cdef int i,j,k
+        if self.x[0] <= self.x[1] <= self.x[2]:
+            i = 0; j = 1; k = 2;
+        elif self.x[0] <= self.x[2] <= self.x[1]:
+            i = 0; j = 2; k = 1;
+        elif self.x[1] <= self.x[0] <= self.x[2]:
+            i = 1; j = 0; k = 2;
+        elif self.x[2] <= self.x[0] <= self.x[1]:
+            i = 2; j = 0; k = 1;
+        elif self.x[1] <= self.x[2] <= self.x[0]:
+            i = 1; j = 2; k = 0;
+        elif self.x[2] <= self.x[1] <= self.x[0]:
+            i = 2; j = 1; k = 0;
+        else:
+            raise ValueError('limit case: reach set of measure zero: {}'.format(self))
+        self.x[k] -= self.x[j]
+        self.x[j] -= self.x[i]
+        self.a[j] += self.a[k]
+        self.a[i] += self.a[j]
+        return 100*i + 10*j + k + 111
+
+    cdef int _Sorted_Poincare(self):
+        r"""
+        EXAMPLES::
+
+        """
+        # Apply the algo
+        self.x[2] -= self.x[1]
+        self.x[1] -= self.x[0]
+        self.a[1] += self.a[2]
+        self.a[0] += self.a[1]
+        self.sort()
+        return 200
+
+    cdef int _Sorted_ArnouxRauzy(self):
+        r"""
+        EXAMPLES::
+
+        """
+        #Arnoux-Rauzy
+        self.x[2] -= self.x[0] + self.x[1]
+        self.a[0] += self.a[2]
+        self.a[1] += self.a[2]
+        self.sort()
+        return 100
+
+    cdef int _Sorted_ArnouxRauzyMulti(self):
+        r"""
+        EXAMPLES::
+
+        """
+        #Arnoux-Rauzy Multi
+        cdef int m
+        m = <int>(self.x[2] / (self.x[0] + self.x[1]))
+        self.x[2] -= m * (self.x[0] + self.x[1])
+        self.a[1] += m * self.a[2];
+        self.a[0] += m * self.a[2];
+        self.sort()
+        return 100
+
+    cdef int _Sorted_FullySubtractive(self):
+        r"""
+        EXAMPLES::
+
+        """
+        # Apply the algo
+        self.x[1] -= self.x[0]
+        self.x[2] -= self.x[0]
+        self.a[0] += self.a[1] + self.a[2]
+        self.sort()
+        return 100
+
+    cdef normalize_x(self):
+        r"""
+        Normalize self.x
+        """
+        s = self.x[0] + self.x[1] + self.x[2]
+        self.x[0] /= s
+        self.x[1] /= s
+        self.x[2] /= s
+
     cdef dot_product(self):
         raise NotImplementedError
     cdef gramm_schmidt(self):
@@ -1692,7 +1792,7 @@ cdef class ARP(MCFAlgorithm):
             P.a[2] += P.a[0]
             return 1
         else:
-            return _Poincare(P)
+            return P._Poincare()
     def name(self):
         r"""
         EXAMPLES::
@@ -1856,7 +1956,7 @@ cdef class Poincare(MCFAlgorithm):
             sage: Poincare()(P)
             ((0.3, 0.3, 0.20000000000000007), (0.8, 0.6, 0.3))
         """
-        return _Poincare(P)
+        return P._Poincare()
 
     def name(self):
         r"""
@@ -2180,7 +2280,7 @@ cdef class Sorted_Brun(MCFAlgorithm):
         """
         P.x[2] -= P.x[1]
         P.a[1] += P.a[2]
-        Sort(P)
+        P.sort()
         return 100
 
 cdef class Sorted_BrunMulti(MCFAlgorithm):
@@ -2197,7 +2297,7 @@ cdef class Sorted_BrunMulti(MCFAlgorithm):
         cdef int m = <int>(P.x[2] / P.x[1])
         P.x[2] -= m*P.x[1]
         P.a[1] += m*P.a[2]
-        Sort(P)
+        P.sort()
         return 100
 
 cdef class Sorted_Selmer(MCFAlgorithm):
@@ -2213,25 +2313,25 @@ cdef class Sorted_Selmer(MCFAlgorithm):
         """
         P.x[2] -= P.x[0]
         P.a[0] += P.a[2]
-        Sort(P)
+        P.sort()
         return 100
 
-cdef class Sorted_Meester(MCFAlgorithm):
+cdef class Sorted_FullySubtractive(MCFAlgorithm):
     cdef int call(self, PairPoint P) except *:
         r"""
         EXAMPLES::
 
-            sage: from slabbe.mult_cont_frac_pyx import Sorted_Meester
+            sage: from slabbe.mult_cont_frac_pyx import Sorted_FullySubtractive
             sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint([.3,.6,.8], [.2,.3,.3])
-            sage: Sorted_Meester()(P)
+            sage: Sorted_FullySubtractive()(P)
             ((0.3, 0.3, 0.5), (0.8, 0.3, 0.3))
         """
         # Apply the algo
         P.x[1] -= P.x[0]
         P.x[2] -= P.x[0]
         P.a[0] += P.a[1] + P.a[2]
-        Sort(P)
+        P.sort()
         return 100
 
 cdef class Sorted_ArnouxRauzy(MCFAlgorithm):
@@ -2256,7 +2356,7 @@ cdef class Sorted_ArnouxRauzy(MCFAlgorithm):
         P.x[2] -= P.x[0] + P.x[1]
         P.a[0] += P.a[2]
         P.a[1] += P.a[2]
-        Sort(P)
+        P.sort()
         return 100
 
 cdef class Sorted_ArnouxRauzyMulti(MCFAlgorithm):
@@ -2271,7 +2371,7 @@ cdef class Sorted_ArnouxRauzyMulti(MCFAlgorithm):
         P.x[2] -= m * (P.x[0] + P.x[1])
         P.a[1] += m * P.a[2];
         P.a[0] += m * P.a[2];
-        Sort(P)
+        P.sort()
         return 100
 
 cdef class Sorted_ARP(MCFAlgorithm):
@@ -2293,9 +2393,9 @@ cdef class Sorted_ARP(MCFAlgorithm):
         """
         # Apply the algo
         if P.x[2] > P.x[0] + P.x[1]:
-            return _Sorted_ArnouxRauzy(P)
+            return P._Sorted_ArnouxRauzy()
         else:
-            return _Sorted_Poincare(P)
+            return P._Sorted_Poincare()
 
 cdef class Sorted_ARPMulti(MCFAlgorithm):
     cdef int call(self, PairPoint P) except *:
@@ -2310,9 +2410,9 @@ cdef class Sorted_ARPMulti(MCFAlgorithm):
         """
         # Apply the algo
         if P.x[2] > P.x[0] + P.x[1]:
-            return _Sorted_ArnouxRauzyMulti(P)
+            return P._Sorted_ArnouxRauzyMulti()
         else:
-            return _Sorted_Poincare(P)
+            return P._Sorted_Poincare()
 
 cdef class Sorted_Poincare(MCFAlgorithm):
     cdef int call(self, PairPoint P) except *:
@@ -2331,7 +2431,7 @@ cdef class Sorted_Poincare(MCFAlgorithm):
         P.x[1] -= P.x[0]
         P.a[1] += P.a[2]
         P.a[0] += P.a[1]
-        Sort(P)
+        P.sort()
         return 200
 
 cdef class Sorted_ARrevert(MCFAlgorithm):
@@ -2452,7 +2552,7 @@ cdef class Sorted_ARMonteil(MCFAlgorithm):
 
         # Apply the algo
         if P.x[2] > P.x[0] + P.x[1]:
-            return _Sorted_ArnouxRauzy(P)
+            return P._Sorted_ArnouxRauzy()
         else:
             # Monteil
             R.x[0] = P.x[0] + P.x[1] - P.x[2]
@@ -2462,7 +2562,7 @@ cdef class Sorted_ARMonteil(MCFAlgorithm):
             R.a[1] = P.a[1] + P.a[2]
             R.a[2] = P.a[0] + P.a[2]
             P.copy_inplace(R)
-            Sort(P)
+            P.sort()
             return 200
 
 cdef class Sorted_Delaunay(MCFAlgorithm):
@@ -2489,10 +2589,10 @@ cdef class Sorted_Delaunay(MCFAlgorithm):
             R.a[1] = P.a[1] + P.a[2]
             R.a[2] = P.a[2]
             P.copy_inplace(R)
-            Sort(P)
+            P.sort()
             return 200
         else:
-            return _Sorted_Meester(P)
+            return P._Sorted_FullySubtractive()
 cdef class JacobiPerron(MCFAlgorithm):
     cdef int call(self, PairPoint P) except *:
         r"""
@@ -2702,149 +2802,6 @@ cdef class Modified(MCFAlgorithm):
 
         """
         return self._algo.dual_substitutions()
-
-cdef inline int _Poincare(PairPoint P):
-    r"""
-    EXAMPLES::
-
-    """
-    cdef PairPoint R = PairPoint([0]*d, [0]*d)
-    if P.x[0] <= P.x[1] <= P.x[2]:
-        R.x[0] = P.x[0]
-        R.x[1] = P.x[1] - P.x[0]
-        R.x[2] = P.x[2] - P.x[1]
-        R.a[0] = P.a[0] + P.a[1] + P.a[2]
-        R.a[1] = P.a[1] + P.a[2]
-        R.a[2] = P.a[2]
-        P.copy_inplace(R)
-        return 123
-    elif P.x[0] <= P.x[2] <= P.x[1]:
-        R.x[0] = P.x[0]
-        R.x[1] = P.x[1] - P.x[2]
-        R.x[2] = P.x[2] - P.x[0]
-        R.a[0] = P.a[0] + P.a[1] + P.a[2]
-        R.a[1] = P.a[1]
-        R.a[2] = P.a[1] + P.a[2]
-        P.copy_inplace(R)
-        return 132
-    elif P.x[1] <= P.x[0] <= P.x[2]:
-        R.x[0] = P.x[0] - P.x[1]
-        R.x[1] = P.x[1]
-        R.x[2] = P.x[2] - P.x[0]
-        R.a[0] = P.a[0]       + P.a[2]
-        R.a[1] = P.a[0] + P.a[1] + P.a[2]
-        R.a[2] = P.a[2]
-        P.copy_inplace(R)
-        return 213
-    elif P.x[2] <= P.x[0] <= P.x[1]:
-        R.x[0] = P.x[0] - P.x[2]
-        R.x[1] = P.x[1] - P.x[0]
-        R.x[2] = P.x[2]
-        R.a[0] = P.a[0] + P.a[1]
-        R.a[1] = P.a[1]
-        R.a[2] = P.a[0] + P.a[1] + P.a[2]
-        P.copy_inplace(R)
-        return 312
-    elif P.x[1] <= P.x[2] <= P.x[0]:
-        R.x[0] = P.x[0] - P.x[2]
-        R.x[1] = P.x[1]
-        R.x[2] = P.x[2] - P.x[1]
-        R.a[0] = P.a[0]
-        R.a[1] = P.a[0] + P.a[1] + P.a[2]
-        R.a[2] = P.a[0] + P.a[2]
-        P.copy_inplace(R)
-        return 231
-    elif P.x[2] <= P.x[1] <= P.x[0]:
-        R.x[0] = P.x[0] - P.x[1]
-        R.x[1] = P.x[1] - P.x[2]
-        R.x[2] = P.x[2]
-        R.a[0] = P.a[0]
-        R.a[1] = P.a[0] + P.a[1]
-        R.a[2] = P.a[0] + P.a[1] + P.a[2]
-        P.copy_inplace(R)
-        return 321
-    else:
-        raise ValueError('limit case: reach set of measure zero: {}'.format(P))
-
-cdef inline int _Sorted_ArnouxRauzy(PairPoint P):
-    r"""
-    EXAMPLES::
-
-    """
-    #Arnoux-Rauzy
-    P.x[2] -= P.x[0] + P.x[1]
-    P.a[0] += P.a[2]
-    P.a[1] += P.a[2]
-    Sort(P)
-    return 100
-
-cdef inline int _Sorted_ArnouxRauzyMulti(PairPoint P):
-    r"""
-    EXAMPLES::
-
-    """
-    #Arnoux-Rauzy Multi
-    cdef int m
-    m = <int>(P.x[2] / (P.x[0] + P.x[1]))
-    P.x[2] -= m * (P.x[0] + P.x[1])
-    P.a[1] += m * P.a[2];
-    P.a[0] += m * P.a[2];
-    Sort(P)
-    return 100
-
-cdef inline int _Sorted_Poincare(PairPoint P):
-    r"""
-    EXAMPLES::
-
-    """
-    # Apply the algo
-    P.x[2] -= P.x[1]
-    P.x[1] -= P.x[0]
-    P.a[1] += P.a[2]
-    P.a[0] += P.a[1]
-    Sort(P)
-    return 200
-
-cdef inline int _Sorted_Meester(PairPoint P):
-    r"""
-    EXAMPLES::
-
-    """
-    # Apply the algo
-    P.x[1] -= P.x[0]
-    P.x[2] -= P.x[0]
-    P.a[0] += P.a[1] + P.a[2]
-    Sort(P)
-    return 100
-
-cdef inline Sort(PairPoint P):
-    r"""
-    EXAMPLES::
-
-    """
-    cdef double tmp
-    if P.x[0] > P.x[1]:
-        tmp = P.x[0]
-        P.x[0] = P.x[1]
-        P.x[1] = tmp
-        tmp = P.a[0]
-        P.a[0] = P.a[1]
-        P.a[1] = tmp
-    if P.x[1] > P.x[2]:
-        tmp = P.x[1]
-        P.x[1] = P.x[2]
-        P.x[2] = tmp
-        tmp = P.a[1]
-        P.a[1] = P.a[2]
-        P.a[2] = tmp
-    if P.x[0] > P.x[1]:
-        tmp = P.x[0]
-        P.x[0] = P.x[1]
-        P.x[1] = tmp
-        tmp = P.a[0]
-        P.a[0] = P.a[1]
-        P.a[1] = tmp
-    
 
 cdef inline (double, double) projection3to2(double x, double y, double z):
     cdef double s = -SQRT3SUR2 * x + SQRT3SUR2 * y
