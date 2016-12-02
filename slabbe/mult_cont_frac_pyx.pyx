@@ -86,7 +86,7 @@ faster without using list...)::
     - Allow 2d, 1d, 4d, algorithms
     - utilise les vecteurs pour les plus grandes dimensions?
 
-    - Replace method ``_natural_extention_dict`` by ``simplex_orbit_filtered_list``
+    - Replace method ``_natural_extension_dict`` by ``simplex_orbit_filtered_list``
     - Use ``simplex_orbit_filtered_list`` for ``invariant_measure`` ?
 
     - Essayer d'utiliser @staticmethod pour call pour que ARP puisse
@@ -1048,10 +1048,10 @@ cdef class MCFAlgorithm(object):
                 x = P.x[0]
                 y = P.x[1]
 
-            if norm_uvw == '1':
+            if norm_uvw == 1:
                 u = -SQRT3SUR2 * P.a[0] + SQRT3SUR2 * P.a[1]
                 v = -.5 * P.a[0] -.5 * P.a[1] + P.a[2]
-            elif norm_uvw == 'sup':
+            elif norm_uvw == 0:
                 u = P.a[0]
                 v = P.a[1]
 
@@ -1308,7 +1308,7 @@ cdef class MCFAlgorithm(object):
                     D[(i,j)] = c
         return D
 
-    def _natural_extention_dict(self, int n_iterations, int norm_xyz=0,
+    def _natural_extension_dict(self, int n_iterations, int norm_xyz=0,
             int norm_uvw=1, verbose=False):
         r"""
         INPUT:
@@ -1332,12 +1332,19 @@ cdef class MCFAlgorithm(object):
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import ARP
-            sage: t = ARP()._natural_extention_dict(10000)
+            sage: t = ARP()._natural_extension_dict(10000)
             sage: map(type, t)
             [<type 'collections.defaultdict'>,
              <type 'collections.defaultdict'>,
              <type 'collections.defaultdict'>,
              <type 'collections.defaultdict'>]
+
+        ::
+
+            sage: from slabbe.mult_cont_frac_pyx import Brun
+            sage: t = Brun()._natural_extension_dict(3000, norm_xyz=1, norm_uvw=1)
+            sage: map(len, t)
+            [6, 6, 6, 6]
 
         """
         cdef double x,y,z           # vector (x,y,z)
@@ -1390,14 +1397,14 @@ cdef class MCFAlgorithm(object):
                 domain_left[branch].append((P.x[0],P.x[1]))
                 image_left[branch].append((R.x[0],R.x[1]))
 
-            if norm_uvw == '1':
+            if norm_uvw == 1:
                 s = -SQRT3SUR2 * P.a[0] + SQRT3SUR2 * P.a[1]
                 t = -.5 * P.a[0] -.5 * P.a[1] + P.a[2]
                 domain_right[branch].append((s,t))
                 s = -SQRT3SUR2 * R.a[0] + SQRT3SUR2 * R.a[1]
                 t = -.5 * R.a[0] -.5 * R.a[1] + R.a[2]
                 image_right[branch].append((s,t))
-            elif norm_uvw == 'sup':
+            elif norm_uvw == 0:
                 domain_right[branch].append((P.a[0],P.a[1]))
                 image_right[branch].append((R.a[0],R.a[1]))
 

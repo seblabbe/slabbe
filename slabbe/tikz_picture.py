@@ -260,12 +260,12 @@ class TikzPicture(SageObject):
             \usepackage{tkz-graph}
             \begin{document}
             \begin{tikzpicture}
-            %
-            \useasboundingbox (0,0) rectangle (5.0cm,5.0cm);
-            %
             \definecolor{cv0}{rgb}{0.0,0.0,0.0}
+            \definecolor{cfv0}{rgb}{1.0,1.0,1.0}
+            \definecolor{clv0}{rgb}{0.0,0.0,0.0}
+            \definecolor{cv1}{rgb}{0.0,0.0,0.0}
             ...
-            ... 68 lines not printed (3748 characters in total) ...
+            ... 65 lines not printed (3695 characters in total) ...
             ...
             \Edge[lw=0.1cm,style={color=cv6v8,},](v6)(v8)
             \Edge[lw=0.1cm,style={color=cv6v9,},](v6)(v9)
@@ -273,7 +273,6 @@ class TikzPicture(SageObject):
             %
             \end{tikzpicture}
             \end{document}
-
         """
         lines = self._latex_file_header_lines()
         lines.append(r"\begin{document}")

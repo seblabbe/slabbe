@@ -2671,7 +2671,7 @@ def table_bispecial(word, k):
     ::
 
         sage: w = words.ThueMorseWord()
-        sage: table_bispecial(w[:10000], 10)
+        sage: table_bispecial(w[:10000], 11)
           |w|   word     m(w)   info
         +-----+--------+------+--------+
           0              1      strong
@@ -2683,6 +2683,7 @@ def table_bispecial(word, k):
           3     101      -1     weak
           4     0110     1      strong
           4     1001     1      strong
+          6     011001   -1     weak
           6     100110   -1     weak
     """
     it = word.bispecial_factors_iterator()

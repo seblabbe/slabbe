@@ -338,8 +338,8 @@ def curve(nb_equipes, max_points=100, K=1, R=2, base=2, verbose=False):
         -99*(p*(log(40) + 1) - p*log(p) - 20*log(40) + 20*log(20) -
         20)/(19*log(40) - 20*log(20) + 19) + 1
         sage: curve(64, 100)
-        -99*(p*(log(128) + 1) - p*log(p) - 64*log(128) + 64*log(64) -
-        64)/(63*log(128) - 64*log(64) + 63) + 1
+        99*(p*(7*log(2) + 1) - p*log(p) + 64*log(64) - 448*log(2) -
+        64)/(64*log(64) - 441*log(2) - 63) + 1
 
     ::
 
@@ -348,19 +348,17 @@ def curve(nb_equipes, max_points=100, K=1, R=2, base=2, verbose=False):
         sage: curve(64, 100)(p=1)
         100
         sage: curve(64, 100)(p=2)
-        198*(31*log(128) - 32*log(64) + log(2) + 31)/(63*log(128) - 64*log(64) + 63) + 1
-        sage: n(curve(64, 100)(p=2))
+        198*(32*log(64) - 218*log(2) - 31)/(64*log(64) - 441*log(2) - 63) + 1
+        sage: n(curve(64, 100)(p=2))     # abs tol 1e-10
         95.6871477097753
 
     ::
 
         sage: curve(64, 100, verbose=True)
-        fn = -(p*(log(128) + 1) - p*log(p) - 64*log(128) + 64*log(64) - 64)/log(2)
+        fn = -(p*(7*log(2) + 1) - p*log(p) + 64*log(64) - 448*log(2) - 64)/log(2)
         aire = 147.889787576005
-        fn normalise = -99*(p*(log(128) + 1) - p*log(p) - 64*log(128) +
-        64*log(64) - 64)/(63*log(128) - 64*log(64) + 63) + 1
-        -99*(p*(log(128) + 1) - p*log(p) - 64*log(128) + 64*log(64) -
-        64)/(63*log(128) - 64*log(64) + 63) + 1
+        fn normalise = 99*(p*(7*log(2) + 1) - p*log(p) + 64*log(64) - 448*log(2) - 64)/(64*log(64) - 441*log(2) - 63) + 1
+        99*(p*(7*log(2) + 1) - p*log(p) + 64*log(64) - 448*log(2) - 64)/(64*log(64) - 441*log(2) - 63) + 1
 
     The base argument seems to be useless (why?)::
 
