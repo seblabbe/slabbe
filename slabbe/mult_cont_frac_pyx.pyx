@@ -75,7 +75,7 @@ With slabbe-0.3.b2, 3.57 s on my machine::
     (0.44296596371477626, -0.17222952278277034, 1.3888098339168744)
 
 With slabbe-0.2 or earlier, 660 ms on my machine.
-With slabbe-0.3.b1, 663 ms on my machine (maybe this test could be made much
+With slabbe-0.3.b1, 640 ms on my machine (maybe this test could be made much
 faster without using list...)::
 
     sage: %time L = Brun().simplex_orbit_list(n_iterations=10^6)   # not tested

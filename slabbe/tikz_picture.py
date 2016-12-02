@@ -2,9 +2,13 @@
 r"""
 TikzPicture
 
-Easy creation of tikzpicture from Sage objects like graphs and posets.
-Conversion of tikzpicture to pdf and png format based on standalone LaTeX
-document class.
+A Python Module for tikz pictures. A TikzPicture object is created from a string
+starting with ``r'\begin{tikzpicture}'`` and ending with
+``r'\end{tikzpicture}'``.
+
+The module allows easy creation of tikz pictures from Sage objects like graphs
+and posets. Conversion of tikz pictures to pdf and png format based on
+standalone LaTeX document class.
 
 EXAMPLES::
 
@@ -76,8 +80,7 @@ AUTHORS:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from sage.misc.latex import have_pdflatex
-from sage.misc.latex import have_convert
+from sage.misc.latex import have_pdflatex, have_convert
 from sage.misc.temporary_file import tmp_filename
 from sage.structure.sage_object import SageObject
 import os
