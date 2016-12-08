@@ -48,7 +48,8 @@ BENCHMARKS:
 
 With slabbe-0.2 or earlier, 68.6 ms on my machine.
 With slabbe-0.3.b1, 62.2 ms on my machine.
-With slabbe-0.3.b2, 43.2 ms on my machine::
+With slabbe-0.3.b2, 43.2 ms on my machine.
+With slabbe-0.3.b2, 29.4 ms on priminfo in Liège::
 
     sage: from slabbe.mult_cont_frac_pyx import Brun
     sage: %time Brun().lyapunov_exponents(n_iterations=1000000)  # not tested
@@ -56,27 +57,31 @@ With slabbe-0.3.b2, 43.2 ms on my machine::
 
 With slabbe-0.2 or earlier, 3.71s at liafa, 4.58s on my machine.
 With slabbe-0.3.b1, 3.93s on my machine.
-With slabbe-0.3.b2, 2.81s on my machine::
+With slabbe-0.3.b2, 2.81s on my machine.
+With slabbe-0.3.b2, 1.68s on priminfo in Liège::
 
     sage: %time Brun().lyapunov_exponents(n_iterations=67000000) # not tested
     (0.30456433843239084, -0.1121770192467067, 1.36831961293987303)
 
 With slabbe-0.3.b1, 74ms on my machine.
-With slabbe-0.3.b2, 56ms on my machine::
+With slabbe-0.3.b2, 56ms on my machine.
+With slabbe-0.3.b2, 25ms on priminfo in Liège::
 
     sage: from slabbe.mult_cont_frac_pyx import ARP
     sage: %time ARP().lyapunov_exponents(n_iterations=10^6)  # not tested
     (0.443493194984839, -0.17269097306340797, 1.3893881011394358)
 
 With slabbe-0.3.b1, 4.83 s on my machine:
-With slabbe-0.3.b2, 3.57 s on my machine::
+With slabbe-0.3.b2, 3.57 s on my machine:
+With slabbe-0.3.b2, 1.56 s on priminfo in Liège::
 
     sage: %time ARP().lyapunov_exponents(n_iterations=67*10^6)   # not tested
     (0.44296596371477626, -0.17222952278277034, 1.3888098339168744)
 
 With slabbe-0.2 or earlier, 660 ms on my machine.
 With slabbe-0.3.b1, 640 ms on my machine (maybe this test could be made much
-faster without using list...)::
+faster without using list...).
+With slabbe-0.3.b2, 215 ms on priminfo in Liège::
 
     sage: %time L = Brun().simplex_orbit_list(n_iterations=10^6)   # not tested
 
