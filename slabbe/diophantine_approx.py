@@ -159,6 +159,17 @@ AUTHORS:
 TODO:
 
 - In general, how many of the dirichlet approximations are found by the MCF algos?
+- Code Szekeres MCF algorithm
+
+REFERENCES:
+
+Szekeres, G.
+Multidimensional continued fractions.
+Ann. Univ. Sci. Budapest. Eötvös Sect. Math. 13 (1970), 113–140 (1971).
+
+Cusick, T. W.
+The Szekeres multidimensional continued fraction.
+Math. Comp. 31 (1977), no. 137, 280–317.
 """
 #*****************************************************************************
 #       Copyright (C) 2016 Sebastien Labbe <slabqc@gmail.com>
