@@ -129,12 +129,20 @@ AUTHORS:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 from libc.math cimport log
-from sage.misc.prandom import random
 
 include "cysignals/signals.pxi"   # ctrl-c interrupt block support
 include "cysignals/memory.pxi"
 
 cdef double SQRT3SUR2 = 0.866025403784439
+
+# random
+# https://groups.google.com/d/msg/cython-users/jc-3UK2Ffoc/GJNVx-CzdKsJ
+from libc.stdlib cimport rand, RAND_MAX
+cdef double RAND_SCALE = 1.0 / RAND_MAX
+cdef inline double random_double_32bit():
+    return rand() * RAND_SCALE
+cdef inline double random_double_64bit():
+    return rand() * RAND_SCALE + rand() * RAND_SCALE * RAND_SCALE 
 
 cdef class PairPoint:
     r"""
@@ -150,7 +158,7 @@ cdef class PairPoint:
     cdef double* a
     cdef int dim
     cdef double _tmp
-    def __cinit__(self, int dim, x=None, a=None):
+    def __cinit__(self, int dim, *args, **kwds):
         self.x = <double*>check_allocarray(dim, sizeof(double))
         self.a = <double*>check_allocarray(dim, sizeof(double))
         self.dim = dim
@@ -159,13 +167,13 @@ cdef class PairPoint:
         cdef int i
         if x is None:
             for i in range(self.dim):
-                self.x[i] = random()
+                self.x[i] = random_double_64bit()
         else:
             for i in range(self.dim):
                 self.x[i] = x[i]
         if a is None:
             for i in range(self.dim):
-                self.a[i] = random()
+                self.a[i] = random_double_64bit()
         else:
             for i in range(self.dim):
                 self.a[i] = a[i]
@@ -855,7 +863,7 @@ cdef class MCFAlgorithm(object):
 
         """
         cdef double s           # temporary variables
-        cdef PairPoint P = PairPoint(self.dim)
+        cdef PairPoint P
         cdef int branch, i
         if start is None:
             P = PairPoint(self.dim)
@@ -918,7 +926,7 @@ cdef class MCFAlgorithm(object):
 
         """
         cdef double s           # temporary variables
-        cdef PairPoint P = PairPoint(self.dim)
+        cdef PairPoint P
         cdef int i
         cdef int branch
         if start is None:
