@@ -389,6 +389,55 @@ cdef class PairPoint:
         else:
             raise ValueError("Unknown value for p(={})".format(p))
 
+    cdef int subcone(self):
+        r"""
+        .. NOTE::
+
+            Calling this method seems slower than copying the same code inside
+            _Poincare method.
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint(3, [.3,.6,.8], [.2,.3,.3])
+        """
+        if self.x[0] <= self.x[1] <= self.x[2]:
+            return 123
+        elif self.x[0] <= self.x[2] <= self.x[1]:
+            return 132
+        elif self.x[1] <= self.x[2] <= self.x[0]:
+            return 231
+        elif self.x[1] <= self.x[0] <= self.x[2]:
+            return 213
+        elif self.x[2] <= self.x[0] <= self.x[1]:
+            return 312
+        elif self.x[2] <= self.x[1] <= self.x[0]:
+            return 321
+        else:
+            return -1
+
+    cdef void op_elem(self, int i, int j):
+        r"""
+        Elementary operation: `x_i = x_i - x_j` and `a_j = a_j + a_i`
+
+        INPUT:
+
+        - ``i`` -- integer, betwen 1 and dimension - 1
+        - ``j`` -- integer, betwen 1 and dimension - 1
+
+        .. NOTE::
+
+            Calling this method seems slower than copying the same code inside
+            _Poincare method.
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint(3, [.3,.6,.8], [.2,.3,.3])
+        """
+        self.x[i] -= self.x[j]
+        self.a[j] += self.a[i]
+
     cdef int _Poincare(self):
         r"""
         EXAMPLES::
@@ -414,6 +463,24 @@ cdef class PairPoint:
         self.a[j] += self.a[k]
         self.a[i] += self.a[j]
         return 100*i + 10*j + k + 111
+
+    cdef int _Poincare_slower(self):
+        r"""
+        .. NOTE::
+
+            This method is slower than _Poincare.
+
+        EXAMPLES::
+
+        """
+        cdef int part,i,j,k
+        part = self.subcone()
+        i = (part // 100 % 10) - 1
+        j = (part // 10 % 10) - 1
+        k = (part % 10) - 1
+        self.op_elem(k, j)
+        self.op_elem(j, i)
+        return part
 
     cdef int _Sorted_Poincare(self):
         r"""
