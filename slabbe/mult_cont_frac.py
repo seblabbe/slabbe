@@ -9,7 +9,7 @@ EXAMPLES::
 
 Drawing the natural extension::
 
-    sage: fig = algo.natural_extension_plot(3000, norm_xyz='1', axis_off=True)
+    sage: fig = algo.natural_extension_plot(3000, norm_xyz=1, axis_off=True)
     sage: fig
     <matplotlib.figure.Figure object at ...>
     sage: fig.savefig('a.png')  # not tested
@@ -415,7 +415,7 @@ class _MCFAlgorithm_methods(object):
     ######################
     # DRAWINGS METHODS (python):
     ######################
-    def invariant_measure_wireframe_plot(self, n_iterations, ndivs, norm='1'):
+    def invariant_measure_wireframe_plot(self, n_iterations, ndivs, norm=1):
         r"""
         Return a matplotlib graph of the invariant measure.
 
@@ -423,15 +423,15 @@ class _MCFAlgorithm_methods(object):
 
         - ``n_iterations`` - integer, number of iterations
         - ``ndvis`` - integer, number of divisions per dimension
-        - ``norm`` -- string (default: ``'1'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit points
+        - ``norm`` -- string (default: ``1``), either ``0`` or
+          ``1``, the p-norm used for the orbit points
 
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac import Reverse, Brun
             sage: Reverse().invariant_measure_wireframe_plot(1000000, 80)
             <matplotlib.figure.Figure object at ...>
-            sage: Brun().invariant_measure_wireframe_plot(1000000, 40, norm='1')
+            sage: Brun().invariant_measure_wireframe_plot(1000000, 40, norm=1)
             <matplotlib.figure.Figure object at ...>
 
         """
@@ -461,7 +461,7 @@ class _MCFAlgorithm_methods(object):
 
         return fig
 
-    def invariant_measure_contour_plot(self, n_iterations, ndivs, norm='1'):
+    def invariant_measure_contour_plot(self, n_iterations, ndivs, norm=1):
         r"""
         Return a matplotlib graph of the invariant measure.
 
@@ -469,15 +469,15 @@ class _MCFAlgorithm_methods(object):
 
         - ``n_iterations`` - integer, number of iterations
         - ``ndvis`` - integer, number of divisions per dimension
-        - ``norm`` -- string (default: ``'1'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit points
+        - ``norm`` -- string (default: ``1``), either ``0`` or
+          ``1``, the p-norm used for the orbit points
 
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac import Reverse, Brun
             sage: Reverse().invariant_measure_contour_plot(1000000, 80)
             <matplotlib.figure.Figure object at ...>
-            sage: Brun().invariant_measure_contour_plot(1000000, 40, norm='1')
+            sage: Brun().invariant_measure_contour_plot(1000000, 40, norm=1)
             <matplotlib.figure.Figure object at ...>
 
         """
@@ -501,19 +501,25 @@ class _MCFAlgorithm_methods(object):
 
         return fig
 
-    def natural_extension_plot(self, n_iterations, norm_xyz='1',
-            norm_uvw='1', axis_off=False):
+    def natural_extension_plot(self, n_iterations, norm_xyz=1,
+            norm_uvw=1, axis_off=False):
         r"""
         INPUT:
 
         - ``n_iterations`` - integer, number of iterations
-        - ``norm_xyz`` -- string (default: ``'1'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit points
-        - ``norm_uvw`` -- string (default: ``'1'``), either ``'sup'`` or
-          ``'1'``, the norm used for the dual orbit points
+        - ``norm_xyz`` -- string (default: ``1``), either ``0`` or
+          ``1``, the p-norm used for the orbit points
+        - ``norm_uvw`` -- string (default: ``1``), either ``0`` or
+          ``1``, the p-norm used for the dual orbit points
         - ``axis_off`` - boolean (default: ``False``), 
 
         EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac import Brun
+            sage: Brun().natural_extension_plot(3000, norm_xyz=1, axis_off=True)
+            <matplotlib.figure.Figure object at ...>
+
+        ::
 
             sage: from slabbe.mult_cont_frac import Sorted_ARP
             sage: Sorted_ARP().natural_extension_plot(1000)
@@ -521,7 +527,7 @@ class _MCFAlgorithm_methods(object):
         """
         import matplotlib
         import matplotlib.pyplot as plt
-        t = self._natural_extention_dict(n_iterations, norm_xyz=norm_xyz,
+        t = self._natural_extension_dict(n_iterations, norm_xyz=norm_xyz,
                 norm_uvw=norm_uvw)
         domain_left, image_left, domain_right, image_right = t
         c = dict(zip(domain_left.keys(), ['b','r','g','c','m','y','k']))
@@ -553,18 +559,18 @@ class _MCFAlgorithm_methods(object):
 
         return fig
 
-    def natural_extension_tikz(self, n_iterations, norm_xyz='1',
-            norm_uvw='1', marksize=0.2, legend_marksize=2, 
+    def natural_extension_tikz(self, n_iterations, norm_xyz=1,
+            norm_uvw=1, marksize=0.2, legend_marksize=2, 
             group_size="4 by 1"):
         r"""
 
         INPUT:
 
         - ``n_iterations`` -- integer, number of iterations
-        - ``norm_xyz`` -- string (default: ``'1'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit points
-        - ``norm_uvw`` -- string (default: ``'1'``), either ``'sup'`` or
-          ``'1'``, the norm used for the dual orbit points
+        - ``norm_xyz`` -- string (default: ``1``), either ``0`` or
+          ``1``, the p-norm used for the orbit points
+        - ``norm_uvw`` -- string (default: ``1``), either ``0`` or
+          ``1``, the p-norm used for the dual orbit points
         - ``marksize`` -- tikz marksize (default:``0.2``)
         - ``legend_marksize`` -- tikz legend marksize (default:``2``)
         - ``group_size`` -- string (default:``"4 by 1"``)
@@ -599,7 +605,7 @@ class _MCFAlgorithm_methods(object):
             sage: filename = tmp_filename('temp','.pdf')
             sage: _ = s.pdf(filename)
         """
-        t = self._natural_extention_dict(n_iterations, norm_xyz=norm_xyz,
+        t = self._natural_extension_dict(n_iterations, norm_xyz=norm_xyz,
                 norm_uvw=norm_uvw)
         domain_left, image_left, domain_right, image_right = t
         sqrt3 = 1.73205080756888
@@ -648,7 +654,7 @@ class _MCFAlgorithm_methods(object):
                 usetikzlibrary=['pgfplots.groupplots'])
 
     def natural_extension_part_tikz(self, n_iterations, part=3, 
-                                    norm_xyz='1', norm_uvw='1',
+                                    norm_xyz=1, norm_uvw=1,
                                     marksize='1pt', limit_nb_points=None,
                                     verbose=False):
         r"""
@@ -659,10 +665,10 @@ class _MCFAlgorithm_methods(object):
 
         - ``n_iterations`` - integer, number of iterations
         - ``part`` - integer, taking value 0, 1, 2 or 3
-        - ``norm_xyz`` -- string (default: ``'1'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit points
-        - ``norm_uvw`` -- string (default: ``'1'``), either ``'sup'`` or
-          ``'1'``, the norm used for the dual orbit points
+        - ``norm_xyz`` -- string (default: ``1``), either ``0`` or
+          ``1``, the p-norm used for the orbit points
+        - ``norm_uvw`` -- string (default: ``1``), either ``0`` or
+          ``1``, the p-norm used for the dual orbit points
         - ``marksize`` -- string (default: ``'1pt'``), pgfplots mark size value
         - ``limit_nb_points`` -- None or integer (default: ``None``), limit
           number of points per patch
@@ -687,7 +693,7 @@ class _MCFAlgorithm_methods(object):
             Taking ... points for key 312
             Taking ... points for key 123
         """
-        t = self._natural_extention_dict(n_iterations, norm_xyz=norm_xyz,
+        t = self._natural_extension_dict(n_iterations, norm_xyz=norm_xyz,
                 norm_uvw=norm_uvw)
         domain_left, image_left, domain_right, image_right = t
         sqrt3 = 1.73205080756888
@@ -728,7 +734,7 @@ class _MCFAlgorithm_methods(object):
         return TikzPicture(s, usepackage=['pgfplots'])
 
     def natural_extension_part_png(self, n_iterations, draw,
-                                    norm_xyz='1', norm_uvw='1',
+                                    norm_xyz=1, norm_uvw=1,
                                     xrange=(-.866, .866),
                                     yrange=(-.5, 1.),
                                     urange=(-.866, .866),
@@ -751,10 +757,10 @@ class _MCFAlgorithm_methods(object):
           - ``'image_left'`` - use x and y ranges
           - ``'image_right'`` - use u and v ranges
 
-        - ``norm_xyz`` -- string (default: ``'1'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit points
-        - ``norm_uvw`` -- string (default: ``'1'``), either ``'sup'`` or
-          ``'1'``, the norm used for the dual orbit points
+        - ``norm_xyz`` -- string (default: ``1``), either ``0`` or
+          ``1``, the p-norm used for the orbit points
+        - ``norm_uvw`` -- string (default: ``1``), either ``0`` or
+          ``1``, the p-norm used for the dual orbit points
         - ``xrange`` -- tuple (default: ``(-.866, .866)``), interval of
           values for x
         - ``yrange`` -- tuple (default: ``(-.5, 1.)``), interval of
@@ -852,7 +858,7 @@ class _MCFAlgorithm_methods(object):
         return img
 
     def measure_evaluation(self, n_iterations, draw,
-                                norm_xyz='1', norm_uvw='1',
+                                norm_xyz=1, norm_uvw=1,
                                 xrange=(-.866, .866),
                                 yrange=(-.5, 1.),
                                 urange=(-.866, .866),
@@ -873,10 +879,10 @@ class _MCFAlgorithm_methods(object):
           - ``'image_left'`` - use x and y ranges
           - ``'image_right'`` - use u and v ranges
 
-        - ``norm_xyz`` -- string (default: ``'1'``), either ``'sup'`` or
-          ``'1'``, the norm used for the orbit points
-        - ``norm_uvw`` -- string (default: ``'1'``), either ``'sup'`` or
-          ``'1'``, the norm used for the dual orbit points
+        - ``norm_xyz`` -- string (default: ``1``), either ``0`` or
+          ``1``, the p-norm used for the orbit points
+        - ``norm_uvw`` -- string (default: ``1``), either ``0`` or
+          ``1``, the p-norm used for the dual orbit points
         - ``xrange`` -- tuple (default: ``(-.866, .866)``), interval of
           values for x
         - ``yrange`` -- tuple (default: ``(-.5, 1.)``), interval of
@@ -1052,15 +1058,15 @@ def Sorted_Selmer():
         Sorted_Selmer 3-dimensional continued fraction algorithm
     """
     return _algo_with(mult_cont_frac_pyx.Sorted_Selmer)
-def Sorted_Meester():
+def Sorted_FullySubtractive():
     r"""
     EXAMPLES::
 
-        sage: from slabbe.mult_cont_frac import Sorted_Meester
-        sage: Sorted_Meester()
-        Sorted_Meester 3-dimensional continued fraction algorithm
+        sage: from slabbe.mult_cont_frac import Sorted_FullySubtractive
+        sage: Sorted_FullySubtractive()
+        Sorted_FullySubtractive 3-dimensional continued fraction algorithm
     """
-    return _algo_with(mult_cont_frac_pyx.Sorted_Meester)
+    return _algo_with(mult_cont_frac_pyx.Sorted_FullySubtractive)
 def Sorted_ArnouxRauzy():
     r"""
     EXAMPLES::

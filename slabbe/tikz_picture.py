@@ -2,9 +2,13 @@
 r"""
 TikzPicture
 
-Easy creation of tikzpicture from Sage objects like graphs and posets.
-Conversion of tikzpicture to pdf and png format based on standalone LaTeX
-document class.
+A Python Module for tikz pictures. A TikzPicture object is created from a string
+starting with ``r'\begin{tikzpicture}'`` and ending with
+``r'\end{tikzpicture}'``.
+
+The module allows easy creation of tikz pictures from Sage objects like graphs
+and posets. Conversion of tikz pictures to pdf and png format based on
+standalone LaTeX document class.
 
 EXAMPLES::
 
@@ -76,8 +80,7 @@ AUTHORS:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from sage.misc.latex import have_pdflatex
-from sage.misc.latex import have_convert
+from sage.misc.latex import have_pdflatex, have_convert
 from sage.misc.temporary_file import tmp_filename
 from sage.structure.sage_object import SageObject
 import os
@@ -260,12 +263,12 @@ class TikzPicture(SageObject):
             \usepackage{tkz-graph}
             \begin{document}
             \begin{tikzpicture}
-            %
-            \useasboundingbox (0,0) rectangle (5.0cm,5.0cm);
-            %
             \definecolor{cv0}{rgb}{0.0,0.0,0.0}
+            \definecolor{cfv0}{rgb}{1.0,1.0,1.0}
+            \definecolor{clv0}{rgb}{0.0,0.0,0.0}
+            \definecolor{cv1}{rgb}{0.0,0.0,0.0}
             ...
-            ... 68 lines not printed (3748 characters in total) ...
+            ... 65 lines not printed (3695 characters in total) ...
             ...
             \Edge[lw=0.1cm,style={color=cv6v8,},](v6)(v8)
             \Edge[lw=0.1cm,style={color=cv6v9,},](v6)(v9)
@@ -273,7 +276,6 @@ class TikzPicture(SageObject):
             %
             \end{tikzpicture}
             \end{document}
-
         """
         lines = self._latex_file_header_lines()
         lines.append(r"\begin{document}")
