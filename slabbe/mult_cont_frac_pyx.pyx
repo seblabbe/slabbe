@@ -49,7 +49,7 @@ BENCHMARKS:
 With slabbe-0.2 or earlier, 68.6 ms on my machine.
 With slabbe-0.3.b1, 62.2 ms on my machine.
 With slabbe-0.3.b2, 43.2 ms on my machine.
-With slabbe-0.3.b2, 29.4 ms on priminfo in Liège::
+With slabbe-0.3.b2, 19.3 ms on priminfo in Liège::
 
     sage: from slabbe.mult_cont_frac_pyx import Brun
     sage: %time Brun().lyapunov_exponents(n_iterations=1000000)  # not tested
@@ -58,7 +58,7 @@ With slabbe-0.3.b2, 29.4 ms on priminfo in Liège::
 With slabbe-0.2 or earlier, 3.71s at liafa, 4.58s on my machine.
 With slabbe-0.3.b1, 3.93s on my machine.
 With slabbe-0.3.b2, 2.81s on my machine.
-With slabbe-0.3.b2, 1.68s on priminfo in Liège::
+With slabbe-0.3.b2, 1.22s on priminfo in Liège::
 
     sage: %time Brun().lyapunov_exponents(n_iterations=67000000) # not tested
     (0.30456433843239084, -0.1121770192467067, 1.36831961293987303)
@@ -128,6 +128,7 @@ AUTHORS:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+#from libc.math cimport fabs
 from sage.misc.prandom import random
 
 include "cysignals/signals.pxi"   # ctrl-c interrupt block support
@@ -136,6 +137,15 @@ include "cysignals/memory.pxi"
 cdef double SQRT3SUR2 = 0.866025403784439
 
 cdef class PairPoint:
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.mult_cont_frac_pyx import PairPoint
+        sage: PairPoint(3, (.2,.3,.4))
+        ((0.2, 0.3, 0.4), (0...., 0...., 0....))
+        sage: PairPoint(3, a=(.2,.3,.4))
+        ((0...., 0...., 0....), (0.2, 0.3, 0.4))
+    """
     cdef double* x
     cdef double* a
     cdef int dim
@@ -149,13 +159,13 @@ cdef class PairPoint:
         cdef int i
         if x is None:
             for i in range(self.dim):
-                self.x[i] = 0
+                self.x[i] = random()
         else:
             for i in range(self.dim):
                 self.x[i] = x[i]
         if a is None:
             for i in range(self.dim):
-                self.a[i] = 0
+                self.a[i] = random()
         else:
             for i in range(self.dim):
                 self.a[i] = a[i]
@@ -164,30 +174,6 @@ cdef class PairPoint:
         sig_free(self.x)
         sig_free(self.a)
 
-    @classmethod
-    def random(cls, int dim):
-        r"""
-        Return a random PairPoint
-
-        INPUT:
-
-        - ``dim`` -- integer
-
-        EXAMPLES::
-
-            sage: from slabbe.mult_cont_frac_pyx import PairPoint
-            sage: PairPoint.random(1)       # random
-            ((0.792938293657812,), (0.35866800363216655,))
-            sage: PairPoint.random(2)       # random
-            ((0.10343110898678465, 0.9012038388635892),
-             (0.5319403073182422, 0.25052294478234216))
-            sage: PairPoint.random(3)       # random
-            ((0.41706755586336675, 0.005120305098289313, 0.644124294693925),
-             (0.5042870614020245, 0.1197772712895191, 0.05968118943875922))
-        """
-        cdef int i
-        return PairPoint(dim, [random() for i in range(dim)],
-                              [random() for i in range(dim)])
 
     def to_dict(self):
         r"""
@@ -286,8 +272,12 @@ cdef class PairPoint:
 
             double
         """
+        cdef int i
         if p == 1: # 1-norm
-            return self.x[0] + self.x[1] + self.x[2]
+            self._tmp = 0
+            for i in range(self.dim):
+                self._tmp += abs(self.x[i])
+            return self._tmp
         elif p == 0: # sup norm
             return max(self.x[0], self.x[1], self.x[2])
         else:
@@ -309,12 +299,16 @@ cdef class PairPoint:
 
             How to deal with the scalar product case?
         """
+        cdef int i
         if p == 1: # 1-norm
-            return self.a[0] + self.a[1] + self.a[2]
+            self._tmp = 0
+            for i in range(self.dim):
+                self._tmp += abs(self.a[i])
+            return self._tmp
         elif p == 0: # sup norm
             return max(self.a[0], self.a[1], self.a[2])
         elif p == -1: # hypersurface
-            return self.x[0]*self.a[0] + self.x[1]*self.a[1] + self.x[2]*self.a[2]
+            return self.dot_product()
         else:
             raise ValueError("Unknown value for p(={})".format(p))
 
@@ -326,10 +320,10 @@ cdef class PairPoint:
 
         - ``p`` -- integer, 0 or 1
         """
+        cdef int i
         self._tmp = self.norm_x(p=p)
-        self.x[0] /= self._tmp
-        self.x[1] /= self._tmp
-        self.x[2] /= self._tmp
+        for i in range(self.dim):
+            self.x[i] /= self._tmp
 
     cdef normalize_a(self, int p=1):
         r"""
@@ -339,15 +333,40 @@ cdef class PairPoint:
 
         - ``p`` -- integer, 0 or 1
         """
+        cdef int i
         self._tmp = self.norm_a(p=p)
-        self.a[0] /= self._tmp
-        self.a[1] /= self._tmp
-        self.a[2] /= self._tmp
+        for i in range(self.dim):
+            self.a[i] /= self._tmp
 
     cdef dot_product(self):
-        raise NotImplementedError
+        r"""
+        TODO: peut-on utiliser _tmp ici? ou aura-t-on des probleme de
+        copie?
+        """
+        cdef int i
+        self._tmp = 0
+        for i in range(self.dim):
+            self._tmp += self.x[i] * self.a[i]
+        return self._tmp
+
+    cdef dot_product_xx(self):
+        cdef int i
+        cdef double s = 0
+        for i in range(self.dim):
+            s += self.x[i] * self.x[i]
+        return s
+
     cdef gramm_schmidt(self):
-        raise NotImplementedError
+        r"""
+        Removes x component for vector a.
+        """
+        cdef int i
+        cdef double p,s
+        p = self.dot_product()
+        s = self.dot_product_xx()
+        for i in range(self.dim):
+            self.a[i] -= p*self.x[i]/s
+
     cdef act_by_diagonal_matrix(self):
         raise NotImplementedError
     cdef projection3to2(self):
@@ -508,7 +527,7 @@ cdef class MCFAlgorithm(object):
             sig_check()
 
             # random initial values
-            P = PairPoint.random(self.dim)
+            P = PairPoint(self.dim)
 
             # Apply Algo
             branch = self.call(P)
@@ -540,8 +559,8 @@ cdef class MCFAlgorithm(object):
             sig_check() # Check for Keyboard interupt
 
             # random initial values
-            P = PairPoint.random(self.dim)
-            s = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2]
+            P = PairPoint(self.dim)
+            s = P.dot_product()
 
             R = P.copy()
 
@@ -550,7 +569,7 @@ cdef class MCFAlgorithm(object):
                 branch = self.call(R)
             except ValueError:
                 continue
-            t = R.x[0]*R.a[0] + R.x[1]*R.a[1] + R.x[2]*R.a[2]
+            t = R.dot_product()
 
             if not abs(s - t) < 0.0000001:
                 m = 'This algo does not preserve the scalar product\n'
@@ -609,7 +628,7 @@ cdef class MCFAlgorithm(object):
             sig_check()
 
             # random initial values
-            P = PairPoint.random(self.dim)
+            P = PairPoint(self.dim)
             
             R = P.copy()  # TODO is the copy needed here?
 
@@ -839,7 +858,7 @@ cdef class MCFAlgorithm(object):
         cdef PairPoint P = PairPoint(self.dim)
         cdef int branch, i
         if start is None:
-            P = PairPoint.random(self.dim)
+            P = PairPoint(self.dim)
         else:
             P = PairPoint(self.dim, start, [1./self.dim for i in range(self.dim)])
 
@@ -903,7 +922,7 @@ cdef class MCFAlgorithm(object):
         cdef int i
         cdef int branch
         if start is None:
-            P = PairPoint.random(self.dim)
+            P = PairPoint(self.dim)
         else:
             P = PairPoint(self.dim, start, [1./self.dim for i in range(self.dim)])
 
@@ -1028,7 +1047,7 @@ cdef class MCFAlgorithm(object):
         cdef double ulen = umax - umin
         cdef double vlen = vmax - vmin
         if start is None:
-            P = PairPoint.random(self.dim)
+            P = PairPoint(self.dim)
         else:
             P = PairPoint(self.dim, start, [1./self.dim for i in range(self.dim)])
 
@@ -1125,7 +1144,7 @@ cdef class MCFAlgorithm(object):
         cdef int branch,i
         cdef PairPoint P
         if start is None:
-            P = PairPoint.random(self.dim)
+            P = PairPoint(self.dim)
         else:
             P = PairPoint(self.dim, start, [1 for i in range(self.dim)])
 
@@ -1162,7 +1181,7 @@ cdef class MCFAlgorithm(object):
         cdef PairPoint P
         cdef int branch, i
         if start is None:
-            P = PairPoint.random(self.dim)
+            P = PairPoint(self.dim)
         else:
             P = PairPoint(self.dim, start, [1 for i in range(self.dim)])
 
@@ -1200,14 +1219,9 @@ cdef class MCFAlgorithm(object):
             sage: Brun().image((10, 21, 37), 10)
             (1.0, 1.0, 0.0)
         """
-        cdef PairPoint P = PairPoint(self.dim)
+        cdef PairPoint P = PairPoint(self.dim, start)
         cdef int i, branch
-        P.x[0] = start[0]; P.x[1] = start[1]; P.x[2] = start[2]
-        P.a[0] = 1
-        P.a[1] = 1
-        P.a[2] = 1
 
-        # Loop
         for i from 0 <= i < n_iterations:
             sig_check() # Check for Keyboard interupt
             branch = self.call(P)
@@ -1285,7 +1299,7 @@ cdef class MCFAlgorithm(object):
             for i from 0 <= i <= ndivs:
                 C[i][j] = 0
 
-        cdef PairPoint P = PairPoint.random(self.dim)
+        cdef PairPoint P = PairPoint(self.dim)
         P.sort()
         P.normalize_x(p=norm)
 
@@ -1361,7 +1375,7 @@ cdef class MCFAlgorithm(object):
         cdef double u_new,v_new,w_new
         cdef int branch
 
-        cdef PairPoint P = PairPoint.random(self.dim)
+        cdef PairPoint P = PairPoint(self.dim)
         P.sort()
         P.normalize_x(1)
         P.normalize_a(1)
@@ -1449,6 +1463,10 @@ cdef class MCFAlgorithm(object):
             sage: Brun().lyapunov_exponents(n_iterations=1000000)  # tolerance 0.003
             (0.3049429393152174, -0.1120652699014143, 1.367495867105725)
 
+        ::
+
+            sage: Brun().lyapunov_exponents(start=(.2,.3,.4),n_iterations=10^6)  # tolerance 0.003
+
         """
         from math import log
         cdef double theta1=0, theta2=0    # values of Lyapunov exponents
@@ -1459,45 +1477,19 @@ cdef class MCFAlgorithm(object):
         cdef unsigned int i         # loop counter
         cdef double critical_value=0.0001
         cdef int branch
+        cdef PairPoint P
 
         # initial values
-        if start is None:
-            x = random(); y = random(); z = random()
-        else:
-            x = start[0]; y = start[1]; z = start[2]
-        u = random() - .5; v = random() - .5; w = random() - .5;
-
-        # Order (x,y,z)
-        if y > z: z,y = y,z
-        if x > z: x,y,z = y,z,x
-        elif x > y: x,y = y,x
-
-        # Normalize (x,y,z)
-        s = x + y + z
-        x /= s; y /= s; z /= s
-
-        # Gram Shmidtt on (u,v,w)
-        p = x*u + y*v + z*w
-        s = x*x + y*y + z*z
-        u -= p*x/s; v -= p*y/s; w -= p*z/s
-
-        # Normalize (u,v,w)
-        s = abs(u) + abs(v) + abs(w);
-        u /= s; v /= s; w /= s
+        P = PairPoint(self.dim, start)
+        for i in range(self.dim):
+            P.a[i] - .5
+        P.sort()
+        P.normalize_x(p=1)
+        P.gramm_schmidt()
+        P.normalize_a(p=1)
 
         if verbose:
-            print("x=%f, y=%f, z=%f" % (x,y,z))
-            print("u=%f, v=%f, w=%f" % (u,v,w))
-            s = x*u + y*v + z*w
-            print("scal prod <(x,y,z),(u,v,w)> = %f" % s)
-
-        cdef PairPoint P = PairPoint(self.dim)
-        P.x[0] = x
-        P.x[1] = y
-        P.x[2] = z
-        P.a[0] = u
-        P.a[1] = v
-        P.a[2] = w
+            print("P = {}\nscal prod <x,a> = {}".format(P, P.dot_product()))
 
         # Loop
         for i from 0 <= i < n_iterations:
@@ -1509,10 +1501,7 @@ cdef class MCFAlgorithm(object):
             branch = self.call(P)
 
             if verbose:
-                print("x=%f, y=%f, z=%f" % (P.x[0],P.x[1],P.x[2]))
-                print("u=%f, v=%f, w=%f" % (P.a[0],P.a[1],P.a[2]))
-                s = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2]
-                print("scal prod <(x,y,z),(u,v,w)> = %f (after algo)" % s)
+                print("P = {}\nscal prod <x,a> = {} (after algo)".format(P, P.dot_product()))
 
             # Save some computations
             #if i % step == 0:
@@ -1539,6 +1528,8 @@ cdef class MCFAlgorithm(object):
                 P.a[0] -= p*P.x[0]/s; P.a[1] -= p*P.x[1]/s; P.a[2] -= p*P.x[2]/s
                 s = abs(P.a[0]) + abs(P.a[1]) + abs(P.a[2])
                 P.a[0] /= s; P.a[1] /= s; P.a[2] /= s
+                #P.gramm_schmidt()
+                #P.normalize_a(p=1)
 
         return theta1/n_iterations, theta2/n_iterations, 1-theta2/theta1
 
