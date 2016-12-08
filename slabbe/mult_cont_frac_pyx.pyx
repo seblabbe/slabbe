@@ -48,31 +48,31 @@ BENCHMARKS:
 
 With slabbe-0.2 or earlier, 68.6 ms on my machine.
 With slabbe-0.3.b1, 62.2 ms on my machine.
-With slabbe-0.3.b2, 43.2 ms on my machine.
+With slabbe-0.3.b2, 28.6 ms on my machine.
 With slabbe-0.3.b2, 13.3 ms on priminfo in Liège::
 
     sage: from slabbe.mult_cont_frac_pyx import Brun
-    sage: %time Brun().lyapunov_exponents(n_iterations=1000000)  # not tested
+    sage: %time Brun().lyapunov_exponents(n_iterations=10^6)  # not tested
     (0.3049429393152174, -0.1120652699014143, 1.367495867105725)
 
-With slabbe-0.2 or earlier, 3.71s at liafa, 4.58s on my machine.
-With slabbe-0.3.b1, 3.93s on my machine.
-With slabbe-0.3.b2, 2.81s on my machine.
-With slabbe-0.3.b2, 1.22s on priminfo in Liège::
-
-    sage: %time Brun().lyapunov_exponents(n_iterations=67000000) # not tested
-    (0.30456433843239084, -0.1121770192467067, 1.36831961293987303)
-
 With slabbe-0.3.b1, 74ms on my machine.
-With slabbe-0.3.b2, 56ms on my machine.
+With slabbe-0.3.b2, 35ms on my machine.
 With slabbe-0.3.b2, 17ms on priminfo in Liège::
 
     sage: from slabbe.mult_cont_frac_pyx import ARP
     sage: %time ARP().lyapunov_exponents(n_iterations=10^6)  # not tested
     (0.443493194984839, -0.17269097306340797, 1.3893881011394358)
 
+With slabbe-0.2 or earlier, 3.71s at liafa, 4.58s on my machine.
+With slabbe-0.3.b1, 3.93s on my machine.
+With slabbe-0.3.b2, 1.93s on my machine.
+With slabbe-0.3.b2, 1.22s on priminfo in Liège::
+
+    sage: %time Brun().lyapunov_exponents(n_iterations=67000000) # not tested
+    (0.30456433843239084, -0.1121770192467067, 1.36831961293987303)
+
 With slabbe-0.3.b1, 4.83 s on my machine:
-With slabbe-0.3.b2, 3.57 s on my machine:
+With slabbe-0.3.b2, 2.33 s on my machine:
 With slabbe-0.3.b2, 1.56 s on priminfo in Liège::
 
     sage: %time ARP().lyapunov_exponents(n_iterations=67*10^6)   # not tested
@@ -216,7 +216,7 @@ cdef class PairPoint:
         """
         return repr(self.to_tuple())
 
-    cdef sort(self):
+    cdef void sort(self):
         r"""
         In larger dimension use::
 
@@ -258,7 +258,7 @@ cdef class PairPoint:
                          x=[self.x[i] for i in range(self.dim)],
                          a=[self.a[i] for i in range(self.dim)])
 
-    cdef copy_inplace(self, PairPoint P):
+    cdef void copy_inplace(self, PairPoint P):
         r"""
         """
         cdef int i
@@ -288,8 +288,6 @@ cdef class PairPoint:
             return self._tmp
         elif p == 0: # sup norm
             return max(self.x[0], self.x[1], self.x[2])
-        else:
-            raise ValueError("Unknown value for p(={})".format(p))
 
     cdef double norm_a(self, int p=1):
         r"""
@@ -314,37 +312,36 @@ cdef class PairPoint:
                 self._tmp += abs(self.a[i])
             return self._tmp
         elif p == 0: # sup norm
-            return max(self.a[0], self.a[1], self.a[2])
+            self._tmp = 0
+            for i in range(self.dim):
+                self._tmp = max(self._tmp, abs(self.a[i]))
+            return self._tmp
         elif p == -1: # hypersurface
             return self.dot_product()
-        else:
-            raise ValueError("Unknown value for p(={})".format(p))
 
-    cdef normalize_x(self, int p=1):
+    cdef void normalize_x(self, double value):
         r"""
-        Normalize vector x
+        Normalize vector x by dividing each entry by some value.
 
         INPUT:
 
-        - ``p`` -- integer, 0 or 1
+        - ``value`` -- positive real number
         """
         cdef int i
-        self._tmp = self.norm_x(p=p)
         for i in range(self.dim):
-            self.x[i] /= self._tmp
+            self.x[i] /= value
 
-    cdef normalize_a(self, int p=1):
+    cdef void normalize_a(self, double value):
         r"""
-        Normalize vector a
+        Normalize vector a by dividing each entry by some value.
 
         INPUT:
 
-        - ``p`` -- integer, 0 or 1
+        - ``value`` -- positive real number
         """
         cdef int i
-        self._tmp = self.norm_a(p=p)
         for i in range(self.dim):
-            self.a[i] /= self._tmp
+            self.a[i] /= value
 
     cdef double dot_product(self):
         r"""
@@ -364,7 +361,7 @@ cdef class PairPoint:
             s += self.x[i] * self.x[i]
         return s
 
-    cdef gramm_schmidt(self):
+    cdef void gramm_schmidt(self):
         r"""
         Removes x component for vector a.
         """
@@ -386,8 +383,6 @@ cdef class PairPoint:
                     -.5 * self.x[0] -.5 * self.x[1] + self.x[2])
         elif p == 0:
             return self.x[0], self.x[1]
-        else:
-            raise ValueError("Unknown value for p(={})".format(p))
 
     cdef int subcone(self):
         r"""
@@ -456,8 +451,6 @@ cdef class PairPoint:
             i = 1; j = 2; k = 0;
         elif self.x[2] <= self.x[1] <= self.x[0]:
             i = 2; j = 1; k = 0;
-        else:
-            raise ValueError('limit case: reach set of measure zero: {}'.format(self))
         self.x[k] -= self.x[j]
         self.x[j] -= self.x[i]
         self.a[j] += self.a[k]
@@ -877,7 +870,7 @@ cdef class MCFAlgorithm(object):
         while True:
             branch = self.call(P)
             yield branch
-            P.normalize_x()
+            P.normalize_x(P.norm_x())
 
     def simplex_orbit_iterator(self, start=None, int norm_xyz=0, int norm_uvw=1):
         r"""
@@ -946,7 +939,7 @@ cdef class MCFAlgorithm(object):
         else:
             P = PairPoint(self.dim, start, [1./self.dim for i in range(self.dim)])
 
-        P.normalize_x()
+        P.normalize_x(P.norm_x())
 
         # Loop
         while True:
@@ -954,8 +947,8 @@ cdef class MCFAlgorithm(object):
             # Apply Algo
             branch = self.call(P)
 
-            P.normalize_x(p=norm_xyz)
-            P.normalize_a(p=norm_uvw)
+            P.normalize_x(P.norm_x(p=norm_xyz))
+            P.normalize_a(P.norm_a(p=norm_uvw))
 
             yield (P.x[0], P.x[1], P.x[2]), (P.a[0], P.a[1], P.a[2]), branch
 
@@ -1010,7 +1003,7 @@ cdef class MCFAlgorithm(object):
         else:
             P = PairPoint(self.dim, start, [1./self.dim for i in range(self.dim)])
 
-        P.normalize_x(p=norm_xyz)
+        P.normalize_x(P.norm_x(p=norm_xyz))
 
         L = []
 
@@ -1023,8 +1016,8 @@ cdef class MCFAlgorithm(object):
             # Apply Algo
             branch = self.call(P)
 
-            P.normalize_x(p=norm_xyz)
-            P.normalize_a(p=norm_uvw)
+            P.normalize_x(P.norm_x(p=norm_xyz))
+            P.normalize_a(P.norm_a(p=norm_uvw))
 
             L.append( (P.x[0], P.x[1], P.x[2], P.a[0], P.a[1], P.a[2], branch))
 
@@ -1140,7 +1133,7 @@ cdef class MCFAlgorithm(object):
                     " value for xmin, xmax, ymin, ymax, umin, umax, vmin"
                     " and vmax")
 
-        P.normalize_x()
+        P.normalize_x(P.norm_x(p=norm_xyz))
 
         L = []
 
@@ -1153,8 +1146,8 @@ cdef class MCFAlgorithm(object):
             # Check for Keyboard interupt
             sig_check()
 
-            P.normalize_x(p=norm_xyz)
-            P.normalize_a(p=norm_uvw)
+            P.normalize_x(P.norm_x(p=norm_xyz))
+            P.normalize_a(P.norm_a(p=norm_uvw))
 
             # Projection
             if norm_xyz == 1:
@@ -1385,14 +1378,14 @@ cdef class MCFAlgorithm(object):
 
         cdef PairPoint P = PairPoint(self.dim)
         P.sort()
-        P.normalize_x(p=norm)
+        P.normalize_x(P.norm_x(p=norm))
 
         for i in range(n_iterations):
 
             sig_check()            # Check for Keyboard interupt
             branch = self.call(P)  # Apply Algo
 
-            P.normalize_x(p=norm)
+            P.normalize_x(P.norm_x(p=norm))
 
             # Increase by one the counter for that part
             X = int(P.x[0]*ndivs)
@@ -1461,8 +1454,8 @@ cdef class MCFAlgorithm(object):
 
         cdef PairPoint P = PairPoint(self.dim)
         P.sort()
-        P.normalize_x(1)
-        P.normalize_a(1)
+        P.normalize_x(P.norm_x(1))
+        P.normalize_a(P.norm_a(1))
         cdef PairPoint R = P.copy()
 
         import collections
@@ -1486,8 +1479,8 @@ cdef class MCFAlgorithm(object):
                 #s = x*u + y*v + z*w
                 #print("scal prod <(x,y,z),(u,v,w)> = %f (after algo)" % s)
 
-            R.normalize_x(p=norm_xyz)
-            R.normalize_a(p=norm_uvw)
+            R.normalize_x(R.norm_x(p=norm_xyz))
+            R.normalize_a(R.norm_a(p=norm_uvw))
 
             # Projection
             if norm_xyz == 1:
@@ -1566,9 +1559,9 @@ cdef class MCFAlgorithm(object):
         for i in range(self.dim):
             P.a[i] - .5
         P.sort()
-        P.normalize_x(p=1)
+        P.normalize_x(P.norm_x(p=1))
         P.gramm_schmidt()
-        P.normalize_a(p=1)
+        P.normalize_a(P.norm_a(p=1))
 
         if verbose:
             print("P = {}\nscal prod <x,a> = {}".format(P, P.dot_product()))
@@ -1590,15 +1583,15 @@ cdef class MCFAlgorithm(object):
             if P.x[0] < critical_value:
 
                 # Sum the first lyapunov exponent
-                s = P.x[0] + P.x[1] + P.x[2]
+                s = P.norm_x()
                 p = -log(s) - theta1c
                 t = theta1 + p
                 theta1c = (t-theta1) - p   # mathematically 0 but not for a computer!!
                 theta1 = t
-                P.x[0] /= s; P.x[1] /= s; P.x[2] /= s;
+                P.normalize_x(s)
 
                 # Sum the second lyapunov exponent
-                s = abs(P.a[0]) + abs(P.a[1]) + abs(P.a[2])
+                s = P.norm_a()
                 p = log(s) - theta2c
                 t = theta2 + p
                 theta2c = (t-theta2) - p   # mathematically 0 but not for a computer!!
@@ -1606,7 +1599,7 @@ cdef class MCFAlgorithm(object):
 
                 # the following gramm shimdts seems to be useless, but it is not!!!
                 P.gramm_schmidt()
-                P.normalize_a(p=1)
+                P.normalize_a(s)
 
         return theta1/n_iterations, theta2/n_iterations, 1-theta2/theta1
 
@@ -2751,3 +2744,16 @@ cdef inline (double, double) projection3to2(double x, double y, double z):
     cdef double t = -.5 * x -.5 * y + z
     return s,t
 
+cdef inline double max_array(double[:] tab, int dim):
+    cdef double s = 0
+    cdef int i
+    for i in range(dim):
+        s = max(s, abs(tab[i]))
+    return s
+
+cdef inline double sum_array(double[:] tab, int dim):
+    cdef double s = 0
+    cdef int i
+    for i in range(dim):
+        s += abs(tab[i])
+    return s
