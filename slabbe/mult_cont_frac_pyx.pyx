@@ -49,7 +49,7 @@ BENCHMARKS:
 With slabbe-0.2 or earlier, 68.6 ms on my machine.
 With slabbe-0.3.b1, 62.2 ms on my machine.
 With slabbe-0.3.b2, 43.2 ms on my machine.
-With slabbe-0.3.b2, 19.3 ms on priminfo in Liège::
+With slabbe-0.3.b2, 13.3 ms on priminfo in Liège::
 
     sage: from slabbe.mult_cont_frac_pyx import Brun
     sage: %time Brun().lyapunov_exponents(n_iterations=1000000)  # not tested
@@ -65,7 +65,7 @@ With slabbe-0.3.b2, 1.22s on priminfo in Liège::
 
 With slabbe-0.3.b1, 74ms on my machine.
 With slabbe-0.3.b2, 56ms on my machine.
-With slabbe-0.3.b2, 25ms on priminfo in Liège::
+With slabbe-0.3.b2, 17ms on priminfo in Liège::
 
     sage: from slabbe.mult_cont_frac_pyx import ARP
     sage: %time ARP().lyapunov_exponents(n_iterations=10^6)  # not tested
@@ -128,7 +128,7 @@ AUTHORS:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-#from libc.math cimport fabs
+from libc.math cimport log
 from sage.misc.prandom import random
 
 include "cysignals/signals.pxi"   # ctrl-c interrupt block support
@@ -142,9 +142,9 @@ cdef class PairPoint:
 
         sage: from slabbe.mult_cont_frac_pyx import PairPoint
         sage: PairPoint(3, (.2,.3,.4))
-        ((0.2, 0.3, 0.4), (0...., 0...., 0....))
+        ((0.2, 0.3, 0.4), (..., ..., ...))
         sage: PairPoint(3, a=(.2,.3,.4))
-        ((0...., 0...., 0....), (0.2, 0.3, 0.4))
+        ((..., ..., ...), (0.2, 0.3, 0.4))
     """
     cdef double* x
     cdef double* a
@@ -338,7 +338,7 @@ cdef class PairPoint:
         for i in range(self.dim):
             self.a[i] /= self._tmp
 
-    cdef dot_product(self):
+    cdef double dot_product(self):
         r"""
         TODO: peut-on utiliser _tmp ici? ou aura-t-on des probleme de
         copie?
@@ -349,7 +349,7 @@ cdef class PairPoint:
             self._tmp += self.x[i] * self.a[i]
         return self._tmp
 
-    cdef dot_product_xx(self):
+    cdef double dot_product_xx(self):
         cdef int i
         cdef double s = 0
         for i in range(self.dim):
@@ -521,7 +521,7 @@ cdef class MCFAlgorithm(object):
         cdef int branch
         S = set()
         # Loop
-        for i from 0 <= i < n_iterations:
+        for i in range(n_iterations):
 
             # Check for Keyboard interupt
             sig_check()
@@ -554,7 +554,7 @@ cdef class MCFAlgorithm(object):
         cdef int branch
 
         # Loop
-        for i from 0 <= i < n_iterations:
+        for i in range(n_iterations):
 
             sig_check() # Check for Keyboard interupt
 
@@ -622,7 +622,7 @@ cdef class MCFAlgorithm(object):
         A = dict((k,s.incidence_matrix()) for k,s in self.substitutions().iteritems())
 
         # Loop
-        for i from 0 <= i < n_iterations:
+        for i in range(n_iterations):
 
             # Check for Keyboard interupt
             sig_check()
@@ -931,7 +931,7 @@ cdef class MCFAlgorithm(object):
         L = []
 
         # Loop
-        for i from 0 <= i < n_iterations:
+        for i in range(n_iterations):
 
             # Check for Keyboard interupt
             sig_check()
@@ -1064,7 +1064,7 @@ cdef class MCFAlgorithm(object):
         branch = self.call(P)
 
         # Loop
-        for i from 0 <= i < n_iterations:
+        for i in range(n_iterations):
 
             # Check for Keyboard interupt
             sig_check()
@@ -1188,13 +1188,13 @@ cdef class MCFAlgorithm(object):
         L = []
 
         # Loop
-        for i from 0 <= i < n_iterations:
+        for i in range(n_iterations):
             sig_check() # Check for Keyboard interupt
             branch = self.call(P)
             L.append( (P.x[0], P.x[1], P.x[2], P.a[0], P.a[1], P.a[2], branch))
         return L
 
-    def image(self, start, n_iterations=1):
+    def image(self, start, int n_iterations=1):
         r"""
         Return the image of a vector in R^3 after n iterations.
 
@@ -1222,7 +1222,7 @@ cdef class MCFAlgorithm(object):
         cdef PairPoint P = PairPoint(self.dim, start)
         cdef int i, branch
 
-        for i from 0 <= i < n_iterations:
+        for i in range(n_iterations):
             sig_check() # Check for Keyboard interupt
             branch = self.call(P)
         return (P.x[0], P.x[1], P.x[2])
@@ -1303,7 +1303,7 @@ cdef class MCFAlgorithm(object):
         P.sort()
         P.normalize_x(p=norm)
 
-        for i from 0 <= i < n_iterations:
+        for i in range(n_iterations):
 
             sig_check()            # Check for Keyboard interupt
             branch = self.call(P)  # Apply Algo
@@ -1388,7 +1388,7 @@ cdef class MCFAlgorithm(object):
         image_left = collections.defaultdict(list)
 
         # Loop
-        for i from 0 <= i < n_iterations:
+        for i in range(n_iterations):
 
             # Check for Keyboard interupt
             sig_check()
@@ -1465,14 +1465,12 @@ cdef class MCFAlgorithm(object):
 
         ::
 
-            sage: Brun().lyapunov_exponents(start=(.2,.3,.4),n_iterations=10^6)  # tolerance 0.003
-
+            sage: start = (0.2134134, 0.31618415, 0.414514985)
+            sage: Brun().lyapunov_exponents(start=start, n_iterations=10^6)  # tolerance 0.003
+            (0.3046809303742965, -0.1121152799778245, 1.3679760326322108)
         """
-        from math import log
         cdef double theta1=0, theta2=0    # values of Lyapunov exponents
         cdef double theta1c=0, theta2c=0  # compensation (for Kahan summation algorithm)
-        cdef double x,y,z           # vector (x,y,z)
-        cdef double u,v,w           # vector (u,v,w)
         cdef double p,s,t           # temporary variables
         cdef unsigned int i         # loop counter
         cdef double critical_value=0.0001
@@ -1492,7 +1490,7 @@ cdef class MCFAlgorithm(object):
             print("P = {}\nscal prod <x,a> = {}".format(P, P.dot_product()))
 
         # Loop
-        for i from 0 <= i < n_iterations:
+        for i in range(n_iterations):
 
             # Check for Keyboard interupt
             sig_check()
@@ -1523,13 +1521,8 @@ cdef class MCFAlgorithm(object):
                 theta2 = t
 
                 # the following gramm shimdts seems to be useless, but it is not!!!
-                p = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2]
-                s = P.x[0]*P.x[0] + P.x[1]*P.x[1] + P.x[2]*P.x[2]
-                P.a[0] -= p*P.x[0]/s; P.a[1] -= p*P.x[1]/s; P.a[2] -= p*P.x[2]/s
-                s = abs(P.a[0]) + abs(P.a[1]) + abs(P.a[2])
-                P.a[0] /= s; P.a[1] /= s; P.a[2] /= s
-                #P.gramm_schmidt()
-                #P.normalize_a(p=1)
+                P.gramm_schmidt()
+                P.normalize_a(p=1)
 
         return theta1/n_iterations, theta2/n_iterations, 1-theta2/theta1
 
