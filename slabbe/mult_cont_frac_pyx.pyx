@@ -120,7 +120,7 @@ AUTHORS:
 
 """
 #*****************************************************************************
-#       Copyright (C) 2013-2015 Sébastien Labbé <slabqc@gmail.com>
+#       Copyright (C) 2013-2016 Sébastien Labbé <slabqc@gmail.com>
 #
 #  Distributed under the terms of the GNU General Public License version 2 (GPLv2)
 #
@@ -164,13 +164,38 @@ cdef class PairPoint:
         sig_free(self.x)
         sig_free(self.a)
 
+    @classmethod
+    def random(cls, int dim):
+        r"""
+        Return a random PairPoint
+
+        INPUT:
+
+        - ``dim`` -- integer
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: PairPoint.random(1)       # random
+            ((0.792938293657812,), (0.35866800363216655,))
+            sage: PairPoint.random(2)       # random
+            ((0.10343110898678465, 0.9012038388635892),
+             (0.5319403073182422, 0.25052294478234216))
+            sage: PairPoint.random(3)       # random
+            ((0.41706755586336675, 0.005120305098289313, 0.644124294693925),
+             (0.5042870614020245, 0.1197772712895191, 0.05968118943875922))
+        """
+        cdef int i
+        return PairPoint(dim, [random() for i in range(dim)],
+                              [random() for i in range(dim)])
+
     def to_dict(self):
         r"""
         EXAMPLES::
 
-             sage: from slabbe.mult_cont_frac_pyx import PairPoint
-             sage: PairPoint(3, [1,2,3], [4,5,6]).to_dict()
-             {'a': [4.0, 5.0, 6.0], 'x': [1.0, 2.0, 3.0]}
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: PairPoint(3, [1,2,3], [4,5,6]).to_dict()
+            {'a': [4.0, 5.0, 6.0], 'x': [1.0, 2.0, 3.0]}
         """
         cdef int i
         return dict(x=[self.x[i] for i in range(self.dim)],
@@ -473,7 +498,7 @@ cdef class MCFAlgorithm(object):
             {1, 2, 3, 123, 132, 213, 231, 312, 321}
         """
         cdef unsigned int i         # loop counter
-        cdef PairPoint P = PairPoint(self.dim)
+        cdef PairPoint P
         cdef int branch
         S = set()
         # Loop
@@ -483,8 +508,7 @@ cdef class MCFAlgorithm(object):
             sig_check()
 
             # random initial values
-            P.x[0] = random(); P.x[1] = random(); P.x[2] = random();
-            P.a[0] = random(); P.a[1] = random(); P.a[2] = random();
+            P = PairPoint.random(self.dim)
 
             # Apply Algo
             branch = self.call(P)
@@ -507,21 +531,16 @@ cdef class MCFAlgorithm(object):
         """
         cdef double s,t             # temporary variables
         cdef unsigned int i         # loop counter
-
-        cdef PairPoint P = PairPoint(self.dim)
-        cdef PairPoint R = PairPoint(self.dim)
-
+        cdef PairPoint P,R
         cdef int branch
 
         # Loop
         for i from 0 <= i < n_iterations:
 
-            # Check for Keyboard interupt
-            sig_check()
+            sig_check() # Check for Keyboard interupt
 
             # random initial values
-            P.x[0] = random(); P.x[1] = random(); P.x[2] = random();
-            P.a[0] = random(); P.a[1] = random(); P.a[2] = random();
+            P = PairPoint.random(self.dim)
             s = P.x[0]*P.a[0] + P.x[1]*P.a[1] + P.x[2]*P.a[2]
 
             R = P.copy()
@@ -578,8 +597,7 @@ cdef class MCFAlgorithm(object):
         """
         from sage.modules.free_module_element import vector
         cdef unsigned int i         # loop counter
-        cdef PairPoint P = PairPoint(self.dim)
-        cdef PairPoint R = PairPoint(self.dim)
+        cdef PairPoint P,R
         cdef int branch
 
         A = dict((k,s.incidence_matrix()) for k,s in self.substitutions().iteritems())
@@ -591,8 +609,7 @@ cdef class MCFAlgorithm(object):
             sig_check()
 
             # random initial values
-            P.x[0] = random(); P.x[1] = random(); P.x[2] = random();
-            P.a[0] = random(); P.a[1] = random(); P.a[2] = random();
+            P = PairPoint.random(self.dim)
             
             R = P.copy()  # TODO is the copy needed here?
 
@@ -820,14 +837,11 @@ cdef class MCFAlgorithm(object):
         """
         cdef double s           # temporary variables
         cdef PairPoint P = PairPoint(self.dim)
-        cdef int branch
+        cdef int branch, i
         if start is None:
-            P = PairPoint(self.dim, [random() for i in range(self.dim)])
+            P = PairPoint.random(self.dim)
         else:
-            P = PairPoint(self.dim, start)
-        P.a[0] = 1./3
-        P.a[1] = 1./3
-        P.a[2] = 1./3
+            P = PairPoint(self.dim, start, [1./self.dim for i in range(self.dim)])
 
         P.normalize_x()
 
@@ -889,12 +903,9 @@ cdef class MCFAlgorithm(object):
         cdef int i
         cdef int branch
         if start is None:
-            P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
+            P = PairPoint.random(self.dim)
         else:
-            P.x[0] = start[0]; P.x[1] = start[1]; P.x[2] = start[2]
-        P.a[0] = 1./3
-        P.a[1] = 1./3
-        P.a[2] = 1./3
+            P = PairPoint(self.dim, start, [1./self.dim for i in range(self.dim)])
 
         P.normalize_x(p=norm_xyz)
 
@@ -1007,7 +1018,7 @@ cdef class MCFAlgorithm(object):
         """
         cdef double s,x,y,u,v           # temporary variables
         s = x = y = u = v = 0           # initialize to avoid a warning
-        cdef PairPoint P = PairPoint(self.dim)
+        cdef PairPoint P
         cdef int branch
         cdef int previous_branch
         cdef int xa,ya,ua,va
@@ -1017,12 +1028,9 @@ cdef class MCFAlgorithm(object):
         cdef double ulen = umax - umin
         cdef double vlen = vmax - vmin
         if start is None:
-            P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
+            P = PairPoint.random(self.dim)
         else:
-            P.x[0] = start[0]; P.x[1] = start[1]; P.x[2] = start[2]
-        P.a[0] = 1./3
-        P.a[1] = 1./3
-        P.a[2] = 1./3
+            P = PairPoint(self.dim, start, [1./self.dim for i in range(self.dim)])
 
         if ndivs and float('inf') in [-xmin, -ymin, -umin, -vmin, xmax, ymax, umax, vmax]:
             raise ValueError("when ndivs is specified, you must provide a"
@@ -1114,15 +1122,12 @@ cdef class MCFAlgorithm(object):
             ((1.0, 1.0, 0.0), (45.0, 14.0, 4.0), 312)
             ((1.0, 0.0, 0.0), (59.0, 14.0, 4.0), 312)
         """
-        cdef int branch
-        cdef PairPoint P = PairPoint(self.dim)
+        cdef int branch,i
+        cdef PairPoint P
         if start is None:
-            P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
+            P = PairPoint.random(self.dim)
         else:
-            P.x[0] = start[0]; P.x[1] = start[1]; P.x[2] = start[2]
-        P.a[0] = 1
-        P.a[1] = 1
-        P.a[2] = 1
+            P = PairPoint(self.dim, start, [1 for i in range(self.dim)])
 
         # Loop
         while True:
@@ -1154,15 +1159,12 @@ cdef class MCFAlgorithm(object):
             Check for a fixed point stop then.
 
         """
-        cdef PairPoint P = PairPoint(self.dim)
+        cdef PairPoint P
         cdef int branch, i
         if start is None:
-            P.x[0] = random(); P.x[1] = random(); P.x[2] = random()
+            P = PairPoint.random(self.dim)
         else:
-            P.x[0] = start[0]; P.x[1] = start[1]; P.x[2] = start[2]
-        P.a[0] = 1
-        P.a[1] = 1
-        P.a[2] = 1
+            P = PairPoint(self.dim, start, [1 for i in range(self.dim)])
 
         L = []
 
@@ -1283,8 +1285,7 @@ cdef class MCFAlgorithm(object):
             for i from 0 <= i <= ndivs:
                 C[i][j] = 0
 
-        cdef PairPoint P = PairPoint(self.dim, 
-                           [random() for i in range(self.dim)], [0.3]*self.dim)
+        cdef PairPoint P = PairPoint.random(self.dim)
         P.sort()
         P.normalize_x(p=norm)
 
@@ -1360,10 +1361,10 @@ cdef class MCFAlgorithm(object):
         cdef double u_new,v_new,w_new
         cdef int branch
 
-        cdef PairPoint P = PairPoint(self.dim, 
-                           [random() for i in range(self.dim)], [1/3.]*self.dim)
+        cdef PairPoint P = PairPoint.random(self.dim)
         P.sort()
         P.normalize_x(1)
+        P.normalize_a(1)
         cdef PairPoint R = P.copy()
 
         import collections
