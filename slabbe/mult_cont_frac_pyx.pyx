@@ -377,8 +377,17 @@ cdef class PairPoint:
 
     cdef act_by_diagonal_matrix(self):
         raise NotImplementedError
-    cdef projection3to2(self):
-        raise NotImplementedError
+
+    cdef (double, double) projection3to2(self, int p=1):
+        assert self.dim == 3, ("Dimension of point is {} but projection"
+                               " implemented only for 3".format(self.dim))
+        if p == 1:
+            return (-SQRT3SUR2 * self.x[0] + SQRT3SUR2 * self.x[1],
+                    -.5 * self.x[0] -.5 * self.x[1] + self.x[2])
+        elif p == 0:
+            return self.x[0], self.x[1]
+        else:
+            raise ValueError("Unknown value for p(={})".format(p))
 
     cdef int _Poincare(self):
         r"""
