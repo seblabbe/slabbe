@@ -18,6 +18,7 @@ def last_modified_datetime(path_to_file):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.analyze_sage_build import last_modified_datetime
         sage: from sage.env import SAGE_ROOT
         sage: last_modified_datetime(SAGE_ROOT+'/README.md')
         datetime.datetime(2016, 8, 25, 17, 13, 49)
@@ -31,6 +32,7 @@ def duration_last_build(path_to_file):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.analyze_sage_build import duration_last_build
         sage: from sage.env import SAGE_LOGS
         sage: duration_last_build(SAGE_LOGS+'/sagelib-7.5.beta5.log')
         datetime.timedelta(0, 9, 747000)
@@ -57,6 +59,7 @@ def two_dict():
     r"""
     EXAMPLES::
 
+        sage: from slabbe.analyze_sage_build import two_dict
         sage: modified, duration = two_dict()
         Error: no duration found in file sqlite.log
         sage: modified
@@ -77,11 +80,4 @@ def two_dict():
             print "Error: no duration found in file {}".format(file)
             duration[file] = 0
     return modified, duration
-
-    
-
-
-
-
-
 
