@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 r"""
-Sage build analyze
+A time evolution picture of Sage building its packages
 
 EXAMPLES::
 
+    sage: from slabbe.analyze_sage_build import draw_sage_build
     sage: t = draw_sage_build() # not tested
     sage: t.pdf()               # not tested
+
+AUTHOR:
+
+    - Sébastien Labbé, December 9, 2016
 """
 #*****************************************************************************
 #       Copyright (C) 2016 Sébastien Labbé <slabqc@gmail.com>
@@ -18,8 +23,7 @@ EXAMPLES::
 #*****************************************************************************
 from __future__ import absolute_import
 import os, datetime, re
-
-from tikz_picture import TikzPicture
+from .tikz_picture import TikzPicture
 
 def last_modified_datetime(path_to_file):
     r"""
@@ -62,7 +66,7 @@ def build_duration(path_to_file):
     seconds = float(line[pos_m+1:pos_s])
     return datetime.timedelta(minutes=minutes, seconds=seconds)
 
-def sage_logs_datetime_list():
+def sage_logs_datetime_list(verbose=False):
     r"""
     Return a dictionnary of duration and last modified information from the
     sage log files.
@@ -71,11 +75,8 @@ def sage_logs_datetime_list():
 
         sage: import datetime
         sage: from slabbe.analyze_sage_build import sage_logs_datetime_list
-        sage: stop = datetime.datetime.now()
-        sage: oneday = datetime.timedelta(1r)
-        sage: twoweeks = datetime.timedelta(14r)
-        sage: L = sage_logs_datetime_list(stop-oneday, stop)
-        sage: L = sage_logs_datetime_list(stop-twoweeks, stop)
+        sage: L = sage_logs_datetime_list()
+        sage: L = sage_logs_datetime_list()
     """
     L = []
     from sage.env import SAGE_LOGS
@@ -85,19 +86,19 @@ def sage_logs_datetime_list():
         try:
             delta  = build_duration(path_to_file)
         except ValueError:
-            print "Error: no duration found in file {}".format(file)
+            if verbose:
+                print("Warning: no duration found in file {} ...".format(file))
             delta = datetime.timedelta(0)
         entry = (B-delta,B,delta,file)
         L.append(entry)
     return L
 
-def draw_sage_build(start=None, stop=None, step=10):
+def draw_sage_build(start=None, stop=None):
     r"""
     INPUT:
 
-    - ``start`` -- datetime object (default is stop minus one day)
+    - ``start`` -- datetime object (default is January 1st, 2000)
     - ``stop`` -- datetime object (default is now)
-    - ``step`` -- integer (default: 10), tick at each ``step`` minutes
 
     OUTPUT:
 
@@ -105,7 +106,15 @@ def draw_sage_build(start=None, stop=None, step=10):
 
     EXAMPLES::
 
-        sage: t = draw_sage_build() # not tested
+        sage: from slabbe.analyze_sage_build import draw_sage_build
+        sage: t = draw_sage_build()
+
+    During the previous 7 day::
+
+        sage: import datetime
+        sage: stop = datetime.datetime.now()
+        sage: start = stop - datetime.timedelta(7r)
+        sage: t = draw_sage_build(start, stop)       # not tested
 
     ::
 
@@ -125,9 +134,10 @@ def draw_sage_build(start=None, stop=None, step=10):
     if stop is None:
         stop = datetime.datetime.now()
     if start is None:
-        start = stop - datetime.timedelta(1) # minus 1 day
+        #start = stop - datetime.timedelta(1) # minus 1 day
+        start = datetime.datetime(2000, 1, 1)
     assert start < stop, ("start date (={}) must precede "
-                            "stop date (={})".format(start, stop))
+                          "stop date (={})".format(start, stop))
 
     # Obtain datetime and timedelta from logs
     L_all = sage_logs_datetime_list()
@@ -173,10 +183,10 @@ def draw_sage_build(start=None, stop=None, step=10):
     axis_y = 1.5
     lines.append('\\draw[thick,->] ({},{axis_y}) -- '
                                   '({},{axis_y});'.format(t0, tn, axis_y=axis_y))
-    duration_minutes = duration.total_seconds()/60
-    step = duration_minutes / 4
-    step = 10 * (int(step / 10) + 1)
-    for n_minutes in srange(duration_minutes, step=step):
+    duration_minutes = int(duration.total_seconds()/60)
+    step = duration_minutes // 4
+    step = 10 * (step // 10 + 1)
+    for n_minutes in range(0, duration_minutes, step):
         delta = datetime.timedelta(0,n_minutes*60)
         tj = timedelta_to_float(delta)
         lines.append('\\draw[thick] ({tj},{}) -- ({tj},{}) node[below] '
