@@ -38,6 +38,7 @@ setup(name='slabbe',
     keywords='sagemath combinatorics discrete geometry symbolic dynamics',
     author='Sebastien Labbe',
     author_email='slabbe@ulg.ac.be',
+    install_requires=['pytimeparse'],
     #install_requires=['cython','cysignals'], # this causes update of cysignals
                                               # which forces recompilation of all cython files!
     #url='http://www.slabbe.org/Sage',

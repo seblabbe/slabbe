@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 r"""
-A time evolution picture of Sage building its packages
+A time evolution picture of packages built by Sage
 
 EXAMPLES::
 
     sage: from slabbe.analyze_sage_build import draw_sage_build
-    sage: t = draw_sage_build() # not tested
-    sage: t.pdf()               # not tested
+    sage: t = draw_sage_build()
+    sage: _ = t.pdf(view=False)
 
 AUTHOR:
 
-    - Sébastien Labbé, December 9, 2016
+    - Sébastien Labbé, December 9-11, 2016
 """
 #*****************************************************************************
 #       Copyright (C) 2016 Sébastien Labbé <slabqc@gmail.com>
@@ -23,7 +23,8 @@ AUTHOR:
 #*****************************************************************************
 from __future__ import absolute_import
 import os, datetime, re
-from .tikz_picture import TikzPicture
+from slabbe.tikz_picture import TikzPicture
+from pytimeparse.timeparse import timeparse
 
 def last_modified_datetime(path_to_file):
     r"""
@@ -32,44 +33,96 @@ def last_modified_datetime(path_to_file):
         sage: from slabbe.analyze_sage_build import last_modified_datetime
         sage: from sage.env import SAGE_ROOT
         sage: last_modified_datetime(SAGE_ROOT+'/README.md')
-        datetime.datetime(2016, 8, 25, 17, 13, 49)
+        datetime.datetime(..., ..., ..., ..., ..., ...)
         sage: last_modified_datetime(SAGE_ROOT+'/VERSION.txt')
-        datetime.datetime(2016, 12, 2, 0, 46, 46)
+        datetime.datetime(..., ..., ..., ..., ..., ...)
     """
     t_stamp = os.path.getmtime(path_to_file)
     return datetime.datetime.fromtimestamp(t_stamp)
 
-def build_duration(path_to_file):
+def build_duration_logs(path_to_file, pattern=None):
     r"""
+    INPUT:
+
+    - ``path_to_file`` -- string, file to parse
+    - ``pattern`` -- string or ``None``, string to parse. If ``None``, it
+      returns 0 seconds.
+
+    OUTPUT:
+
+        list of timedelta objects
+
     EXAMPLES::
 
-        sage: from slabbe.analyze_sage_build import build_duration
+        sage: from slabbe.analyze_sage_build import build_duration_logs
         sage: from sage.env import SAGE_LOGS
-        sage: build_duration(SAGE_LOGS+'/sagelib-7.5.beta5.log')
-        datetime.timedelta(0, 9, 747000)
-        sage: build_duration(SAGE_LOGS+'/sqlite.log')
-        Traceback (most recent call last):
-        ...
-        ValueError: No duration found in file /Users/slabbe/Applications/sage-git/logs/pkgs/sqlite.log
+
+    ::
+
+        sage: file = 'ptestlong.log'
+        sage: pattern = 'Total time for all tests: '
+        sage: build_duration_logs(SAGE_LOGS+'/../'+file, pattern)
+        [datetime.timedelta(0, ..., ...)]
+
+    ::
+
+        sage: file = 'dochtml.log'
+        sage: pattern = 'Elapsed time: '
+        sage: build_duration_logs(SAGE_LOGS+'/../'+file, pattern)
+        [datetime.timedelta(0, ..., ...)]
+
+    ::
+
+        sage: file = 'start.log'
+        sage: build_duration_logs(SAGE_LOGS+'/../'+file)
+        []
+
+    ::
+
+        sage: file = 'sagelib-7.5.beta6.log'
+        sage: pattern = 'real\t'
+        sage: build_duration_logs(SAGE_LOGS+'/'+file, pattern)
+        [datetime.timedelta(0, ..., ...)]
+
+    ::
+
+        sage: file = 'sqlite.log'
+        sage: pattern = 'real\t'
+        sage: build_duration_logs(SAGE_LOGS+'/'+file, pattern)
+        []
     """
+    if pattern is None:
+        return []
+
     with open(path_to_file, 'r') as f:
         s = f.read()
 
-    result = re.findall('real\t.*', s)
-    if not result:
-        raise ValueError("No duration found in file {}".format(path_to_file))
+    result = re.findall('^'+pattern+'.*', s, flags=re.MULTILINE)
 
-    line = result[-1]
-    pos_m = line.find('m')
-    pos_s = line.find('s')
-    minutes = int(line[5:pos_m])
-    seconds = float(line[pos_m+1:pos_s])
-    return datetime.timedelta(minutes=minutes, seconds=seconds)
+    # line = "real\t0m41.027s"            # in logs/*.log
+    # line = "Total time for all tests: 14922.7 seconds" # in ptestlong.log
+    # line = "Elapsed time: 4156.8 seconds." # in dochtml.log
+    L = []
+    for line in result:
+        time_string = line[len(pattern):].strip('.')
+        seconds = timeparse(time_string)
+        if seconds is None:
+            raise ValueError('Unable to parse time delta in string '
+                    '"{}" of file {}'.format(time_string, path_to_file))
+        L.append(datetime.timedelta(seconds=seconds))
 
-def sage_logs_datetime_list(verbose=False):
+    return L
+
+def sage_logs_datetime_list(consider='last', verbose=False):
     r"""
     Return a dictionnary of duration and last modified information from the
     sage log files.
+
+    INPUT:
+
+    - ``consider`` - string (default: ``'last'``), ``'last'`` or ``'all'``, in
+      any log file, consider the last duration found or the sum of all of them
+    - ``verbose`` - boolean (default: ``False``)
 
     EXAMPLES::
 
@@ -77,28 +130,66 @@ def sage_logs_datetime_list(verbose=False):
         sage: from slabbe.analyze_sage_build import sage_logs_datetime_list
         sage: L = sage_logs_datetime_list()
         sage: L = sage_logs_datetime_list()
+        sage: stop = datetime.datetime.now()
+        sage: start = stop - datetime.timedelta(14r)
+        sage: L_filtered = [(A,B,delta,file) for (A,B,delta,file) in L
+        ....:                  if start <= A and B <= stop]
     """
-    L = []
     from sage.env import SAGE_LOGS
+    K = []
+    pattern = 'real\t'
     for file in os.listdir(SAGE_LOGS):
         path_to_file = os.path.join(SAGE_LOGS, file)
+        K.append((path_to_file, pattern))
+
+    path_to_file = os.path.join(SAGE_LOGS, '..', 'dochtml.log')
+    if os.path.exists(path_to_file):
+        pattern = 'Elapsed time: '
+        K.append((path_to_file, pattern))
+
+    path_to_file = os.path.join(SAGE_LOGS, '..', 'ptestlong.log')
+    if os.path.exists(path_to_file):
+        pattern = 'Total time for all tests: '
+        K.append((path_to_file, pattern))
+
+    path_to_file = os.path.join(SAGE_LOGS, '..', 'start.log')
+    if os.path.exists(path_to_file):
+        K.append((path_to_file, None))
+
+    L = []
+    for path_to_file, pattern in K:
+        file = os.path.split(path_to_file)[-1]
         B = last_modified_datetime(path_to_file)
-        try:
-            delta  = build_duration(path_to_file)
-        except ValueError:
-            if verbose:
-                print("Warning: no duration found in file {} ...".format(file))
+        deltas = build_duration_logs(path_to_file, pattern)
+        if pattern is None:
             delta = datetime.timedelta(0)
+        elif not deltas:
+            if verbose:
+                print('Warning: no duration found in file {} '
+                      'with pattern "{}"'.format(file, pattern))
+            delta = datetime.timedelta(0)
+        elif consider == 'last':
+            delta = deltas[-1]
+        elif consider == 'all':
+            delta = sum(deltas, datetime.timedelta(0))
+        else:
+            raise ValueError('Unknown value for consider(={})'.format(consider))
         entry = (B-delta,B,delta,file)
         L.append(entry)
+
     return L
 
-def draw_sage_build(start=None, stop=None):
+def draw_sage_build(start=None, stop=None, consider='last', verbose=False):
     r"""
+    Return a time evolution picture of packages built by Sage
+
     INPUT:
 
     - ``start`` -- datetime object (default is January 1st, 2000)
     - ``stop`` -- datetime object (default is now)
+    - ``consider`` - string (default: ``'last'``), ``'last'`` or ``'all'``, in
+      any log file, consider the last duration found or the sum of all of them
+    - ``verbose`` - boolean (default: ``False``)
 
     OUTPUT:
 
@@ -114,7 +205,7 @@ def draw_sage_build(start=None, stop=None):
         sage: import datetime
         sage: stop = datetime.datetime.now()
         sage: start = stop - datetime.timedelta(7r)
-        sage: t = draw_sage_build(start, stop)       # not tested
+        sage: t = draw_sage_build(start, stop)
 
     ::
 
@@ -140,7 +231,7 @@ def draw_sage_build(start=None, stop=None):
                           "stop date (={})".format(start, stop))
 
     # Obtain datetime and timedelta from logs
-    L_all = sage_logs_datetime_list()
+    L_all = sage_logs_datetime_list(consider=consider, verbose=verbose)
     if not L_all:
         raise ValueError("no package found in the logs directory")
     L_all.sort()
@@ -158,6 +249,10 @@ def draw_sage_build(start=None, stop=None):
     effective_stop = L[-1][1]
     duration = (effective_stop-effective_start)
     TOTAL = duration.total_seconds()
+    if TOTAL == 0:
+        raise ValueError("start={}, stop={}, in {}".format(effective_start,
+            effective_stop, L))
+
     def timedelta_to_float(t):
         return t.total_seconds() / TOTAL * 40
     def datetime_to_float(t):
