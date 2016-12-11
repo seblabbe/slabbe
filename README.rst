@@ -22,6 +22,13 @@ __ http://www.slabbe.org/Sage/
 __ http://github.com/seblabbe/slabbe
 __ http://pypi.python.org/pypi/slabbe
 
+Version 0.3b2 (December 11, 2016)
+---------------------------------
+
+Version ``0.3b2`` includes a new module for diophantine approximations, random
+point generation inside polytopes, analyzing sage building time, and many
+improvements to previous modules.
+
 Version 0.3b1 (June 12, 2016)
 -----------------------------
 

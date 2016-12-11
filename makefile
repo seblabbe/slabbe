@@ -25,7 +25,7 @@ dist:
 register: dist
 	VERSION=`cat VERSION`; sage -sh -c "twine register dist/slabbe-$$VERSION.tar.gz"
 
-upload: dist
+upload:
 	VERSION=`cat VERSION`; sage -sh -c "twine upload dist/slabbe-$$VERSION.tar.gz"
 
 clean: clean-doc
