@@ -1537,13 +1537,13 @@ cdef class MCFAlgorithm(object):
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Brun
-            sage: Brun().lyapunov_exponents(n_iterations=1000000)  # tolerance 0.003
+            sage: Brun().lyapunov_exponents(n_iterations=1000000)  # tol 0.01
             (0.3049429393152174, -0.1120652699014143, 1.367495867105725)
 
         ::
 
             sage: start = (0.2134134, 0.31618415, 0.414514985)
-            sage: Brun().lyapunov_exponents(start=start, n_iterations=10^6)  # tolerance 0.003
+            sage: Brun().lyapunov_exponents(start=start, n_iterations=10^6)  # tol 0.01
             (0.3046809303742965, -0.1121152799778245, 1.3679760326322108)
         """
         cdef double theta1=0, theta2=0    # values of Lyapunov exponents
