@@ -155,7 +155,7 @@ class TikzPicture(SageObject):
             self._macros.extend(sage_latex_macros())
 
     @classmethod
-    def from_graph(cls, graph, prog='dot', edge_labels=True, color_by_label=False):
+    def from_graph(cls, graph, **kwds):
         r"""
         Convert a graph to a tikzpicture using graphviz and dot2tex.
 
@@ -172,6 +172,7 @@ class TikzPicture(SageObject):
           suite: 'dot', 'neato', 'twopi', 'circo' or 'fdp'.
         - ``edge_labels`` -- bool (default: ``True``)
         - ``color_by_label`` -- bool (default: ``False``)
+        - ``rankdir`` -- string (default: ``'down'``)
 
         EXAMPLES::
 
@@ -182,15 +183,20 @@ class TikzPicture(SageObject):
         ::
 
             sage: tikz = TikzPicture.from_graph(g, prog='neato', color_by_label=True) # optional dot2tex # long time (3s)
+
+        ::
+
+            sage: tikz = TikzPicture.from_graph(g, rankdir='right') # optional dot2tex # long time (3s)
         """
-        kwds = dict(format='dot2tex', edge_labels=edge_labels,
-                color_by_label=color_by_label, prog=prog)
-        graph.latex_options().set_options(**kwds)
+        default = dict(format='dot2tex', edge_labels=True,
+                color_by_label=False, prog='dot', rankdir='down')
+        default.update(kwds)
+        graph.latex_options().set_options(**default)
         tikz = graph._latex_()
         return TikzPicture(tikz, standalone_options=["border=4mm"])
 
     @classmethod
-    def from_poset(cls, poset, prog='dot', edge_labels=True, color_by_label=False):
+    def from_poset(cls, poset, **kwds):
         r"""
         Convert a poset to a tikzpicture using graphviz and dot2tex.
 
@@ -207,6 +213,7 @@ class TikzPicture(SageObject):
           suite: 'dot', 'neato', 'twopi', 'circo' or 'fdp'.
         - ``edge_labels`` -- bool (default: ``True``)
         - ``color_by_label`` -- bool (default: ``False``)
+        - ``rankdir`` -- string (default: ``'down'``)
 
         EXAMPLES::
 
@@ -222,7 +229,7 @@ class TikzPicture(SageObject):
             sage: tikz = TikzPicture.from_poset(P, prog='neato') # optional dot2tex # long time (4s)
         """
         graph = poset.hasse_diagram()
-        return cls.from_graph(graph, prog, edge_labels, color_by_label)
+        return cls.from_graph(graph, **kwds)
 
     def _latex_file_header_lines(self):
         r"""
