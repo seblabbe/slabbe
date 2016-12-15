@@ -291,7 +291,7 @@ class ExtensionType(object):
         The factor may be included in the repr::
 
             sage: ExtensionType1to1(L, [1,2,3], ('a','b'), Word('xyz'), 
-            ....:                   include_factor_in_repr=True)
+            ....:                   repr_options=dict(factor=True))
             w=as(u)b=xyz
               E(w)   1   2   3
                1             X
@@ -316,7 +316,7 @@ class ExtensionType(object):
         mw = self.multiplicity()
         info = self.information()
         lines = []
-        if self._include_factor_in_repr:
+        if self._repr_options['factor']:
             chignons = self._chignons
             first_line = "w={}s(u){}={}".format(chignons[0], chignons[1],
                                                 self._factor.string_rep())
@@ -364,7 +364,7 @@ class ExtensionType(object):
 
         With factor appearing::
 
-            sage: E._include_factor_in_repr = True
+            sage: E._repr_options = dict(factor=True)
             sage: latex(E)
             \begin{tabular}{c}
             $w=s(u)=$\\
@@ -382,7 +382,7 @@ class ExtensionType(object):
         mw = self.multiplicity()
         info = self.information()
         s = '\\begin{tabular}{c}\n'
-        if self._include_factor_in_repr:
+        if self._repr_options['factor']:
             chignons = self._chignons
             s += "$w={}s(u){}={}$".format(chignons[0], chignons[1], self._factor.string_rep())
             s += "\\\\\n"
@@ -1107,7 +1107,7 @@ class ExtensionType(object):
             sage: data = [((2, 1), (2,)), ((3, 1), (2,)), ((2, 2), (3,)), ((1,
             ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
             sage: E1 = ExtensionTypeLong(data, (1,2,3))
-            sage: E1._include_factor_in_repr=False
+            sage: E1._repr_options=dict(factor=False)
             sage: seq = [231,213,213,213,321]+[213,231,231,231,123]+[132,123]
             sage: E1.graph_under_sadic_joined(seq, S, growth_limit=1)
             Looped multi-digraph on 10 vertices
@@ -1403,8 +1403,9 @@ class ExtensionType1to1(ExtensionType):
     - ``chignons`` - optional (default: None), pair of words added to the
       left  and to the right of the image of the previous bispecial
     - ``factor`` - optional (default: empty word), the factor
-    - ``include_factor_in_repr`` - optional (default: False), whether to include
-      the factor in the string or latex representation
+    - ``repr_options`` - optional (default:
+      dict(factor=False,valence=False)), whether to include the factor and
+      or the valence in the string or latex representation
 
     EXAMPLES::
 
@@ -1429,7 +1430,7 @@ class ExtensionType1to1(ExtensionType):
          m(w)=0, ord.
     """
     def __init__(self, L, alphabet, chignons=('',''), factor=Word(),
-            include_factor_in_repr=False):
+            repr_options=None):
         r"""
         EXAMPLES::
 
@@ -1447,7 +1448,7 @@ class ExtensionType1to1(ExtensionType):
         self._alphabet = alphabet
         self._chignons = tuple(chignons)
         self._factor = factor
-        self._include_factor_in_repr = include_factor_in_repr
+        self._repr_options = dict(factor=False,valence=False) if repr_options is None else repr_options
 
     def table(self):
         r"""
@@ -1794,7 +1795,7 @@ class ExtensionType1to1(ExtensionType):
                     factor = chignons[0] * m(self._factor) * chignons[1]
                     e = ExtensionType1to1(L=extension, alphabet=self._alphabet,
                             chignons=chignons, factor=factor,
-                            include_factor_in_repr=self._include_factor_in_repr)
+                            repr_options=self._repr_options)
                     if e.is_bispecial():
                         L.append(e)
         return tuple(L)
@@ -1989,8 +1990,9 @@ class ExtensionTypeLong(ExtensionType):
     - ``empty`` - bool, (optional, default: None), if None, then it is
       computed from the chignons and takes value True iff the chignons are
       empty.
-    - ``include_factor_in_repr`` - optional (default: False), whether to
-      include the factor in the string or latex representation
+    - ``repr_options`` - optional (default:
+      dict(factor=False,valence=False)), whether to include the factor and
+      or the valence in the string or latex representation
 
     EXAMPLES::
 
@@ -2010,7 +2012,7 @@ class ExtensionTypeLong(ExtensionType):
     """
     def __init__(self, L, alphabet, chignons=('',''), factor=Word(),
             factors_length_k=None, empty=None,
-            include_factor_in_repr=False):
+            repr_options=None):
         r"""
         EXAMPLES::
 
@@ -2028,7 +2030,7 @@ class ExtensionTypeLong(ExtensionType):
             self._empty = self.is_chignons_empty()
         else:
             self._empty = empty
-        self._include_factor_in_repr = include_factor_in_repr
+        self._repr_options = dict(factor=False,valence=False) if repr_options is None else repr_options
 
     def is_chignons_empty(self):
         r"""
@@ -2512,7 +2514,7 @@ class ExtensionTypeLong(ExtensionType):
             factor = chignons[0] * m(self._factor) * chignons[1]
             e = ExtensionTypeLong(extension, alphabet=self._alphabet,
                     factor=factor, chignons=chignons, factors_length_k=Fimage,
-                    empty=empty, include_factor_in_repr=self._include_factor_in_repr)
+                    empty=empty, repr_options=self._repr_options)
             if e.is_valid() and e.is_bispecial():
                 L.append(e)
         return tuple(L)
