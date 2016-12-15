@@ -241,17 +241,16 @@ def draw_sage_build(start=None, stop=None, consider='last', verbose=False):
                           if start <= A and B <= stop]
     if not L:
         raise ValueError("no package found built between start date (={}) "
-                         "and stop date (={}). Oldest is {}. "
-                         "Newest is {}.".format(start, stop, 
+                         "and stop date (={}). Oldest started at {}. "
+                         "Newest started at {}.".format(start, stop,
                                         L_all[0][0], L_all[-1][0]))
     # time to x axis float
-    effective_start = L[0][0]
-    effective_stop = L[-1][1]
+    effective_start = min(A for (A,B,delta,file) in L)
+    effective_stop = max(B for (A,B,delta,file) in L)
     duration = (effective_stop-effective_start)
     TOTAL = duration.total_seconds()
     if TOTAL == 0:
-        raise ValueError("start={}, stop={}, in {}".format(effective_start,
-            effective_stop, L))
+        TOTAL += 1 # avoid division by zero
 
     def timedelta_to_float(t):
         return t.total_seconds() / TOTAL * 40
@@ -288,6 +287,7 @@ def draw_sage_build(start=None, stop=None, consider='last', verbose=False):
                 '{{{delta}}};'.format(axis_y+.3, axis_y-.3, delta=delta, tj=tj))
 
     # Boxes
+    L.sort()
     for i,entry in enumerate(L):
         A,B,delta,file_ext = entry
         Af = datetime_to_float(A)
