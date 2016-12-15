@@ -322,7 +322,18 @@ class ExtensionType(object):
                                                 self._factor.string_rep())
             lines.append(first_line)
         lines.append(repr(self.table()))
-        lines.append("m(w)={}, {}".format(mw, info))
+        if self._repr_options['multiplicity']:
+            lines.append("m(w)={}, {}".format(mw, info))
+        if self._repr_options['valence']:
+            left_val1 = self.left_valence()
+            if hasattr(self, 'left_word_extensions'):
+                left_extensions = self.left_word_extensions()
+                left_ext_length = len(left_extensions[0])
+                left_val2 = len(left_extensions)
+                lines.append("d^-_1(w)={}, d^-_{}(w){}".format(left_val1,
+                                            left_ext_length, left_val2))
+            else:
+                lines.append("d^-(w)={}".format(left_val1))
         return "\n".join(lines)
 
     def _latex_(self):
@@ -340,7 +351,7 @@ class ExtensionType(object):
             $2$ &   &   & $\times$ \\
             $3$ & $\times$ & $\times$ & $\times$ \\
             \end{tabular}\\
-            $m(w) = 0$, ord.
+            $m(w) = 0$, ord.\\
             \end{tabular}
 
         ::
@@ -359,12 +370,12 @@ class ExtensionType(object):
             $22$ & $\times$ &   &   \\
             $23$ & $\times$ &   &   \\
             \end{tabular}\\
-            $m(w) = 0$, neutral
+            $m(w) = 0$, neutral\\
             \end{tabular}
 
         With factor appearing::
 
-            sage: E._repr_options = dict(factor=True)
+            sage: E = ExtensionTypeLong(L, (1,2,3), repr_options=dict(factor=True))
             sage: latex(E)
             \begin{tabular}{c}
             $w=s(u)=$\\
@@ -376,24 +387,56 @@ class ExtensionType(object):
             $22$ & $\times$ &   &   \\
             $23$ & $\times$ &   &   \\
             \end{tabular}\\
-            $m(w) = 0$, neutral
+            $m(w) = 0$, neutral\\
             \end{tabular}
+
+        With valence appearing::
+
+            sage: E = ExtensionTypeLong(L, (1,2,3), repr_options=dict(valence=True))
+            sage: latex(E)
+            \begin{tabular}{c}
+            \begin{tabular}{cccc}
+            $E(w)$ & $1$ & $2$ & $3$ \\
+            $21$ &   & $\times$ &   \\
+            $31$ &   & $\times$ &   \\
+            $12$ & $\times$ & $\times$ & $\times$ \\
+            $22$ & $\times$ &   &   \\
+            $23$ & $\times$ &   &   \\
+            \end{tabular}\\
+            $m(w) = 0$, neutral\\
+            $d^-_1(w)=3$, $d^-_{2}(w)=5$\\
+            \end{tabular}
+
         """
         mw = self.multiplicity()
         info = self.information()
-        s = '\\begin{tabular}{c}\n'
+        lines = []
+        lines.append('\\begin{tabular}{c}')
         if self._repr_options['factor']:
             chignons = self._chignons
-            s += "$w={}s(u){}={}$".format(chignons[0], chignons[1], self._factor.string_rep())
-            s += "\\\\\n"
+            s = "$w={}s(u){}={}$\\\\".format(chignons[0], chignons[1], self._factor.string_rep())
+            lines.append(s)
         table_latex = self.table()._latex_()
         table_latex = table_latex.replace('E(w)', '$E(w)$')
         table_latex = table_latex.replace(' X ', ' $\\times$ ')
-        s += table_latex
-        s += "\\\\\n"
-        s += "$m(w) = {}$, {}".format(mw, info)
-        s += '\n\\end{tabular}'
-        return s
+        lines.append(table_latex+'\\\\')
+        if self._repr_options['multiplicity']:
+            lines.append("$m(w) = {}$, {}\\\\".format(mw, info))
+        if self._repr_options['valence']:
+            left_val1 = self.left_valence()
+            if hasattr(self, 'left_word_extensions'):
+                left_extensions = self.left_word_extensions()
+                left_val2 = len(left_extensions)
+                if left_extensions:
+                    left_ext_length = len(left_extensions.pop())
+                else:
+                    left_ext_length = "ND"
+                lines.append("$d^-_1(w)={}$, $d^-_{{{}}}(w)={}$\\\\".format(left_val1,
+                                            left_ext_length, left_val2))
+            else:
+                lines.append("$d^-(w)={}$\\\\".format(left_val1))
+        lines.append('\\end{tabular}')
+        return '\n'.join(lines)
 
     def factor(self):
         r"""
@@ -1448,7 +1491,9 @@ class ExtensionType1to1(ExtensionType):
         self._alphabet = alphabet
         self._chignons = tuple(chignons)
         self._factor = factor
-        self._repr_options = dict(factor=False,valence=False) if repr_options is None else repr_options
+        self._repr_options = dict(factor=False,multiplicity=True,valence=False)
+        if repr_options is not None:
+            self._repr_options.update(repr_options)
 
     def table(self):
         r"""
@@ -2030,7 +2075,9 @@ class ExtensionTypeLong(ExtensionType):
             self._empty = self.is_chignons_empty()
         else:
             self._empty = empty
-        self._repr_options = dict(factor=False,valence=False) if repr_options is None else repr_options
+        self._repr_options = dict(factor=False,multiplicity=True,valence=False)
+        if repr_options is not None:
+            self._repr_options.update(repr_options)
 
     def is_chignons_empty(self):
         r"""
