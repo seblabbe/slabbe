@@ -176,9 +176,10 @@ class ExtensionType(object):
             return ExtensionType1to1(L, W.alphabet(), factor=bispecial)
         else:
             L = [(tuple(a), tuple(b)) for (a,b) in L]
+            factors_lr = word.factor_set(nleft+nright)
             return ExtensionTypeLong(L, W.alphabet(), factor=bispecial,
+                    factors_length_k=factors_lr,
                     empty=bispecial.is_empty())
-
 
     @staticmethod
     def from_morphism(m):
