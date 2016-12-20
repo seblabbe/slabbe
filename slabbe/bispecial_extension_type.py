@@ -543,6 +543,7 @@ class ExtensionType(object):
             return False
         else:
             return self._pairs <= other._pairs
+
     def is_equivalent(self, other):
         r"""
         EXAMPLES::
@@ -2079,6 +2080,46 @@ class ExtensionTypeLong(ExtensionType):
         self._repr_options = dict(factor=False,multiplicity=True,valence=False)
         if repr_options is not None:
             self._repr_options.update(repr_options)
+
+    def is_subset(self, other):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import ExtensionTypeLong
+            sage: L = [((2, 3), (1,)), ((2, 1), (2,)), ((1,
+            ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
+            sage: E = ExtensionTypeLong(L, (1,2,3))
+            sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
+            ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
+            sage: F = ExtensionTypeLong(L, (1,2,3))
+            sage: E.is_subset(F)
+            True
+            sage: F.is_subset(E)
+            False
+
+        With incomplete word extensions::
+
+            sage: L = [((3,), (1,)), ((2, 1), (2,)), ((1,
+            ....:    2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
+            sage: G = ExtensionTypeLong(L, (1,2,3))
+            sage: G
+              E(w)   1   2   3
+               21        X
+               31        X
+               12    X   X   X
+               3     X
+            m(w)=0, neutral
+            sage: G.is_subset(E)
+            True
+        """
+        if not isinstance(other, ExtensionType):
+            return False
+        else:
+            return (self._pairs <= other._pairs or 
+                self._pairs <= frozenset((u[i:],v[:j]) 
+                for (u,v) in other._pairs
+                for i in range(len(u)) 
+                for j in range(1,len(v)+1) ))
 
     def is_chignons_empty(self):
         r"""
