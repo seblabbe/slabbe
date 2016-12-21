@@ -57,7 +57,6 @@ TODO:
     - use __classcall_private__ stuff for ExtensionType ?
     - fix bug of apply for ExtensionTypeLong when the word appears in the
       image of a letter (first initial fix: 18 May 2016, to be confirmed)
-    - add the bispecial word to the attribute of extension type
     - use this to compute the factor complexity function
     - When should two bispecial extension type be equal? In graphs, we sometimes
       prefer when they are all different...
@@ -117,7 +116,7 @@ class ExtensionType(object):
     #        raise NotImplementedError
 
     @staticmethod
-    def from_factor(bispecial, word, nleft=1, nright=1):
+    def from_factor(bispecial, word, nleft=1, nright=1, repr_options):
         r"""
         INPUT:
 
@@ -125,6 +124,9 @@ class ExtensionType(object):
         - ``word`` -- the word describing the language
         - ``nleft`` -- length of left extensions (default: ``1``)
         - ``nright`` -- length of right extensions (default: ``1``)
+        - ``repr_options`` - optional (default:
+          dict(factor=False,valence=False)), whether to include the factor
+          and or the valence in the string or latex representation
 
         EXAMPLES::
 
@@ -179,7 +181,8 @@ class ExtensionType(object):
             factors_lr = word.factor_set(nleft+nright)
             return ExtensionTypeLong(L, W.alphabet(), factor=bispecial,
                     factors_length_k=factors_lr,
-                    empty=bispecial.is_empty())
+                    empty=bispecial.is_empty(),
+                    repr_options=repr_options)
 
     @staticmethod
     def from_morphism(m):
