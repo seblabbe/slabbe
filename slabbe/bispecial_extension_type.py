@@ -116,7 +116,7 @@ class ExtensionType(object):
     #        raise NotImplementedError
 
     @staticmethod
-    def from_factor(bispecial, word, nleft=1, nright=1, repr_options):
+    def from_factor(bispecial, word, nleft=1, nright=1, repr_options=None):
         r"""
         INPUT:
 
