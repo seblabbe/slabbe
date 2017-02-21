@@ -107,6 +107,12 @@ With slabbe-0.3.b2, 215 ms on priminfo in Liège::
 
     - Move more methods into the PairPoint class
 
+    - cone_orbit_list is broken because it does not return distinct
+      points... (21 Feb 2017)
+
+    - Code qsort and sort and permutation (21 Feb 2017) so that we can use
+      this code in multidimensional case
+
 Question:
 
     - Comment factoriser le code sans utiliser les yield?
@@ -250,6 +256,21 @@ cdef class PairPoint:
             self.a[0] = self.a[1]
             self.a[1] = self._tmp
 
+    cdef void permutation(self):
+        r"""
+        In larger dimension use::
+
+            man 3 qsort::
+
+        void
+        qsort(void *base, size_t nel, size_t width,
+            int (*compar)(const void *, const void *));
+
+        + google
+        http://stackoverflow.com/questions/17554242/how-to-obtain-the-index-permutation-after-the-sorting
+        """
+        raise NotImplementedError
+
     cdef PairPoint copy(self):
         r"""
         """
@@ -260,6 +281,7 @@ cdef class PairPoint:
 
     cdef void copy_inplace(self, PairPoint P):
         r"""
+        Copy P into self
         """
         cdef int i
         assert self.dim == P.dim, "dimension inconsistencies"
@@ -371,6 +393,17 @@ cdef class PairPoint:
         s = self.dot_product_xx()
         for i in range(self.dim):
             self.a[i] -= p*self.x[i]/s
+
+    cpdef int index_ratio(self, double ratio, int p=1):
+        r"""
+        Returns the number of indices i such that x[i]/||x|| < ratio.
+        """
+        cdef int i,s=0
+        cdef double norm_ratio = self.norm_x(p) * ratio
+        for i in range(self.dim):
+            if self.x[i] < norm_ratio:
+                s += 1
+        return s
 
     cdef act_by_diagonal_matrix(self):
         raise NotImplementedError
@@ -1228,9 +1261,9 @@ cdef class MCFAlgorithm(object):
         # Loop
         while True:
             sig_check() # Check for Keyboard interupt
-            # Apply Algo
             branch = self.call(P)
-            yield (P.x[0], P.x[1], P.x[2]), (P.a[0], P.a[1], P.a[2]), branch
+            yield P.copy(), branch
+
     def cone_orbit_list(self, start=None, int n_iterations=100):
         r"""
         INPUT:
@@ -1262,13 +1295,12 @@ cdef class MCFAlgorithm(object):
         else:
             P = PairPoint(self.dim, start, [1 for i in range(self.dim)])
 
-        L = []
-
         # Loop
+        L = []
         for i in range(n_iterations):
             sig_check() # Check for Keyboard interupt
             branch = self.call(P)
-            L.append( (P.x[0], P.x[1], P.x[2], P.a[0], P.a[1], P.a[2], branch))
+            L.append( (P.copy(), branch) )
         return L
 
     def image(self, start, int n_iterations=1):

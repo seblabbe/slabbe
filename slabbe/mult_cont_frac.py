@@ -204,7 +204,9 @@ class _MCFAlgorithm_methods(object):
             S = []
             it = self.cone_orbit_iterator(v)
             previousA = None
-            for A,B,b in it:
+            for P,b in it:
+                A = (P.x[0], P.x[1], P.x[2])
+                B = (P.a[0], P.a[1], P.a[2])
                 if not all(a in ZZ for a in A):
                     raise ValueError("On input={}, algorithm {} reaches"
                             " non integer entries {}".format(v, self.name(), A))
