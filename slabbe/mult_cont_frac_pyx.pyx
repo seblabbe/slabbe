@@ -150,6 +150,27 @@ cdef inline double random_double_32bit():
 cdef inline double random_double_64bit():
     return rand() * RAND_SCALE + rand() * RAND_SCALE * RAND_SCALE 
 
+# qsort
+# http://stackoverflow.com/questions/35095914/sorting-in-cython 
+# from libc.stdlib cimport qsort
+# ... declaring "const void *" type seems problematic
+
+# http://stackoverflow.com/questions/8353076/how-do-i-pass-a-pointer-to-a-c-fun$
+cdef extern from "stdlib.h":
+    ctypedef void const_void "const void"
+    void qsort(void *base, int nmemb, int size,
+                int(*compar)(const_void *, const_void *)) nogil
+
+cdef int cmp_double(const_void * pa, const_void * pb):
+    cdef double a = (<double *>pa)[0]
+    cdef double b = (<double *>pb)[0]
+    if a < b:
+        return -1
+    elif a > b:
+        return 1
+    else:
+        return 0
+
 cdef class PairPoint:
     r"""
     EXAMPLES::
@@ -255,6 +276,50 @@ cdef class PairPoint:
             self._tmp = self.a[0]
             self.a[0] = self.a[1]
             self.a[1] = self._tmp
+
+    cpdef void sort_x(self): # nogil:
+        r"""
+        EXAMPLES::
+
+            sage: P = PairPoint(4, [.4, .2, .3, .1], [4,3,2,1])
+            sage: P.sort_x()
+            sage: P
+            ((0.1, 0.2, 0.3, 0.4), (4.0, 3.0, 2.0, 1.0))
+        """
+        qsort(self.x, self.dim, sizeof(double), cmp_double)
+
+    # How to sort array a according to x?
+    #@staticmethod
+    #cdef int cmp_x(self, const_void * pa, const_void * pb):
+    #    cdef int a = (<int *>pa)[0]
+    #    cdef int b = (<int *>pb)[0]
+    #    if self.x[a] < self.x[b]:
+    #        return -1
+    #    elif self.x[a] > self.x[b]:
+    #        return 1
+    #    else:
+    #        return 0
+    #cpdef void sort_a(self):
+    #    qsort(self.a, self.dim, sizeof(double), self.cmp_x)
+    # THE ERROR IS:
+    # warning: _Users_slabbe_GitBox_slabbe_slabbe_tmp2_pyx_12.pyx:14:14: Function
+    # signature does not match previous declaration
+    # 
+    # Error compiling Cython file:
+    # ------------------------------------------------------------
+    # ...
+    #             return 1
+    #         else:
+    #             return 0
+    # 
+    #     cpdef void sort_a(self):
+    #         qsort(self.a, self.dim, sizeof(double), self.cmp_x)
+    #                                                    ^
+    # ------------------------------------------------------------
+    # 
+    # _Users_slabbe_GitBox_slabbe_slabbe_tmp2_pyx_12.pyx:183:52: Cannot assign type
+    # 'int (PairPoint, const_void *, const_void *)' to 'int (*)(const_void *,
+    # const_void *)'
 
     cdef void permutation(self):
         r"""
