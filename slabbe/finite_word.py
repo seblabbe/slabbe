@@ -23,10 +23,11 @@ EXAMPLES::
 #  the License, or (at your option) any later version.
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+import itertools
 from collections import Counter
+from random import randrange
 from sage.rings.rational_field import QQ
 from sage.functions.other import abs
-from random import randrange
 
 def discrepancy(self):
     r"""
@@ -128,3 +129,14 @@ def to_image(self, width=1000):
     img = smp.toimage( data )       # Create a PIL image
     #img.show()                     # View in default viewer
     return img
+
+def run_length_encoding(self):
+    r"""
+    EXAMPLES::
+
+        sage: L = [0, 1, 1, 1, 1, 1, 1, 2, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3]
+        sage: run_length_encoding(L)
+        [(0, 1), (1, 6), (2, 1), (1, 1), (2, 5), (3, 6)]
+    """
+    return [(value, sum(1 for _ in it)) for value,it in itertools.groupby(self)]
+
