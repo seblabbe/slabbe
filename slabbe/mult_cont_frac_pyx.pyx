@@ -162,11 +162,28 @@ cdef extern from "stdlib.h":
                 int(*compar)(const_void *, const_void *)) nogil
 
 cdef int cmp_double(const_void * pa, const_void * pb):
+    r"""
+    cmp of doubles
+    """
     cdef double a = (<double *>pa)[0]
     cdef double b = (<double *>pb)[0]
     if a < b:
         return -1
     elif a > b:
+        return 1
+    else:
+        return 0
+
+cdef double* _KEY
+cdef int cmp_int_KEY(const_void * pa, const_void * pb):
+    r"""
+    cmp of integers according to their values in global array _KEY 
+    """
+    cdef int a = (<int *>pa)[0]
+    cdef int b = (<int *>pb)[0]
+    if _KEY[a] < _KEY[b]:
+        return -1
+    elif _KEY[a] > _KEY[b]:
         return 1
     else:
         return 0
@@ -183,11 +200,13 @@ cdef class PairPoint:
     """
     cdef double* x
     cdef double* a
+    cdef int* perm
     cdef int dim
     cdef double _tmp
     def __cinit__(self, int dim, *args, **kwds):
         self.x = <double*>check_allocarray(dim, sizeof(double))
         self.a = <double*>check_allocarray(dim, sizeof(double))
+        self.perm = <int*>check_allocarray(dim, sizeof(int))
         self.dim = dim
 
     def __init__(self, int dim, x=None, a=None):
@@ -245,16 +264,10 @@ cdef class PairPoint:
 
     cdef void sort(self):
         r"""
-        In larger dimension use::
-
-            man 3 qsort::
-
-        void
-        qsort(void *base, size_t nel, size_t width,
-            int (*compar)(const void *, const void *));
-
-        + google
+        # How to sort x and a arrays according to x?
         """
+        if self.dim != 3:
+            raise NotImplementedError("sort is implemented only for dim=3")
         if self.x[0] > self.x[1]:
             self._tmp = self.x[0]
             self.x[0] = self.x[1]
@@ -279,6 +292,8 @@ cdef class PairPoint:
 
     cpdef void sort_x(self): # nogil:
         r"""
+        Sort array x independently of array a.
+
         EXAMPLES::
 
             sage: P = PairPoint(4, [.4, .2, .3, .1], [4,3,2,1])
@@ -288,53 +303,33 @@ cdef class PairPoint:
         """
         qsort(self.x, self.dim, sizeof(double), cmp_double)
 
-    # How to sort array a according to x?
-    #@staticmethod
-    #cdef int cmp_x(self, const_void * pa, const_void * pb):
-    #    cdef int a = (<int *>pa)[0]
-    #    cdef int b = (<int *>pb)[0]
-    #    if self.x[a] < self.x[b]:
-    #        return -1
-    #    elif self.x[a] > self.x[b]:
-    #        return 1
-    #    else:
-    #        return 0
-    #cpdef void sort_a(self):
-    #    qsort(self.a, self.dim, sizeof(double), self.cmp_x)
-    # THE ERROR IS:
-    # warning: _Users_slabbe_GitBox_slabbe_slabbe_tmp2_pyx_12.pyx:14:14: Function
-    # signature does not match previous declaration
-    # 
-    # Error compiling Cython file:
-    # ------------------------------------------------------------
-    # ...
-    #             return 1
-    #         else:
-    #             return 0
-    # 
-    #     cpdef void sort_a(self):
-    #         qsort(self.a, self.dim, sizeof(double), self.cmp_x)
-    #                                                    ^
-    # ------------------------------------------------------------
-    # 
-    # _Users_slabbe_GitBox_slabbe_slabbe_tmp2_pyx_12.pyx:183:52: Cannot assign type
-    # 'int (PairPoint, const_void *, const_void *)' to 'int (*)(const_void *,
-    # const_void *)'
-
-    cdef void permutation(self):
+    cpdef int permutation(self):
         r"""
-        In larger dimension use::
-
-            man 3 qsort::
-
-        void
-        qsort(void *base, size_t nel, size_t width,
-            int (*compar)(const void *, const void *));
-
-        + google
         http://stackoverflow.com/questions/17554242/how-to-obtain-the-index-permutation-after-the-sorting
+
+        OUTPUT:
+
+            int (the permutation, works well if self.dim < 10)
+
+            Permutation gets written to self.perm
+
+        EXAMPLES::
+
+            sage: P = PairPoint(4, [.4, .2, .3, .1], [4,3,2,1])
+            sage: P.permutation()
+            4231
         """
-        raise NotImplementedError
+        cdef int i
+        for i in range(self.dim):
+            self.perm[i] = i
+        global _KEY
+        _KEY = self.x
+        qsort(self.perm, self.dim, sizeof(int), cmp_int_KEY)
+        cdef rep = 0
+        for i in range(self.dim):
+            rep *= 10
+            rep += self.perm[i] + 1
+        return rep
 
     cdef PairPoint copy(self):
         r"""
@@ -355,6 +350,36 @@ cdef class PairPoint:
         for i in range(self.dim):
             self.a[i] = P.a[i]
 
+    cdef double min_x(self):
+        r"""
+        Return the minimum entry of vector x
+
+        OUTPUT:
+
+            double
+        """
+        cdef int i
+        self._tmp = self.x[0]
+        for i in range(1, self.dim):
+            if self._tmp > self.x[i]:
+                self._tmp = self.x[i]
+        return self._tmp
+
+    cdef double max_x(self):
+        r"""
+        Return the maximum entry of vector x
+
+        OUTPUT:
+
+            double
+        """
+        cdef int i
+        self._tmp = self.x[0]
+        for i in range(1, self.dim):
+            if self._tmp < self.x[i]:
+                self._tmp = self.x[i]
+        return self._tmp
+
     cdef double norm_x(self, int p=1):
         r"""
         Return the p-norm of vector x
@@ -374,7 +399,7 @@ cdef class PairPoint:
                 self._tmp += abs(self.x[i])
             return self._tmp
         elif p == 0: # sup norm
-            return max(self.x[0], self.x[1], self.x[2])
+            return self.max_x()
 
     cdef double norm_a(self, int p=1):
         r"""
@@ -459,16 +484,16 @@ cdef class PairPoint:
         for i in range(self.dim):
             self.a[i] -= p*self.x[i]/s
 
-    cpdef int index_ratio(self, double ratio, int p=1):
+    cpdef int number_small_entries(self, double ratio, int p=1):
         r"""
         Returns the number of indices i such that x[i]/||x|| < ratio.
         """
-        cdef int i,s=0
+        cdef int i,c=0
         cdef double norm_ratio = self.norm_x(p) * ratio
         for i in range(self.dim):
             if self.x[i] < norm_ratio:
-                s += 1
-        return s
+                c += 1
+        return c
 
     cdef act_by_diagonal_matrix(self):
         raise NotImplementedError
@@ -532,6 +557,20 @@ cdef class PairPoint:
         self.a[j] += self.a[i]
 
     cdef int _Poincare(self):
+        r"""
+        EXAMPLES::
+
+        """
+        cdef branch = self.permutation() # result written in self.perm
+        cdef int i, s,t
+        for i in range(self.dim-1, 0, -1):
+            t = self.perm[i]
+            s = self.perm[i-1]
+            self.x[t] -= self.x[s]
+            self.a[s] += self.a[t]
+        return branch
+
+    cdef int _Poincare3(self):
         r"""
         EXAMPLES::
 
@@ -961,6 +1000,12 @@ cdef class MCFAlgorithm(object):
             sage: [next(it) for _ in range(20)]
             [123, 2, 1, 123, 1, 231, 3, 3, 3, 3, 123, 1, 1, 1, 231, 2, 321, 2, 3, 312]
 
+        ::
+
+            sage: algo = Poincare(4)
+            sage: it = algo.coding_iterator((1,e,pi,sqrt(2)))
+            sage: [next(it) for _ in range(10)]
+            [1423, 4312, 3241, 3412, 3142, 3214, 4312, 1342, 3412, 1342]
         """
         cdef PairPoint P = PairPoint(self.dim, start)
         cdef int branch
@@ -1699,6 +1744,108 @@ cdef class MCFAlgorithm(object):
                 P.normalize_a(s)
 
         return theta1/n_iterations, theta2/n_iterations, 1-theta2/theta1
+
+    def nsmall_entries_list(self, double ratio, start=None, int n_iterations=1000, int p=1):
+        r"""
+        INPUT:
+
+        - ``ratio`` - real number, 0 < ratio < 1
+        - ``start`` - initial vector (default: ``None``), if None, then
+          initial point is random
+        - ``n_iterations`` -- integer
+        - ``p`` -- integer, p-norm
+
+        EXAMPLES::
+
+            sage: algo = Poincare(4)
+            sage: algo.nsmall_entries_list(.1, n_iterations=20)
+            [0, 1, 1, 0, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3]
+
+        ::
+
+            sage: from slabbe.finite_word import run_length_encoding
+            sage: L = algo.nsmall_entries_list(.01, n_iterations=1000)
+            sage: run_length_encoding(L)
+            [(0, 1),
+            (1, 4),
+            (0, 11),
+            (2, 151),
+            (1, 7),
+            (2, 1),
+            (3, 51),
+            (2, 353),
+            (1, 8),
+            (2, 178),
+            (1, 10),
+            (2, 4),
+            (3, 221)]
+
+        """
+        cdef unsigned int i         # loop counter
+        cdef int branch
+        cdef PairPoint P
+
+        # initial values
+        P = PairPoint(self.dim, start, [0 for i in range(self.dim)])
+        P.normalize_x(P.norm_x(p=p))
+
+        L = []
+        for i in range(n_iterations):
+            sig_check() # Check for Keyboard interupt
+
+            branch = self.call(P) # Apply Algo
+            P.normalize_x(P.norm_x(p=p))
+            L.append(P.number_small_entries(ratio, p=p))
+        return L
+
+    def return_time_to_nsmall_entries(self, double ratio, int n, start=None, int p=1):
+        r"""
+        INPUT:
+
+        - ``ratio`` - real number, 0 < ratio < 1
+        - ``n`` - integer, number of small entries
+        - ``start`` - initial vector (default: ``None``), if None, then
+          initial point is random
+        - ``p`` -- integer, p-norm
+
+        EXAMPLES::
+
+            sage: algo = Poincare(4)
+            sage: algo.return_time_to_nsmall_entries(.05, 0)
+            (3,
+             ((0.17178638839414534, 0.1795717682823472, 0.3283120296944157,
+             0.3203298136290918), (0.0, 0.0, 0.0, 0.0)))
+
+        ::
+
+            sage: algo = Poincare(6)
+            sage: algo.return_time_to_nsmall_entries(.05, 0)
+            (13,
+             ((0.09245603108045694, 0.05458251789275042,
+             0.06004337427302976, 0.5889911219490447, 0.10991340769388094,
+             0.09401354711083737), (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)))
+        """
+        cdef unsigned int i=0         # loop counter
+        cdef int branch
+        cdef PairPoint P
+
+        # initial values
+        P = PairPoint(self.dim, start, [0 for i in range(self.dim)])
+        P.normalize_x(P.norm_x(p=p))
+
+        while True:
+            sig_check() # Check for Keyboard interupt
+
+            branch = self.call(P) # Apply Algo
+            P.normalize_x(P.norm_x(p=p))
+            if P.number_small_entries(ratio, p=p) == n:
+                return i, P
+
+            if P.min_x() == 0:
+                raise ValueError("precision problem at "
+                        "i={},\nP={}".format(i, P))
+
+            i += 1
 
 cdef class Brun(MCFAlgorithm):
     r"""
