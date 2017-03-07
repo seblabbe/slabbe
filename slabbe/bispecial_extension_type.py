@@ -697,30 +697,6 @@ class ExtensionType(object):
 
         """
         raise NotImplementedError
-    def left_valence(self):
-        r"""
-        EXAMPLES::
-
-            sage: from slabbe import ExtensionType1to1
-            sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
-            sage: E = ExtensionType1to1(L, [1,2,3])
-            sage: E.left_valence()
-            3
-
-        """
-        return len(self.left_extensions())
-    def right_valence(self):
-        r"""
-        EXAMPLES::
-
-            sage: from slabbe import ExtensionType1to1
-            sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
-            sage: E = ExtensionType1to1(L, [1,2,3])
-            sage: E.right_valence()
-            3
-
-        """
-        return len(self.right_extensions())
     def palindromic_valence(self):
         r"""
         EXAMPLES::
@@ -1850,6 +1826,38 @@ class ExtensionType1to1(ExtensionType):
                         L.append(e)
         return tuple(L)
 
+    def left_valence(self, length=1):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import ExtensionType1to1
+            sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
+            sage: E = ExtensionType1to1(L, [1,2,3])
+            sage: E.left_valence()
+            3
+
+        """
+        if length == 1:
+            return len(self.left_extensions())
+        else:
+            raise NotImplementedError('can not compute left valence of '
+                    'length(={})'.format(length))
+
+    def right_valence(self, length=1):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import ExtensionType1to1
+            sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
+            sage: E = ExtensionType1to1(L, [1,2,3])
+            sage: E.right_valence()
+            3
+        """
+        if length == 1:
+            return len(self.right_extensions())
+        else:
+            raise NotImplementedError('can not compute right valence of '
+                    'length(={})'.format(length))
     def is_ordinaire(self):
         r"""
         EXAMPLES:
@@ -2243,6 +2251,47 @@ class ExtensionTypeLong(ExtensionType):
             [word: 1, word: 2, word: 3]
         """
         return set(b for a,b in self)
+    def left_valence(self, length=1):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import ExtensionTypeLong
+            sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
+            ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
+            sage: E = ExtensionTypeLong(L, (1,2,3))
+            sage: E.left_valence()
+            3
+            sage: E.left_valence(2)
+            5
+        """
+        if length == 1:
+            return len(self.left_extensions())
+        L = self.left_word_extensions()
+        if length == len(next(iter(L))):
+            return len(L)
+        else:
+            raise NotImplementedError('can not compute left valence of '
+                    'length(={}) for extensions {}'.format(length, L))
+
+    def right_valence(self, length=1):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import ExtensionTypeLong
+            sage: L = [((2, 2), (1,)), ((2, 3), (1,)), ((2, 1), (2,)), ((1,
+            ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
+            sage: E = ExtensionTypeLong(L, (1,2,3))
+            sage: E.right_valence()
+            3
+        """
+        if length == 1:
+            return len(self.right_extensions())
+        L = self.right_word_extensions()
+        if length == len(next(iter(L))):
+            return len(L)
+        else:
+            raise NotImplementedError('can not compute right valence of '
+                    'length(={}) for extensions {}'.format(length, L))
     def table(self):
         r"""
         return a table representation of self.
@@ -2735,7 +2784,7 @@ def longest_common_suffix(L):
         common = w.longest_common_suffix(common)
     return common
 
-def table_bispecial(word, k):
+def table_bispecial(word, k, nleft=1, nright=1):
     r"""
     Return the table of the first k bispecial factors of a word.
 
@@ -2753,45 +2802,73 @@ def table_bispecial(word, k):
         sage: from slabbe.bispecial_extension_type import table_bispecial
         sage: w = words.FibonacciWord()
         sage: table_bispecial(w[:10000], 6)
-          |w|   word                  m(w)   info
-        +-----+---------------------+------+------+
-          0                           0      ord.
-          1     0                     0      ord.
-          3     010                   0      ord.
-          6     010010                0      ord.
-          11    01001010010           0      ord.
-          19    0100101001001010010   0      ord.
+          |w|   word                  m(w)   info   d^-(w)   d^+(w)
+        +-----+---------------------+------+------+--------+--------+
+          0                           0      ord.   2        2
+          1     0                     0      ord.   2        2
+          3     010                   0      ord.   2        2
+          6     010010                0      ord.   2        2
+          11    01001010010           0      ord.   2        2
+          19    0100101001001010010   0      ord.   2        2
+
+    ::
+
+        sage: w = words.FibonacciWord()
+        sage: table_bispecial(w[:10000], 6, nleft=2)
+          |w|   word                  m(w)   info   d^-(w)   d_2^-(w)   d^+(w)
+        +-----+---------------------+------+------+--------+----------+--------+
+          0                           0      ord.   2        3          2
+          1     0                     0      ord.   2        2          2
+          3     010                   0      ord.   2        2          2
+          6     010010                0      ord.   2        2          2
+          11    01001010010           0      ord.   2        2          2
+          19    0100101001001010010   0      ord.   2        2          2
 
     ::
 
         sage: w = words.ThueMorseWord()
         sage: table_bispecial(w[:10000], 11)
-          |w|   word     m(w)   info
-        +-----+--------+------+--------+
-          0              1      strong
-          1     0        0      ord.
-          1     1        0      ord.
-          2     01       1      strong
-          2     10       1      strong
-          3     010      -1     weak
-          3     101      -1     weak
-          4     0110     1      strong
-          4     1001     1      strong
-          6     011001   -1     weak
-          6     100110   -1     weak
+          |w|   word     m(w)   info     d^-(w)   d^+(w)
+        +-----+--------+------+--------+--------+--------+
+          0              1      strong   2        2
+          1     0        0      ord.     2        2
+          1     1        0      ord.     2        2
+          2     01       1      strong   2        2
+          2     10       1      strong   2        2
+          3     010      -1     weak     2        2
+          3     101      -1     weak     2        2
+          4     0110     1      strong   2        2
+          4     1001     1      strong   2        2
+          6     011001   -1     weak     2        2
+          6     100110   -1     weak     2        2
     """
     it = word.bispecial_factors_iterator()
     bispecials = [next(it) for _ in range(k)]
     rows = []
     for w in bispecials:
-        ext = ExtensionType.from_factor(w, word)
+        ext = ExtensionType.from_factor(w, word, nleft=nleft, nright=nright)
         mw = ext.multiplicity()
         info = ext.information()
-        row = [w.length(), w, mw, info]
+        left_valence = ext.left_valence()
+        row = [w.length(), w, mw, info, left_valence]
+        if nleft > 1:
+            left_word_valence = ext.left_valence(nleft)
+            row.append(left_word_valence)
+        right_valence = ext.right_valence()
+        row.append(right_valence)
+        if nright > 1:
+            right_word_valence = ext.right_valence(nright)
+            row.append(right_word_valence)
         rows.append(row)
     rows.sort(key=lambda row:row[1])
     rows.sort(key=lambda row:row[0])
-    return table(rows=rows, header_row=['|w|', 'word', 'm(w)','info'])
+    header_row=['|w|', 'word', 'm(w)','info', 'd^-(w)']
+    if nleft > 1:
+        header_row.append('d_{}^-(w)'.format(nleft))
+    header_row.append('d^+(w)')
+    if nright > 1:
+        header_row.append('d_{}^+(w)'.format(nright))
+    return table(rows=rows, header_row=header_row)
 
 def recursively_enumerated_set_to_digraph(R, max_depth=float('inf')):
     r"""
