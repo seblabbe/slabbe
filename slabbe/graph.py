@@ -65,7 +65,7 @@ def projection_graph(G, proj_fn, filename=None, verbose=False):
         print TikzPicture.from_graph(G_proj, prog='dot').pdf(filename)
     return G_proj
 
-def digraph_move_label_to_edge(G, label_function=None):
+def digraph_move_label_to_edge(G, label_function=None, noduplicates=True):
     r"""
     Return a digraph with labels moved from the arrival vertices to
     corresponding edges.
@@ -74,6 +74,8 @@ def digraph_move_label_to_edge(G, label_function=None):
 
     - ``G`` -- graph, whose vertices are tuples of the form (vertex, label)
     - ``label_function`` -- function or None, a function to apply to each label
+    - ``noduplicates`` -- bool (default: True), if True, it avoids
+      duplicated edges
 
     EXAMPLES::
 
@@ -99,6 +101,8 @@ def digraph_move_label_to_edge(G, label_function=None):
         edges = [(u,v,label_function(label)) for ((u,_), (v,label), _) in G.edges()]
     else:
         edges = [(u,v,label) for ((u,_), (v,label), _) in G.edges()]
+    if noduplicates:
+        edges = list(set(edges))
     return DiGraph(edges, format='list_of_edges', loops=True, multiedges=True)
 
 def induced_subgraph(G, filter):
