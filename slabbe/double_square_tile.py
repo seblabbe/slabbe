@@ -1928,8 +1928,8 @@ class DoubleSquare(SageObject):
         EXAMPLES::
 
             sage: d = DoubleSquare((5,8,5,8))
-            sage: d.tikz_tiling(nx=10, ny=10).pdf()
-            sage: d.tikz_tiling(nx=10, ny=10, kind=2).pdf()
+            sage: t = d.tikz_tiling(nx=4, ny=4)
+            sage: t = d.tikz_tiling(nx=4, ny=4, kind=2)
         """
         L = self.factorization_points()
         w = self.boundary_word()
