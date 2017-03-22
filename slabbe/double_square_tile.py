@@ -1967,6 +1967,7 @@ class DoubleSquare(SageObject):
             lines.append(r'\draw[thick, draw=red] {};'.format(pts_str))
 
         lines.append(r'\end{tikzpicture}')
+        from slabbe import TikzPicture
         return TikzPicture('\n'.join(lines))
 
 ###############################
