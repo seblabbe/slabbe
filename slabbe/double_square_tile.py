@@ -175,7 +175,7 @@ also works for double square tiles that are 8-connected polyominoes::
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from itertools import izip_longest
+import itertools
 from sage.structure.sage_object import SageObject
 from sage.rings.integer import Integer
 from sage.rings.real_mpfr import RR
@@ -1274,6 +1274,26 @@ class DoubleSquare(SageObject):
         lengths_of_w = map(len, self._w)
         return [sum(lengths_of_w[:i]) for i in range(8)]
 
+    def translation_vectors(self):
+        r"""
+        Returns two pairs of translation vectors of the two associated tiling. 
+
+        EXAMPLES::
+
+            sage: from slabbe import DoubleSquare
+            sage: D = DoubleSquare(words.fibonacci_tile(1))
+            sage: D.translation_vectors()
+            (((-1, -2), (2, -1)), ((1, -2), (2, 1)))
+        """
+        L = self.factorization_points()
+        w = self.boundary_word()
+        X = w[L[0]:L[2]]
+        Y = w[L[2]:L[4]]
+        U = w[L[1]:L[3]]
+        V = w[L[3]:L[5]]
+        return ((X.end_point(), Y.end_point()),
+                (U.end_point(), V.end_point()))
+
     def apply_morphism(self, m):
         r"""
         INPUT:
@@ -1788,7 +1808,9 @@ class DoubleSquare(SageObject):
                 edge += "{$\\%s$}" % func
                 s += "\\path[->] (q%s) %s (q%s);\n"%(j-1, edge, j)
         s += "\\end{tikzpicture}\n"
-        return LatexExpr(s)
+        from slabbe import TikzPicture
+        usetikzlibrary = ['pgfplots.groupplots']
+        return TikzPicture(s, usetikzlibrary=usetikzlibrary)
 
     def tikz_commutative_diagram(self, tile, N=1, scale=(1,1), labels=True,
             newcommand=True):
@@ -1888,7 +1910,64 @@ class DoubleSquare(SageObject):
             edge += "{$\\varphi$}"
             s += "\\path[thick, ->] (q%s) %s (r%s);\n"%(j, edge, j)
         s += "\\end{tikzpicture}\n"
-        return LatexExpr(s)
+        from slabbe import TikzPicture
+        return TikzPicture(s)
+
+    def tikz_tiling(self, nx=4, ny=4, kind=1, rectangle=None, clip=None):
+        r"""
+        Return a tikz of the tiling.
+
+        INPUT:
+
+        - ``nx`` -- integer
+        - ``ny`` -- integer
+        - ``kind`` -- integer, 1 or 2, first or second tiling
+        - ``rectangle`` -- list of two points (to practice for the clip)
+        - ``clip`` -- list of two points
+
+        EXAMPLES::
+
+            sage: d = DoubleSquare((5,8,5,8))
+            sage: d.tikz_tiling(nx=10, ny=10).pdf()
+            sage: d.tikz_tiling(nx=10, ny=10, kind=2).pdf()
+        """
+        L = self.factorization_points()
+        w = self.boundary_word()
+        if kind == 1:
+            X = w[L[0]:L[2]]
+            Y = w[L[2]:L[4]]
+        elif kind == 2:
+            X = w[L[1]:L[3]]
+            Y = w[L[3]:L[5]]
+        vx = X.end_point()
+        vy = Y.end_point()
+
+        lines = []
+        lines.append(r'\begin{tikzpicture}')
+
+        if rectangle:
+            p,q = rectangle
+            lines.append(r'\draw {} rectangle {};'.format(p,q))
+        if clip:
+            p,q = clip
+            lines.append(r'\clip {} rectangle {};'.format(p,q))
+
+        pts = list((X**nx).points())
+        for i in range(ny+1):
+            t = i*vy
+            pts_t = [p+t for p in pts]
+            pts_str = ' -- '.join(map(str, pts_t))
+            lines.append(r'\draw[thick, draw=red] {};'.format(pts_str))
+
+        pts = list((Y**ny).points())
+        for i in range(nx+1):
+            t = i*vx
+            pts_t = [p+t for p in pts]
+            pts_str = ' -- '.join(map(str, pts_t))
+            lines.append(r'\draw[thick, draw=red] {};'.format(pts_str))
+
+        lines.append(r'\end{tikzpicture}')
+        return TikzPicture('\n'.join(lines))
 
 ###############################
 # Creation of Double Square from inputs
