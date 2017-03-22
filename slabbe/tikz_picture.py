@@ -373,7 +373,7 @@ class TikzPicture(SageObject):
         from subprocess import check_call, CalledProcessError, PIPE
 
         # running pdflatex
-        cmd = ['sage-native-execute', 'pdflatex', '-interaction=nonstopmode', _filename_tex]
+        cmd = ['pdflatex', '-interaction=nonstopmode', _filename_tex]
         cmd = ' '.join(cmd)
         try:
             check_call(cmd, shell=True, stdout=PIPE, stderr=PIPE, cwd=base)
@@ -390,7 +390,7 @@ class TikzPicture(SageObject):
         # move the pdf into the good location
         if filename:
             filename = os.path.abspath(filename)
-            cmd = ['sage-native-execute', 'mv', _filename_pdf, filename]
+            cmd = ['mv', _filename_pdf, filename]
             check_call(cmd, stdout=PIPE, stderr=PIPE)
             return filename
 
@@ -455,7 +455,7 @@ class TikzPicture(SageObject):
         _filename_png = _filename+'.png'
 
         # convert to png
-        cmd = ['sage-native-execute', 'convert', '-density',
+        cmd = ['convert', '-density',
                '{0}x{0}'.format(density), '-trim', _filename_pdf,
                _filename_png]
         cmd = ' '.join(cmd)
@@ -464,7 +464,7 @@ class TikzPicture(SageObject):
         # move the png into the good location
         if filename:
             filename = os.path.abspath(filename)
-            cmd = ['sage-native-execute', 'mv', _filename_png, filename]
+            cmd = ['mv', _filename_png, filename]
             check_call(cmd, stdout=PIPE, stderr=PIPE)
             return filename
 
@@ -525,16 +525,14 @@ class TikzPicture(SageObject):
         _filename_svg = _filename+'.svg'
 
         # convert to svg
-        cmd = ['sage-native-execute', 'pdf2svg',
-               _filename_pdf,
-               _filename_svg]
+        cmd = ['pdf2svg', _filename_pdf, _filename_svg]
         cmd = ' '.join(cmd)
         check_call(cmd, shell=True, stdout=PIPE, stderr=PIPE)
 
         # move the svg into the good location
         if filename:
             filename = os.path.abspath(filename)
-            cmd = ['sage-native-execute', 'mv', _filename_svg, filename]
+            cmd = ['mv', _filename_svg, filename]
             check_call(cmd, stdout=PIPE, stderr=PIPE)
             return filename
 
