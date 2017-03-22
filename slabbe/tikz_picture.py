@@ -80,7 +80,7 @@ AUTHORS:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from sage.misc.latex import have_pdflatex, have_convert
+from sage.misc.latex import have_pdflatex, have_convert, have_program
 from sage.misc.temporary_file import tmp_filename
 from sage.structure.sage_object import SageObject
 import os
@@ -476,4 +476,74 @@ class TikzPicture(SageObject):
             check_call(cmd, shell=True, stdout=PIPE, stderr=PIPE)
 
         return _filename_png
+
+    def svg(self, filename=None, view=True):
+        """
+        Compiles the latex code with pdflatex and converts to a svg file.
+
+        INPUT:
+
+        - ``filename`` -- string (default:``None``), the output filename. 
+          If ``None``, it saves the file in a temporary directory.
+
+        - ``view`` -- bool (default:``True``), whether to open the file in a
+          png viewer. This option is ignored if ``filename`` is not ``None``.
+
+        OUTPUT:
+
+            string, path to svg file
+
+        EXAMPLES::
+
+            sage: from slabbe import TikzPicture
+            sage: V = [[1,0,1],[1,0,0],[1,1,0],[0,0,-1],[0,1,0],[-1,0,0],[0,1,1],[0,0,1],[0,-1,0]]
+            sage: P = Polyhedron(vertices=V).polar()
+            sage: s = P.projection().tikz([674,108,-731],112)
+            sage: t = TikzPicture(s)
+            sage: _ = t.svg()    # not tested
+
+        ::
+
+            sage: from sage.misc.temporary_file import tmp_filename
+            sage: filename = tmp_filename('temp','.svg')
+            sage: _ = t.svg(filename)      # long time (2s)
+
+        ACKNOWLEDGEMENT:
+
+            The code was adapted and taken from the module :mod:`sage.misc.latex.py`.
+        """
+        if not have_program('pdf2svg'):
+            raise RuntimeError("pdf2svg does not seem to be installed. " 
+                    "Install it for example with ``brew install pdf2svg``"
+                    " or ``apt-get install pdf2svg``.")
+
+        # subprocess stuff
+        from subprocess import check_call, PIPE
+
+        _filename_pdf = self.pdf(filename=None, view=False)
+        _filename, ext = os.path.splitext(_filename_pdf)
+        _filename_svg = _filename+'.svg'
+
+        # convert to svg
+        cmd = ['sage-native-execute', 'pdf2svg',
+               _filename_pdf,
+               _filename_svg]
+        cmd = ' '.join(cmd)
+        check_call(cmd, shell=True, stdout=PIPE, stderr=PIPE)
+
+        # move the svg into the good location
+        if filename:
+            filename = os.path.abspath(filename)
+            cmd = ['sage-native-execute', 'mv', _filename_svg, filename]
+            check_call(cmd, stdout=PIPE, stderr=PIPE)
+            return filename
+
+        # open the tmp svg
+        elif view:
+            from sage.misc.viewer import browser
+            cmd = [browser(), _filename_svg]
+            cmd = ' '.join(cmd)
+            check_call(cmd, shell=True, stdout=PIPE, stderr=PIPE)
+
+        return _filename_svg
 
