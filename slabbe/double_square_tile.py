@@ -1953,14 +1953,14 @@ class DoubleSquare(SageObject):
             lines.append(r'\clip {} rectangle {};'.format(p,q))
 
         pts = list((X**nx).points())
-        for i in range(-ny, ny+1):
+        for i in range(ny+1):
             t = i*vy
             pts_t = [p+t for p in pts]
             pts_str = ' -- '.join(map(str, pts_t))
             lines.append(r'\draw[thick, draw=red] {};'.format(pts_str))
 
         pts = list((Y**ny).points())
-        for i in range(-nx, nx+1):
+        for i in range(nx+1):
             t = i*vx
             pts_t = [p+t for p in pts]
             pts_str = ' -- '.join(map(str, pts_t))
