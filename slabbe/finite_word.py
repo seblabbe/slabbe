@@ -134,9 +134,95 @@ def run_length_encoding(self):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.finite_word import run_length_encoding
         sage: L = [0, 1, 1, 1, 1, 1, 1, 2, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3]
         sage: run_length_encoding(L)
         [(0, 1), (1, 6), (2, 1), (1, 1), (2, 5), (3, 6)]
     """
     return [(value, sum(1 for _ in it)) for value,it in itertools.groupby(self)]
+
+def word_to_polyomino(self):
+    r"""
+    Returns the inside points of a polyomino.
+
+    INPUT:
+
+    - ``self`` -- list of integers in 0,1,2,3 describing a closed path
+
+    OUTPUT:
+
+    - list of 2d vectors
+
+    EXAMPLES::
+
+        sage: from slabbe.finite_word import word_to_polyomino
+        sage: w = [0,0,0,1,1,1,2,2,2,3,3,3]
+        sage: word_to_polyomino(w)
+        [(0, 0), (0, 1), (1, 0), (2, 0), (1, 1), (0, 2), (1, 2), (2, 1), (2, 2)]
+        sage: w = [1,1,1,0,0,0,3,3,3,2,2,2]
+        sage: word_to_polyomino(w)
+        [(0, 0), (0, 1), (1, 0), (2, 0), (1, 1), (0, 2), (1, 2), (2, 1), (2, 2)]
+    """
+    from sage.combinat.words.words import FiniteWords
+    alphabet = [0,1,2,3]
+    FW = FiniteWords(alphabet)
+    w = FW(self)
+
+    # Checking it is closed
+    end = (w.count(0)-w.count(2), w.count(1) - w.count(3))
+    if end != (0,0):
+        raise ValueError("input word is not closed path, "
+                "it finishes at {}".format(end))
+
+    # Checking its turning number is 1 = 4/4
+    w_ = w + FW([self[0]])
+    turns = w_.finite_differences(mod=4)
+    turning_number = turns.count(1) - turns.count(3)
+    if turning_number == 4:
+        pass
+    elif turning_number == -4:
+        self = [(a+2)%4 for a in reversed(self)]
+    else:
+        raise ValueError("input word is not simple path, "
+                "its turning number is {}".format(turning_number))
+
+    # Setting up directions, outside and inside points of each edge
+    from sage.modules.free_module import FreeModule
+    from sage.rings.integer_ring import ZZ
+    F = FreeModule(ZZ, 2)
+    directions = map(F, [(1,0), (0,1), (-1,0), (0,-1)])
+    outside = map(F, [(0,-1), (0,0), (-1,0), (-1,-1)])
+    inside = map(F, [(0,0), (-1,0), (-1,-1), (0,-1)])
+    # obtained from below after a translation by (-1/2,-1/2)
+    #outside = map(F, [(u/2,-u/2), (u/2,u/2), (-u/2,u/2), (-u/2,-u/2)])
+    #inside = map(F, [(u/2,u/2), (-u/2,u/2), (-u/2,-u/2), (u/2,-u/2)])
+    for p in directions: p.set_immutable()
+    for p in outside: p.set_immutable()
+    for p in inside: p.set_immutable()
+    alph_to_dir = dict(zip(alphabet, directions))
+    alph_to_outside = dict(zip(alphabet, outside))
+    alph_to_inside = dict(zip(alphabet, inside))
+
+    # Computing the outside points
+    cur = F.zero()
+    outside_points = set()
+    for a in self:
+        outside = cur + alph_to_outside[a]
+        outside.set_immutable()
+        outside_points.add(outside)
+        cur += alph_to_dir[a]
+
+    # The recursively enumerated set
+    def children(p):
+        possible = []
+        for d in directions:
+            p_d = p+d
+            p_d.set_immutable()
+            if p_d not in outside_points:
+                possible.append(p_d)
+        return possible
+    seeds = [alph_to_inside[self[0]]]
+    from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
+    R = RecursivelyEnumeratedSet(seeds, children, structure='symmetric')
+    return list(R)
 
