@@ -470,4 +470,43 @@ class LanguageGenerator(object):
             autom.add_transition(S(*p), S(k,i,j), S(k,i,j))
         return autom
 
+    def Cassaigne(self):
+        r"""
+        Return the Cassaigne regular language over the alphabet
+        [11, 22, 122, 211, 121, 212].
+
+        EXAMPLES::
+
+            sage: from slabbe.language import languages
+            sage: L = languages.Cassaigne()
+            sage: L
+            Regular language over [11, 22, 122, 211, 121, 212]
+            defined by: Automaton with 1 state
+            sage: map(L.complexity, range(4))
+            [1, 6, 36, 216]
+        """
+        alphabet = [11, 22, 122, 211, 121, 212]
+        automaton = self._Cassaigne_automaton()
+        return RegularLanguage(alphabet, automaton)
+
+    def _Cassaigne_automaton(self):
+        r"""
+        Return the automaton for the Cassaigne language over the alphabet
+        [11, 22, 122, 211, 121, 212].
+
+        EXAMPLES::
+
+            sage: from slabbe.language import languages
+            sage: A = languages._Cassaigne_automaton()
+            sage: A
+            Automaton with 1 state
+        """
+        q = 0
+        states = [q]
+        autom = Automaton(initial_states=states, final_states=states)
+        alphabet = [11, 22, 122, 211, 121, 212]
+        for i in alphabet:
+            autom.add_transition(q, q, i)
+        return autom
+
 languages = LanguageGenerator()
