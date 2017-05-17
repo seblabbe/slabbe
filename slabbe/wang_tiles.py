@@ -9,19 +9,19 @@ This uses Coin solver which can be installed with::
 EXAMPLES::
 
     sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
-    sage: W = WangTiling(tiles,3,4)
+    sage: W = WangTileSolver(tiles,3,4)
     sage: _ = W.tikz().pdf()
 
 ::
 
     sage: tiles = [(1/2,1/2,1/2,1/2), (1,1,1,1), (2,2,2,2)]
-    sage: W = WangTiling(tiles,3,4)
+    sage: W = WangTileSolver(tiles,3,4)
     sage: _ = W.tikz().pdf()
 
 ::
 
     sage: tiles = [(0,3,1,4), (1,4,0,3)]
-    sage: W = WangTiling(tiles,3,4)
+    sage: W = WangTileSolver(tiles,3,4)
     sage: table = W.solve()
     sage: table
     [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
@@ -33,14 +33,14 @@ Kari-Culik (Here 0' is replaced by 10)::
     sage: times_3 = [(1,2,0,1), (2,1,0,1), (2,2,1,1), (0,1,1,0), (0,2,2,0),
     ....:     (1,1,2,0)]
     sage: tiles = divide_by_2 + times_3
-    sage: W = WangTiling(tiles,3,4)
+    sage: W = WangTileSolver(tiles,3,4)
     sage: _ = W.tikz().pdf()
 
 Rao-Jeandel::
 
     sage: tiles = [(2,4,2,1), (2,2,2,0), (1,1,3,1), (1,2,3,2), (3,1,3,3),
     ....: (0,1,3,1), (0,0,0,1), (3,1,0,2), (0,2,1,2), (1,2,1,4), (3,3,1,2)]
-    sage: W = WangTiling(tiles,3,4)
+    sage: W = WangTileSolver(tiles,3,4)
     sage: _ = W.tikz().pdf()
 
 .. TODO::
@@ -59,7 +59,7 @@ Rao-Jeandel::
 #*****************************************************************************
 from sage.numerical.mip import MixedIntegerLinearProgram
 
-class WangTiling(object):
+class WangTileSolver(object):
     r"""
     INPUT:
 
@@ -74,7 +74,7 @@ class WangTiling(object):
     EXAMPLES::
 
         sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
-        sage: W = WangTiling(tiles, 3, 3)
+        sage: W = WangTileSolver(tiles, 3, 3)
 	sage: W.solve()
 	[[0, 0, 0], [0, 0, 0], [0, 0, 0]]
 
@@ -82,14 +82,14 @@ class WangTiling(object):
 
 	sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
 	sage: right = {(1,1):2}
-	sage: W = WangTiling(tiles,3,3,precolor=[right,{},{},{}])
+	sage: W = WangTileSolver(tiles,3,3,precolor=[right,{},{},{}])
 	sage: W.solve()
 	[[2, 2, 2], [2, 2, 2], [2, 2, 2]]
 
     When constraints are inconsistent::
 
 	sage: right = {(1,1):1, (2,2):0}
-	sage: W = WangTiling(tiles,3,3,precolor=[right,{},{},{}])
+	sage: W = WangTileSolver(tiles,3,3,precolor=[right,{},{},{}])
 	sage: W.solve()
 	Traceback (most recent call last):
 	...
@@ -100,7 +100,7 @@ class WangTiling(object):
     Colors must be convertable to float::
 
         sage: tiles = [('a','a','a','a'), ('b','b','b','b')]
-        sage: W = WangTiling(tiles,3,4)
+        sage: W = WangTileSolver(tiles,3,4)
         sage: _ = W.tikz().pdf()
 	Traceback (most recent call last):
 	...
@@ -113,7 +113,7 @@ class WangTiling(object):
         EXAMPLES::
 
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
-            sage: W = WangTiling(tiles, 3, 4)
+            sage: W = WangTileSolver(tiles, 3, 4)
         """
         self._tiles = tiles
         self._width = width
@@ -131,7 +131,7 @@ class WangTiling(object):
         EXAMPLES::
 
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
-            sage: W = WangTiling(tiles,3,4)
+            sage: W = WangTileSolver(tiles,3,4)
             sage: p,x = W.milp()
         """
         tiles = self._tiles
@@ -187,7 +187,7 @@ class WangTiling(object):
         EXAMPLES::
 
             sage: tiles = [(0,3,1,4), (1,4,0,3)]
-            sage: W = WangTiling(tiles,3,4)
+            sage: W = WangTileSolver(tiles,3,4)
             sage: table = W.solve()
             sage: table
             [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
@@ -218,7 +218,7 @@ class WangTiling(object):
         EXAMPLES::
 
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
-            sage: W = WangTiling(tiles,3,4)
+            sage: W = WangTileSolver(tiles,3,4)
             sage: t = W.tikz()
             \documentclass[tikz]{standalone}
             \usepackage{amsmath}
