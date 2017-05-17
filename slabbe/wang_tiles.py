@@ -67,7 +67,7 @@ class WangTileSolver(object):
         color, left color, bottom color)
     - ``width`` -- integer
     - ``height`` -- integer
-    - ``precolor`` -- None or list of 4 dict or the form ``[{}, {}, {}, {}]``
+    - ``preassigned`` -- None or list of 4 dict or the form ``[{}, {}, {}, {}]``
         right, top, left, bottom colors preassigned to some positions (on
         the border or inside)
 
@@ -82,14 +82,14 @@ class WangTileSolver(object):
 
 	sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
 	sage: right = {(1,1):2}
-	sage: W = WangTileSolver(tiles,3,3,precolor=[right,{},{},{}])
+	sage: W = WangTileSolver(tiles,3,3,preassigned=[right,{},{},{}])
 	sage: W.solve()
 	[[2, 2, 2], [2, 2, 2], [2, 2, 2]]
 
     When constraints are inconsistent::
 
 	sage: right = {(1,1):1, (2,2):0}
-	sage: W = WangTileSolver(tiles,3,3,precolor=[right,{},{},{}])
+	sage: W = WangTileSolver(tiles,3,3,preassigned=[right,{},{},{}])
 	sage: W.solve()
 	Traceback (most recent call last):
 	...
@@ -106,7 +106,7 @@ class WangTileSolver(object):
 	...
         ValueError: could not convert string to float: a
     """
-    def __init__(self, tiles, width, height, precolor=None):
+    def __init__(self, tiles, width, height, preassigned=None):
         r"""
         See class for documentation.
 
@@ -118,9 +118,9 @@ class WangTileSolver(object):
         self._tiles = tiles
         self._width = width
         self._height = height
-        if precolor is None:
-            precolor = [{}, {}, {}, {}]
-        self._precolor = precolor
+        if preassigned is None:
+            preassigned = [{}, {}, {}, {}]
+        self._preassigned = preassigned
 
     def milp(self, solver='Coin'):
         r"""
@@ -166,7 +166,7 @@ class WangTileSolver(object):
 
         # matching preassigned color constraints
         legend = {0:'right',1:'top',2:'left',3:'bottom'}
-        for angle, D in enumerate(self._precolor):
+        for angle, D in enumerate(self._preassigned):
             for j,k in D:
                 A = p.sum(tiles[i][angle]*x[i,j,k] for i in indices)
                 name = "preassigned {} of {}".format(legend[angle], (j,k))
