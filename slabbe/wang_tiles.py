@@ -207,13 +207,14 @@ class WangTileSolver(object):
             table[j][k] = i
         return table
 
-    def tikz(self, solver='Coin'):
+    def tikz(self, solver='Coin', color=None):
         r"""
         Return a tikzpicture showing one solution.
 
         INPUT:
 
         - ``solver`` --
+        - ``color`` -- None or dict
 
         EXAMPLES::
 
@@ -238,6 +239,13 @@ class WangTileSolver(object):
             \end{tikzpicture}
             \end{document}
             sage: _ = t.pdf()
+
+        With colors::
+
+            sage: tiles = [(0,2,1,3), (1,3,0,2)]
+            sage: W = WangTileSolver(tiles,3,4)
+            sage: color = {0:'white',1:'red',2:'blue',3:'green'}
+            sage: t = W.tikz(color=color)
         """
         table = self.solve(solver)
         lines = []
@@ -247,6 +255,13 @@ class WangTileSolver(object):
                 i = table[j][k]
                 tile = self._tiles[i]
                 lines.append('% tile at position {}'.format((j,k)))
+                if color:
+                    tri = r'\fill[{}] {} -- {} -- {};'
+                    c = (j+.5,k+.5)
+                    lines.append(tri.format(color[tile[0]],(j+1,k),c,(j+1,k+1)))
+                    lines.append(tri.format(color[tile[1]],(j,k+1),c,(j+1,k+1)))
+                    lines.append(tri.format(color[tile[2]],(j,k),c,(j,k+1)))
+                    lines.append(tri.format(color[tile[3]],(j,k),c,(j+1,k)))
                 lines.append(r'\draw {} -- {};'.format((j,k), (j+1,k)))
                 lines.append(r'\draw {} -- {};'.format((j,k), (j,k+1)))
                 lines.append(r'\node[left]  at {} {{{}}};'.format((j+1,k+.5), tile[0]))
