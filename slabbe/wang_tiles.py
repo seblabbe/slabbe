@@ -106,7 +106,7 @@ class WangTileSolver(object):
 	...
         ValueError: could not convert string to float: a
     """
-    def __init__(self, tiles, width, height, preassigned=None):
+    def __init__(self, tiles, width, height, preassigned=None, color=None):
         r"""
         See class for documentation.
 
@@ -121,6 +121,7 @@ class WangTileSolver(object):
         if preassigned is None:
             preassigned = [{}, {}, {}, {}]
         self._preassigned = preassigned
+        self._color = color
 
     def milp(self, solver='Coin'):
         r"""
@@ -243,11 +244,20 @@ class WangTileSolver(object):
         With colors::
 
             sage: tiles = [(0,2,1,3), (1,3,0,2)]
+            sage: color = {0:'white',1:'red',2:'blue',3:'green'}
+            sage: W = WangTileSolver(tiles,3,4,color=color)
+            sage: t = W.tikz()
+
+        With colors, alternatively::
+
+            sage: tiles = [(0,2,1,3), (1,3,0,2)]
             sage: W = WangTileSolver(tiles,3,4)
             sage: color = {0:'white',1:'red',2:'blue',3:'green'}
             sage: t = W.tikz(color=color)
         """
         table = self.solve(solver)
+        if color is None:
+            color = self._color
         lines = []
         lines.append(r'\begin{tikzpicture}')
         for j in range(self._width):
