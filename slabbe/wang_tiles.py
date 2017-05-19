@@ -77,25 +77,25 @@ class WangTileSolver(object):
 
         sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
         sage: W = WangTileSolver(tiles, 3, 3)
-	sage: W.solve()
-	[[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+        sage: W.solve()
+        [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
 
     With color 2 preassigned to the right part of tile at position (1,1)::
 
-	sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
-	sage: right = {(1,1):2}
-	sage: W = WangTileSolver(tiles,3,3,preassigned=[right,{},{},{}])
-	sage: W.solve()
-	[[2, 2, 2], [2, 2, 2], [2, 2, 2]]
+        sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+        sage: right = {(1,1):2}
+        sage: W = WangTileSolver(tiles,3,3,preassigned=[right,{},{},{}])
+        sage: W.solve()
+        [[2, 2, 2], [2, 2, 2], [2, 2, 2]]
 
     When constraints are inconsistent::
 
-	sage: right = {(1,1):1, (2,2):0}
-	sage: W = WangTileSolver(tiles,3,3,preassigned=[right,{},{},{}])
-	sage: W.solve()
-	Traceback (most recent call last):
-	...
-	MIPSolverException: CBC : The problem or its dual has been proven infeasible!
+        sage: right = {(1,1):1, (2,2):0}
+        sage: W = WangTileSolver(tiles,3,3,preassigned=[right,{},{},{}])
+        sage: W.solve()
+        Traceback (most recent call last):
+        ...
+        MIPSolverException: CBC : The problem or its dual has been proven infeasible!
 
     TESTS:
 
@@ -104,8 +104,8 @@ class WangTileSolver(object):
         sage: tiles = [('a','a','a','a'), ('b','b','b','b')]
         sage: W = WangTileSolver(tiles,3,4)
         sage: _ = W.tikz().pdf()
-	Traceback (most recent call last):
-	...
+        Traceback (most recent call last):
+        ...
         ValueError: could not convert string to float: a
     """
     def __init__(self, tiles, width, height, preassigned=None, color=None, solver='Coin'):
@@ -203,6 +203,32 @@ class WangTileSolver(object):
         for i,j,k in support:
             table[j][k] = i
         return table
+
+    def horizontal_words_list(self, side=3):
+        r"""
+        Return a list of horizontal words of colors appearing on a given
+        side.
+
+        INPUT
+
+        - ``side`` -- integer in [0,1,2,3], 3 is for bottom
+
+        EXAMPLES::
+
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: W = WangTileSolver(tiles,3,4)
+            sage: W.horizontal_words_list()
+            [[4, 3, 4], [3, 4, 3], [4, 3, 4], [3, 4, 3]]
+            sage: W.horizontal_words_list(0)
+            [[0, 1, 0], [1, 0, 1], [0, 1, 0], [1, 0, 1]]
+        """
+        table = self.solve()
+        rep = []
+        for i in range(self._height):
+            row = [table[j][i] for j in range(self._width)]
+            L = [self._tiles[r][side] for r in row]
+            rep.append(L)
+        return rep
 
     def tikz(self, color=None):
         r"""
