@@ -57,6 +57,7 @@ Rao-Jeandel::
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from sage.misc.cachefunc import cached_method
 from sage.numerical.mip import MixedIntegerLinearProgram
 
 class WangTileSolver(object):
@@ -70,6 +71,7 @@ class WangTileSolver(object):
     - ``preassigned`` -- None or list of 4 dict or the form ``[{}, {}, {}, {}]``
         right, top, left, bottom colors preassigned to some positions (on
         the border or inside)
+    - ``solver`` -- None or string
 
     EXAMPLES::
 
@@ -106,7 +108,7 @@ class WangTileSolver(object):
 	...
         ValueError: could not convert string to float: a
     """
-    def __init__(self, tiles, width, height, preassigned=None, color=None):
+    def __init__(self, tiles, width, height, preassigned=None, color=None, solver='Coin'):
         r"""
         See class for documentation.
 
@@ -122,13 +124,10 @@ class WangTileSolver(object):
             preassigned = [{}, {}, {}, {}]
         self._preassigned = preassigned
         self._color = color
+        self._solver = solver
 
-    def milp(self, solver='Coin'):
+    def milp(self):
         r"""
-        INPUT:
-
-        - ``solver`` -- None or string
-
         EXAMPLES::
 
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
@@ -139,7 +138,7 @@ class WangTileSolver(object):
         indices = range(len(tiles))
 
         # x[i,j,k] == 1 iff tile i is at position (j,k)
-        p = MixedIntegerLinearProgram(solver=solver)
+        p = MixedIntegerLinearProgram(solver=self._solver)
         x = p.new_variable(binary=True)
 
         # exactly one tile at each position (j,k)
@@ -176,14 +175,11 @@ class WangTileSolver(object):
         p.set_objective(x[0,0,0])
         return p, x
 
-    def solve(self, solver='Coin'):
+    @cached_method
+    def solve(self):
         r"""
         Return a dictionary associating to each tile a list of positions
         where to find this tile.
-
-        INPUT:
-
-        - ``solver`` --
 
         EXAMPLES::
 
@@ -198,7 +194,7 @@ class WangTileSolver(object):
             sage: table[1][3]
             0
         """
-        p,x = self.milp(solver)
+        p,x = self.milp()
         p.solve()
         soln = p.get_values(x)
         support = [key for key in soln if soln[key]]
@@ -208,13 +204,12 @@ class WangTileSolver(object):
             table[j][k] = i
         return table
 
-    def tikz(self, solver='Coin', color=None):
+    def tikz(self, color=None):
         r"""
         Return a tikzpicture showing one solution.
 
         INPUT:
 
-        - ``solver`` --
         - ``color`` -- None or dict
 
         EXAMPLES::
@@ -255,7 +250,7 @@ class WangTileSolver(object):
             sage: color = {0:'white',1:'red',2:'blue',3:'green'}
             sage: t = W.tikz(color=color)
         """
-        table = self.solve(solver)
+        table = self.solve()
         if color is None:
             color = self._color
         lines = []
@@ -281,9 +276,4 @@ class WangTileSolver(object):
         lines.append(r'\end{tikzpicture}')
         from slabbe import TikzPicture
         return TikzPicture('\n'.join(lines))
-
-
-
-
-
 
