@@ -256,7 +256,7 @@ class WangTiling(object):
             sage: tiling.height()
             4
         """
-        return len(table[0])
+        return len(self._table[0])
 
     def width(self):
         r"""
@@ -268,7 +268,7 @@ class WangTiling(object):
             sage: tiling.width()
             3
         """
-        return len(table)
+        return len(self._table)
 
     def horizontal_words_list(self, side=3):
         r"""
