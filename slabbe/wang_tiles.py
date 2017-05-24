@@ -2,7 +2,7 @@
 r"""
 Wang tile solver
 
-This uses Coin solver which can be installed with::
+This uses MILP solvers like Coin or Gurobi. Coin can be installed with::
 
     sage -i cbc sagelib
 
@@ -75,7 +75,6 @@ class WangTileSolver(object):
     - ``preassigned`` -- None or list of 4 dict or the form ``[{}, {}, {}, {}]``
         right, top, left, bottom colors preassigned to some positions (on
         the border or inside)
-    - ``solver`` -- None or string
 
     EXAMPLES::
 
@@ -114,7 +113,7 @@ class WangTileSolver(object):
         ...
         ValueError: could not convert string to float: a
     """
-    def __init__(self, tiles, width, height, preassigned=None, color=None, solver='Coin'):
+    def __init__(self, tiles, width, height, preassigned=None, color=None):
         r"""
         See class for documentation.
 
@@ -130,21 +129,30 @@ class WangTileSolver(object):
             preassigned = [{}, {}, {}, {}]
         self._preassigned = preassigned
         self._color = color
-        self._solver = solver
 
-    def milp(self):
+    def milp(self, solver='Coin'):
         r"""
+        Return the Mixed integer linear program.
+
+        INPUT:
+
+        - ``solver`` -- string or None
+
         EXAMPLES::
 
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
             sage: W = WangTileSolver(tiles,3,4)
             sage: p,x = W.milp()
+
+        ::
+
+            sage: p,x = W.milp(solver='Gurobi')   # optional gurobi
         """
         tiles = self._tiles
         indices = range(len(tiles))
 
         # x[i,j,k] == 1 iff tile i is at position (j,k)
-        p = MixedIntegerLinearProgram(solver=self._solver)
+        p = MixedIntegerLinearProgram(solver=solver)
         x = p.new_variable(binary=True)
 
         # exactly one tile at each position (j,k)
@@ -182,10 +190,14 @@ class WangTileSolver(object):
         return p, x
 
     @cached_method
-    def solve(self):
+    def solve(self, solver='Coin'):
         r"""
         Return a dictionary associating to each tile a list of positions
         where to find this tile.
+
+        INPUT:
+
+        - ``solver`` -- string or None
 
         EXAMPLES::
 
@@ -201,7 +213,7 @@ class WangTileSolver(object):
             sage: table[1][3]
             0
         """
-        p,x = self.milp()
+        p,x = self.milp(solver=solver)
         p.solve()
         soln = p.get_values(x)
         support = [key for key in soln if soln[key]]
