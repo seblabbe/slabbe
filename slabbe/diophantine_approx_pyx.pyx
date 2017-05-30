@@ -39,8 +39,8 @@ AUTHORS:
 #*****************************************************************************
 from libc.math cimport floor
 
-include "cysignals/signals.pxi"   # ctrl-c interrupt block support
-include "cysignals/memory.pxi"
+from cysignals.signals cimport sig_check   # ctrl-c interrupt block support
+from cysignals.memory cimport check_allocarray, sig_free
 
 def good_simultaneous_convergents_upto(v, double Q, int start=1, int step=1):
     r"""

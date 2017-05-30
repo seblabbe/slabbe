@@ -136,8 +136,8 @@ AUTHORS:
 #*****************************************************************************
 from libc.math cimport log
 
-include "cysignals/signals.pxi"   # ctrl-c interrupt block support
-include "cysignals/memory.pxi"
+from cysignals.signals cimport sig_check   # ctrl-c interrupt block support
+from cysignals.memory cimport check_allocarray, sig_free
 
 cdef double SQRT3SUR2 = 0.866025403784439
 
