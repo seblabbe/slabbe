@@ -242,3 +242,34 @@ def unique_mod_conjugate_reverse_word(self):
     C.extend(self.reversal().conjugates())
     return min(C)
 
+def unique_mod_conjugate_word(self):
+    r"""
+    TODO: Use Lyndon factorisation to improve the time/space...
+
+    EXAMPLES::
+
+        sage: from slabbe.finite_word import unique_mod_conjugate_word
+        sage: unique_mod_conjugate_word(Word([1,3,2,2,2]))
+        word: 13222
+        sage: unique_mod_conjugate_word(Word([1,4,3]))
+        word: 143
+        sage: unique_mod_conjugate_word(Word([3,4,1]))
+        word: 134
+
+    """
+    C = self.conjugates()
+    return min(C)
+
+def is_lyndon_mod_reverse(self):
+    r"""
+    EXAMPLES::
+
+        sage: is_lyndon_mod_reverse(Word('111222'))
+        True
+        sage: is_lyndon_mod_reverse(Word('1112221'))
+        False
+        sage: is_lyndon_mod_reverse(Word('143'))
+        False
+    """
+    return self.is_lyndon() and self <= unique_mod_conjugate_word(self.reversal())
+
