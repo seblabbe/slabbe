@@ -226,3 +226,19 @@ def word_to_polyomino(self):
     R = RecursivelyEnumeratedSet(seeds, children, structure='symmetric')
     return list(R)
 
+def unique_mod_conjugate_reverse_word(self):
+    r"""
+    TODO: Use Lyndon factorisation to improve the time/space...
+
+    EXAMPLES::
+
+        sage: from slabbe.finite_word import unique_mod_conjugate_reverse_word
+        sage: unique_mod_conjugate_reverse_word(Word([1,3,2,2,2]))
+        word: 12223
+        sage: unique_mod_conjugate_reverse_word(Word([1,3,2,2,1,1,2]))
+        word: 1121322
+    """
+    C = self.conjugates()
+    C.extend(self.reversal().conjugates())
+    return min(C)
+
