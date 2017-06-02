@@ -7,6 +7,7 @@ Methods that are not in Sage (for now!)
 AUTHORS:
 
 - Sébastien Labbé, 2015
+- Sébastien Labbé, 2017, added lexicographic Lyndon stuff
 
 EXAMPLES::
 
@@ -16,7 +17,7 @@ EXAMPLES::
     12/13
 """
 #*****************************************************************************
-#       Copyright (C) 2015 Sebastien Labbe <slabqc@gmail.com>
+#       Copyright (C) 2015,2017 Sebastien Labbe <slabqc@gmail.com>
 #
 #  Distributed under the terms of the GNU General Public License (GPL)
 #  as published by the Free Software Foundation; either version 2 of
@@ -226,50 +227,71 @@ def word_to_polyomino(self):
     R = RecursivelyEnumeratedSet(seeds, children, structure='symmetric')
     return list(R)
 
-def unique_mod_conjugate_reverse_word(self):
+def minimum_lexicographic_conjugate_reversal(self):
     r"""
     TODO: Use Lyndon factorisation to improve the time/space...
 
     EXAMPLES::
 
-        sage: from slabbe.finite_word import unique_mod_conjugate_reverse_word
-        sage: unique_mod_conjugate_reverse_word(Word([1,3,2,2,2]))
+        sage: from slabbe.finite_word import minimum_lexicographic_conjugate_reversal
+        sage: minimum_lexicographic_conjugate_reversal(Word([1,3,2,2,2]))
         word: 12223
-        sage: unique_mod_conjugate_reverse_word(Word([1,3,2,2,1,1,2]))
+
+    ::
+
+        sage: w = words.ChristoffelWord(72452,462443)
+        sage: minimum_lexicographic_conjugate_reversal(w)
+        word: 0000000100000010000000100000010000001000...
+        sage: _ == w
+        True
+        sage: minimum_lexicographic_conjugate_reversal(Word([1,3,2,2,1,1,2]))
         word: 1121322
     """
-    C = self.conjugates()
+    u = minimum_lexicographic_conjugate(self)
     C.extend(self.reversal().conjugates())
     return min(C)
 
-def unique_mod_conjugate_word(self):
+def minimum_lexicographic_conjugate(self):
     r"""
-    TODO: Use Lyndon factorisation to improve the time/space...
+    Return the conjugate word which is minimal for the lexicographic order.
+
+    The output is a Lyndon word (or some power of).
 
     EXAMPLES::
 
-        sage: from slabbe.finite_word import unique_mod_conjugate_word
-        sage: unique_mod_conjugate_word(Word([1,3,2,2,2]))
+        sage: from slabbe.finite_word import minimum_lexicographic_conjugate
+        sage: minimum_lexicographic_conjugate(Word([1,3,2,2,2]))
         word: 13222
-        sage: unique_mod_conjugate_word(Word([1,4,3]))
+        sage: minimum_lexicographic_conjugate(Word([1,4,3]))
         word: 143
-        sage: unique_mod_conjugate_word(Word([3,4,1]))
+        sage: minimum_lexicographic_conjugate(Word([3,4,1]))
         word: 134
 
+    The code is fast::
+
+        sage: w = words.ChristoffelWord(72452, 462443)
+        sage: minimum_lexicographic_conjugate(w)
+        word: 0000000100000010000000100000010000001000...
     """
-    C = self.conjugates()
-    return min(C)
+    f = self.lyndon_factorization()
+    return f[-1]*prod(f[:-1], Word())
 
 def is_lyndon_mod_reverse(self):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.finite_word import is_lyndon_mod_reverse
         sage: is_lyndon_mod_reverse(Word('111222'))
         True
         sage: is_lyndon_mod_reverse(Word('1112221'))
         False
         sage: is_lyndon_mod_reverse(Word('143'))
-        False
+
+    ::
+
+        sage: w = words.ChristoffelWord(72452,462443)
+        sage: is_lyndon_mod_reverse(w)
+        True
     """
-    return self.is_lyndon() and self <= unique_mod_conjugate_word(self.reversal())
+    return self.is_lyndon() and self <= minimum_lexicographic_conjugate(self.reversal())
 
