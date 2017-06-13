@@ -124,9 +124,10 @@ class ExtensionType(object):
         - ``word`` -- the word describing the language
         - ``nleft`` -- length of left extensions (default: ``1``)
         - ``nright`` -- length of right extensions (default: ``1``)
-        - ``repr_options`` - optional (default:
-          dict(factor=False,valence=False)), whether to include the factor
-          and or the valence in the string or latex representation
+        - ``repr_options`` - dict (default:``None``) representation options
+          whether to include the factor and or the valence in the string or
+          latex representation. The value ``None`` is replaced by
+          ``dict(factor=False,multiplicity=True,valence=False))``.
 
         EXAMPLES::
 
@@ -185,7 +186,7 @@ class ExtensionType(object):
                     repr_options=repr_options)
 
     @staticmethod
-    def from_morphism(m):
+    def from_morphism(m, repr_options=None):
         r"""
         Return the extension type of the empty word in the language defined by
         the image of the free monoid under the morphism m.
@@ -193,6 +194,10 @@ class ExtensionType(object):
         INPUT:
 
         - ``m`` - endomorphim
+        - ``repr_options`` - dict (default:``None``) representation options
+          whether to include the factor and or the valence in the string or
+          latex representation. The value ``None`` is replaced by
+          ``dict(factor=False,multiplicity=True,valence=False))``.
 
         EXAMPLES::
 
@@ -238,7 +243,7 @@ class ExtensionType(object):
             for i in range(len(image)-1):
                 L.append( (image[i], image[i+1]) )
         alphabet = m.domain().alphabet()
-        return ExtensionType1to1(L, alphabet)
+        return ExtensionType1to1(L, alphabet, repr_options=repr_options)
 
     def __hash__(self):
         r"""
@@ -1427,9 +1432,10 @@ class ExtensionType1to1(ExtensionType):
     - ``chignons`` - optional (default: None), pair of words added to the
       left  and to the right of the image of the previous bispecial
     - ``factor`` - optional (default: empty word), the factor
-    - ``repr_options`` - optional (default:
-      dict(factor=False,valence=False)), whether to include the factor and
-      or the valence in the string or latex representation
+    - ``repr_options`` - dict (default:``None``)
+      representation options whether to include the factor and or the
+      valence in the string or latex representation. The value ``None`` is
+      replaced by ``dict(factor=False,multiplicity=True,valence=False))``.
 
     EXAMPLES::
 
@@ -2048,9 +2054,10 @@ class ExtensionTypeLong(ExtensionType):
     - ``empty`` - bool, (optional, default: None), if None, then it is
       computed from the chignons and takes value True iff the chignons are
       empty.
-    - ``repr_options`` - optional (default:
-      dict(factor=False,valence=False)), whether to include the factor and
-      or the valence in the string or latex representation
+    - ``repr_options`` - dict (default:``None``) representation options
+      whether to include the factor and or the valence in the string or
+      latex representation. The value ``None`` is replaced by
+      ``dict(factor=False,multiplicity=True,valence=False))``.
 
     EXAMPLES::
 
@@ -3090,7 +3097,8 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
 
     from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
     if label == 'history':
-        structure = 'forest'
+        #structure = 'forest'
+        structure = None # because R.to_digraph() does not work when structure is forest...
     elif label == 'previous':
         structure = None
     else:
