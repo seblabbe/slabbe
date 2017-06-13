@@ -8,6 +8,7 @@ This uses MILP solvers like Coin or Gurobi. Coin can be installed with::
 
 EXAMPLES::
 
+    sage: from slabbe.wang_tiles import WangTileSolver
     sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
     sage: W = WangTileSolver(tiles,3,4)
     sage: tiling = W.solve()
@@ -78,6 +79,7 @@ class WangTileSolver(object):
 
     EXAMPLES::
 
+        sage: from slabbe.wang_tiles import WangTileSolver
         sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
         sage: W = WangTileSolver(tiles, 3, 3)
         sage: tiling = W.solve()
@@ -119,6 +121,7 @@ class WangTileSolver(object):
 
         EXAMPLES::
 
+            sage: from slabbe.wang_tiles import WangTileSolver
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
             sage: W = WangTileSolver(tiles, 3, 4)
         """
@@ -130,21 +133,47 @@ class WangTileSolver(object):
         self._preassigned = preassigned
         self._color = color
 
+    @cached_method
     def milp(self, solver='Coin'):
         r"""
         Return the Mixed integer linear program.
 
         INPUT:
 
-        - ``solver`` -- string or None
+        - ``solver`` -- string or None (default: ``'Coin'``)
+
+        OUTPUT:
+
+        a tuple (p,x) where p is the MILP and x is the variable
+
+        .. NOTE::
+
+            In some cases, calling this method takes much more time (few
+            minutes) than calling the method ``solve`` which takes few
+            seconds.
 
         EXAMPLES::
 
+            sage: from slabbe.wang_tiles import WangTileSolver
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
             sage: W = WangTileSolver(tiles,3,4)
             sage: p,x = W.milp()
+            sage: p
+            Mixed Integer Program  ( maximization, 36 variables, 29 constraints )
+            sage: x
+            MIPVariable of dimension 1
 
-        ::
+        Then you can solve it and get the solutions::
+
+            sage: p.solve()
+            1.0
+            sage: soln = p.get_values(x)
+            sage: support = [key for key in soln if soln[key]]
+            sage: support
+            [(0, 1, 1), (0, 1, 3), (0, 2, 1), (0, 2, 0), (0, 2, 3), (0, 2, 2), 
+             (0, 1, 2), (0, 0, 3), (0, 0, 2), (0, 0, 1), (0, 0, 0), (0, 1, 0)]
+
+        Other solver can be used::
 
             sage: p,x = W.milp(solver='Gurobi')   # optional gurobi
         """
@@ -201,6 +230,7 @@ class WangTileSolver(object):
 
         EXAMPLES::
 
+            sage: from slabbe.wang_tiles import WangTileSolver
             sage: tiles = [(0,3,1,4), (1,4,0,3)]
             sage: W = WangTileSolver(tiles,3,4)
             sage: tiling = W.solve()
@@ -234,6 +264,7 @@ class WangTiling(object):
 
     EXAMPLES::
 
+        sage: from slabbe.wang_tiles import WangTiling
         sage: tiles = [(0,3,1,4), (1,4,0,3)]
         sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
         sage: tiling = WangTiling(table, tiles)
@@ -246,6 +277,7 @@ class WangTiling(object):
 
         EXAMPLES::
 
+            sage: from slabbe.wang_tiles import WangTileSolver
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
             sage: W = WangTileSolver(tiles, 3, 4)
             sage: W.solve()
@@ -262,6 +294,7 @@ class WangTiling(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe.wang_tiles import WangTiling
             sage: tiles = [(0,3,1,4), (1,4,0,3)]
             sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
             sage: tiling = WangTiling(table, tiles)
@@ -274,6 +307,7 @@ class WangTiling(object):
         r"""
         EXAMPLES::
 
+            sage: from slabbe.wang_tiles import WangTiling
             sage: tiles = [(0,3,1,4), (1,4,0,3)]
             sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
             sage: tiling = WangTiling(table, tiles)
@@ -293,6 +327,7 @@ class WangTiling(object):
 
         EXAMPLES::
 
+            sage: from slabbe.wang_tiles import WangTileSolver
             sage: tiles = [(0,3,1,4), (1,4,0,3)]
             sage: W = WangTileSolver(tiles,3,4)
             sage: tiling = W.solve()
@@ -318,6 +353,7 @@ class WangTiling(object):
 
         EXAMPLES::
 
+            sage: from slabbe.wang_tiles import WangTileSolver
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
             sage: W = WangTileSolver(tiles,3,4)
             sage: tiling = W.solve()
