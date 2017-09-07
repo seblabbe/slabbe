@@ -390,7 +390,7 @@ class WangTiling(object):
 
             sage: tiles = [(0,2,1,3), (1,3,0,2)]
             sage: W = WangTileSolver(tiles,3,4)
-            sage: tiling = W.solve()
+            sage: tiling = W.solve('Gurobi')
             sage: color = {0:'white',1:'red',2:'blue',3:'green'}
             sage: t = tiling.tikz(color=color)
         """
@@ -398,8 +398,10 @@ class WangTiling(object):
             color = self._color
         lines = []
         lines.append(r'\begin{tikzpicture}')
-        for j in range(self.width()):
-            for k in range(self.height()):
+        W = self.width()
+        H = self.height()
+        for j in range(W):
+            for k in range(H):
                 i = self._table[j][k]
                 tile = self._tiles[i]
                 lines.append('% tile at position {}'.format((j,k)))
@@ -416,6 +418,10 @@ class WangTiling(object):
                 lines.append(r'\node[below] at {} {{{}}};'.format((j+.5,k+1), tile[1]))
                 lines.append(r'\node[right] at {} {{{}}};'.format((j,k+.5), tile[2]))
                 lines.append(r'\node[above] at {} {{{}}};'.format((j+.5,k), tile[3]))
+        for j in range(W):
+            lines.append(r'\draw {} -- {};'.format((j,H), (j+1,H)))
+        for k in range(H):
+            lines.append(r'\draw {} -- {};'.format((W,k), (W,k+1)))
         lines.append(r'\end{tikzpicture}')
         from slabbe import TikzPicture
         return TikzPicture('\n'.join(lines))
