@@ -196,6 +196,48 @@ class TikzPicture(SageObject):
         return TikzPicture(tikz, standalone_options=["border=4mm"])
 
     @classmethod
+    def from_graph_with_pos(cls, graph, **kwds):
+        r"""
+        Convert a graph with positions defined for vertices to a tikzpicture.
+
+        INPUT:
+
+        - ``graph`` -- graph
+        - ``edge_labels`` -- bool (default: ``True``)
+
+        EXAMPLES::
+
+            sage: from slabbe import TikzPicture
+            sage: g = graphs.PetersenGraph()
+            sage: tikz = TikzPicture.from_graph_with_pos(g)
+        """
+        keys_for_vertices = graph._keys_for_vertices()
+        pos = graph.get_pos()
+        lines = []
+        lines.append(r'\begin{tikzpicture}[auto]')
+        for u in graph.vertices():
+            line = r'\node ({}) at {} {{{}}};'.format(keys_for_vertices(u),
+                                                      pos[u],
+                                                      u)
+            lines.append(line)
+        arrow = '->' if graph.is_directed() else ''
+        for (u,v,label) in graph.edges():
+            if label:
+                line = r'\draw[{}] ({}) -- node {{{}}} ({});'.format(arrow,
+                                                    keys_for_vertices(u),
+                                                    label,
+                                                    keys_for_vertices(v))
+            else:
+                line = r'\draw[{}] ({}) -- ({});'.format(arrow,
+                                                    keys_for_vertices(u),
+                                                    keys_for_vertices(v))
+
+            lines.append(line)
+        lines.append(r'\end{tikzpicture}')
+        tikz = '\n'.join(lines)
+        return TikzPicture(tikz, standalone_options=["border=4mm"])
+
+    @classmethod
     def from_poset(cls, poset, **kwds):
         r"""
         Convert a poset to a tikzpicture using graphviz and dot2tex.
