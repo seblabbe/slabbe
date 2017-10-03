@@ -720,8 +720,10 @@ class MatrixCocycle(object):
         r"""
         INPUT:
 
+        - ``n`` -- integer, for the nth-cylinders
         - ``labels`` -- None, True or False (default: None), if None, it
           takes value True if n is 1.
+        - ``scale`` -- real (default: 1), scale value for tikzpicture
 
         EXAMPLES::
 
@@ -854,9 +856,46 @@ class MatrixCocycleGenerator(object):
         return MatrixCocycle(gens, cone)
 
     def Cassaigne(self):
-        T1 = matrix(3, [1,1,0, 0,0,1, 0,1,0])
-        T2 = matrix(3, [0,1,0, 1,0,0, 0,1,1])
-        gens = {1:T1, 2:T2}
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: c = cocycles.Cassaigne()
+            sage: list(m for (w,m) in c.n_cylinders_iterator(2))
+            [
+            [1 1 1]  [1 1 0]  [0 0 1]  [1 0 0]
+            [0 1 0]  [0 1 1]  [1 1 0]  [0 1 0]
+            [0 0 1], [1 0 0], [0 1 1], [1 1 1]
+            ]
+        """
+        C1 = matrix(3, [1,1,0, 0,0,1, 0,1,0])
+        C2 = matrix(3, [0,1,0, 1,0,0, 0,1,1])
+        gens = {1:C1, 2:C2}
+        return MatrixCocycle(gens)
+
+    def Cassaigne_accelerated(self, order=3):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: c = cocycles.Cassaigne_accelerated(order=3)
+            sage: c
+            Cocycle with 6 gens over Language of finite words over alphabet
+            [11, 22, 121, 212, 1221, 2112]
+        """
+        C1 = matrix(3, [1,1,0, 0,0,1, 0,1,0])
+        C2 = matrix(3, [0,1,0, 1,0,0, 0,1,1])
+        C = {1:C1, 2:C2}
+        gens = {}
+        for i in range(order):
+            for (a,b) in [(1,2), (2,1)]:
+                if i == 0:
+                    code = '{}{}'.format(a,a)
+                elif i == 1:
+                    code = '{}{}{}'.format(a,b,a)
+                else:
+                    code = '{}{}^{{{}}}{}'.format(a,b,i,a)
+                gens[code] = C[a]*C[b]**i*C[a]
         return MatrixCocycle(gens)
 
     def Reverse(self):
