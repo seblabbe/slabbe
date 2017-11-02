@@ -343,6 +343,65 @@ class WangTiling(object):
             rep.append(L)
         return rep
 
+    def number_of_occurences(self, pattern):
+        r"""
+        Return the number of occurences of the given pattern in the tiling.
+
+        INPUT
+
+        - ``pattern`` -- dict
+
+        EXAMPLES::
+
+            sage: from slabbe.wang_tiles import WangTileSolver
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: W = WangTileSolver(tiles,3,4)
+            sage: tiling = W.solve()
+            sage: tiling.number_of_occurences({(0,0):0})
+            6
+            sage: tiling.number_of_occurences({(0,0):1})
+            6
+            sage: tiling.number_of_occurences({(0,0):1, (1,0):1})
+            0
+            sage: tiling.number_of_occurences({(0,0):1, (1,0):1, (0,1):1})
+            0
+            sage: tiling.number_of_occurences({(0,0):1, (1,0):0, (0,1):0})
+            3
+
+        The pattern is translation invariant::
+
+            sage: tiling.number_of_occurences({(0,-1):1})
+            6
+            sage: tiling.number_of_occurences({(-1,-1):1})
+            6
+            sage: tiling.number_of_occurences({(-100,-100):1})
+            6
+
+        The x coordinates of the pattern corresponds to the x coordinates
+        when you plot it::
+
+            sage: tiles = [(0,3,0,4), (1,4,1,3)]
+            sage: W = WangTileSolver(tiles,3,4)
+            sage: tiling = W.solve()
+            sage: tiling.number_of_occurences({(0,0):1})
+            6
+            sage: tiling.number_of_occurences({(0,0):1, (1,0):1})
+            4
+            sage: tiling.number_of_occurences({(0,0):1, (0,1):1})
+            0
+            sage: tiling.tikz().pdf()   # not tested
+        """
+        xmin = min(x for (x,y) in pattern)
+        xmax = max(x for (x,y) in pattern)
+        ymin = min(y for (x,y) in pattern)
+        ymax = max(y for (x,y) in pattern)
+        a = 0
+        for i in range(0-xmin, self.width()-xmax):
+            for j in range(0-ymin, self.height()-ymax):
+                if all(self._table[i+x][j+y] == pattern[(x,y)] for (x,y) in pattern):
+                    a += 1
+        return a
+
     def tikz(self, color=None):
         r"""
         Return a tikzpicture showing one solution.
