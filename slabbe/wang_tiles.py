@@ -64,6 +64,7 @@ Rao-Jeandel::
 #*****************************************************************************
 from sage.misc.cachefunc import cached_method
 from sage.numerical.mip import MixedIntegerLinearProgram
+from collections import Counter
 
 class WangTileSolver(object):
     r"""
@@ -134,13 +135,14 @@ class WangTileSolver(object):
         self._color = color
 
     @cached_method
-    def milp(self, solver='Coin'):
+    def milp(self, solver=None):
         r"""
         Return the Mixed integer linear program.
 
         INPUT:
 
-        - ``solver`` -- string or None (default: ``'Coin'``)
+        - ``solver`` -- string or None (default: ``None``), other possible
+          values are ``'Coin'`` or ``'Gurobi'``
 
         OUTPUT:
 
@@ -219,14 +221,15 @@ class WangTileSolver(object):
         return p, x
 
     @cached_method
-    def solve(self, solver='Coin'):
+    def solve(self, solver=None):
         r"""
         Return a dictionary associating to each tile a list of positions
         where to find this tile.
 
         INPUT:
 
-        - ``solver`` -- string or None
+        - ``solver`` -- string or None (default: ``None``), other possible
+          values are ``'Coin'`` or ``'Gurobi'``
 
         EXAMPLES::
 
@@ -401,6 +404,50 @@ class WangTiling(object):
                 if all(self._table[i+x][j+y] == pattern[(x,y)] for (x,y) in pattern):
                     a += 1
         return a
+
+    def pattern_occurrences(self, shape):
+        r"""
+        Return the number of occurences of every pattern having a given
+        shape.
+
+        INPUT
+
+        - ``shape`` -- list, list of coordinates
+
+        OUTPUT
+
+        a dict where each key is a tuple giving the tiles at each
+        coordinate of the shape (in the same order) and values are integers
+
+        EXAMPLES::
+
+            sage: from slabbe.wang_tiles import WangTiling
+            sage: table = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+            sage: tiles = [(0, 0, 0, 0), (1, 1, 1, 1), (2, 2, 2, 2)]
+            sage: tiling = WangTiling(table, tiles)
+            sage: tiling.pattern_occurrences([(0,0)])
+            Counter({(0,): 12})
+
+        ::
+
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+            sage: tiling = WangTiling(table, tiles)
+            sage: tiling.pattern_occurrences([(0,0)])
+            Counter({(0,): 6, (1,): 6})
+            sage: tiling.pattern_occurrences([(0,0), (1,0), (0,1)])
+            Counter({(1, 0, 0): 3, (0, 1, 1): 3})
+        """
+        xmin = min(x for (x,y) in shape)
+        xmax = max(x for (x,y) in shape)
+        ymin = min(y for (x,y) in shape)
+        ymax = max(y for (x,y) in shape)
+        C = Counter()
+        for i in range(0-xmin, self.width()-xmax):
+            for j in range(0-ymin, self.height()-ymax):
+                pattern = tuple(self._table[i+x][j+y] for (x,y) in shape)
+                C[pattern] += 1
+        return C
 
     def tikz(self, color=None):
         r"""
