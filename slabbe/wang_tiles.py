@@ -265,6 +265,12 @@ class WangTiling(object):
         color, left color, bottom color)
     - ``color`` -- dict (default: None)
 
+    .. NOTE::
+
+        ``table[x][y]`` refers to the tile at position `(x,y)` using the
+        cartesian coordinates. Thus, it is **not** using the matrix-like
+        coordinates.
+
     EXAMPLES::
 
         sage: from slabbe.wang_tiles import WangTiling
