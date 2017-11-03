@@ -273,6 +273,14 @@ class WangTiling(object):
         sage: tiling = WangTiling(table, tiles)
         sage: tiling
         A wang tiling of a 3 x 4 rectangle
+
+    Using some blank tiles::
+
+        sage: tiles = [(0,3,1,4), (1,4,0,3)]
+        sage: table = [[0, 1, None, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+        sage: tiling = WangTiling(table, tiles)
+        sage: tiling
+        A wang tiling of a 3 x 4 rectangle
     """
     def __init__(self, table, tiles, color=None):
         r"""
@@ -499,6 +507,14 @@ class WangTiling(object):
             sage: tiling = W.solve('Gurobi')
             sage: color = {0:'white',1:'red',2:'blue',3:'green'}
             sage: t = tiling.tikz(color=color)
+
+        Using some blank tiles::
+
+            sage: tiles = [(0,3,1,2), (1,2,0,3)]
+            sage: table = [[0, 1, None, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+            sage: color = {0:'white',1:'red',2:'blue',3:'green'}
+            sage: tiling = WangTiling(table, tiles, color)
+            sage: t = tiling.tikz()
         """
         if color is None:
             color = self._color
@@ -509,6 +525,9 @@ class WangTiling(object):
         for j in range(W):
             for k in range(H):
                 i = self._table[j][k]
+                if i is None:
+                    # this is a blank tile
+                    continue
                 tile = self._tiles[i]
                 lines.append('% tile at position {}'.format((j,k)))
                 if color:
