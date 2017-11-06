@@ -360,13 +360,15 @@ class WangTiling(object):
             rep.append(L)
         return rep
 
-    def number_of_occurences(self, pattern):
+    def number_of_occurences(self, pattern, avoid_border=0):
         r"""
         Return the number of occurences of the given pattern in the tiling.
 
         INPUT
 
         - ``pattern`` -- dict
+        - ``avoid_border`` -- integer (default: 0), the size of the border
+          to avoid during the computation
 
         EXAMPLES::
 
@@ -407,19 +409,27 @@ class WangTiling(object):
             sage: tiling.number_of_occurences({(0,0):1, (0,1):1})
             0
             sage: tiling.tikz().pdf()   # not tested
+
+        When avoiding the border::
+
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: W = WangTileSolver(tiles,3,4)
+            sage: tiling = W.solve()
+            sage: tiling.number_of_occurences({(0,0):0}, avoid_border=1)
+            1
         """
         xmin = min(x for (x,y) in pattern)
         xmax = max(x for (x,y) in pattern)
         ymin = min(y for (x,y) in pattern)
         ymax = max(y for (x,y) in pattern)
         a = 0
-        for i in range(0-xmin, self.width()-xmax):
-            for j in range(0-ymin, self.height()-ymax):
+        for i in range(0-xmin+avoid_border, self.width()-xmax-avoid_border):
+            for j in range(0-ymin+avoid_border, self.height()-ymax-avoid_border):
                 if all(self._table[i+x][j+y] == pattern[(x,y)] for (x,y) in pattern):
                     a += 1
         return a
 
-    def pattern_occurrences(self, shape):
+    def pattern_occurrences(self, shape, avoid_border=0):
         r"""
         Return the number of occurences of every pattern having a given
         shape.
@@ -427,6 +437,8 @@ class WangTiling(object):
         INPUT
 
         - ``shape`` -- list, list of coordinates
+        - ``avoid_border`` -- integer (default: 0), the size of the border
+          to avoid during the computation
 
         OUTPUT
 
@@ -451,14 +463,21 @@ class WangTiling(object):
             Counter({(0,): 6, (1,): 6})
             sage: tiling.pattern_occurrences([(0,0), (1,0), (0,1)])
             Counter({(1, 0, 0): 3, (0, 1, 1): 3})
+
+        When avoiding the border::
+
+            sage: tiling.pattern_occurrences([(0,0)], avoid_border=1)
+            Counter({(0,): 1, (1,): 1})
+            sage: tiling.pattern_occurrences([(0,0)], avoid_border=2)
+            Counter()
         """
         xmin = min(x for (x,y) in shape)
         xmax = max(x for (x,y) in shape)
         ymin = min(y for (x,y) in shape)
         ymax = max(y for (x,y) in shape)
         C = Counter()
-        for i in range(0-xmin, self.width()-xmax):
-            for j in range(0-ymin, self.height()-ymax):
+        for i in range(0-xmin+avoid_border, self.width()-xmax-avoid_border):
+            for j in range(0-ymin+avoid_border, self.height()-ymax-avoid_border):
                 pattern = tuple(self._table[i+x][j+y] for (x,y) in shape)
                 C[pattern] += 1
         return C
