@@ -220,8 +220,7 @@ class WangTileSolver(object):
         p.set_objective(x[0,0,0])
         return p, x
 
-    @cached_method
-    def solve(self, solver=None):
+    def solve(self, solver=None, solver_parameters=None):
         r"""
         Return a dictionary associating to each tile a list of positions
         where to find this tile.
@@ -230,6 +229,15 @@ class WangTileSolver(object):
 
         - ``solver`` -- string or None (default: ``None``), other possible
           values are ``'Coin'`` or ``'Gurobi'``
+        - ``solver_parameters`` -- dict (default: ``{}``), parameters given
+          to the solver using method ``solver_parameter``. For a list of
+          available parameters for example for the Gurobi backend, see
+          dictionary ``parameters_type`` in the file
+          ``sage/numerical/backends/gurobi_backend.pyx``
+
+        OUTPUT:
+
+            a wang tiling object
 
         EXAMPLES::
 
@@ -245,8 +253,25 @@ class WangTileSolver(object):
 
             sage: table[1][3]
             0
+
+        Allowing more threads while using Gurobi::
+
+            sage: W = WangTileSolver(tiles,3,4)
+            sage: kwds = dict(Threads=4)
+            sage: tiling = W.solve(solver='Gurobi', kwds) # optional Gurobi
+            sage: tiling._table                           # optional Gurobi
+            [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+
+        REFERENCES:
+
+            How do I set solver_parameter to make Gurobi use more than one
+            processor?, https://ask.sagemath.org/question/37726/
         """
         p,x = self.milp(solver=solver)
+        if solver_parameters is None:
+            solver_parameters = {}
+        for key, value in solver_parameters.items():
+            p.solver_parameter(key, value)
         p.solve()
         soln = p.get_values(x)
         support = [key for key in soln if soln[key]]
