@@ -98,6 +98,41 @@ class Substitution2d(object):
         d = {key:[col] for key,col in s.items()}
         return Substitution2d(d)
 
+    @classmethod
+    def from_permutation(self, d):
+        r"""
+        INPUT:
+
+        - ``d`` -- dict
+
+        EXAMPLES::
+
+            sage: from slabbe import Substitution2d
+            sage: s = Substitution2d.from_permutation({4:0, 5:1})
+            sage: s
+            Substitution 2d: {4: [[0]], 5: [[1]]}
+
+        ::
+
+            sage: A = [[5,6],[7,8]]
+            sage: B = [[6,5],[9,8]]
+            sage: t = Substitution2d({0:A, 1:B})
+            sage: t
+            Substitution 2d: {0: [[5, 6], [7, 8]], 1: [[6, 5], [9, 8]]}
+            sage: t*s
+            Substitution 2d: {4: [[5, 6], [7, 8]], 5: [[6, 5], [9, 8]]}
+
+        ::
+
+            sage: u = Substitution2d.from_permutation({5:0, 6:1, 7:2, 8:3, 9:4})
+            sage: u
+            Substitution 2d: {8: [[3]], 9: [[4]], 5: [[0]], 6: [[1]], 7: [[2]]}
+            sage: u * t
+            Substitution 2d: {0: [[0, 1], [2, 3]], 1: [[1, 0], [4, 3]]}
+        """
+        d = {key:[[val]] for key,val in d.items()}
+        return Substitution2d(d)
+
     def call_on_row(self, row):
         r"""
         INPUT:
@@ -244,10 +279,55 @@ class Substitution2d(object):
             sage: s * s * s
             Substitution 2d: {0: [[0, 1, 1, 0, 1, 0, 0, 1], [0, 1, 1, 1, 1, 1, 0, 1], [0, 1, 1, 0, 1, 0, 1, 0], [0, 1, 1, 1, 1, 1, 1, 1], [0, 1, 1, 0, 1, 0, 0, 1], [0, 1, 1, 1, 1, 1, 0, 1], [0, 1, 1, 0, 1, 0, 1, 0], [0, 1, 1, 1, 1, 1, 1, 1]], 1: [[1, 0, 0, 1, 0, 1, 1, 0], [1, 1, 0, 1, 0, 1, 1, 1], [1, 0, 1, 0, 0, 1, 1, 0], [1, 1, 1, 1, 0, 1, 1, 1], [1, 0, 0, 1, 1, 0, 0, 1], [1, 1, 0, 1, 1, 1, 0, 1], [1, 0, 1, 0, 1, 0, 1, 0], [1, 1, 1, 1, 1, 1, 1, 1]]}
 
+        ::
+
+            sage: t = Substitution2d.from_permutation({0:4, 1:5})
+	    sage: t * s
+	    Substitution 2d: {0: [[4, 5], [4, 5]], 1: [[5, 4], [5, 5]]}
+	    sage: s * t
+	    Traceback (most recent call last):
+	    ...
+            ValueError: codomain alphabet of other (=set([4, 5])) must be
+            included in domain alphabet of self (=set([0, 1]))
         """
+        if not self.domain_alphabet() >= other.codomain_alphabet():
+            raise ValueError("codomain alphabet of other (={}) must be included"
+                " in domain alphabet of self (={})".format(other.codomain_alphabet(),
+                                                            self.domain_alphabet()))
         d = {}
         for a,image_a in other._d.items():
             d[a] = self(image_a)
         return Substitution2d(d)
 
 
+    def domain_alphabet(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import Substitution2d
+            sage: A = [[5,6],[7,8]]
+            sage: B = [[6,5],[9,8]]
+            sage: d = {0:A, 1:B}
+            sage: s = Substitution2d(d)
+            sage: s.domain_alphabet()
+            {0, 1}
+        """
+        return set(self._d.keys())
+
+    def codomain_alphabet(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import Substitution2d
+            sage: A = [[5,6],[7,8]]
+            sage: B = [[6,5],[9,8]]
+            sage: d = {0:A, 1:B}
+            sage: s = Substitution2d(d)
+            sage: s.codomain_alphabet()
+            {5, 6, 7, 8, 9}
+        """
+        s = set()
+        for a,image_a in self._d.items():
+            for column in image_a:
+                s.update(column)
+        return s
