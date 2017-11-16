@@ -395,5 +395,63 @@ class Substitution2d(object):
             L.append(v)
         return matrix.column(L)
 
+    def desubstitute(self, tiles, function=None):
+        r"""
+        Return the Wang tile set obtained from the desubstitution of the
+        given Wang tile set.
+
+        INPUT:
+
+        - ``tiles`` -- list of Wang tiles, each tile being a 4-tuple of
+          (east, north, west, south) colors
+        - ``fn`` -- a function (default: ``None``) to apply to the
+          new colors which are tuple of previous colors
+
+        OUTPUT:
+
+            list of tiles
+
+        EXAMPLES::
+
+            sage: from slabbe import Substitution2d
+            sage: A = [[0,1],[1,0]]
+            sage: B = [[0,1]]
+            sage: d = {4:A, 5:B}
+            sage: s = Substitution2d(d)
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: s.desubstitute(tiles)
+            [((0, 1), (4, 3), (0, 1), (4, 3)), ((1, 0), (4,), (0, 1), (4,))]
+
+        Providing a function which gets back to integers::
+
+            sage: fn = lambda colors:int(''.join(map(str, colors)))
+            sage: s.desubstitute(tiles, fn)
+            [(1, 43, 1, 43), (10, 4, 1, 4)]
+
+        Providing a function which gets back to integers::
+
+            sage: fn = lambda colors:''.join(map(str, colors))
+            sage: s.desubstitute(tiles, fn)
+            [('01', '43', '01', '43'), ('10', '4', '01', '4')]
+        """
+        if function is None:
+            function = lambda x:x
+        L = []
+        for a,image_a in self._d.items():
+            # get the border tiles
+            west = image_a[0]
+            east = image_a[-1]
+            north = [column[-1] for column in image_a]
+            south = [column[0] for column in image_a]
+            # get the good color for each
+            west = tuple(tiles[b][0] for b in west)
+            east = tuple(tiles[b][2] for b in east)
+            north = tuple(tiles[b][1] for b in north)
+            south = tuple(tiles[b][3] for b in south)
+            # create the tile and save
+            tile = tuple(function(color) for color in (east, north, west, south))
+            L.append(tile)
+        return L
+
     _matrix_ = incidence_matrix
 
