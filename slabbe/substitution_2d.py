@@ -305,11 +305,11 @@ class Substitution2d(object):
         ::
 
             sage: t = Substitution2d.from_permutation({0:4, 1:5})
-	    sage: t * s
-	    Substitution 2d: {0: [[4, 5], [4, 5]], 1: [[5, 4], [5, 5]]}
-	    sage: s * t
-	    Traceback (most recent call last):
-	    ...
+            sage: t * s
+            Substitution 2d: {0: [[4, 5], [4, 5]], 1: [[5, 4], [5, 5]]}
+            sage: s * t
+            Traceback (most recent call last):
+            ...
             ValueError: codomain alphabet of other (=set([4, 5])) must be
             included in domain alphabet of self (=set([0, 1]))
         """
@@ -354,4 +354,46 @@ class Substitution2d(object):
             for column in image_a:
                 s.update(column)
         return s
+
+    def incidence_matrix(self):
+        r"""
+        Return the incidence matrix of self.
+
+        Some default ordering (sorted) is used for the domain and codomain
+        alphabet.
+
+        EXAMPLES::
+
+            sage: from slabbe import Substitution2d
+            sage: A = [[0,1],[2,3]]
+            sage: B = [[4,5]]
+            sage: C = [[6,7,8]]
+            sage: d = {0:A, 1:B, 2:C}
+            sage: s = Substitution2d(d)
+            sage: s.incidence_matrix()
+            [1 0 0]
+            [1 0 0]
+            [1 0 0]
+            [1 0 0]
+            [0 1 0]
+            [0 1 0]
+            [0 0 1]
+            [0 0 1]
+            [0 0 1]
+        """
+        from collections import Counter
+        from sage.matrix.constructor import matrix
+        domain_alphabet = sorted(self.domain_alphabet())
+        codomain_alphabet = sorted(self.codomain_alphabet())
+        L = []
+        for a in domain_alphabet:
+            c = Counter()
+            image_a = self._d[a]
+            for column in image_a:
+                c.update(column)
+            v = [c[b] for b in codomain_alphabet]
+            L.append(v)
+        return matrix.column(L)
+
+    _matrix_ = incidence_matrix
 
