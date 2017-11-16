@@ -26,6 +26,8 @@ from tikz_picture import TikzPicture
 
 from matrices import M3to2, M2to3, M4to2, M4to3
 
+from substitution_2d import Substitution2d
+
 # BUG (sometimes, cython code does not work properly)
 try:
     from kolakoski_word import KolakoskiWord
