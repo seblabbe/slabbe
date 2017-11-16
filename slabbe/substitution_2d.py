@@ -32,7 +32,6 @@ class Substitution2d(object):
         sage: s = Substitution2d(d)
         sage: s
         Substitution 2d: {0: [[0, 1], [2, 3]], 1: [[4, 5]]}
-
     """
     def __init__(self, d):
         r"""
@@ -61,6 +60,30 @@ class Substitution2d(object):
             Substitution 2d: {0: [[0, 1], [2, 3]], 1: [[4, 5]]}
         """
         return "Substitution 2d: {}".format(self._d)
+
+    def _latex_(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import Substitution2d
+            sage: A = [[0,1],[2,3]]
+            sage: B = [[4,5]]
+            sage: d = {0:A, 1:B}
+            sage: s = Substitution2d(d)
+            sage: latex(s)
+            \left\{0 : \left(\begin{array}{rr}
+            1 & 3 \\
+            0 & 2
+            \end{array}\right), 1 : \left(\begin{array}{r}
+            5 \\
+            4
+            \end{array}\right)\right\}
+        """
+        from sage.matrix.constructor import matrix
+        from sage.misc.latex import latex
+        d = {key:matrix.column([col[::-1] for col in table]) 
+                            for key,table in self._d.items()}
+        return latex(d)
 
     @classmethod
     def from_1d_row_substitution(self, s):
@@ -331,3 +354,4 @@ class Substitution2d(object):
             for column in image_a:
                 s.update(column)
         return s
+
