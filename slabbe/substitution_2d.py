@@ -414,26 +414,26 @@ class Substitution2d(object):
         EXAMPLES::
 
             sage: from slabbe import Substitution2d
-            sage: A = [[0,1],[1,0]]
-            sage: B = [[0,1]]
+            sage: A = [[0,1,2],[1,0,0]]
+            sage: B = [[0,1,2]]
             sage: d = {4:A, 5:B}
             sage: s = Substitution2d(d)
-            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: tiles = [(0,3,1,4), (1,4,0,3), (5,6,7,8)]
             sage: s.desubstitute(tiles)
-            {4: ((0, 1), (4, 3), (0, 1), (4, 3)),
-             5: ((1, 0), (4,), (0, 1), (4,))}
+            {4: ((1, 0, 0), (6, 3), (1, 0, 7), (4, 3)),
+             5: ((0, 1, 5), (6,), (1, 0, 7), (4,))}
 
         Providing a function which gets back to integers::
 
             sage: fn = lambda colors:int(''.join(map(str, colors)))
             sage: s.desubstitute(tiles, fn)
-            {4: (1, 43, 1, 43), 5: (10, 4, 1, 4)}
+            {4: (100, 63, 107, 43), 5: (15, 6, 107, 4)}
 
         Providing a function which concatenate label as strings::
 
             sage: fn = lambda colors:''.join(map(str, colors))
             sage: s.desubstitute(tiles, fn)
-            {4: ('01', '43', '01', '43'), 5: ('10', '4', '01', '4')}
+            {4: ('100', '63', '107', '43'), 5: ('015', '6', '107', '4')}
         """
         if function is None:
             function = lambda x:x
@@ -445,8 +445,8 @@ class Substitution2d(object):
             north = [column[-1] for column in image_a]
             south = [column[0] for column in image_a]
             # get the good color for each
-            west = tuple(tiles[b][0] for b in west)
-            east = tuple(tiles[b][2] for b in east)
+            west = tuple(tiles[b][2] for b in west)
+            east = tuple(tiles[b][0] for b in east)
             north = tuple(tiles[b][1] for b in north)
             south = tuple(tiles[b][3] for b in south)
             # create the tile and save
