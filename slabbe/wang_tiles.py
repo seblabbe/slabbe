@@ -508,7 +508,7 @@ class WangTiling(object):
         return C
 
     def tikz(self, color=None, fontsize=r'\normalsize', rotate=(0,0,0,0),
-            space=.2, scale=1):
+            space=.2, scale=1, transformation_matrix=None):
         r"""
         Return a tikzpicture showing one solution.
 
@@ -521,6 +521,14 @@ class WangTiling(object):
         - ``space`` -- number (default: ``.2``) translation distance of the
           label from the edge
         - ``scale`` -- number (default: ``1``), tikzpicture scale
+        - ``transformation_matrix`` -- matrix (default: ``None``), a matrix
+          to apply to the coordinate before drawing, it can be in
+          ``SL(2,ZZ)`` or not.
+
+        .. TODO::
+
+            - Fix the top and right lines when using the transformation
+              matrix.
 
         EXAMPLES::
 
@@ -575,13 +583,22 @@ class WangTiling(object):
 
         Testing the options::
 
+            sage: tiles = [(0,3,1,2), (1,2,0,3)]
+            sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+            sage: color = {0:'white',1:'red',2:'blue',3:'green'}
             sage: t = WangTiling(table, tiles, color).tikz(fontsize=r'\Huge')
             sage: t = WangTiling(table, tiles, color).tikz(rotate=(0,90,0,0))
             sage: t = WangTiling(table, tiles, color).tikz(space=.05)
             sage: t = WangTiling(table, tiles, color).tikz(scale=4)
+            sage: m = matrix(2,[1,1,0,1])
+            sage: t = WangTiling(table, tiles, color).tikz(transformation_matrix=m)
         """
+        from sage.matrix.constructor import matrix
+        from sage.modules.free_module_element import vector
         if color is None:
             color = self._color
+        if transformation_matrix is None:
+            transformation_matrix = matrix.identity(2)
         s = space # because it is shorter to write below
         lines = []
         lines.append(r'\begin{{tikzpicture}}[scale={}]'.format(scale))
@@ -600,22 +617,23 @@ class WangTiling(object):
                 if i is None:
                     # this is a blank tile
                     continue
+                x,y = transformation_matrix*vector((j,k))
                 tile = self._tiles[i]
-                lines.append('% tile at position {}'.format((j,k)))
+                lines.append('% tile at position (j,k)={} or (x,y)={}'.format((j,k), (x,y)))
                 if color:
                     triangle = r'\fill[{}] {} -- {} -- {};'
-                    c = (j+.5,k+.5)
-                    lines.append(triangle.format(color[tile[0]],(j+1,k),c,(j+1,k+1)))
-                    lines.append(triangle.format(color[tile[1]],(j,k+1),c,(j+1,k+1)))
-                    lines.append(triangle.format(color[tile[2]],(j,k),c,(j,k+1)))
-                    lines.append(triangle.format(color[tile[3]],(j,k),c,(j+1,k)))
-                lines.append(r'\draw {} -- {};'.format((j,k), (j+1,k)))
-                lines.append(r'\draw {} -- {};'.format((j,k), (j,k+1)))
+                    c = (x+.5,y+.5)
+                    lines.append(triangle.format(color[tile[0]],(x+1,y),c,(x+1,y+1)))
+                    lines.append(triangle.format(color[tile[1]],(x,y+1),c,(x+1,y+1)))
+                    lines.append(triangle.format(color[tile[2]],(x,y),c,(x,y+1)))
+                    lines.append(triangle.format(color[tile[3]],(x,y),c,(x+1,y)))
+                lines.append(r'\draw {} -- {};'.format((x,y), (x+1,y)))
+                lines.append(r'\draw {} -- {};'.format((x,y), (x,y+1)))
                 node_str = r'\node[rotate={},font={}] at {} {{{}}};'
-                lines.append(node_str.format(rotate[0],fontsize,(j+1-s,k+.5),  tile[0]))
-                lines.append(node_str.format(rotate[1],fontsize,(j+.5, k+1-s), tile[1]))
-                lines.append(node_str.format(rotate[2],fontsize,(j+s,  k+.5),  tile[2]))
-                lines.append(node_str.format(rotate[3],fontsize,(j+.5, k+s),   tile[3]))
+                lines.append(node_str.format(rotate[0],fontsize,(x+1-s,y+.5),  tile[0]))
+                lines.append(node_str.format(rotate[1],fontsize,(x+.5, y+1-s), tile[1]))
+                lines.append(node_str.format(rotate[2],fontsize,(x+s,  y+.5),  tile[2]))
+                lines.append(node_str.format(rotate[3],fontsize,(x+.5, y+s),   tile[3]))
         lines.append(r'\end{tikzpicture}')
         from slabbe import TikzPicture
         return TikzPicture('\n'.join(lines))
