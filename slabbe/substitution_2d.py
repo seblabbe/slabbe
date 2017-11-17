@@ -409,7 +409,7 @@ class Substitution2d(object):
 
         OUTPUT:
 
-            list of tiles
+            dict, key -> tile
 
         EXAMPLES::
 
@@ -420,23 +420,24 @@ class Substitution2d(object):
             sage: s = Substitution2d(d)
             sage: tiles = [(0,3,1,4), (1,4,0,3)]
             sage: s.desubstitute(tiles)
-            [((0, 1), (4, 3), (0, 1), (4, 3)), ((1, 0), (4,), (0, 1), (4,))]
+            {4: ((0, 1), (4, 3), (0, 1), (4, 3)),
+             5: ((1, 0), (4,), (0, 1), (4,))}
 
         Providing a function which gets back to integers::
 
             sage: fn = lambda colors:int(''.join(map(str, colors)))
             sage: s.desubstitute(tiles, fn)
-            [(1, 43, 1, 43), (10, 4, 1, 4)]
+            {4: (1, 43, 1, 43), 5: (10, 4, 1, 4)}
 
         Providing a function which concatenate label as strings::
 
             sage: fn = lambda colors:''.join(map(str, colors))
             sage: s.desubstitute(tiles, fn)
-            [('01', '43', '01', '43'), ('10', '4', '01', '4')]
+            {4: ('01', '43', '01', '43'), 5: ('10', '4', '01', '4')}
         """
         if function is None:
             function = lambda x:x
-        L = []
+        d = {}
         for a,image_a in self._d.items():
             # get the border tiles
             west = image_a[0]
@@ -450,8 +451,8 @@ class Substitution2d(object):
             south = tuple(tiles[b][3] for b in south)
             # create the tile and save
             tile = tuple(function(color) for color in (east, north, west, south))
-            L.append(tile)
-        return L
+            d[a] = tile
+        return d
 
     _matrix_ = incidence_matrix
 
