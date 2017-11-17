@@ -428,7 +428,7 @@ class Substitution2d(object):
             sage: s.desubstitute(tiles, fn)
             [(1, 43, 1, 43), (10, 4, 1, 4)]
 
-        Providing a function which gets back to integers::
+        Providing a function which concatenate label as strings::
 
             sage: fn = lambda colors:''.join(map(str, colors))
             sage: s.desubstitute(tiles, fn)
