@@ -507,13 +507,20 @@ class WangTiling(object):
                 C[pattern] += 1
         return C
 
-    def tikz(self, color=None):
+    def tikz(self, color=None, fontsize=r'\normalsize', rotate=(0,0,0,0),
+            space=.2, scale=1):
         r"""
         Return a tikzpicture showing one solution.
 
         INPUT:
 
-        - ``color`` -- None or dict
+        - ``color`` -- None or dict from tile values -> tikz colors
+        - ``fontsize`` -- string (default: ``r'\normalsize'``
+        - ``rotate`` -- list (default:``(0,0,0,0)``) of four angles in
+          degrees, the rotation angle to apply to each label of Wang tiles
+        - ``space`` -- number (default: ``.2``) translation distance of the
+          label from the edge
+        - ``scale`` -- number (default: ``1``), tikzpicture scale
 
         EXAMPLES::
 
@@ -565,13 +572,28 @@ class WangTiling(object):
             sage: color = {0:'white',1:'red',2:'blue',3:'green'}
             sage: tiling = WangTiling(table, tiles, color)
             sage: t = tiling.tikz()
+
+        Testing the options::
+
+            sage: t = WangTiling(table, tiles, color).tikz(fontsize=r'\Huge')
+            sage: t = WangTiling(table, tiles, color).tikz(rotate=(0,90,0,0))
+            sage: t = WangTiling(table, tiles, color).tikz(space=.05)
+            sage: t = WangTiling(table, tiles, color).tikz(scale=4)
         """
         if color is None:
             color = self._color
+        s = space # because it is shorter to write below
         lines = []
-        lines.append(r'\begin{tikzpicture}')
+        lines.append(r'\begin{{tikzpicture}}[scale={}]'.format(scale))
         W = self.width()
         H = self.height()
+        # missing lines on the top
+        for j in range(W):
+            lines.append(r'\draw {} -- {};'.format((j,H), (j+1,H)))
+        # missing lines on the right
+        for k in range(H):
+            lines.append(r'\draw {} -- {};'.format((W,k), (W,k+1)))
+        # the tiles with borders left and below
         for j in range(W):
             for k in range(H):
                 i = self._table[j][k]
@@ -581,22 +603,19 @@ class WangTiling(object):
                 tile = self._tiles[i]
                 lines.append('% tile at position {}'.format((j,k)))
                 if color:
-                    tri = r'\fill[{}] {} -- {} -- {};'
+                    triangle = r'\fill[{}] {} -- {} -- {};'
                     c = (j+.5,k+.5)
-                    lines.append(tri.format(color[tile[0]],(j+1,k),c,(j+1,k+1)))
-                    lines.append(tri.format(color[tile[1]],(j,k+1),c,(j+1,k+1)))
-                    lines.append(tri.format(color[tile[2]],(j,k),c,(j,k+1)))
-                    lines.append(tri.format(color[tile[3]],(j,k),c,(j+1,k)))
+                    lines.append(triangle.format(color[tile[0]],(j+1,k),c,(j+1,k+1)))
+                    lines.append(triangle.format(color[tile[1]],(j,k+1),c,(j+1,k+1)))
+                    lines.append(triangle.format(color[tile[2]],(j,k),c,(j,k+1)))
+                    lines.append(triangle.format(color[tile[3]],(j,k),c,(j+1,k)))
                 lines.append(r'\draw {} -- {};'.format((j,k), (j+1,k)))
                 lines.append(r'\draw {} -- {};'.format((j,k), (j,k+1)))
-                lines.append(r'\node[left]  at {} {{{}}};'.format((j+1,k+.5), tile[0]))
-                lines.append(r'\node[below] at {} {{{}}};'.format((j+.5,k+1), tile[1]))
-                lines.append(r'\node[right] at {} {{{}}};'.format((j,k+.5), tile[2]))
-                lines.append(r'\node[above] at {} {{{}}};'.format((j+.5,k), tile[3]))
-        for j in range(W):
-            lines.append(r'\draw {} -- {};'.format((j,H), (j+1,H)))
-        for k in range(H):
-            lines.append(r'\draw {} -- {};'.format((W,k), (W,k+1)))
+                node_str = r'\node[rotate={},font={}] at {} {{{}}};'
+                lines.append(node_str.format(rotate[0],fontsize,(j+1-s,k+.5),  tile[0]))
+                lines.append(node_str.format(rotate[1],fontsize,(j+.5, k+1-s), tile[1]))
+                lines.append(node_str.format(rotate[2],fontsize,(j+s,  k+.5),  tile[2]))
+                lines.append(node_str.format(rotate[3],fontsize,(j+.5, k+s),   tile[3]))
         lines.append(r'\end{tikzpicture}')
         from slabbe import TikzPicture
         return TikzPicture('\n'.join(lines))
