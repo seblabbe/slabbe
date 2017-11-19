@@ -43,19 +43,18 @@ Inducing an irrationnal rotation on a subdomain::
     sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s}, base_ring=K)
     sage: u = rotation_mod(0, 1/phi, 1, K)
     sage: u_inv = rotation_mod(0, 1/phi^2, 1, K)
-    sage: D1 = Polyhedron([(0,0), (h,0), (0,1), (h,1)])
-    sage: P1,sub01 = P.induced_partition(u, u_inv, D1)
+    sage: ieq = [h, -1, 0]   # x0 <= h
+    sage: P1,sub01 = P.induced_partition(u, u_inv, ieq)
     sage: P1
-    Polyhedron partition of 8 atoms
+    Polyhedron partition of 7 atoms
     sage: sub01
     {0: [0, 2],
-     1: [0, 2],
-     2: [1, 2],
-     3: [1, 3],
-     4: [0, 2, 2],
-     5: [1, 2, 2],
-     6: [1, 3, 2],
-     7: [1, 3, 3]}
+     1: [1, 2],
+     2: [1, 3],
+     3: [0, 2, 2],
+     4: [1, 2, 2],
+     5: [1, 3, 2],
+     6: [1, 3, 3]}
 
 AUTHORS:
 
@@ -753,6 +752,38 @@ class PolyhedronPartition(object):
             raise ValueError("polyhedron p whose vertices are {} lies "
                     "in no atom".format(p.vertices()))
 
+
+    def refine_by_hyperplane(self, ieq):
+        r"""
+        Refine the partition with the two half spaces of each side of an
+        hyperplane.
+
+        INPUT:
+
+        - ``ieq`` -- list, an inequality. An entry equal to "[-1,7,3,4]"
+          represents the inequality 7x_1+3x_2+4x_3>= 1.
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition
+            sage: h = 1/3
+            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
+            sage: q = Polyhedron([(0,0), (0,h), (h,1), (h,0)])
+            sage: r = Polyhedron([(h,1), (1,1), (1,h), (h,0)])
+            sage: s = Polyhedron([(h,0), (1,0), (1,h)])
+            sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
+            sage: ieq = [-4, 5, 1]
+            sage: P.refine_by_hyperplane(ieq)
+            Polyhedron partition of 6 atoms
+        """
+        half = Polyhedron(ieqs=[ieq])
+        half_partition = PolyhedronPartition([half])
+        other_half = Polyhedron(ieqs=[[-a for a in ieq]])
+        other_half_partition = PolyhedronPartition([other_half])
+        A = self.refinement(half_partition)
+        B = self.refinement(other_half_partition)
+        return PolyhedronPartition(A.atoms()+B.atoms())
+
     def refinement(self, other):
         r"""
         Return the polyhedron partition obtained by the intersection of the
@@ -794,17 +825,19 @@ class PolyhedronPartition(object):
                 L.append(p_q)
         return PolyhedronPartition(L)
         
-    def induced_out_partition(self, trans, domain):
+    def induced_out_partition(self, trans, ieq):
         r"""
-        Returns the output partition of the exchange of pieces ordered by return time.
+        Returns the output partition obtained as the induction of the given
+        transformation on the domain given by an inequality.
 
-        Note: the output partition corresponds to the arrival partition,
-        not the initial one.
+        Note: the output partition corresponds to the arrival partition in
+        the domain, not the initial one.
 
         INPUT:
 
         - ``trans`` -- a function: polyhedron -> polyhedron
-        - ``domain`` -- a polyhedron
+        - ``ieq`` -- list, an inequality. An entry equal to "[-1,7,3,4]"
+          represents the inequality 7x_1+3x_2+4x_3>= 1.
 
         OUTPUT:
 
@@ -820,73 +853,83 @@ class PolyhedronPartition(object):
             sage: s = Polyhedron([(h,0), (1,0), (1,h)])
             sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
             sage: u = rotation_mod(0, 1/3, 1, QQ)
-            sage: D1 = Polyhedron([(0,0), (h,0), (0,1), (h,1)])
-            sage: P.induced_out_partition(u, D1)
+            sage: ieq = [h, -1, 0]   # x0 <= h
+            sage: P.induced_out_partition(u, ieq)
             {3: Polyhedron partition of 4 atoms}
 
         ::
 
             sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
-            sage: D2 = Polyhedron([(0,0), (1/2,0), (0,1), (1/2,1)])
-            sage: d = P.induced_out_partition(u, D2)
+            sage: ieq2 = [1/2, -1, 0]   # x0 <= 1/2
+            sage: d = P.induced_out_partition(u, ieq2)
             sage: d
-            {2: Polyhedron partition of 3 atoms, 
+            {1: Polyhedron partition of 2 atoms,
+             2: Polyhedron partition of 3 atoms,
              3: Polyhedron partition of 4 atoms}
-
-        TODO: This is weird, maybe a bug::
-
-            sage: d[2].is_pairwise_disjoint()
+            sage: Q = PolyhedronPartition(d[1].atoms()+d[2].atoms()+d[3].atoms())
+            sage: Q.is_pairwise_disjoint()
             True
-            sage: d[3].is_pairwise_disjoint()
-            True
-            sage: PolyhedronPartition(d[3].atoms()+d[2].atoms()).is_pairwise_disjoint()
+
+        ::
+
+            sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
+            sage: ieq3 = [-1/2, 1, 0]   # x0 >= 1/2
+            sage: P.induced_out_partition(u, ieq3)
+            {2: Polyhedron partition of 3 atoms, 3: Polyhedron partition of 4 atoms}
+
+        TESTS::
+
+            sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
+            sage: ieq4 = [-1/2, -1, 0]   # x0 <= -1/2
+            sage: P.induced_out_partition(u, ieq4)
             Traceback (most recent call last):
             ...
-            ValueError: Intersection of self[0](=(A vertex at (1/3, 1), A
-            vertex at (0, 1), A vertex at (0, 1/3))) and self[4](=(A vertex
-            at (1/6, 1/4), A vertex at (1/6, 1), A vertex at (0, 1/6), A
-            vertex at (0, 1))) is not of zero volume (=1/12)
+            ValueError: Inequality An inequality (-2, 0) x - 1 >= 0 does
+            not intersect P (=Polyhedron partition of 4 atoms)
+
+        The whole domain::
+
+            sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
+            sage: ieq5 = [1/2, 1, 0]   # x0 >= -1/2
+            sage: P.induced_out_partition(u, ieq5)
+            {1: Polyhedron partition of 4 atoms}
         """
-        # the partition inside the domain of the induction
-        D = PolyhedronPartition([domain])
-        P = self.refinement(D)
+        # good side of the hyperplane
+        half = Polyhedron(ieqs=[ieq])
+        half_part = PolyhedronPartition([half])
+        # the other side of the hyperplane
+        other_half = Polyhedron(ieqs=[[-a for a in ieq]])
+        other_half_part = PolyhedronPartition([other_half])
+        # initial refinement
+        P = self.refinement(half_part)
+        if len(P) == 0:
+            raise ValueError("Inequality {} does not intersect P "
+                    "(={})".format(half.inequalities()[0], self))
         level = 1
         ans = {}
-        Q = P.apply_transformation(trans)
-        while len(Q):
-            Q_back = []
-            Q_remaining = []
-            for k in Q.atoms():
-                if all(v in domain for v in k.vertices()):
-                    Q_back.append(k)
-                else:
-                    Q_remaining.append(k)
-            Q_remaining = PolyhedronPartition(Q_remaining)
-            Q_refined = Q_remaining.refinement(self)
-            # refilter what is back and what is remaining after the refinement
-            Q_remaining = []
-            for k in Q_refined.atoms():
-                if all(v in domain for v in k.vertices()):
-                    Q_back.append(k)
-                else:
-                    Q_remaining.append(k)
-            if Q_back:
-                Q_back = PolyhedronPartition(Q_back)
-                ans[level] = Q_back
+        P = P.apply_transformation(trans)
+        while len(P):
+            P_returned = P.refinement(half_part)
+            if P_returned:
+                ans[level] = P_returned
+            # for what is remaining we do:
+            P = P.refinement(other_half_part)
+            P = P.refinement(self)
+            P = P.apply_transformation(trans)
             level += 1
-            Q_remaining = PolyhedronPartition(Q_remaining)
-            Q = Q_remaining.apply_transformation(trans)
         return ans
 
-    def induced_in_partition(self, trans, trans_inv, domain):
+    def induced_in_partition(self, trans, trans_inv, ieq):
         r"""
         Returns the partition of the induced transformation on the domain.
+        given by an inequality.
 
         INPUT:
 
         - ``trans`` -- a function: polyhedron -> polyhedron
         - ``trans_inv`` -- a function: polyhedron -> polyhedron
-        - ``domain`` -- a polyhedron
+        - ``ieq`` -- list, an inequality. An entry equal to "[-1,7,3,4]"
+          represents the inequality 7x_1+3x_2+4x_3>= 1.
 
         OUTPUT:
 
@@ -903,20 +946,21 @@ class PolyhedronPartition(object):
             sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
             sage: u = rotation_mod(0, 1/3, 1, QQ)
             sage: u_inv = rotation_mod(0, 2/3, 1, QQ)
-            sage: D1 = Polyhedron([(0,0), (h,0), (0,1), (h,1)])
-            sage: P.induced_in_partition(u, u_inv, D1)
+            sage: ieq = [h, -1, 0]   # x0 <= h
+            sage: P.induced_in_partition(u, u_inv, ieq)
             {3: Polyhedron partition of 4 atoms}
 
         ::
 
             sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
-            sage: D2 = Polyhedron([(0,0), (1/2,0), (0,1), (1/2,1)])
-            sage: d = P.induced_in_partition(u, u_inv, D2)
+            sage: ieq2 = [1/2, -1, 0]   # x0 <= 1/2
+            sage: d = P.induced_in_partition(u, u_inv, ieq2)
             sage: d
-            {2: Polyhedron partition of 3 atoms, 
+            {1: Polyhedron partition of 2 atoms,
+             2: Polyhedron partition of 3 atoms,
              3: Polyhedron partition of 4 atoms}
         """
-        out_partition = self.induced_out_partition(trans, domain)
+        out_partition = self.induced_out_partition(trans, ieq)
         in_partition = {}
         for i,P in out_partition.items():
             for _ in range(i):
@@ -924,7 +968,7 @@ class PolyhedronPartition(object):
             in_partition[i] = P
         return in_partition
 
-    def induced_partition(self, trans, trans_inv, domain):
+    def induced_partition(self, trans, trans_inv, ieq):
         r"""
         Returns the partition of the induced transformation on the domain.
 
@@ -932,7 +976,7 @@ class PolyhedronPartition(object):
 
         - ``trans`` -- a function: polyhedron -> polyhedron
         - ``trans_inv`` -- a function: polyhedron -> polyhedron
-        - ``domain`` -- a polyhedron
+        - ``ieq`` -- a polyhedron
 
         OUTPUT:
 
@@ -950,8 +994,8 @@ class PolyhedronPartition(object):
             sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
             sage: u = rotation_mod(0, 1/3, 1, QQ)
             sage: u_inv = rotation_mod(0, 2/3, 1, QQ)
-            sage: D1 = Polyhedron([(0,0), (h,0), (0,1), (h,1)])
-            sage: Q,sub = P.induced_partition(u, u_inv, D1)
+            sage: ieq = [h, -1, 0]   # x0 <= h
+            sage: Q,sub = P.induced_partition(u, u_inv, ieq)
             sage: Q
             Polyhedron partition of 4 atoms
             sage: sub
@@ -960,18 +1004,20 @@ class PolyhedronPartition(object):
         ::
 
             sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
-            sage: D2 = Polyhedron([(0,0), (1/2,0), (0,1), (1/2,1)])
-            sage: Q,sub = P.induced_partition(u, u_inv, D2)
+            sage: ieq2 = [1/2, -1, 0]   # x0 <= 1/2
+            sage: Q,sub = P.induced_partition(u, u_inv, ieq2)
             sage: Q
-            Polyhedron partition of 7 atoms
+            Polyhedron partition of 9 atoms
             sage: sub
-            {0: [0, 2, 2],
-             1: [2, 2],
-             2: [2, 3],
-             3: [3, 3],
-             4: [1, 2, 2],
-             5: [1, 2, 3],
-             6: [1, 3, 3]}
+            {0: [0],
+             1: [1],
+             2: [2, 2],
+             3: [2, 3],
+             4: [3, 3],
+             5: [0, 2, 2],
+             6: [1, 2, 2],
+             7: [1, 2, 3],
+             8: [1, 3, 3]}
 
         Irrationnal rotations::
 
@@ -986,24 +1032,23 @@ class PolyhedronPartition(object):
             sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s}, base_ring=K)
             sage: u = rotation_mod(0, 1/phi, 1, K)
             sage: u_inv = rotation_mod(0, 1/phi^2, 1, K)
-            sage: D1 = Polyhedron([(0,0), (h,0), (0,1), (h,1)])
-            sage: P1,sub01 = P.induced_partition(u, u_inv, D1)
+            sage: ieq = [h, -1, 0]   # x0 <= h
+            sage: P1,sub01 = P.induced_partition(u, u_inv, ieq)
             sage: P1
-            Polyhedron partition of 8 atoms
+            Polyhedron partition of 7 atoms
             sage: sub01
             {0: [0, 2],
-             1: [0, 2],
-             2: [1, 2],
-             3: [1, 3],
-             4: [0, 2, 2],
-             5: [1, 2, 2],
-             6: [1, 3, 2],
-             7: [1, 3, 3]}
+             1: [1, 2],
+             2: [1, 3],
+             3: [0, 2, 2],
+             4: [1, 2, 2],
+             5: [1, 3, 2],
+             6: [1, 3, 3]}
 
         We do the induction on a smaller domain::
 
-            sage: D2 = Polyhedron([(0,0), (1/phi^3,0), (0,1), (1/phi^3,1)])
-            sage: P2,sub02 = P.induced_partition(u, u_inv, D2)
+            sage: ieq2 = [1/phi^3, -1, 0]   # x0 <= h
+            sage: P2,sub02 = P.induced_partition(u, u_inv, ieq2)
             sage: P2
             Polyhedron partition of 10 atoms
             sage: sub02
@@ -1022,7 +1067,7 @@ class PolyhedronPartition(object):
 
             sage: u1 = rotation_mod(0, phi^-3, phi^-2, K)
             sage: u1_inv = rotation_mod(0, phi^-4, phi^-2, K)
-            sage: P2_alt,sub12 = P1.induced_partition(u1, u1_inv, D2)
+            sage: P2_alt,sub12 = P1.induced_partition(u1, u1_inv, ieq2)
             sage: P2_alt
             Polyhedron partition of 10 atoms
             sage: P2_alt == P2
@@ -1034,15 +1079,20 @@ class PolyhedronPartition(object):
             sage: s01 = WordMorphism(sub01)
             sage: s12 = WordMorphism(sub12)
             sage: s02 = WordMorphism(sub02)
-            sage: s01*s12 == s02
-            False
-            sage: perm = WordMorphism(P2.keys_permutation(P2_alt))
-            sage: s01*s12*perm == s02
-            True
             sage: s02
             WordMorphism: 0->022, 1->122, 2->132, 3->133, 4->02022, 5->02122, 6->12122, 7->12132, 8->13132, 9->13133
+            sage: s01*s12 == s02
+            True
+
+        By chance, the above is true, but in general, we have::
+
+            sage: perm = WordMorphism(P2.keys_permutation(P2_alt))
+            sage: perm
+            WordMorphism: 0->0, 1->1, 2->2, 3->3, 4->4, 5->5, 6->6, 7->7, 8->8, 9->9
+            sage: s01*s12*perm == s02
+            True
         """
-        in_partition = self.induced_in_partition(trans, trans_inv, domain)
+        in_partition = self.induced_in_partition(trans, trans_inv, ieq)
 
         # preprocess the in_partition to recognize atoms which are in self
         # and reuse the same coding letter for them
