@@ -8,18 +8,18 @@ This uses MILP solvers like Coin or Gurobi. Coin can be installed with::
 
 EXAMPLES::
 
-    sage: from slabbe.wang_tiles import WangTileSolver
+    sage: from slabbe import WangTileSolver
     sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
     sage: W = WangTileSolver(tiles,3,4)
     sage: tiling = W.solve()
-    sage: _ = tiling.tikz().pdf()
+    sage: _ = tiling.tikz().pdf(view=False)
 
 ::
 
     sage: tiles = [(1/2,1/2,1/2,1/2), (1,1,1,1), (2,2,2,2)]
     sage: W = WangTileSolver(tiles,3,4)
     sage: tiling = W.solve()
-    sage: _ = tiling.tikz().pdf()
+    sage: _ = tiling.tikz().pdf(view=False)
 
 ::
 
@@ -38,7 +38,7 @@ Kari-Culik (Here 0' is replaced by 10)::
     sage: tiles = divide_by_2 + times_3
     sage: W = WangTileSolver(tiles,3,4)
     sage: tiling = W.solve()
-    sage: _ = tiling.tikz().pdf()
+    sage: _ = tiling.tikz().pdf(view=False)
 
 Rao-Jeandel::
 
@@ -46,7 +46,7 @@ Rao-Jeandel::
     ....: (0,1,3,1), (0,0,0,1), (3,1,0,2), (0,2,1,2), (1,2,1,4), (3,3,1,2)]
     sage: W = WangTileSolver(tiles,3,4)
     sage: tiling = W.solve()
-    sage: _ = tiling.tikz().pdf()
+    sage: _ = tiling.tikz().pdf(view=False)
 
 .. TODO::
 
@@ -80,7 +80,7 @@ class WangTileSolver(object):
 
     EXAMPLES::
 
-        sage: from slabbe.wang_tiles import WangTileSolver
+        sage: from slabbe import WangTileSolver
         sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
         sage: W = WangTileSolver(tiles, 3, 3)
         sage: tiling = W.solve()
@@ -100,10 +100,10 @@ class WangTileSolver(object):
 
         sage: right = {(1,1):1, (2,2):0}
         sage: W = WangTileSolver(tiles,3,3,preassigned=[right,{},{},{}])
-        sage: W.solve()
+        sage: W.solve(solver='GLPK')
         Traceback (most recent call last):
         ...
-        MIPSolverException: CBC : The problem or its dual has been proven infeasible!
+        MIPSolverException: GLPK: Problem has no feasible solution
 
     TESTS:
 
@@ -111,7 +111,7 @@ class WangTileSolver(object):
 
         sage: tiles = [('a','a','a','a'), ('b','b','b','b')]
         sage: W = WangTileSolver(tiles,3,4)
-        sage: _ = W.tikz().pdf()
+        sage: tiling = W.solve()
         Traceback (most recent call last):
         ...
         ValueError: could not convert string to float: a
@@ -122,7 +122,7 @@ class WangTileSolver(object):
 
         EXAMPLES::
 
-            sage: from slabbe.wang_tiles import WangTileSolver
+            sage: from slabbe import WangTileSolver
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
             sage: W = WangTileSolver(tiles, 3, 4)
         """
@@ -156,12 +156,12 @@ class WangTileSolver(object):
 
         EXAMPLES::
 
-            sage: from slabbe.wang_tiles import WangTileSolver
+            sage: from slabbe import WangTileSolver
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
             sage: W = WangTileSolver(tiles,3,4)
-            sage: p,x = W.milp()
+            sage: p,x = W.milp(solver='GLPK')
             sage: p
-            Mixed Integer Program  ( maximization, 36 variables, 29 constraints )
+            Boolean Program (maximization, 36 variables, 29 constraints)
             sage: x
             MIPVariable of dimension 1
 
@@ -241,7 +241,7 @@ class WangTileSolver(object):
 
         EXAMPLES::
 
-            sage: from slabbe.wang_tiles import WangTileSolver
+            sage: from slabbe import WangTileSolver
             sage: tiles = [(0,3,1,4), (1,4,0,3)]
             sage: W = WangTileSolver(tiles,3,4)
             sage: tiling = W.solve()
@@ -298,7 +298,7 @@ class WangTiling(object):
 
     EXAMPLES::
 
-        sage: from slabbe.wang_tiles import WangTiling
+        sage: from slabbe import WangTiling
         sage: tiles = [(0,3,1,4), (1,4,0,3)]
         sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
         sage: tiling = WangTiling(table, tiles)
@@ -319,7 +319,7 @@ class WangTiling(object):
 
         EXAMPLES::
 
-            sage: from slabbe.wang_tiles import WangTileSolver
+            sage: from slabbe import WangTileSolver
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
             sage: W = WangTileSolver(tiles, 3, 4)
             sage: W.solve()
@@ -336,7 +336,7 @@ class WangTiling(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.wang_tiles import WangTiling
+            sage: from slabbe import WangTiling
             sage: tiles = [(0,3,1,4), (1,4,0,3)]
             sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
             sage: tiling = WangTiling(table, tiles)
@@ -349,7 +349,7 @@ class WangTiling(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe.wang_tiles import WangTiling
+            sage: from slabbe import WangTiling
             sage: tiles = [(0,3,1,4), (1,4,0,3)]
             sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
             sage: tiling = WangTiling(table, tiles)
@@ -369,7 +369,7 @@ class WangTiling(object):
 
         EXAMPLES::
 
-            sage: from slabbe.wang_tiles import WangTileSolver
+            sage: from slabbe import WangTileSolver
             sage: tiles = [(0,3,1,4), (1,4,0,3)]
             sage: W = WangTileSolver(tiles,3,4)
             sage: tiling = W.solve()
@@ -397,7 +397,7 @@ class WangTiling(object):
 
         EXAMPLES::
 
-            sage: from slabbe.wang_tiles import WangTileSolver
+            sage: from slabbe import WangTileSolver
             sage: tiles = [(0,3,1,4), (1,4,0,3)]
             sage: W = WangTileSolver(tiles,3,4)
             sage: tiling = W.solve()
@@ -433,7 +433,7 @@ class WangTiling(object):
             4
             sage: tiling.number_of_occurences({(0,0):1, (0,1):1})
             0
-            sage: tiling.tikz().pdf()   # not tested
+            sage: tiling.tikz().pdf(view=False)   # not tested
 
         When avoiding the border::
 
@@ -472,7 +472,7 @@ class WangTiling(object):
 
         EXAMPLES::
 
-            sage: from slabbe.wang_tiles import WangTiling
+            sage: from slabbe import WangTiling
             sage: table = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
             sage: tiles = [(0, 0, 0, 0), (1, 1, 1, 1), (2, 2, 2, 2)]
             sage: tiling = WangTiling(table, tiles)
@@ -507,6 +507,23 @@ class WangTiling(object):
                 C[pattern] += 1
         return C
 
+    def tile_frequency(self, avoid_border=1):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTiling
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+            sage: tiling = WangTiling(table, tiles)
+            sage: tiling.tile_frequency()
+            {(0,): 1/2,
+             (1,): 1/2}
+        """
+        from sage.rings.rational_field import QQ
+        C = self.pattern_occurrences([(0,0)], avoid_border=avoid_border)
+        s = sum(C.values())
+        return {k:QQ((v,s)) for k,v in C.items()}
+
     def tikz(self, color=None, fontsize=r'\normalsize', rotate=(0,0,0,0),
             space=.2, scale=1, transformation_matrix=None):
         r"""
@@ -532,7 +549,7 @@ class WangTiling(object):
 
         EXAMPLES::
 
-            sage: from slabbe.wang_tiles import WangTileSolver
+            sage: from slabbe import WangTileSolver
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
             sage: W = WangTileSolver(tiles,3,4)
             sage: tiling = W.solve()
@@ -541,21 +558,21 @@ class WangTiling(object):
             \documentclass[tikz]{standalone}
             \usepackage{amsmath}
             \begin{document}
-            \begin{tikzpicture}
-            % tile at position (0,0)
-            \draw (0, 0) -- (1, 0);
-            \draw (0, 0) -- (0, 1);
-            \node[left]  at (1, 0.5) {0};
+            \begin{tikzpicture}[scale=1]
+            \draw (0, 4) -- (1, 4);
+            \draw (1, 4) -- (2, 4);
+            \draw (2, 4) -- (3, 4);
+            \draw (3, 0) -- (3, 1);
             ...
-            ... 76 lines not printed (2365 characters in total) ...
+            ... 83 lines not printed (3862 characters in total) ...
             ...
-            \node[left]  at (3, 3.5) {0};
-            \node[below] at (2.5, 4) {0};
-            \node[right] at (2, 3.5) {0};
-            \node[above] at (2.5, 3) {0};
+            \node[rotate=0,font=\normalsize] at (2.8, 3.5) {0};
+            \node[rotate=0,font=\normalsize] at (2.5, 3.8) {0};
+            \node[rotate=0,font=\normalsize] at (2.2, 3.5) {0};
+            \node[rotate=0,font=\normalsize] at (2.5, 3.2) {0};
             \end{tikzpicture}
             \end{document}
-            sage: _ = t.pdf()
+            sage: _ = t.pdf(view=False)
 
         With colors::
 
@@ -569,12 +586,13 @@ class WangTiling(object):
 
             sage: tiles = [(0,2,1,3), (1,3,0,2)]
             sage: W = WangTileSolver(tiles,3,4)
-            sage: tiling = W.solve('Gurobi')
+            sage: tiling = W.solve('GLPK')
             sage: color = {0:'white',1:'red',2:'blue',3:'green'}
             sage: t = tiling.tikz(color=color)
 
         Using some blank tiles::
 
+            sage: from slabbe import WangTiling
             sage: tiles = [(0,3,1,2), (1,2,0,3)]
             sage: table = [[0, 1, None, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
             sage: color = {0:'white',1:'red',2:'blue',3:'green'}

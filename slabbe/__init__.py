@@ -27,6 +27,7 @@ from tikz_picture import TikzPicture
 from matrices import M3to2, M2to3, M4to2, M4to3
 
 from substitution_2d import Substitution2d
+from slabbe.wang_tiles import WangTiling, WangTileSolver
 
 # BUG (sometimes, cython code does not work properly)
 try:
