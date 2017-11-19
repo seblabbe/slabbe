@@ -877,7 +877,7 @@ class PolyhedronPartition(object):
             sage: P.induced_out_partition(u, ieq3)
             {2: Polyhedron partition of 3 atoms, 3: Polyhedron partition of 4 atoms}
 
-        TESTS::
+        It is an error if the induced region is empty::
 
             sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
             sage: ieq4 = [-1/2, -1, 0]   # x0 <= -1/2
@@ -893,6 +893,24 @@ class PolyhedronPartition(object):
             sage: ieq5 = [1/2, 1, 0]   # x0 >= -1/2
             sage: P.induced_out_partition(u, ieq5)
             {1: Polyhedron partition of 4 atoms}
+
+        An irrational rotation::
+
+            sage: z = polygen(QQ, 'z') #z = QQ['z'].0 # same as
+            sage: K = NumberField(z**2-z-1, 'phi', embedding=RR(1.6))
+            sage: phi = K.gen()
+            sage: h = 1/phi^2
+            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
+            sage: q = Polyhedron([(0,0), (0,h), (h,1), (h,0)])
+            sage: r = Polyhedron([(h,1), (1,1), (1,h), (h,0)])
+            sage: s = Polyhedron([(h,0), (1,0), (1,h)])
+            sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s}, base_ring=K)
+            sage: u = rotation_mod(0, 1/phi, 1, K)
+            sage: ieq = [phi^-4, -1, 0]   # x0 <= phi^-4
+            sage: d = P.induced_out_partition(u, ieq)
+            sage: d
+            {5: Polyhedron partition of 6 atoms,
+             8: Polyhedron partition of 9 atoms}
         """
         # good side of the hyperplane
         half = Polyhedron(ieqs=[ieq])
