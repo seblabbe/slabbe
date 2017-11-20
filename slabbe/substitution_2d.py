@@ -61,7 +61,7 @@ class Substitution2d(object):
         """
         return "Substitution 2d: {}".format(self._d)
 
-    def _latex_(self):
+    def _latex_(self, ncolumns=8):
         r"""
         EXAMPLES::
 
@@ -71,19 +71,35 @@ class Substitution2d(object):
             sage: d = {0:A, 1:B}
             sage: s = Substitution2d(d)
             sage: latex(s)
-            \left\{0 : \left(\begin{array}{rr}
+            \begin{equation*}
+            \begin{split}
+            &
+            0\mapsto \left(\begin{array}{rr}
             1 & 3 \\
             0 & 2
-            \end{array}\right), 1 : \left(\begin{array}{r}
+            \end{array}\right),
+            1\mapsto \left(\begin{array}{r}
             5 \\
             4
-            \end{array}\right)\right\}
+            \end{array}\right),
+            \end{split}
+            \end{equation*}
         """
         from sage.matrix.constructor import matrix
         from sage.misc.latex import latex
-        d = {key:matrix.column([col[::-1] for col in table]) 
-                            for key,table in self._d.items()}
-        return latex(d)
+        from sage.misc.latex import LatexExpr
+        lines = []
+        lines.append(r'\begin{equation*}')
+        lines.append(r'\begin{split}')
+        lines.append(r'&')
+        for i,(key,table) in enumerate(self._d.items()):
+            M = matrix.column([col[::-1] for col in table])
+            lines.append(r'{}\mapsto {},'.format(latex(key), latex(M)))
+            if (i+1) % ncolumns == 0:
+                lines.append(r'\\&\quad')
+        lines.append(r'\end{split}')
+        lines.append(r'\end{equation*}')
+        return LatexExpr('\n'.join(lines))
 
     @classmethod
     def from_1d_row_substitution(self, s):
