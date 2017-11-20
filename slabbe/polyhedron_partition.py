@@ -73,8 +73,6 @@ import itertools
 from copy import copy
 from sage.misc.cachefunc import cached_method
 from sage.geometry.polyhedron.constructor import Polyhedron
-from sage.plot.graphics import Graphics
-from sage.plot.text import text
 
 def rotation_mod(i, angle, mod, base_ring):
     r"""
@@ -570,11 +568,52 @@ class PolyhedronPartition(object):
             sage: P.plot()
             Graphics object consisting of 21 graphics primitives
         """
+        from sage.plot.graphics import Graphics
+        from sage.plot.text import text
         G = Graphics()
-        for i,p in self:
-            G += p.plot(fill='white') 
-            G += text(i, p.center())
+        for key,P in self:
+            G += P.plot(fill='white')
+            G += text(key, P.center())
         return G
+
+    def tikz(self, fontsize=r'\normalsize', scale=1):
+        r"""
+        INPUT:
+
+        - ``fontsize`` -- string (default: ``r'\normalsize'``
+        - ``scale`` -- number (default: ``1``)
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition
+            sage: h = 1/2
+            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
+            sage: q = Polyhedron([(0,0), (0,h), (h,1), (1,1), (1,h), (h,0)])
+            sage: r = Polyhedron([(h,0), (1,0), (1,h)])
+            sage: P = PolyhedronPartition([p,q,r])
+            sage: _ = P.tikz().pdf(view=False)
+
+        Testing the options::
+
+            sage: _ = P.tikz(fontsize=r'\scriptsize').pdf(view=False)
+            sage: _ = P.tikz(scale=2).pdf(view=False)
+        """
+        from slabbe import TikzPicture
+        lines = []
+        lines.append(r'\begin{tikzpicture}')
+        lines.append('[scale={}]'.format(scale))
+        for key,P in self:
+            proj = P.projection()
+            lines.append(r'% atom with key {}'.format(key))
+            node_str = r'\node[font={}] at {} {{{}}};'
+            lines.append(node_str.format(fontsize, P.center(), key))
+            for (a,b) in proj.lines:
+                a = proj.coords[a]
+                b = proj.coords[b]
+                line = r'\draw {} -- {};'.format(a,b)
+                lines.append(line)
+        lines.append(r'\end{tikzpicture}')
+        return TikzPicture('\n'.join(lines))
 
     def is_pairwise_disjoint(self):
         r"""
