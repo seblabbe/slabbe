@@ -994,7 +994,8 @@ class PolyhedronPartition(object):
 
         - ``trans`` -- a function: polyhedron -> polyhedron
         - ``trans_inv`` -- a function: polyhedron -> polyhedron
-        - ``ieq`` -- a polyhedron
+        - ``ieq`` -- list, an inequality. An entry equal to "[-1,7,3,4]"
+          represents the inequality 7x_1+3x_2+4x_3>= 1.
 
         OUTPUT:
 
