@@ -78,9 +78,9 @@ def tile_to_tikz(tile, position, color=None, size=1,
     - ``size`` -- number (default: ``1``), size of the tile
     - ``fontsize`` -- string (default: ``r'\normalsize'``
     - ``rotate`` -- list (default:``(0,0,0,0)``) of four angles in
-        degrees, the rotation angle to apply to each label of Wang tiles
+      degrees, the rotation angle to apply to each label of Wang tiles
     - ``label_shift`` -- number (default: ``.2``) translation distance of the
-        label from the edge
+      label from the edge
 
     OUTPUT:
 
@@ -379,7 +379,8 @@ class WangTileSet(object):
             ieqs.append(v)
         return Polyhedron(ieqs=ieqs, eqns=eqns)
 
-    def tikz(self, ncolumns=10, color=None, size=1, space=.1, scale=1):
+    def tikz(self, ncolumns=10, color=None, size=1, space=.1, scale=1,
+             fontsize=r'\normalsize', rotate=(0,0,0,0), label_shift=.2):
         r"""
         INPUT:
 
@@ -388,6 +389,11 @@ class WangTileSet(object):
         - ``size`` -- number (default: ``1``)
         - ``space`` -- number (default: ``.1``)
         - ``scale`` -- number (default: ``1``)
+        - ``fontsize`` -- string (default: ``r'\normalsize'``
+        - ``rotate`` -- list (default:``(0,0,0,0)``) of four angles in
+          degrees, the rotation angle to apply to each label of Wang tiles
+        - ``label_shift`` -- number (default: ``.2``) translation distance
+          of the label from the edge
 
         EXAMPLES::
 
@@ -406,7 +412,9 @@ class WangTileSet(object):
             x = i % ncolumns
             y = - (i // ncolumns)
             position = (x * (size + space), y * (size + space))
-            new_lines = tile_to_tikz(tile, position, color=color, size=size)
+            new_lines = tile_to_tikz(tile, position, color=color,
+                    size=size, fontsize=fontsize, rotate=rotate,
+                    label_shift=label_shift)
             lines.extend(new_lines)
         lines.append(r'\end{tikzpicture}')
         return TikzPicture('\n'.join(lines))
