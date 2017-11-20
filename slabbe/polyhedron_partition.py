@@ -576,12 +576,15 @@ class PolyhedronPartition(object):
             G += text(key, P.center())
         return G
 
-    def tikz(self, fontsize=r'\normalsize', scale=1):
+    def tikz(self, fontsize=r'\normalsize', scale=1, key_map=None):
         r"""
         INPUT:
 
         - ``fontsize`` -- string (default: ``r'\normalsize'``
         - ``scale`` -- number (default: ``1``)
+        - ``key_map`` -- dict (default: ``None``), mapping the key to
+          something else for showing purposes (sometimes you want two atoms
+          to have the same key even if their union is not a convex polyhedron)
 
         EXAMPLES::
 
@@ -610,6 +613,7 @@ class PolyhedronPartition(object):
 
             sage: _ = P.tikz(fontsize=r'\scriptsize').pdf(view=False)
             sage: _ = P.tikz(scale=2).pdf(view=False)
+            sage: _ = P.tikz(key_map={0:7,1:7,2:4,3:4}).pdf(view=False)
         """
         from slabbe import TikzPicture
         lines = []
@@ -617,9 +621,13 @@ class PolyhedronPartition(object):
         lines.append('[scale={}]'.format(scale))
         for key,P in self:
             proj = P.projection()
-            lines.append(r'% atom with key {}'.format(key))
+            shown_key = key if key_map is None else key_map[key]
+            lines.append(r'% atom with key {} (mapped to {})'.format(key, 
+                                                             shown_key))
             node_str = r'\node[font={}] at {} {{{}}};'
-            lines.append(node_str.format(fontsize, P.center().n(digits=5), key))
+            lines.append(node_str.format(fontsize, 
+                                         P.center().n(digits=5),
+                                         shown_key))
             for (a,b) in proj.lines:
                 a = proj.coords[a].n(digits=5)
                 b = proj.coords[b].n(digits=5)
