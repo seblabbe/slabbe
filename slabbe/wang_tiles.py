@@ -66,43 +66,87 @@ from sage.misc.cachefunc import cached_method
 from sage.numerical.mip import MixedIntegerLinearProgram
 from collections import Counter
 
-def tile_to_tikz(tile, position, color=None, size=1):
+def tile_to_tikz(tile, position, color=None, size=1,
+        fontsize=r'\normalsize', rotate=(0,0,0,0), label_shift=.2):
     r"""
+
+    INPUT:
+
+    - ``tile`` -- tuple of length 4
+    - ``position`` -- tuple of two numbers
+    - ``color`` -- dict (default: ``None``) from tile values -> tikz colors
+    - ``size`` -- number (default: ``1``), size of the tile
+    - ``fontsize`` -- string (default: ``r'\normalsize'``
+    - ``rotate`` -- list (default:``(0,0,0,0)``) of four angles in
+        degrees, the rotation angle to apply to each label of Wang tiles
+    - ``label_shift`` -- number (default: ``.2``) translation distance of the
+        label from the edge
+
+    OUTPUT:
+
+    - list of strings
+
     EXAMPLES::
 
         sage: from slabbe.wang_tiles import tile_to_tikz
         sage: color = {0:'white',1:'red',2:'cyan',3:'green',4:'white'}
         sage: tile_to_tikz((1,2,3,4), (10,100), color)
-        ['% tile at position (10, 100)',
+        ['% tile at position (x,y)=(10, 100)',
          '\\fill[red] (11, 100) -- (10.5, 100.5) -- (11, 101);',
          '\\fill[cyan] (10, 101) -- (10.5, 100.5) -- (11, 101);',
          '\\fill[green] (10, 100) -- (10.5, 100.5) -- (10, 101);',
          '\\fill[white] (10, 100) -- (10.5, 100.5) -- (11, 100);',
          '\\draw (10, 100) -- (11, 100);',
          '\\draw (10, 100) -- (10, 101);',
-         '\\node[left]  at (11, 100.5) {1};',
-         '\\node[below] at (10.5, 101) {2};',
-         '\\node[right] at (10, 100.5) {3};',
-         '\\node[above] at (10.5, 100) {4};']
+         '\\node[rotate=0,font=\\normalsize] at (10.8, 100.5) {1};',
+         '\\node[rotate=0,font=\\normalsize] at (10.5, 100.8) {2};',
+         '\\node[rotate=0,font=\\normalsize] at (10.2, 100.5) {3};',
+         '\\node[rotate=0,font=\\normalsize] at (10.5, 100.2) {4};']
+        sage: tile_to_tikz((1,2,3,4), (10,100), color=None)
+        ['% tile at position (x,y)=(10, 100)',
+         '\\draw (10, 100) -- (11, 100);',
+         '\\draw (10, 100) -- (10, 101);',
+         '\\node[rotate=0,font=\\normalsize] at (10.8, 100.5) {1};',
+         '\\node[rotate=0,font=\\normalsize] at (10.5, 100.8) {2};',
+         '\\node[rotate=0,font=\\normalsize] at (10.2, 100.5) {3};',
+         '\\node[rotate=0,font=\\normalsize] at (10.5, 100.2) {4};']
+        sage: tile_to_tikz((1,2,3,4), (10,100), color=None, rotate=(0,90,0,0))
+        ['% tile at position (x,y)=(10, 100)',
+         '\\draw (10, 100) -- (11, 100);',
+         '\\draw (10, 100) -- (10, 101);',
+         '\\node[rotate=0,font=\\normalsize] at (10.8, 100.5) {1};',
+         '\\node[rotate=90,font=\\normalsize] at (10.5, 100.8) {2};',
+         '\\node[rotate=0,font=\\normalsize] at (10.2, 100.5) {3};',
+         '\\node[rotate=0,font=\\normalsize] at (10.5, 100.2) {4};']
+        sage: tile_to_tikz((1,2,3,4), (10,100), color=None, label_shift=.1)
+        ['% tile at position (x,y)=(10, 100)',
+         '\\draw (10, 100) -- (11, 100);',
+         '\\draw (10, 100) -- (10, 101);',
+         '\\node[rotate=0,font=\\normalsize] at (10.9000000000000, 100.5) {1};',
+         '\\node[rotate=0,font=\\normalsize] at (10.5, 100.900000000000) {2};',
+         '\\node[rotate=0,font=\\normalsize] at (10.1000000000000, 100.5) {3};',
+         '\\node[rotate=0,font=\\normalsize] at (10.5, 100.100000000000) {4};']
     """
-    s = size
-    j,k = position
     lines = []
     #lines.append(r'\begin{tikzpicture}')
-    lines.append('% tile at position {}'.format((j,k)))
+    s = size        # because it is shorter to write below
+    t = label_shift # because it is shorter to write below
+    x,y = position
+    lines.append('% tile at position (x,y)={}'.format((x,y)))
     if color:
-        tri = r'\fill[{}] {} -- {} -- {};'
-        c = (j+.5*s,k+.5*s)
-        lines.append(tri.format(color[tile[0]],(j+s,k),c,(j+s,k+s)))
-        lines.append(tri.format(color[tile[1]],(j,k+s),c,(j+s,k+s)))
-        lines.append(tri.format(color[tile[2]],(j,k),c,(j,k+s)))
-        lines.append(tri.format(color[tile[3]],(j,k),c,(j+s,k)))
-    lines.append(r'\draw {} -- {};'.format((j,k), (j+s,k)))
-    lines.append(r'\draw {} -- {};'.format((j,k), (j,k+s)))
-    lines.append(r'\node[left]  at {} {{{}}};'.format((j+s,k+.5*s), tile[0]))
-    lines.append(r'\node[below] at {} {{{}}};'.format((j+.5*s,k+s), tile[1]))
-    lines.append(r'\node[right] at {} {{{}}};'.format((j,k+.5*s), tile[2]))
-    lines.append(r'\node[above] at {} {{{}}};'.format((j+.5*s,k), tile[3]))
+        triangle = r'\fill[{}] {} -- {} -- {};'
+        c = (x+.5*s,y+.5*s)
+        lines.append(triangle.format(color[tile[0]],(x+s,y),c,(x+s,y+s)))
+        lines.append(triangle.format(color[tile[1]],(x,y+s),c,(x+s,y+s)))
+        lines.append(triangle.format(color[tile[2]],(x,y),c,(x,y+s)))
+        lines.append(triangle.format(color[tile[3]],(x,y),c,(x+s,y)))
+    lines.append(r'\draw {} -- {};'.format((x,y), (x+s,y)))
+    lines.append(r'\draw {} -- {};'.format((x,y), (x,y+s)))
+    node_str = r'\node[rotate={},font={}] at {} {{{}}};'
+    lines.append(node_str.format(rotate[0],fontsize,(x+s-t,y+.5),  tile[0]))
+    lines.append(node_str.format(rotate[1],fontsize,(x+.5, y+s-t), tile[1]))
+    lines.append(node_str.format(rotate[2],fontsize,(x+t,  y+.5),  tile[2]))
+    lines.append(node_str.format(rotate[3],fontsize,(x+.5, y+t),   tile[3]))
     #lines.append(r'\end{tikzpicture}')
     return lines
     #return TikzPicture('\n'.join(lines))
@@ -351,11 +395,10 @@ class WangTileSet(object):
             sage: tiles = [(0,0,0,2), (1,0,0,1), (2,1,0,0), (0,0,1,0),
             ....:          (1,2,1,1), (1,1,2,0), (2,0,2,1)]
             sage: T = WangTileSet(tiles)
-            sage: _ = T.tikz().pdf(view=False)
+            sage: color = {0:'white',1:'red',2:'cyan',3:'green',4:'white'}
+            sage: _ = T.tikz(color=color).pdf(view=False)
         """
         from slabbe import TikzPicture
-        if color is None:
-            color = {0:'white',1:'red',2:'cyan',3:'green',4:'white'}
         lines = []
         lines.append(r'\begin{tikzpicture}')
         lines.append('[scale={}]'.format(scale))
@@ -846,7 +889,7 @@ class WangTiling(object):
         return {k:QQ((v,s)) for k,v in C.items()}
 
     def tikz(self, color=None, fontsize=r'\normalsize', rotate=(0,0,0,0),
-            space=.2, scale=1, transformation_matrix=None):
+            label_shift=.2, scale=1, transformation_matrix=None):
         r"""
         Return a tikzpicture showing one solution.
 
@@ -856,8 +899,8 @@ class WangTiling(object):
         - ``fontsize`` -- string (default: ``r'\normalsize'``
         - ``rotate`` -- list (default:``(0,0,0,0)``) of four angles in
           degrees, the rotation angle to apply to each label of Wang tiles
-        - ``space`` -- number (default: ``.2``) translation distance of the
-          label from the edge
+        - ``label_shift`` -- number (default: ``.2``) translation distance
+          of the label from the edge
         - ``scale`` -- number (default: ``1``), tikzpicture scale
         - ``transformation_matrix`` -- matrix (default: ``None``), a matrix
           to apply to the coordinate before drawing, it can be in
@@ -885,7 +928,7 @@ class WangTiling(object):
             \draw (2, 4) -- (3, 4);
             \draw (3, 0) -- (3, 1);
             ...
-            ... 83 lines not printed (3862 characters in total) ...
+            ... 83 lines not printed (3670 characters in total) ...
             ...
             \node[rotate=0,font=\normalsize] at (2.8, 3.5) {0};
             \node[rotate=0,font=\normalsize] at (2.5, 3.8) {0};
@@ -927,7 +970,7 @@ class WangTiling(object):
             sage: color = {0:'white',1:'red',2:'blue',3:'green'}
             sage: t = WangTiling(table, tiles, color).tikz(fontsize=r'\Huge')
             sage: t = WangTiling(table, tiles, color).tikz(rotate=(0,90,0,0))
-            sage: t = WangTiling(table, tiles, color).tikz(space=.05)
+            sage: t = WangTiling(table, tiles, color).tikz(label_shift=.05)
             sage: t = WangTiling(table, tiles, color).tikz(scale=4)
             sage: m = matrix(2,[1,1,0,1])
             sage: t = WangTiling(table, tiles, color).tikz(transformation_matrix=m)
@@ -938,7 +981,6 @@ class WangTiling(object):
             color = self._color
         if transformation_matrix is None:
             transformation_matrix = matrix.identity(2)
-        s = space # because it is shorter to write below
         lines = []
         lines.append(r'\begin{{tikzpicture}}[scale={}]'.format(scale))
         W = self.width()
@@ -956,23 +998,12 @@ class WangTiling(object):
                 if i is None:
                     # this is a blank tile
                     continue
-                x,y = transformation_matrix*vector((j,k))
+                position = transformation_matrix*vector((j,k))
                 tile = self._tiles[i]
-                lines.append('% tile at position (j,k)={} or (x,y)={}'.format((j,k), (x,y)))
-                if color:
-                    triangle = r'\fill[{}] {} -- {} -- {};'
-                    c = (x+.5,y+.5)
-                    lines.append(triangle.format(color[tile[0]],(x+1,y),c,(x+1,y+1)))
-                    lines.append(triangle.format(color[tile[1]],(x,y+1),c,(x+1,y+1)))
-                    lines.append(triangle.format(color[tile[2]],(x,y),c,(x,y+1)))
-                    lines.append(triangle.format(color[tile[3]],(x,y),c,(x+1,y)))
-                lines.append(r'\draw {} -- {};'.format((x,y), (x+1,y)))
-                lines.append(r'\draw {} -- {};'.format((x,y), (x,y+1)))
-                node_str = r'\node[rotate={},font={}] at {} {{{}}};'
-                lines.append(node_str.format(rotate[0],fontsize,(x+1-s,y+.5),  tile[0]))
-                lines.append(node_str.format(rotate[1],fontsize,(x+.5, y+1-s), tile[1]))
-                lines.append(node_str.format(rotate[2],fontsize,(x+s,  y+.5),  tile[2]))
-                lines.append(node_str.format(rotate[3],fontsize,(x+.5, y+s),   tile[3]))
+                more_lines = tile_to_tikz(tile, position, color=color,
+                        size=1, fontsize=fontsize, rotate=rotate,
+                        label_shift=label_shift)
+                lines.extend(more_lines)
         lines.append(r'\end{tikzpicture}')
         from slabbe import TikzPicture
         return TikzPicture('\n'.join(lines))
