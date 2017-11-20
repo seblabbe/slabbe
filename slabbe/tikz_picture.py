@@ -365,6 +365,20 @@ class TikzPicture(SageObject):
         lines.append(r"\end{document}")
         return '\n'.join(lines)
 
+    def tikz_picture_code(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import TikzPicture
+            sage: s = "\\begin{tikzpicture}\n\\draw (0,0) -- (1,1);\n\\end{tikzpicture}"
+            sage: t = TikzPicture(s)
+            sage: print(t.tikz_picture_code())
+            \begin{tikzpicture}
+            \draw (0,0) -- (1,1);
+            \end{tikzpicture}
+        """
+        return self._code
+
     def pdf(self, filename=None, view=True):
         """
         Compiles the latex code with pdflatex and create a pdf file.
