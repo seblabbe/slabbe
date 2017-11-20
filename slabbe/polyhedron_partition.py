@@ -593,6 +593,19 @@ class PolyhedronPartition(object):
             sage: P = PolyhedronPartition([p,q,r])
             sage: _ = P.tikz().pdf(view=False)
 
+        Irrational partition::
+
+            sage: z = polygen(QQ, 'z') #z = QQ['z'].0 # same as
+            sage: K = NumberField(z**2-z-1, 'phi', embedding=RR(1.6))
+            sage: phi = K.gen()
+            sage: h = 1/phi^2
+            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
+            sage: q = Polyhedron([(0,0), (0,h), (h,1), (h,0)])
+            sage: r = Polyhedron([(h,1), (1,1), (1,h), (h,0)])
+            sage: s = Polyhedron([(h,0), (1,0), (1,h)])
+            sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s}, base_ring=K)
+            sage: _ = P.tikz().pdf(view=False)
+
         Testing the options::
 
             sage: _ = P.tikz(fontsize=r'\scriptsize').pdf(view=False)
@@ -606,10 +619,10 @@ class PolyhedronPartition(object):
             proj = P.projection()
             lines.append(r'% atom with key {}'.format(key))
             node_str = r'\node[font={}] at {} {{{}}};'
-            lines.append(node_str.format(fontsize, P.center(), key))
+            lines.append(node_str.format(fontsize, P.center().n(digits=5), key))
             for (a,b) in proj.lines:
-                a = proj.coords[a]
-                b = proj.coords[b]
+                a = proj.coords[a].n(digits=5)
+                b = proj.coords[b].n(digits=5)
                 line = r'\draw {} -- {};'.format(a,b)
                 lines.append(line)
         lines.append(r'\end{tikzpicture}')
