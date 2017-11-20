@@ -66,6 +66,48 @@ from sage.misc.cachefunc import cached_method
 from sage.numerical.mip import MixedIntegerLinearProgram
 from collections import Counter
 
+def tile_to_tikz(tile, position, color=None, size=1):
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.wang_tiles import tile_to_tikz
+        sage: color = {0:'white',1:'red',2:'cyan',3:'green',4:'white'}
+        sage: tile_to_tikz((1,2,3,4), (10,100), color)
+        ['% tile at position (10, 100)',
+         '\\fill[red] (11, 100) -- (10.5, 100.5) -- (11, 101);',
+         '\\fill[cyan] (10, 101) -- (10.5, 100.5) -- (11, 101);',
+         '\\fill[green] (10, 100) -- (10.5, 100.5) -- (10, 101);',
+         '\\fill[white] (10, 100) -- (10.5, 100.5) -- (11, 100);',
+         '\\draw (10, 100) -- (11, 100);',
+         '\\draw (10, 100) -- (10, 101);',
+         '\\node[left]  at (11, 100.5) {1};',
+         '\\node[below] at (10.5, 101) {2};',
+         '\\node[right] at (10, 100.5) {3};',
+         '\\node[above] at (10.5, 100) {4};']
+    """
+    s = size
+    j,k = position
+    lines = []
+    #lines.append(r'\begin{tikzpicture}')
+    lines.append('% tile at position {}'.format((j,k)))
+    if color:
+        tri = r'\fill[{}] {} -- {} -- {};'
+        c = (j+.5*s,k+.5*s)
+        lines.append(tri.format(color[tile[0]],(j+s,k),c,(j+s,k+s)))
+        lines.append(tri.format(color[tile[1]],(j,k+s),c,(j+s,k+s)))
+        lines.append(tri.format(color[tile[2]],(j,k),c,(j,k+s)))
+        lines.append(tri.format(color[tile[3]],(j,k),c,(j+s,k)))
+    lines.append(r'\draw {} -- {};'.format((j,k), (j+s,k)))
+    lines.append(r'\draw {} -- {};'.format((j,k), (j,k+s)))
+    lines.append(r'\node[left]  at {} {{{}}};'.format((j+s,k+.5*s), tile[0]))
+    lines.append(r'\node[below] at {} {{{}}};'.format((j+.5*s,k+s), tile[1]))
+    lines.append(r'\node[right] at {} {{{}}};'.format((j,k+.5*s), tile[2]))
+    lines.append(r'\node[above] at {} {{{}}};'.format((j+.5*s,k), tile[3]))
+    #lines.append(r'\end{tikzpicture}')
+    return lines
+    #return TikzPicture('\n'.join(lines))
+
+
 class WangTileSet(object):
     r"""
     Construct a Wang tile set.
@@ -292,6 +334,39 @@ class WangTileSet(object):
             v[i+1] = 1
             ieqs.append(v)
         return Polyhedron(ieqs=ieqs, eqns=eqns)
+
+    def tikz(self, ncolumns=10, color=None, size=1, space=.1, scale=1):
+        r"""
+        INPUT:
+
+        - ``ncolumns`` -- integer (default: ``10``)
+        - ``color`` -- dict (default: None)
+        - ``size`` -- number (default: ``1``)
+        - ``space`` -- number (default: ``.1``)
+        - ``scale`` -- number (default: ``1``)
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,2), (1,0,0,1), (2,1,0,0), (0,0,1,0),
+            ....:          (1,2,1,1), (1,1,2,0), (2,0,2,1)]
+            sage: T = WangTileSet(tiles)
+            sage: _ = T.tikz().pdf(view=False)
+        """
+        from slabbe import TikzPicture
+        if color is None:
+            color = {0:'white',1:'red',2:'cyan',3:'green',4:'white'}
+        lines = []
+        lines.append(r'\begin{tikzpicture}')
+        lines.append('[scale={}]'.format(scale))
+        for i,tile in enumerate(self):
+            x = i % ncolumns
+            y = - (i // ncolumns)
+            position = (x * (size + space), y * (size + space))
+            new_lines = tile_to_tikz(tile, position, color=color, size=size)
+            lines.extend(new_lines)
+        lines.append(r'\end{tikzpicture}')
+        return TikzPicture('\n'.join(lines))
 
     def create_tikz_pdf_files(self, prefix='tile', color=None):
         r"""
