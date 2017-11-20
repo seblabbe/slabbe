@@ -66,6 +66,252 @@ from sage.misc.cachefunc import cached_method
 from sage.numerical.mip import MixedIntegerLinearProgram
 from collections import Counter
 
+class WangTileSet(object):
+    r"""
+    Construct a Wang tile set.
+
+    INPUT:
+
+    - ``tiles`` -- list of tiles, a tile is a 4-tuple (right color, top
+        color, left color, bottom color)
+
+    EXAMPLES::
+
+        sage: from slabbe import WangTileSet
+        sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+        sage: T = WangTileSet(tiles)
+
+    ::
+
+        sage: tiles = [(0,0,0,2), (1,0,0,1), (2,1,0,0), (0,0,1,0),
+        ....:          (1,2,1,1), (1,1,2,0), (2,0,2,1)]
+        sage: T = WangTileSet(tiles)
+    """
+    def __init__(self, tiles):
+        r"""
+        See documentation of the class.
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+            sage: T = WangTileSet(tiles)
+        """
+        self._tiles = tiles
+
+    def __iter__(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+            sage: T = WangTileSet(tiles)
+            sage: next(iter(T))
+            (0, 0, 0, 0)
+        """
+        return iter(self._tiles)
+
+    def __len__(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+            sage: T = WangTileSet(tiles)
+            sage: len(T)
+            3
+        """
+        return len(self._tiles)
+
+    def __repr__(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+            sage: T = WangTileSet(tiles)
+            sage: T
+            Wang tile set of cardinality 3
+        """
+        return r"Wang tile set of cardinality {}".format(len(self))
+
+    def tiles(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+            sage: T = WangTileSet(tiles)
+            sage: T.tiles()
+            [(0, 0, 0, 0), (1, 1, 1, 1), (2, 2, 2, 2)]
+        """
+        return self._tiles
+
+    def dual(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,2), (1,0,0,1), (2,1,0,0), (0,0,1,0),
+            ....:          (1,2,1,1), (1,1,2,0), (2,0,2,1)]
+            sage: T = WangTileSet(tiles)
+            sage: dual = T.dual()
+            sage: dual
+            Wang tile set of cardinality 7
+            sage: dual.tiles()
+            [(0, 0, 2, 0),
+             (0, 1, 1, 0),
+             (1, 2, 0, 0),
+             (0, 0, 0, 1),
+             (2, 1, 1, 1),
+             (1, 1, 0, 2),
+             (0, 2, 1, 2)]
+        """
+        tiles = []
+        for (right, top, left, bottom) in self:
+            tile = (top, right, bottom, left)
+            tiles.append(tile)
+        return WangTileSet(tiles)
+
+    def to_transducer(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,2), (1,0,0,1), (2,1,0,0), (0,0,1,0),
+            ....:          (1,2,1,1), (1,1,2,0), (2,0,2,1)]
+            sage: T = WangTileSet(tiles)
+            sage: T.to_transducer()
+            Transducer with 3 states
+        """
+        from sage.combinat.finite_state_machine import Transducer
+        transitions = []
+        for (right, top, left, bottom) in self:
+            # transition = (stateA, stateB, word_in, word_out)
+            transition = (left, right, bottom, right)
+            transitions.append(transition)
+        return Transducer(transitions)
+
+    def system_of_density_equations(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,2), (1,0,0,1), (2,1,0,0), (0,0,1,0),
+            ....:          (1,2,1,1), (1,1,2,0), (2,0,2,1)]
+            sage: T = WangTileSet(tiles)
+            sage: M = T.system_of_density_equations()
+            sage: M
+            [ 0  1  1 -1  0  0  0  0]
+            [ 0 -1  0  1  0 -1  0  0]
+            [ 0  0 -1  0  0  1  0  0]
+            [ 1  1 -1  0  0 -1  1  0]
+            [ 0 -1  1  0 -1  1 -1  0]
+            [-1  0  0  0  1  0  0  0]
+            [ 1  1  1  1  1  1  1  1]
+            sage: M.rank()
+            5
+        """
+        from collections import defaultdict
+        from sage.modules.free_module import FreeModule
+        from sage.rings.integer_ring import ZZ
+        from sage.matrix.constructor import matrix
+        M = FreeModule(ZZ, len(self)+1)
+        vertical = defaultdict(M)
+        horizontal = defaultdict(M)
+        for i, (right, top, left, bottom) in enumerate(self):
+            vertical[left][i] += 1
+            vertical[right][i] -= 1
+            horizontal[top][i] += 1
+            horizontal[bottom][i] -= 1
+        rows = vertical.values()
+        rows.extend(horizontal.values())
+        rows.append(M([1 for _ in range(len(self)+1)]))
+        return matrix(rows)
+
+    def polyhedron_of_densities(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,2), (1,0,0,1), (2,1,0,0), (0,0,1,0),
+            ....:          (1,2,1,1), (1,1,2,0), (2,0,2,1)]
+            sage: T = WangTileSet(tiles)
+            sage: P = T.polyhedron_of_densities()
+            sage: P
+            A 2-dimensional polyhedron in QQ^7 defined as the convex hull of 3 vertices
+            sage: P.vertices()
+            (A vertex at (0, 2/7, 1/7, 3/7, 0, 1/7, 0),
+             A vertex at (0, 0, 1/5, 1/5, 0, 1/5, 2/5),
+             A vertex at (2/7, 0, 1/7, 1/7, 2/7, 1/7, 0))
+            sage: (0, 0, 1/5, 1/5, 0, 1/5, 2/5) in P
+            True
+
+        Jeandel-Rao tiles::
+
+            sage: tiles = [(2,4,2,1), (2,2,2,0), (1,1,3,1), (1,2,3,2), (3,1,3,3),
+            ....: (0,1,3,1), (0,0,0,1), (3,1,0,2), (0,2,1,2), (1,2,1,4), (3,3,1,2)]
+            sage: T = WangTileSet(tiles)
+            sage: P = T.polyhedron_of_densities()
+            sage: P
+            A 4-dimensional polyhedron in QQ^11 defined as the convex hull of 10 vertices
+            sage: P.vertices()
+            (A vertex at (0, 1/5, 1/5, 0, 1/5, 0, 1/5, 0, 0, 0, 1/5),
+             A vertex at (0, 1/5, 0, 1/5, 1/5, 0, 1/5, 0, 0, 0, 1/5),
+             A vertex at (0, 1/5, 1/5, 0, 0, 0, 1/5, 1/5, 1/5, 0, 0),
+             A vertex at (0, 1/5, 0, 1/5, 0, 0, 1/5, 1/5, 1/5, 0, 0),
+             A vertex at (0, 1/4, 0, 0, 0, 1/4, 1/4, 1/4, 0, 0, 0),
+             A vertex at (1/4, 0, 0, 0, 0, 1/4, 0, 1/4, 0, 1/4, 0),
+             A vertex at (1/5, 0, 1/5, 0, 1/5, 0, 0, 0, 0, 1/5, 1/5),
+             A vertex at (1/5, 0, 1/5, 0, 0, 0, 0, 1/5, 1/5, 1/5, 0),
+             A vertex at (1/5, 0, 0, 1/5, 1/5, 0, 0, 0, 0, 1/5, 1/5),
+             A vertex at (1/5, 0, 0, 1/5, 0, 0, 0, 1/5, 1/5, 1/5, 0))
+        """
+        from collections import defaultdict
+        from sage.modules.free_module import FreeModule
+        from sage.rings.integer_ring import ZZ
+        from sage.geometry.polyhedron.constructor import Polyhedron
+        M = FreeModule(ZZ, len(self)+1)
+        vertical = defaultdict(M)
+        horizontal = defaultdict(M)
+        for i, (right, top, left, bottom) in enumerate(self):
+            vertical[left][i+1] += 1
+            vertical[right][i+1] -= 1
+            horizontal[top][i+1] += 1
+            horizontal[bottom][i+1] -= 1
+        eqns = vertical.values()
+        eqns.extend(horizontal.values())
+        v = M([1 for _ in range(len(self)+1)])
+        v[0] = -1
+        eqns.append(v)
+        # An entry equal to "[-1,7,3,4]" represents the equality
+        # 7x_1+3x_2+4x_3= 1.
+        ieqs = []
+        for i in range(len(self)):
+            v = M()
+            v[i+1] = 1
+            ieqs.append(v)
+        return Polyhedron(ieqs=ieqs, eqns=eqns)
+
+    def create_tikz_pdf_files(self, prefix='tile', color=None):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,2), (1,0,0,1), (2,1,0,0), (0,0,1,0),
+            ....:          (1,2,1,1), (1,1,2,0), (2,0,2,1)]
+            sage: T = WangTileSet(tiles)
+            sage: T.create_tikz_pdf_files() # not tested
+
+        This creates tile0.pdf, tile1.pdf, etc. in the repository.
+        """
+        if color is None:
+            color = {0:'white',1:'red',2:'cyan',3:'green',4:'white'}
+        for i in range(11):
+            tiling = WangTiling([[i]], tiles)
+            tiling.tikz().pdf('{}-{}.pdf'.format(prefix,i))
+            tiling.tikz(color).pdf('{}-{}_colored.pdf'.format(prefix,i))
+
 class WangTileSolver(object):
     r"""
     INPUT:

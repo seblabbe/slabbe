@@ -27,7 +27,7 @@ from tikz_picture import TikzPicture
 from matrices import M3to2, M2to3, M4to2, M4to3
 
 from substitution_2d import Substitution2d
-from wang_tiles import WangTiling, WangTileSolver
+from wang_tiles import WangTiling, WangTileSolver, WangTileSet
 from polyhedron_partition import PolyhedronPartition, rotation_mod
 
 # BUG (sometimes, cython code does not work properly)
