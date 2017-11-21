@@ -744,8 +744,8 @@ class PolyhedronPartition(object):
           impossible to merge them because their union is not a convex
           polyhedron, this function is called on the label ``V`` with
           integer argument ``n`` to give a list of ``n`` new labels. When
-          ``None`` the default behavior is to use ``Va``, ``Vb``, ``Vc``,
-          etc.
+          ``None`` the default behavior is to append ``'a'``, ``'b'``,
+          ``'c'``, etc to the label.
 
         EXAMPLES::
 
