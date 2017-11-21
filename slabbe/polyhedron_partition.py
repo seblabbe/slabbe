@@ -155,13 +155,60 @@ def find_unused_key(d, sequence):
         if a not in d:
             return a
 
+
+def is_union_convex(t):
+    r"""
+    Return whether the union of the polyhedrons is convex.
+
+    INPUT:
+
+    - ``t`` -- list of polyhedron
+
+    EXAMPLES::
+
+        sage: from slabbe.polyhedron_partition import is_union_convex
+        sage: h = 1/2
+        sage: p = Polyhedron([(0,h),(0,1),(h,1)])
+        sage: q = Polyhedron([(0,0), (0,h), (h,1), (1,1), (1,h), (h,0)])
+        sage: r = Polyhedron([(h,0), (1,0), (1,h)])
+        sage: is_union_convex((p,q,r))
+        True
+        sage: is_union_convex((p,q))
+        True
+        sage: is_union_convex((p,r))
+        False
+
+    Here we need to consider the three at the same time to get a convex
+    union::
+
+        sage: h = 1/5
+        sage: p = Polyhedron([(0,0),(h,1-h),(0,1)])
+        sage: q = Polyhedron([(0,1), (h,1-h), (1,1)])
+        sage: r = Polyhedron([(0,0), (h,1-h), (1,1), (1,0)])
+        sage: is_union_convex((p,q))
+        False
+        sage: is_union_convex((p,r))
+        False
+        sage: is_union_convex((q,r))
+        False
+        sage: is_union_convex((p,q,r))
+        True
+    """
+    if not t:
+        return True
+    base_ring = t[0].base_ring()
+    vertices = sum((p.vertices() for p in t), tuple())
+    r = Polyhedron(vertices, base_ring=base_ring)
+    return r.volume() == sum(p.volume() for p in t)
+
 class PolyhedronPartition(object):
     r"""
     Return a partition into polyhedron.
 
     INPUT:
 
-    - ``atoms`` -- list or dict of polyhedron
+    - ``atoms`` -- list of polyhedron or dict of key -> polyhedron or list
+      of (key, polyhedron)
     - ``base_ring`` -- base ring (default: ``None``) of the vertices
 
     EXAMPLES::
@@ -187,6 +234,11 @@ class PolyhedronPartition(object):
 
         sage: PolyhedronPartition(dict(a=p,b=q,c=r))
         Polyhedron partition of 3 atoms
+
+    From a list of (key, polyhedron)::
+
+        sage: PolyhedronPartition([(9,p),(8,q),(9,r)])
+        Polyhedron partition of 3 atoms
     """
     def __init__(self, atoms, base_ring=None):
         r"""
@@ -202,9 +254,12 @@ class PolyhedronPartition(object):
             sage: P = PolyhedronPartition([p,q,r])
         """
         if isinstance(atoms, list):
-            self._atoms = dict(enumerate(atoms))
+            if all(hasattr(p, 'vertices') for p in atoms):
+                self._items = list(enumerate(atoms))
+            elif all(isinstance(t, tuple) for t in atoms):
+                self._items = atoms
         elif isinstance(atoms, dict):
-            self._atoms = atoms
+            self._items = atoms.items()
         else:
             raise TypeError('atoms (={}) must be a list or a'
                     ' dict'.format(atoms))
@@ -231,7 +286,7 @@ class PolyhedronPartition(object):
              A 2-dimensional polyhedron in QQ^2 defined as the convex hull
              of 3 vertices)
         """
-        return iter(self._atoms.items())
+        return iter(self._items)
 
     def atoms(self):
         r"""
@@ -248,7 +303,7 @@ class PolyhedronPartition(object):
              A 2-dimensional polyhedron in QQ^2 defined as the convex hull of 6 vertices,
              A 2-dimensional polyhedron in QQ^2 defined as the convex hull of 3 vertices]
         """
-        return self._atoms.values()
+        return [atom for (key,atom) in self._items]
 
     def base_ring(self):
         r"""
@@ -280,7 +335,8 @@ class PolyhedronPartition(object):
             sage: P[0].vertices()
             (A vertex at (0, 1), A vertex at (0, 1/2), A vertex at (1/2, 1))
         """
-        return self._atoms[i]
+        assert False, "not possible anymore"
+        #return self._atoms[i]
 
     @cached_method
     def cached_atoms_set(self):
@@ -368,7 +424,7 @@ class PolyhedronPartition(object):
             sage: len(P)
             3
         """
-        return len(self._atoms)
+        return len(self._items)
 
     def __repr__(self):
         r"""
@@ -443,7 +499,7 @@ class PolyhedronPartition(object):
         
         INPUT:
 
-        - ``d`` -- dict, injective function old key -> new key
+        - ``d`` -- dict, function old key -> new key
 
         EXAMPLES::
 
@@ -453,20 +509,25 @@ class PolyhedronPartition(object):
             sage: q = Polyhedron([(0,0), (0,h), (h,1), (1,1), (1,h), (h,0)])
             sage: r = Polyhedron([(h,0), (1,0), (1,h)])
             sage: P = PolyhedronPartition([p,q,r])
-            sage: d = {0:'b', 1:'a', 2:'z'}
-            sage: Q = P.rename_keys(d)
+            sage: Q = P.rename_keys({0:'b', 1:'a', 2:'z'})
             sage: Q
             Polyhedron partition of 3 atoms
-            sage: [key for key,p in Q]
+            sage: sorted(key for key,p in Q)
             ['a', 'b', 'z']
+
+        It does not have to be injective::
+
+            sage: Q = P.rename_keys({0:'b', 1:'a', 2:'b'})
+            sage: sorted(key for key,p in Q)
+            ['a', 'b', 'b']
         """
-        if len(set(d.values())) < len(d):
-            raise ValueError('input d(={}) is not injective'.format(d))
-        return PolyhedronPartition({d[key]:p for (key,p) in self})
+        return PolyhedronPartition([(d[key],p) for (key,p) in self])
 
     def keys_permutation(self, other):
         r"""
         Return a permutation of the keys for self to look like other.
+
+        TODO: update this code with noninjective coding
 
         INPUT:
 
@@ -491,6 +552,8 @@ class PolyhedronPartition(object):
             sage: P.rename_keys(d)
             Polyhedron partition of 3 atoms
         """
+        print "You are using keys_permutation method, which might be removed soon"
+
         if not isinstance(other, PolyhedronPartition):
             raise TypeError("other (of type={}) must a polyhedron"
                     " partition".format(type(other)))
@@ -502,7 +565,7 @@ class PolyhedronPartition(object):
                 d[self_key] = other_key
             else:
                 atoms_not_in_other.append((self_key,p))
-        forbidden_keys = set(other._atoms.keys())
+        forbidden_keys = set(key for (key,q) in other._items)
         for self_key,p in atoms_not_in_other:
             new_key = find_unused_key(forbidden_keys, itertools.count())
             d[self_key] = new_key
@@ -533,7 +596,7 @@ class PolyhedronPartition(object):
             sage: P.translation((1,1))
             Polyhedron partition of 3 atoms
         """
-        return PolyhedronPartition({key:p.translation(displacement) for (key,p) in self})
+        return PolyhedronPartition([(key,p.translation(displacement)) for (key,p) in self])
 
     def volume(self):
         r"""
@@ -655,6 +718,9 @@ class PolyhedronPartition(object):
           something else for showing purposes (sometimes you want two atoms
           to have the same key even if their union is not a convex polyhedron)
 
+        TODO: fix (remove?) the key_map input since key can now be non
+        injective
+
         EXAMPLES::
 
             sage: from slabbe import PolyhedronPartition
@@ -684,6 +750,9 @@ class PolyhedronPartition(object):
             sage: _ = P.tikz(scale=2).pdf(view=False)
             sage: _ = P.tikz(key_map={0:7,1:7,2:4,3:4}).pdf(view=False)
         """
+        if key_map:
+            print "You are using key_map option, which might be removed soon"
+
         from slabbe import TikzPicture
         lines = []
         lines.append(r'\begin{tikzpicture}')
@@ -721,17 +790,16 @@ class PolyhedronPartition(object):
             sage: P.is_pairwise_disjoint()
             True
         """
-        for (i,j) in itertools.permutations(self._atoms.keys(), 2):
-            p = self[i]
-            q = self[j]
+        for ((keyi,p),(keyj,q)) in itertools.permutations(self, 2):
             volume = p.intersection(q).volume()
             if volume > 0:
-                raise ValueError('Intersection of self[{}](={}) and self[{}](={}) is not'
-                     ' of zero volume (={})'.format(i, p.vertices(), j,
-                         q.vertices(), volume))
+                raise ValueError('Intersection of atom with key {} (={})'
+                    ' and atom with key {} (={}) is not of zero volume'
+                    ' (={})'.format(keyi, p.vertices(), keyj, q.vertices(),
+                        volume))
         return True
 
-    def merge_atoms(self, d, split_label_function=None):
+    def merge_atoms(self, d):
         r"""
         Return the polyhedron partition obtained by merging atoms having
         the same image under the dictionnary.
@@ -739,13 +807,6 @@ class PolyhedronPartition(object):
         INPUT:
 
         - ``d`` -- dict
-        - ``split_label_function`` -- function (default:``None``), when two
-          atoms have the same image ``V`` under the dictionary, but it is
-          impossible to merge them because their union is not a convex
-          polyhedron, this function is called on the label ``V`` with
-          integer argument ``n`` to give a list of ``n`` new labels. When
-          ``None`` the default behavior is to append ``'a'``, ``'b'``,
-          ``'c'``, etc to the label.
 
         EXAMPLES::
 
@@ -774,29 +835,15 @@ class PolyhedronPartition(object):
         from collections import defaultdict
         from sage.misc.misc import exists
 
-        if split_label_function is None:
-            def split_label_function(V, n):
-                AZ = 'abcdefghijklmnopqrstuvwyxzABCDEFGHIJKLMNOPQRSTUVWYXZ'
-                return ['{}{}'.format(V, AZ[i]) for i in range(n)]
+        to_merge = defaultdict(set)
+        for key,p in self:
+            to_merge[d[key]].add(p)
 
-        def can_merge(t):
-            if not t:
-                return True
-            base_ring = t[0].base_ring()
-            vertices = sum((p.vertices() for p in t), tuple())
-            r = Polyhedron(vertices, base_ring=base_ring)
-            return r.volume() == sum(p.volume() for p in t)
-
-        to_merge = defaultdict(list)
-        for key,val in d.items():
-            to_merge[val].append(key)
-
-        final_atoms = {}
-        for val,keys in to_merge.items():
-            atoms = set(self[key] for key in keys)
+        final_atoms = []
+        for new_key,atoms in to_merge.items():
             subsets = (s for k in range(2,len(atoms)+1)
-                            for s in itertools.permutations(atoms, k))
-            answer,t = exists(subsets, can_merge)
+                         for s in itertools.permutations(atoms, k))
+            answer,t = exists(subsets, is_union_convex)
             while answer:
                 vertices = sum((p.vertices() for p in t), tuple())
                 base_ring = t[0].base_ring()
@@ -806,13 +853,9 @@ class PolyhedronPartition(object):
                 atoms.add(r)
                 subsets = (s for k in range(2,len(atoms)+1)
                              for s in itertools.permutations(atoms, k))
-                answer,t = exists(subsets, can_merge)
-            if len(atoms) == 1:
-                final_atoms[val] = atoms.pop()
-            else:
-                new_vals = split_label_function(val, len(atoms))
-                for atom,val in zip(atoms,new_vals):
-                    final_atoms[val] = atom
+                answer,t = exists(subsets, is_union_convex)
+            for atom in atoms:
+                final_atoms.append((new_key, atom))
 
         return PolyhedronPartition(final_atoms)
 
@@ -844,12 +887,12 @@ class PolyhedronPartition(object):
             sage: P == R
             True
         """
-        d = {}
+        L = []
         for key,p in self:
             trans_p = trans(p)
             assert p.volume() == trans_p.volume()
-            d[key] = trans_p
-        return PolyhedronPartition(d)
+            L.append((key, trans_p))
+        return PolyhedronPartition(L)
 
     def code(self, p):
         r"""
@@ -897,7 +940,7 @@ class PolyhedronPartition(object):
         elif len(L) > 1:
             raise ValueError("polyhedron p whose vertices are {} lies "
                     "in more than one atoms (={})".format(p.vertices(), L))
-        elif len(L) == 0:
+        else:
             raise ValueError("polyhedron p whose vertices are {} lies "
                     "in no atom".format(p.vertices()))
 
