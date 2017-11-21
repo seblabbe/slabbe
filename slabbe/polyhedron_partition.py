@@ -49,10 +49,10 @@ Inducing an irrationnal rotation on a subdomain::
     Polyhedron partition of 7 atoms
     sage: sub01
     {0: [0, 2],
-     1: [1, 2],
-     2: [1, 3],
-     3: [0, 2, 2],
-     4: [1, 2, 2],
+     1: [0, 2, 2],
+     2: [1, 2],
+     3: [1, 2, 2],
+     4: [1, 3],
      5: [1, 3, 2],
      6: [1, 3, 3]}
 
@@ -1221,14 +1221,14 @@ class PolyhedronPartition(object):
             Polyhedron partition of 9 atoms
             sage: sub
             {0: [0],
-             1: [1],
-             2: [2, 2],
-             3: [2, 3],
-             4: [3, 3],
-             5: [0, 2, 2],
-             6: [1, 2, 2],
-             7: [1, 2, 3],
-             8: [1, 3, 3]}
+             1: [0, 2, 2],
+             2: [1],
+             3: [1, 2, 2],
+             4: [1, 2, 3],
+             5: [1, 3, 3],
+             6: [2, 2],
+             7: [2, 3],
+             8: [3, 3]}
 
         Irrationnal rotations::
 
@@ -1249,10 +1249,10 @@ class PolyhedronPartition(object):
             Polyhedron partition of 7 atoms
             sage: sub01
             {0: [0, 2],
-             1: [1, 2],
-             2: [1, 3],
-             3: [0, 2, 2],
-             4: [1, 2, 2],
+             1: [0, 2, 2],
+             2: [1, 2],
+             3: [1, 2, 2],
+             4: [1, 3],
              5: [1, 3, 2],
              6: [1, 3, 3]}
 
@@ -1263,17 +1263,17 @@ class PolyhedronPartition(object):
             sage: P2
             Polyhedron partition of 10 atoms
             sage: sub02
-            {0: [0, 2, 2],
-             1: [1, 2, 2],
-             2: [1, 3, 2],
-             3: [1, 3, 3],
-             4: [0, 2, 0, 2, 2],
-             5: [0, 2, 1, 2, 2],
-             6: [1, 2, 1, 2, 2],
-             7: [1, 2, 1, 3, 2],
-             8: [1, 3, 1, 3, 2],
-             9: [1, 3, 1, 3, 3]}
-        
+            {0: [0, 2, 0, 2, 2],
+             1: [0, 2, 1, 2, 2],
+             2: [0, 2, 2],
+             3: [1, 2, 1, 2, 2],
+             4: [1, 2, 1, 3, 2],
+             5: [1, 2, 2],
+             6: [1, 3, 1, 3, 2],
+             7: [1, 3, 1, 3, 3],
+             8: [1, 3, 2],
+             9: [1, 3, 3]}
+
         We check that inductions commute::
 
             sage: u1 = rotation_mod(0, phi^-3, phi^-2, K)
@@ -1291,7 +1291,7 @@ class PolyhedronPartition(object):
             sage: s12 = WordMorphism(sub12)
             sage: s02 = WordMorphism(sub02)
             sage: s02
-            WordMorphism: 0->022, 1->122, 2->132, 3->133, 4->02022, 5->02122, 6->12122, 7->12132, 8->13132, 9->13133
+            WordMorphism: 0->02022, 1->02122, 2->022, 3->12122, 4->12132, 5->122, 6->13132, 7->13133, 8->132, 9->133
             sage: s01*s12 == s02
             True
 
@@ -1305,35 +1305,29 @@ class PolyhedronPartition(object):
         """
         in_partition = self.induced_in_partition(trans, trans_inv, ieq)
 
-        # preprocess the in_partition to recognize atoms which are in self
-        # and reuse the same coding letter for them
-        d = {}
-        return_time_dict = {}
-        new_atoms = []
+        # Goal: we want two atoms to have the same key if they have
+        # the same behavior under the induction
+
+        # Solution: we construct a dict image of letter -> list of atoms
+        from collections import defaultdict
+        d = defaultdict(list)
         for return_time,P in in_partition.items():
             for garbage_key,p in P:
-                if p in self:
-                    key = self.code(p)
-                    d[key] = p
-                    return_time_dict[key] = return_time
-                else:
-                    new_atoms.append((return_time,p))
-        for return_time,p in new_atoms:
-            key = find_unused_key(d, itertools.count())
-            d[key] = p
-            return_time_dict[key] = return_time
+                p_copy = copy(p)
+                w = []
+                for _ in range(return_time):
+                    w.append(self.code(p))
+                    p = trans(p)
+                d[tuple(w)].append(p_copy)
 
-        # construct the return words and substitution
+        # We construct the list of (key, atom) and the substitution
+        L = []
         substitution = {}
-        for key,p in d.items():
-            return_time = return_time_dict[key]
-            p_copy = copy(p)
-            w = []
-            for _ in range(return_time):
-                w.append(self.code(p))
-                p = trans(p)
-            substitution[key] = w
+        for key,(w,atoms) in enumerate(sorted(d.items())):
+            for atom in atoms:
+                L.append((key,atom))
+                substitution[key] = list(w)
 
-        return PolyhedronPartition(d), substitution
+        return PolyhedronPartition(L), substitution
 
 
