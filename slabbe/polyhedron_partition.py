@@ -741,8 +741,8 @@ class PolyhedronPartition(object):
         - ``d`` -- dict
         - ``split_label_function`` -- function (default:``None``), when two
           atoms have the same image ``V`` under the dictionary, but it is
-          impossible to merge them because their convex hull contains more
-          than the two, this function is called on the label ``V`` with
+          impossible to merge them because their union is not a convex
+          polyhedron, this function is called on the label ``V`` with
           integer argument ``n`` to give a list of ``n`` new labels. When
           ``None`` the default behavior is to use ``Va``, ``Vb``, ``Vc``,
           etc.
