@@ -576,6 +576,75 @@ class PolyhedronPartition(object):
             G += text(key, P.center())
         return G
 
+    def edges(self):
+        r"""
+        Return the edges of partition (one copy of each edge).
+
+        .. NOTE::
+
+            If there are vertices of atoms on the interior of the edge of
+            another atom, then, the overlapping edges will be repeated.
+
+        OUTPUT:
+
+        - set of sorted pair of immutable vectors
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition
+            sage: h = 1/2
+            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
+            sage: q = Polyhedron([(0,0), (0,h), (h,1), (1,1), (1,h), (h,0)])
+            sage: r = Polyhedron([(h,0), (1,0), (1,h)])
+            sage: P = PolyhedronPartition([p,q,r])
+            sage: sorted(P.edges())
+            [((0, 0), (0, 1/2)),
+             ((0, 0), (1/2, 0)),
+             ((0, 1/2), (0, 1)),
+             ((0, 1/2), (1/2, 1)),
+             ((0, 1), (1/2, 1)),
+             ((1/2, 0), (1, 0)),
+             ((1/2, 0), (1, 1/2)),
+             ((1/2, 1), (1, 1)),
+             ((1, 0), (1, 1/2)),
+             ((1, 1/2), (1, 1))]
+
+        Irrational partition::
+
+            sage: z = polygen(QQ, 'z') #z = QQ['z'].0 # same as
+            sage: K = NumberField(z**2-z-1, 'phi', embedding=RR(1.6))
+            sage: phi = K.gen()
+            sage: h = 1/phi^2
+            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
+            sage: q = Polyhedron([(0,0), (0,h), (h,1), (h,0)])
+            sage: r = Polyhedron([(h,1), (1,1), (1,h), (h,0)])
+            sage: s = Polyhedron([(h,0), (1,0), (1,h)])
+            sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s}, base_ring=K)
+            sage: sorted(P.edges())
+            [((0, 0), (0, -phi + 2)),
+             ((0, 0), (-phi + 2, 0)),
+             ((0, -phi + 2), (0, 1)),
+             ((0, -phi + 2), (-phi + 2, 1)),
+             ((0, 1), (-phi + 2, 1)),
+             ((-phi + 2, 0), (-phi + 2, 1)),
+             ((-phi + 2, 0), (1, 0)),
+             ((-phi + 2, 0), (1, -phi + 2)),
+             ((-phi + 2, 1), (1, 1)),
+             ((1, 0), (1, -phi + 2)),
+             ((1, -phi + 2), (1, 1))]
+        """
+        edges = set()
+        for key,P in self:
+            proj = P.projection()
+            for (a,b) in proj.lines:
+                a = proj.coords[a]
+                b = proj.coords[b]
+                a.set_immutable()
+                b.set_immutable()
+                sorted_edge = tuple(sorted((a,b)))
+                edges.add(sorted_edge)
+        return edges
+
     def tikz(self, fontsize=r'\normalsize', scale=1, key_map=None):
         r"""
         INPUT:
@@ -619,8 +688,14 @@ class PolyhedronPartition(object):
         lines = []
         lines.append(r'\begin{tikzpicture}')
         lines.append('[scale={}]'.format(scale))
+        # edges
+        for (a,b) in self.edges():
+            a = a.n(digits=5)
+            b = b.n(digits=5)
+            line = r'\draw {} -- {};'.format(a,b)
+            lines.append(line)
+        # node key
         for key,P in self:
-            proj = P.projection()
             shown_key = key if key_map is None else key_map[key]
             lines.append(r'% atom with key {} (mapped to {})'.format(key, 
                                                              shown_key))
@@ -628,11 +703,6 @@ class PolyhedronPartition(object):
             lines.append(node_str.format(fontsize, 
                                          P.center().n(digits=5),
                                          shown_key))
-            for (a,b) in proj.lines:
-                a = proj.coords[a].n(digits=5)
-                b = proj.coords[b].n(digits=5)
-                line = r'\draw {} -- {};'.format(a,b)
-                lines.append(line)
         lines.append(r'\end{tikzpicture}')
         return TikzPicture('\n'.join(lines))
 
