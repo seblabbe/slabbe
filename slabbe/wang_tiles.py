@@ -274,7 +274,7 @@ class WangTileSet(object):
         transitions = []
         for (right, top, left, bottom) in self:
             # transition = (stateA, stateB, word_in, word_out)
-            transition = (left, right, bottom, right)
+            transition = (left, right, bottom, top)
             transitions.append(transition)
         return Transducer(transitions)
 
