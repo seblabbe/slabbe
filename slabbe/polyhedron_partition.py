@@ -320,23 +320,6 @@ class PolyhedronPartition(object):
         """
         return self._base_ring
 
-    def __getitem__(self, i):
-        r"""
-        EXAMPLES::
-
-            sage: from slabbe import PolyhedronPartition
-            sage: h = 1/2
-            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
-            sage: q = Polyhedron([(0,0), (0,h), (h,1), (1,1), (1,h), (h,0)])
-            sage: r = Polyhedron([(h,0), (1,0), (1,h)])
-            sage: P = PolyhedronPartition([p,q,r])
-            sage: P[0]
-            A 2-dimensional polyhedron in QQ^2 defined as the convex hull of 3 vertices
-            sage: P[0].vertices()
-            (A vertex at (0, 1), A vertex at (0, 1/2), A vertex at (1/2, 1))
-        """
-        assert False, "not possible anymore"
-        #return self._atoms[i]
 
     @cached_method
     def cached_atoms_set(self):
@@ -745,18 +728,12 @@ class PolyhedronPartition(object):
                 edges.add(sorted_edge)
         return edges
 
-    def tikz(self, fontsize=r'\normalsize', scale=1, key_map=None):
+    def tikz(self, fontsize=r'\normalsize', scale=1):
         r"""
         INPUT:
 
         - ``fontsize`` -- string (default: ``r'\normalsize'``
         - ``scale`` -- number (default: ``1``)
-        - ``key_map`` -- dict (default: ``None``), mapping the key to
-          something else for showing purposes (sometimes you want two atoms
-          to have the same key even if their union is not a convex polyhedron)
-
-        TODO: fix (remove?) the key_map input since key can now be non
-        injective
 
         EXAMPLES::
 
@@ -785,11 +762,7 @@ class PolyhedronPartition(object):
 
             sage: _ = P.tikz(fontsize=r'\scriptsize').pdf(view=False)
             sage: _ = P.tikz(scale=2).pdf(view=False)
-            sage: _ = P.tikz(key_map={0:7,1:7,2:4,3:4}).pdf(view=False)
         """
-        if key_map:
-            print "You are using key_map option, which might be removed soon"
-
         from slabbe import TikzPicture
         lines = []
         lines.append(r'\begin{tikzpicture}')
@@ -802,13 +775,11 @@ class PolyhedronPartition(object):
             lines.append(line)
         # node key
         for key,P in self:
-            shown_key = key if key_map is None else key_map[key]
-            lines.append(r'% atom with key {} (mapped to {})'.format(key, 
-                                                             shown_key))
+            lines.append(r'% atom with key {}'.format(key))
             node_str = r'\node[font={}] at {} {{{}}};'
             lines.append(node_str.format(fontsize, 
                                          P.center().n(digits=5),
-                                         shown_key))
+                                         key))
         lines.append(r'\end{tikzpicture}')
         return TikzPicture('\n'.join(lines))
 
