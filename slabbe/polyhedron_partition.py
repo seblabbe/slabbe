@@ -733,8 +733,8 @@ class PolyhedronPartition(object):
 
     def merge_atoms(self, d, split_label_function=None):
         r"""
-        Return the polyhedron partition obtained by
-        merging two atoms having the same image under the dictionnary.
+        Return the polyhedron partition obtained by merging atoms having
+        the same image under the dictionnary.
 
         INPUT:
 
@@ -759,6 +759,17 @@ class PolyhedronPartition(object):
             Polyhedron partition of 2 atoms
             sage: P.merge_atoms({0:4, 1:5, 2:4})
             Polyhedron partition of 3 atoms
+
+        When pair of atoms are not convex, it needs to merge 3 or more
+        atoms::
+
+            sage: h = 1/5
+            sage: p = Polyhedron([(0,0),(h,1-h),(0,1)])
+            sage: q = Polyhedron([(0,1), (h,1-h), (1,1)])
+            sage: r = Polyhedron([(0,0), (h,1-h), (1,1), (1,0)])
+            sage: P = PolyhedronPartition({0:p, 1:q, 2:r})
+            sage: P.merge_atoms({0:4, 1:4, 2:4})
+            Polyhedron partition of 1 atoms
         """
         from collections import defaultdict
         from sage.misc.misc import exists
@@ -769,9 +780,12 @@ class PolyhedronPartition(object):
                 return ['{}{}'.format(V, AZ[i]) for i in range(n)]
 
         def can_merge(t):
-            p,q = t
-            r = Polyhedron(p.vertices()+q.vertices(), base_ring=p.base_ring())
-            return r.volume() == p.volume()+q.volume()
+            if not t:
+                return True
+            base_ring = t[0].base_ring()
+            vertices = sum((p.vertices() for p in t), tuple())
+            r = Polyhedron(vertices, base_ring=base_ring)
+            return r.volume() == sum(p.volume() for p in t)
 
         to_merge = defaultdict(list)
         for key,val in d.items():
@@ -780,14 +794,19 @@ class PolyhedronPartition(object):
         final_atoms = {}
         for val,keys in to_merge.items():
             atoms = set(self[key] for key in keys)
-            answer,t = exists(itertools.permutations(atoms, 2), can_merge)
+            subsets = (s for k in range(2,len(atoms)+1)
+                            for s in itertools.permutations(atoms, k))
+            answer,t = exists(subsets, can_merge)
             while answer:
-                p,q = t
-                r = Polyhedron(p.vertices()+q.vertices(), base_ring=p.base_ring())
-                atoms.remove(p)
-                atoms.remove(q)
+                vertices = sum((p.vertices() for p in t), tuple())
+                base_ring = t[0].base_ring()
+                r = Polyhedron(vertices, base_ring=base_ring)
+                for p in t:
+                    atoms.remove(p)
                 atoms.add(r)
-                answer,t = exists(itertools.permutations(atoms, 2), can_merge)
+                subsets = (s for k in range(2,len(atoms)+1)
+                             for s in itertools.permutations(atoms, k))
+                answer,t = exists(subsets, can_merge)
             if len(atoms) == 1:
                 final_atoms[val] = atoms.pop()
             else:
