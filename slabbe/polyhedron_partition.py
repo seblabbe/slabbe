@@ -28,7 +28,7 @@ Applying a rationnal rotation::
     sage: u = rotation_mod(0, 2/3, 1, QQ)
     sage: Q = P.apply_transformation(u)
     sage: Q
-    Polyhedron partition of 4 atoms
+    Polyhedron partition of 4 atoms with 4 letters
 
 Inducing an irrationnal rotation on a subdomain::
 
@@ -46,7 +46,7 @@ Inducing an irrationnal rotation on a subdomain::
     sage: ieq = [h, -1, 0]   # x0 <= h
     sage: P1,sub01 = P.induced_partition(u, u_inv, ieq)
     sage: P1
-    Polyhedron partition of 7 atoms
+    Polyhedron partition of 7 atoms with 7 letters
     sage: sub01
     {0: [0, 2],
      1: [0, 2, 2],
@@ -220,7 +220,7 @@ class PolyhedronPartition(object):
         sage: r = Polyhedron([(h,0), (1,0), (1,h)])
         sage: P = PolyhedronPartition([p,q,r])
         sage: P
-        Polyhedron partition of 3 atoms
+        Polyhedron partition of 3 atoms with 3 letters
 
     ::
 
@@ -233,12 +233,12 @@ class PolyhedronPartition(object):
     From a dict::
 
         sage: PolyhedronPartition(dict(a=p,b=q,c=r))
-        Polyhedron partition of 3 atoms
+        Polyhedron partition of 3 atoms with 3 letters
 
     From a list of (key, polyhedron)::
 
         sage: PolyhedronPartition([(9,p),(8,q),(9,r)])
-        Polyhedron partition of 3 atoms
+        Polyhedron partition of 3 atoms with 2 letters
     """
     def __init__(self, atoms, base_ring=None):
         r"""
@@ -426,6 +426,42 @@ class PolyhedronPartition(object):
         """
         return len(self._items)
 
+    def alphabet(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition
+            sage: h = 1/2
+            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
+            sage: q = Polyhedron([(0,0), (0,h), (h,1), (1,1), (1,h), (h,0)])
+            sage: r = Polyhedron([(h,0), (1,0), (1,h)])
+            sage: P = PolyhedronPartition([(3,p), (5,q), (9,r)])
+            sage: P.alphabet()
+            {3, 5, 9}
+            sage: P = PolyhedronPartition([(3,p), (5,q), (3,r)])
+            sage: P.alphabet()
+            {3, 5}
+        """
+        return set(key for (key,atom) in self)
+
+    def alphabet_size(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition
+            sage: h = 1/2
+            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
+            sage: q = Polyhedron([(0,0), (0,h), (h,1), (1,1), (1,h), (h,0)])
+            sage: r = Polyhedron([(h,0), (1,0), (1,h)])
+            sage: P = PolyhedronPartition([(3,p), (5,q), (9,r)])
+            sage: P.alphabet_size()
+            3
+            sage: P = PolyhedronPartition([(3,p), (5,q), (3,r)])
+            sage: P.alphabet_size()
+            2
+        """
+        return len(self.alphabet())
+
     def __repr__(self):
         r"""
         EXAMPLES::
@@ -436,9 +472,10 @@ class PolyhedronPartition(object):
             sage: q = Polyhedron([(0,0), (0,h), (h,1), (1,1), (1,h), (h,0)])
             sage: r = Polyhedron([(h,0), (1,0), (1,h)])
             sage: PolyhedronPartition([p,q,r])
-            Polyhedron partition of 3 atoms
+            Polyhedron partition of 3 atoms with 3 letters
         """
-        return "Polyhedron partition of {} atoms".format(len(self))
+        return ("Polyhedron partition of {} atoms "
+                "with {} letters".format(len(self),self.alphabet_size()))
 
     def __rmul__(self, factor):
         r"""
@@ -461,9 +498,9 @@ class PolyhedronPartition(object):
             sage: r = Polyhedron([(h,0), (1,0), (1,h)])
             sage: P = PolyhedronPartition([p,q,r])
             sage: 4 * P
-            Polyhedron partition of 3 atoms
+            Polyhedron partition of 3 atoms with 3 letters
             sage: -4 * P
-            Polyhedron partition of 3 atoms
+            Polyhedron partition of 3 atoms with 3 letters
 
         TESTS::
 
@@ -489,7 +526,7 @@ class PolyhedronPartition(object):
             sage: r = Polyhedron([(h,0), (1,0), (1,h)])
             sage: P = PolyhedronPartition([p,q,r])
             sage: -P
-            Polyhedron partition of 3 atoms
+            Polyhedron partition of 3 atoms with 3 letters
         """
         return PolyhedronPartition({key:-p for (key,p) in self})
 
@@ -511,7 +548,7 @@ class PolyhedronPartition(object):
             sage: P = PolyhedronPartition([p,q,r])
             sage: Q = P.rename_keys({0:'b', 1:'a', 2:'z'})
             sage: Q
-            Polyhedron partition of 3 atoms
+            Polyhedron partition of 3 atoms with 3 letters
             sage: sorted(key for key,p in Q)
             ['a', 'b', 'z']
 
@@ -550,7 +587,7 @@ class PolyhedronPartition(object):
             sage: d
             {1: 5, 2: 1, 4: 0}
             sage: P.rename_keys(d)
-            Polyhedron partition of 3 atoms
+            Polyhedron partition of 3 atoms with 3 letters
         """
         print "You are using keys_permutation method, which might be removed soon"
 
@@ -594,7 +631,7 @@ class PolyhedronPartition(object):
             sage: r = Polyhedron([(h,0), (1,0), (1,h)])
             sage: P = PolyhedronPartition([p,q,r])
             sage: P.translation((1,1))
-            Polyhedron partition of 3 atoms
+            Polyhedron partition of 3 atoms with 3 letters
         """
         return PolyhedronPartition([(key,p.translation(displacement)) for (key,p) in self])
 
@@ -817,9 +854,9 @@ class PolyhedronPartition(object):
             sage: r = Polyhedron([(h,0), (1,0), (1,h)])
             sage: P = PolyhedronPartition({0:p, 1:q, 2:r})
             sage: P.merge_atoms({0:4, 1:4, 2:5})
-            Polyhedron partition of 2 atoms
+            Polyhedron partition of 2 atoms with 2 letters
             sage: P.merge_atoms({0:4, 1:5, 2:4})
-            Polyhedron partition of 3 atoms
+            Polyhedron partition of 3 atoms with 2 letters
 
         When pair of atoms are not convex, it needs to merge 3 or more
         atoms::
@@ -830,7 +867,7 @@ class PolyhedronPartition(object):
             sage: r = Polyhedron([(0,0), (h,1-h), (1,1), (1,0)])
             sage: P = PolyhedronPartition({0:p, 1:q, 2:r})
             sage: P.merge_atoms({0:4, 1:4, 2:4})
-            Polyhedron partition of 1 atoms
+            Polyhedron partition of 1 atoms with 1 letters
         """
         from collections import defaultdict
         from sage.misc.misc import exists
@@ -877,7 +914,7 @@ class PolyhedronPartition(object):
             sage: u = rotation_mod(0, 2/3, 1, QQ)
             sage: Q = P.apply_transformation(u)
             sage: Q
-            Polyhedron partition of 4 atoms
+            Polyhedron partition of 4 atoms with 4 letters
 
         ::
 
@@ -966,7 +1003,7 @@ class PolyhedronPartition(object):
             sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
             sage: ieq = [-4, 5, 1]
             sage: P.refine_by_hyperplane(ieq)
-            Polyhedron partition of 6 atoms
+            Polyhedron partition of 6 atoms with 6 letters
         """
         half = Polyhedron(ieqs=[ieq])
         half_partition = PolyhedronPartition([half])
@@ -1005,7 +1042,7 @@ class PolyhedronPartition(object):
             sage: t2 = Polyhedron([(g,1-g), (1-g,g), (1-g,1-g)])
             sage: Q = PolyhedronPartition([t1,t2])
             sage: P.refinement(Q)
-            Polyhedron partition of 8 atoms
+            Polyhedron partition of 8 atoms with 8 letters
         """
         if not isinstance(other, PolyhedronPartition):
             raise TypeError("other (of type={}) must a polyhedron"
@@ -1047,7 +1084,7 @@ class PolyhedronPartition(object):
             sage: u = rotation_mod(0, 1/3, 1, QQ)
             sage: ieq = [h, -1, 0]   # x0 <= h
             sage: P.induced_out_partition(u, ieq)
-            {3: Polyhedron partition of 4 atoms}
+            {3: Polyhedron partition of 4 atoms with 4 letters}
 
         ::
 
@@ -1055,9 +1092,9 @@ class PolyhedronPartition(object):
             sage: ieq2 = [1/2, -1, 0]   # x0 <= 1/2
             sage: d = P.induced_out_partition(u, ieq2)
             sage: d
-            {1: Polyhedron partition of 2 atoms,
-             2: Polyhedron partition of 3 atoms,
-             3: Polyhedron partition of 4 atoms}
+            {1: Polyhedron partition of 2 atoms with 2 letters,
+             2: Polyhedron partition of 3 atoms with 3 letters,
+             3: Polyhedron partition of 4 atoms with 4 letters}
             sage: Q = PolyhedronPartition(d[1].atoms()+d[2].atoms()+d[3].atoms())
             sage: Q.is_pairwise_disjoint()
             True
@@ -1067,7 +1104,8 @@ class PolyhedronPartition(object):
             sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
             sage: ieq3 = [-1/2, 1, 0]   # x0 >= 1/2
             sage: P.induced_out_partition(u, ieq3)
-            {2: Polyhedron partition of 3 atoms, 3: Polyhedron partition of 4 atoms}
+            {2: Polyhedron partition of 3 atoms with 3 letters,
+             3: Polyhedron partition of 4 atoms with 4 letters}
 
         It is an error if the induced region is empty::
 
@@ -1077,14 +1115,15 @@ class PolyhedronPartition(object):
             Traceback (most recent call last):
             ...
             ValueError: Inequality An inequality (-2, 0) x - 1 >= 0 does
-            not intersect P (=Polyhedron partition of 4 atoms)
+            not intersect P (=Polyhedron partition of 4 atoms with 4
+            letters)
 
         The whole domain::
 
             sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
             sage: ieq5 = [1/2, 1, 0]   # x0 >= -1/2
             sage: P.induced_out_partition(u, ieq5)
-            {1: Polyhedron partition of 4 atoms}
+            {1: Polyhedron partition of 4 atoms with 4 letters}
 
         An irrational rotation::
 
@@ -1101,8 +1140,8 @@ class PolyhedronPartition(object):
             sage: ieq = [phi^-4, -1, 0]   # x0 <= phi^-4
             sage: d = P.induced_out_partition(u, ieq)
             sage: d
-            {5: Polyhedron partition of 6 atoms,
-             8: Polyhedron partition of 9 atoms}
+            {5: Polyhedron partition of 6 atoms with 6 letters,
+             8: Polyhedron partition of 9 atoms with 9 letters}
         """
         # good side of the hyperplane
         half = Polyhedron(ieqs=[ieq])
@@ -1158,7 +1197,7 @@ class PolyhedronPartition(object):
             sage: u_inv = rotation_mod(0, 2/3, 1, QQ)
             sage: ieq = [h, -1, 0]   # x0 <= h
             sage: P.induced_in_partition(u, u_inv, ieq)
-            {3: Polyhedron partition of 4 atoms}
+            {3: Polyhedron partition of 4 atoms with 4 letters}
 
         ::
 
@@ -1166,9 +1205,9 @@ class PolyhedronPartition(object):
             sage: ieq2 = [1/2, -1, 0]   # x0 <= 1/2
             sage: d = P.induced_in_partition(u, u_inv, ieq2)
             sage: d
-            {1: Polyhedron partition of 2 atoms,
-             2: Polyhedron partition of 3 atoms,
-             3: Polyhedron partition of 4 atoms}
+            {1: Polyhedron partition of 2 atoms with 2 letters,
+             2: Polyhedron partition of 3 atoms with 3 letters,
+             3: Polyhedron partition of 4 atoms with 4 letters}
         """
         out_partition = self.induced_out_partition(trans, ieq)
         in_partition = {}
@@ -1208,7 +1247,7 @@ class PolyhedronPartition(object):
             sage: ieq = [h, -1, 0]   # x0 <= h
             sage: Q,sub = P.induced_partition(u, u_inv, ieq)
             sage: Q
-            Polyhedron partition of 4 atoms
+            Polyhedron partition of 4 atoms with 4 letters
             sage: sub
             {0: [0, 2, 2], 1: [1, 2, 2], 2: [1, 2, 3], 3: [1, 3, 3]}
 
@@ -1218,7 +1257,7 @@ class PolyhedronPartition(object):
             sage: ieq2 = [1/2, -1, 0]   # x0 <= 1/2
             sage: Q,sub = P.induced_partition(u, u_inv, ieq2)
             sage: Q
-            Polyhedron partition of 9 atoms
+            Polyhedron partition of 9 atoms with 9 letters
             sage: sub
             {0: [0],
              1: [0, 2, 2],
@@ -1246,7 +1285,7 @@ class PolyhedronPartition(object):
             sage: ieq = [h, -1, 0]   # x0 <= h
             sage: P1,sub01 = P.induced_partition(u, u_inv, ieq)
             sage: P1
-            Polyhedron partition of 7 atoms
+            Polyhedron partition of 7 atoms with 7 letters
             sage: sub01
             {0: [0, 2],
              1: [0, 2, 2],
@@ -1261,7 +1300,7 @@ class PolyhedronPartition(object):
             sage: ieq2 = [1/phi^3, -1, 0]   # x0 <= h
             sage: P2,sub02 = P.induced_partition(u, u_inv, ieq2)
             sage: P2
-            Polyhedron partition of 10 atoms
+            Polyhedron partition of 10 atoms with 10 letters
             sage: sub02
             {0: [0, 2, 0, 2, 2],
              1: [0, 2, 1, 2, 2],
@@ -1280,7 +1319,7 @@ class PolyhedronPartition(object):
             sage: u1_inv = rotation_mod(0, phi^-4, phi^-2, K)
             sage: P2_alt,sub12 = P1.induced_partition(u1, u1_inv, ieq2)
             sage: P2_alt
-            Polyhedron partition of 10 atoms
+            Polyhedron partition of 10 atoms with 10 letters
             sage: P2_alt == P2
             True
 
