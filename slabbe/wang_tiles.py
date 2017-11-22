@@ -67,7 +67,8 @@ from sage.numerical.mip import MixedIntegerLinearProgram
 from collections import Counter
 
 def tile_to_tikz(tile, position, color=None, size=1,
-        fontsize=r'\normalsize', rotate=(0,0,0,0), label_shift=.2):
+        fontsize=r'\normalsize', rotate=(0,0,0,0), label_shift=.2,
+        top_right_edges=True):
     r"""
 
     INPUT:
@@ -81,6 +82,7 @@ def tile_to_tikz(tile, position, color=None, size=1,
       degrees, the rotation angle to apply to each label of Wang tiles
     - ``label_shift`` -- number (default: ``.2``) translation distance of the
       label from the edge
+    - ``top_right_edges`` -- bool (default: ``True``) 
 
     OUTPUT:
 
@@ -98,6 +100,8 @@ def tile_to_tikz(tile, position, color=None, size=1,
          '\\fill[white] (10, 100) -- (10.5, 100.5) -- (11, 100);',
          '\\draw (10, 100) -- (11, 100);',
          '\\draw (10, 100) -- (10, 101);',
+         '\\draw (11, 101) -- (11, 100);',
+         '\\draw (11, 101) -- (10, 101);',
          '\\node[rotate=0,font=\\normalsize] at (10.8, 100.5) {1};',
          '\\node[rotate=0,font=\\normalsize] at (10.5, 100.8) {2};',
          '\\node[rotate=0,font=\\normalsize] at (10.2, 100.5) {3};',
@@ -106,6 +110,8 @@ def tile_to_tikz(tile, position, color=None, size=1,
         ['% tile at position (x,y)=(10, 100)',
          '\\draw (10, 100) -- (11, 100);',
          '\\draw (10, 100) -- (10, 101);',
+         '\\draw (11, 101) -- (11, 100);',
+         '\\draw (11, 101) -- (10, 101);',
          '\\node[rotate=0,font=\\normalsize] at (10.8, 100.5) {1};',
          '\\node[rotate=0,font=\\normalsize] at (10.5, 100.8) {2};',
          '\\node[rotate=0,font=\\normalsize] at (10.2, 100.5) {3};',
@@ -114,6 +120,8 @@ def tile_to_tikz(tile, position, color=None, size=1,
         ['% tile at position (x,y)=(10, 100)',
          '\\draw (10, 100) -- (11, 100);',
          '\\draw (10, 100) -- (10, 101);',
+         '\\draw (11, 101) -- (11, 100);',
+         '\\draw (11, 101) -- (10, 101);',
          '\\node[rotate=0,font=\\normalsize] at (10.8, 100.5) {1};',
          '\\node[rotate=90,font=\\normalsize] at (10.5, 100.8) {2};',
          '\\node[rotate=0,font=\\normalsize] at (10.2, 100.5) {3};',
@@ -122,6 +130,8 @@ def tile_to_tikz(tile, position, color=None, size=1,
         ['% tile at position (x,y)=(10, 100)',
          '\\draw (10, 100) -- (11, 100);',
          '\\draw (10, 100) -- (10, 101);',
+         '\\draw (11, 101) -- (11, 100);',
+         '\\draw (11, 101) -- (10, 101);',
          '\\node[rotate=0,font=\\normalsize] at (10.9000000000000, 100.5) {1};',
          '\\node[rotate=0,font=\\normalsize] at (10.5, 100.900000000000) {2};',
          '\\node[rotate=0,font=\\normalsize] at (10.1000000000000, 100.5) {3};',
@@ -142,6 +152,9 @@ def tile_to_tikz(tile, position, color=None, size=1,
         lines.append(triangle.format(color[tile[3]],(x,y),c,(x+s,y)))
     lines.append(r'\draw {} -- {};'.format((x,y), (x+s,y)))
     lines.append(r'\draw {} -- {};'.format((x,y), (x,y+s)))
+    if top_right_edges:
+        lines.append(r'\draw {} -- {};'.format((x+s,y+s), (x+s,y)))
+        lines.append(r'\draw {} -- {};'.format((x+s,y+s), (x,y+s)))
     node_str = r'\node[rotate={},font={}] at {} {{{}}};'
     lines.append(node_str.format(rotate[0],fontsize,(x+s-t,y+.5),  tile[0]))
     lines.append(node_str.format(rotate[1],fontsize,(x+.5, y+s-t), tile[1]))
@@ -506,7 +519,7 @@ class WangTileSet(WangTileSet_generic):
             position = (x * (size + space), y * (size + space))
             new_lines = tile_to_tikz(tile, position, color=color,
                     size=size, fontsize=fontsize, rotate=rotate,
-                    label_shift=label_shift)
+                    label_shift=label_shift, top_right_edges=True)
             lines.extend(new_lines)
         lines.append(r'\end{tikzpicture}')
         return TikzPicture('\n'.join(lines))
@@ -1164,7 +1177,7 @@ class WangTiling(object):
                 tile = self._tiles[i]
                 more_lines = tile_to_tikz(tile, position, color=color,
                         size=1, fontsize=fontsize, rotate=rotate,
-                        label_shift=label_shift)
+                        label_shift=label_shift, top_right_edges=False)
                 lines.extend(more_lines)
         lines.append(r'\end{tikzpicture}')
         from slabbe import TikzPicture
