@@ -546,6 +546,82 @@ class WangTileSet(WangTileSet_generic):
             tiling.tikz().pdf('{}-{}.pdf'.format(prefix,i))
             tiling.tikz(color).pdf('{}-{}_colored.pdf'.format(prefix,i))
 
+    def substitution_tikz(self, substitution, function=None, color=None,
+            size=1, fontsize=r'\normalsize', rotate=(0,0,0,0),
+            label_shift=.2, transformation_matrix=None):
+        r"""
+        Return the tikz code showing what the substitution A->B* does on
+        Wang tiles.
+
+        Note: we assume that the tiles in self are the elements of B.
+
+        INPUT:
+
+        - ``substitution`` -- substitution 2d
+        - ``fn`` -- a function (default: ``None``) to apply to the
+          new colors which are tuple of previous colors
+        - ``color`` -- dict (default: ``None``) from tile values -> tikz colors
+        - ``size`` -- number (default: ``1``), size of the tile
+        - ``fontsize`` -- string (default: ``r'\normalsize'``
+        - ``rotate`` -- list (default:``(0,0,0,0)``) of four angles in
+          degrees, the rotation angle to apply to each label of Wang tiles
+        - ``label_shift`` -- number (default: ``.2``) translation distance
+          of the label from the edge
+        - ``transformation_matrix`` -- matrix (default: ``None``), a matrix
+          to apply to the coordinate before drawing, it can be in
+          ``SL(2,ZZ)`` or not.
+
+        OUTPUT:
+
+            dict, key -> tile
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet, Substitution2d
+            sage: A = [[0,1,2],[1,0,0]]
+            sage: B = [[0,1,2]]
+            sage: d = {4:A, 5:B}
+            sage: s = Substitution2d(d)
+            sage: tiles = [(0,3,1,4), (1,4,0,3), (5,6,7,8)]
+            sage: W = WangTileSet(tiles)
+            sage: fn = lambda colors:''.join(map(str, colors))
+            sage: output = W.substitution_tikz(s, fn, rotate=(90,0,90,0))
+            sage: view(output)    # not tested
+
+        ::
+
+            sage: M = matrix(2, [1,1,0,1])
+            sage: output = W.substitution_tikz(s, fn, rotate=(90,0,90,0),
+            ....:                    transformation_matrix=M)
+            sage: view(output)    # not tested
+        """
+        d = substitution.desubstitute(self._tiles, function)
+        lines = []
+        for a in d:
+            desubstituted_tile = d[a] 
+            lines.append(r'\begin{tikzpicture}')
+            new_lines = tile_to_tikz(desubstituted_tile, (0,0), color=color,
+                    size=size, fontsize=fontsize, rotate=rotate,
+                    label_shift=label_shift, top_right_edges=True)
+            lines.extend(new_lines)
+
+            lines.append(r'\node at (1.5,.5) {$\mapsto$};')
+
+            image_a = substitution._d[a]
+            tiling = WangTiling(image_a, self._tiles, color)
+            tikz = tiling.tikz(color=color, fontsize=fontsize, rotate=(0,0,0,0),
+                    label_shift=.2, scale=1, transformation_matrix=transformation_matrix)
+            yshift = 2.0 + .5 * len(image_a)
+            lines.append(r'\node at ({},.5) {{{}}};'.format(yshift,
+                                             tikz.tikz_picture_code()))
+
+            lines.append(r'\end{tikzpicture}')
+            lines.append(r',')
+
+        from sage.misc.latex import LatexExpr
+        return LatexExpr('\n'.join(lines))
+
+
 class HexagonalWangTileSet(WangTileSet_generic):
     r"""
     Construct an hexagonal Wang tile set.
@@ -610,12 +686,12 @@ class WangTileSolver(object):
     INPUT:
 
     - ``tiles`` -- list of tiles, a tile is a 4-tuple (right color, top
-        color, left color, bottom color)
+      color, left color, bottom color)
     - ``width`` -- integer
     - ``height`` -- integer
     - ``preassigned`` -- None or list of 4 dict or the form ``[{}, {}, {}, {}]``
-        right, top, left, bottom colors preassigned to some positions (on
-        the border or inside)
+      right, top, left, bottom colors preassigned to some positions (on
+      the border or inside)
 
     EXAMPLES::
 
@@ -1085,6 +1161,7 @@ class WangTiling(object):
 
             - Fix the top and right lines when using the transformation
               matrix.
+            - Fix the double drawn edges
 
         EXAMPLES::
 
@@ -1098,12 +1175,12 @@ class WangTiling(object):
             \usepackage{amsmath}
             \begin{document}
             \begin{tikzpicture}[scale=1]
-            \draw (0, 4) -- (1, 4);
-            \draw (1, 4) -- (2, 4);
-            \draw (2, 4) -- (3, 4);
-            \draw (3, 0) -- (3, 1);
+            % tile at position (x,y)=(0, 0)
+            \draw (0, 0) -- (1, 0);
+            \draw (0, 0) -- (0, 1);
+            \draw (1, 1) -- (1, 0);
             ...
-            ... 83 lines not printed (3670 characters in total) ...
+            ... 100 lines not printed (4078 characters in total) ...
             ...
             \node[rotate=0,font=\normalsize] at (2.8, 3.5) {0};
             \node[rotate=0,font=\normalsize] at (2.5, 3.8) {0};
@@ -1111,7 +1188,6 @@ class WangTiling(object):
             \node[rotate=0,font=\normalsize] at (2.5, 3.2) {0};
             \end{tikzpicture}
             \end{document}
-            sage: _ = t.pdf(view=False)
 
         With colors::
 
@@ -1160,12 +1236,12 @@ class WangTiling(object):
         lines.append(r'\begin{{tikzpicture}}[scale={}]'.format(scale))
         W = self.width()
         H = self.height()
-        # missing lines on the top
-        for j in range(W):
-            lines.append(r'\draw {} -- {};'.format((j,H), (j+1,H)))
-        # missing lines on the right
-        for k in range(H):
-            lines.append(r'\draw {} -- {};'.format((W,k), (W,k+1)))
+        ## missing lines on the top
+        #for j in range(W):
+        #    lines.append(r'\draw {} -- {};'.format((j,H), (j+1,H)))
+        ## missing lines on the right
+        #for k in range(H):
+        #    lines.append(r'\draw {} -- {};'.format((W,k), (W,k+1)))
         # the tiles with borders left and below
         for j in range(W):
             for k in range(H):
@@ -1177,7 +1253,7 @@ class WangTiling(object):
                 tile = self._tiles[i]
                 more_lines = tile_to_tikz(tile, position, color=color,
                         size=1, fontsize=fontsize, rotate=rotate,
-                        label_shift=label_shift, top_right_edges=False)
+                        label_shift=label_shift, top_right_edges=True)
                 lines.extend(more_lines)
         lines.append(r'\end{tikzpicture}')
         from slabbe import TikzPicture
