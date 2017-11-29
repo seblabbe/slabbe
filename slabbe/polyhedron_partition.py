@@ -545,7 +545,8 @@ class PolyhedronPartition(object):
 
     def keys_permutation(self, other):
         r"""
-        Return a permutation of the keys for self to look like other.
+        Return a relabelling permutation of the keys for self to look like
+        other.
 
         .. NOTE::
 
@@ -601,6 +602,48 @@ class PolyhedronPartition(object):
             new_key = find_unused_key(forbidden_keys, itertools.count())
             d[self_key] = new_key
             forbidden_keys.add(new_key)
+        return d
+
+    def keys_permutation_lexicographic(self):
+        r"""
+        Return a permutation relabelling of the keys for self in increasing
+        order for the lexicographic order of the centers of the polyhedrons.
+
+        .. NOTE::
+
+            currently, the code works only if the coding of self and other
+            is injective, i.e., no two polyhedron are coded by the same
+            letter.
+
+        OUTPUT:
+
+            dict, key -> key
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition
+            sage: h = 1/2
+            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
+            sage: q = Polyhedron([(0,0), (0,h), (h,1), (1,1), (1,h), (h,0)])
+            sage: r = Polyhedron([(h,0), (1,0), (1,h)])
+            sage: P = PolyhedronPartition({4:p, 1:q, 2:r})
+            sage: d = P.keys_permutation_lexicographic()
+            sage: d
+            {1: 1, 2: 2, 4: 0}
+            sage: P.rename_keys(d)
+            Polyhedron partition of 3 atoms with 3 letters
+            sage: Q = PolyhedronPartition({0:p, 5:q})
+            sage: Q.keys_permutation_lexicographic()
+            {0: 0, 5: 1}
+        """
+        if self.alphabet_size() != len(self):
+            raise NotImplementedError('keys_permutation method is'
+                ' implemented only if the coding of self (={}) is'
+                ' injective'.format(self))
+
+        L = [(key, p.center()) for (key,p) in self]
+        L.sort(key=lambda t:t[1])
+        d = {key:i for i,(key,center) in enumerate(L)}
         return d
 
     def translation(self, displacement):
