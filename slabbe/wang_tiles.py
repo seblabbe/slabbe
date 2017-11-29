@@ -494,7 +494,7 @@ class WangTileSet(WangTileSet_generic):
         - ``size`` -- number (default: ``1``)
         - ``space`` -- number (default: ``.1``)
         - ``scale`` -- number (default: ``1``)
-        - ``fontsize`` -- string (default: ``r'\normalsize'``
+        - ``fontsize`` -- string (default: ``r'\normalsize'``)
         - ``rotate`` -- list (default:``(0,0,0,0)``) of four angles in
           degrees, the rotation angle to apply to each label of Wang tiles
         - ``label_shift`` -- number (default: ``.2``) translation distance
@@ -545,6 +545,60 @@ class WangTileSet(WangTileSet_generic):
             tiling = WangTiling([[i]], tiles)
             tiling.tikz().pdf('{}-{}.pdf'.format(prefix,i))
             tiling.tikz(color).pdf('{}-{}_colored.pdf'.format(prefix,i))
+
+    def create_macro_file(self, filename='macro.tex', command_name='Tile',
+            raisebox=-3, color=None, size=1, scale=1,
+            fontsize=r'\normalsize', rotate=(0,0,0,0), label_shift=.2):
+        r"""
+        INPUT:
+
+        - ``filename`` -- string (default: ``r'macro.tex'``)
+        - ``comand_name`` -- string (default: ``r'Tile'``)
+        - ``raisebox`` -- integer (default: ``-3``) in mm units
+        - ``color`` -- dict (default: None)
+        - ``size`` -- number (default: ``1``)
+        - ``scale`` -- number (default: ``1``)
+        - ``fontsize`` -- string (default: ``r'\normalsize'``)
+        - ``rotate`` -- list (default:``(0,0,0,0)``) of four angles in
+          degrees, the rotation angle to apply to each label of Wang tiles
+        - ``label_shift`` -- number (default: ``.2``) translation distance
+          of the label from the edge
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,2), (1,0,0,1), (2,1,0,0), (0,0,1,0),
+            ....:          (1,2,1,1), (1,1,2,0), (2,0,2,1)]
+            sage: T = WangTileSet(tiles)
+            sage: T.create_macro_file() # not tested
+            creation of file macro.tex
+
+        ::
+
+            sage: color = {0:'white',1:'red',2:'cyan',3:'green',4:'white'}
+            sage: T.create_macro_file(color=color) # not tested
+            creation of file macro.tex
+        """
+        from roman import toRoman
+        lines = []
+        for i,tile in enumerate(self):
+            roman_i = toRoman(i) if i!=0 else 'O'
+            lines.append(r'\newcommand\{}{}'.format(command_name, roman_i))
+            lines.append(r'{{\raisebox{{{}mm}}{{'.format(raisebox))
+            lines.append(r'\begin{tikzpicture}')
+            lines.append('[scale={}]'.format(scale))
+            new_lines = tile_to_tikz(tile, position=(0,0), color=color,
+                    size=size, fontsize=fontsize, rotate=rotate,
+                    label_shift=label_shift, top_right_edges=True)
+            lines.extend(new_lines)
+            lines.append(r'\end{tikzpicture}')
+            lines.append(r'} % end of raisebox')
+            lines.append(r'} % end of newcommand')
+        s = '\n'.join(lines)
+        with open(filename, 'w') as f:
+            f.write(s)
+            print "creation of file {}".format(filename)
+
 
     def substitution_tikz(self, substitution, function=None, color=None,
             size=1, fontsize=r'\normalsize', rotate=(0,0,0,0),
