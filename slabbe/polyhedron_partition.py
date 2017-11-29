@@ -547,11 +547,15 @@ class PolyhedronPartition(object):
         r"""
         Return a permutation of the keys for self to look like other.
 
-        TODO: update this code with noninjective coding
+        .. NOTE::
+
+            currently, the code works only if the coding of self and other
+            is injective, i.e., no two polyhedron are coded by the same
+            letter.
 
         INPUT:
 
-        - ``other`` -- a polyhedron partition
+        - ``other`` -- a polyhedron partition (with injective coding)
 
         OUTPUT:
 
@@ -572,17 +576,24 @@ class PolyhedronPartition(object):
             sage: P.rename_keys(d)
             Polyhedron partition of 3 atoms with 3 letters
         """
-        print "You are using keys_permutation method, which might be removed soon"
-
         if not isinstance(other, PolyhedronPartition):
             raise TypeError("other (of type={}) must a polyhedron"
                     " partition".format(type(other)))
+
+        if self.alphabet_size() != len(self):
+            raise NotImplementedError('keys_permutation method is'
+                ' implemented only if the coding of self (={}) is'
+                ' injective'.format(self))
+        if other.alphabet_size() != len(other):
+            raise NotImplementedError('keys_permutation method is'
+                ' implemented only if the coding of self (={}) is'
+                ' injective'.format(self))
+
         d = {}
         atoms_not_in_other = []
         for self_key,p in self:
             if p in other:
-                other_key = other.code(p)
-                d[self_key] = other_key
+                d[self_key] = other.code(p)
             else:
                 atoms_not_in_other.append((self_key,p))
         forbidden_keys = set(key for (key,q) in other._items)
