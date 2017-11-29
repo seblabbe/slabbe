@@ -547,14 +547,13 @@ class WangTileSet(WangTileSet_generic):
             tiling.tikz(color).pdf('{}-{}_colored.pdf'.format(prefix,i))
 
     def create_macro_file(self, filename='macro.tex', command_name='Tile',
-            raisebox=-3, color=None, size=1, scale=1,
-            fontsize=r'\normalsize', rotate=(0,0,0,0), label_shift=.2):
+            color=None, size=1, scale=1, fontsize=r'\normalsize',
+            rotate=(0,0,0,0), label_shift=.2):
         r"""
         INPUT:
 
         - ``filename`` -- string (default: ``r'macro.tex'``)
         - ``comand_name`` -- string (default: ``r'Tile'``)
-        - ``raisebox`` -- integer (default: ``-3``) in mm units
         - ``color`` -- dict (default: None)
         - ``size`` -- number (default: ``1``)
         - ``scale`` -- number (default: ``1``)
@@ -583,8 +582,7 @@ class WangTileSet(WangTileSet_generic):
         lines = []
         for i,tile in enumerate(self):
             roman_i = toRoman(i) if i!=0 else 'O'
-            lines.append(r'\newcommand\{}{}'.format(command_name, roman_i))
-            lines.append(r'{{\raisebox{{{}mm}}{{'.format(raisebox))
+            lines.append(r'\newcommand\{}{}{{'.format(command_name, roman_i))
             lines.append(r'\begin{tikzpicture}')
             lines.append('[scale={}]'.format(scale))
             new_lines = tile_to_tikz(tile, position=(0,0), color=color,
@@ -592,7 +590,6 @@ class WangTileSet(WangTileSet_generic):
                     label_shift=label_shift, top_right_edges=True)
             lines.extend(new_lines)
             lines.append(r'\end{tikzpicture}')
-            lines.append(r'} % end of raisebox')
             lines.append(r'} % end of newcommand')
         s = '\n'.join(lines)
         with open(filename, 'w') as f:
