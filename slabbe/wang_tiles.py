@@ -62,9 +62,10 @@ Rao-Jeandel::
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from collections import Counter
 from sage.misc.cachefunc import cached_method
 from sage.numerical.mip import MixedIntegerLinearProgram
-from collections import Counter
+from sage.rings.integer_ring import ZZ
 
 def tile_to_tikz(tile, position, color=None, size=1,
         fontsize=r'\normalsize', rotate=(0,0,0,0), label_shift=.2,
@@ -800,6 +801,14 @@ class WangTileSolver(object):
         self._preassigned = preassigned
         self._color = color
 
+    def vertical_alphabet(self):
+        right, top, left, bottom = zip(*self._tiles)
+        return set(left) | set(right)
+
+    def horizontal_alphabet(self):
+        right, top, left, bottom = zip(*self._tiles)
+        return set(top) | set(bottom)
+
     @cached_method
     def milp(self, solver=None):
         r"""
@@ -946,6 +955,140 @@ class WangTileSolver(object):
         for i,j,k in support:
             table[j][k] = i
         return WangTiling(table, self._tiles, color=self._color)
+
+    def rows(self):
+        r"""
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSolver
+            sage: tiles = [(0,1,2,3), (1,2,3,4), (2,3,4,5), (3,4,5,6)]
+            sage: W = WangTileSolver(tiles, 3, 4)
+
+        There is a problem in the code::
+
+            sage: tiles = [(0,0,0,0), (1,1,1,1)]
+            sage: W = WangTileSolver(tiles, 3, 4)
+            sage: d = W.rows()
+            sage: rows = d.values()
+            sage: rows
+            [[8, 19, 22],
+            [25, 28],
+            [11, 14, 24, 27],
+            [5, 6, 22, 23],
+            [4, 20],
+            [15, 18],
+            [3, 6, 23],
+            [17, 18],
+            [7, 8, 21, 22],
+            [12, 21, 24],
+            [16],
+            [7, 10, 22, 25],
+            [11, 12, 23, 24],
+            [27, 28],
+            [27, 30],
+            [9, 10, 24, 25],
+            [29, 30],
+            [15, 16],
+            [3, 4, 19, 20],
+            [26],
+            [13, 14, 26, 27],
+            [25, 26]]
+            sage: dlx = dlx_solver(rows)
+            sage: dlx.number_of_solutions()
+            0
+        """
+        from math import log, ceil
+        vertical_alphabet = sorted(self.vertical_alphabet())
+        padtoV = int(ceil(log(len(vertical_alphabet), 2)))+1
+        #left_color_to_int = {c:i for i,c in enumerate(vertical_alphabet)}
+        #right_color_to_int = {c:2**padtoV-1-i for i,c in enumerate(vertical_alphabet)}
+        #def integer_to_digits(a, padto):
+        #    return ZZ(a).digits(2, padto=padto)
+        #def digits_to_integer(digits):
+        #    return sum(2**k for k in digits)
+        left_color_to_digits = {c:[2**k for (k,d) in 
+                                enumerate(ZZ(i).digits(2,padto=padtoV)) if d!=0]
+                                for i,c in enumerate(vertical_alphabet)}
+        right_color_to_digits = {c:[2**k for (k,d) in 
+                                enumerate(ZZ(2**padtoV-1-i).digits(2,padto=padtoV)) if d!=0]
+                                for i,c in enumerate(vertical_alphabet)}
+
+        horizontal_alphabet = sorted(self.horizontal_alphabet())
+        padtoH = int(ceil(log(len(horizontal_alphabet), 2)))+1
+        bottom_color_to_digits = {c:[2**k for (k,d) in 
+                                enumerate(ZZ(i).digits(2,padto=padtoH)) if d!=0]
+                                for i,c in enumerate(horizontal_alphabet)}
+        top_color_to_digits = {c:[2**k for (k,d) in 
+                                enumerate(ZZ(2**padtoH-1-i).digits(2,padto=padtoH)) if d!=0]
+                                for i,c in enumerate(horizontal_alphabet)}
+
+        tiles = self._tiles
+        indices = range(len(tiles))
+
+        W = self._width
+        H = self._height
+        from collections import defaultdict
+        dict_of_rows = defaultdict(list)
+
+        # matching vertical colors
+        for j in range(W-1):
+            for k in range(H):
+                for i,tile in enumerate(tiles):
+                    # the tile i at position (j,k)
+                    right,top,left,bottom = tile
+                    A = left_color_to_digits[left]
+                    B = right_color_to_digits[right]
+                    position = (k*(W-1)+j)*padtoV
+                    row = []
+                    if j > 0:
+                        row.extend([position+a for a in A])
+                    if j < W-1:
+                        row.extend([position+padtoV+b for b in B])
+                    dict_of_rows[(j,k,i)] = row
+
+        shift = H*(W-1)*padtoV
+
+        # matching horizontal colors
+        for j in range(W):
+            for k in range(H-1):
+                for i,tile in enumerate(tiles):
+                    # the tile i at position (j,k)
+                    right,top,left,bottom = tile
+                    A = bottom_color_to_digits[bottom]
+                    B = top_color_to_digits[top]
+                    position = j*(H-1)+k*padtoH
+                    row = []
+                    if k > 0:
+                        row.extend([shift+position+a for a in A])
+                    if k < H-1:
+                        row.extend([shift+position+padtoH+b for b in B])
+                    dict_of_rows[(j,k,i)].extend(row)
+
+        dict_of_rows = dict(dict_of_rows)
+
+        return dict_of_rows
+
+    def dlx_solver(self):
+        r"""
+        Return the sage DLX solver of that Wang tiling problem.
+
+        OUTPUT:
+
+            DLX Solver
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSolver
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: W = WangTileSolver(tiles,3,4)
+            sage: W.dlx_solver()
+            Dancing links solver for 9 columns and 15 rows
+        """
+        from sage.combinat.matrices.dancing_links import dlx_solver
+        return dlx_solver(self.rows())
+
+
 
 class WangTiling(object):
     r"""
