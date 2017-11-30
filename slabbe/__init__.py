@@ -30,6 +30,9 @@ from substitution_2d import Substitution2d
 from wang_tiles import WangTiling, WangTileSolver, WangTileSet, HexagonalWangTileSet
 from polyhedron_partition import PolyhedronPartition, rotation_mod
 
+
+from partial_injection import number_of_partial_injection, random_partial_injection
+
 # BUG (sometimes, cython code does not work properly)
 try:
     from kolakoski_word import KolakoskiWord
