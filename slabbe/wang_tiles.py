@@ -62,7 +62,7 @@ Rao-Jeandel::
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from collections import Counter
+from collections import Counter, defaultdict
 from sage.misc.cachefunc import cached_method
 from sage.numerical.mip import MixedIntegerLinearProgram
 from sage.rings.integer_ring import ZZ
@@ -404,7 +404,6 @@ class WangTileSet(WangTileSet_generic):
             sage: M.rank()
             5
         """
-        from collections import defaultdict
         from sage.modules.free_module import FreeModule
         from sage.rings.integer_ring import ZZ
         from sage.matrix.constructor import matrix
@@ -459,7 +458,6 @@ class WangTileSet(WangTileSet_generic):
              A vertex at (1/5, 0, 0, 1/5, 1/5, 0, 0, 0, 0, 1/5, 1/5),
              A vertex at (1/5, 0, 0, 1/5, 0, 0, 0, 1/5, 1/5, 1/5, 0))
         """
-        from collections import defaultdict
         from sage.modules.free_module import FreeModule
         from sage.rings.integer_ring import ZZ
         from sage.geometry.polyhedron.constructor import Polyhedron
@@ -900,13 +898,19 @@ class WangTileSolver(object):
         Return a dictionary associating to each tile a list of positions
         where to find this tile.
 
+        .. TODO::
+
+            Currently, the dancing links reduction ignores the preassigned
+            parameters.
+
         INPUT:
 
-        - ``solver`` -- string or None (default: ``None``), other possible
-          values are ``'Coin'`` or ``'Gurobi'``
+        - ``solver`` -- string or None (default: ``None``), 
+          ``'dancing_links'`` or the name of a MILP solver in Sage like
+          ``'GLPK'``, ``'Coin'`` or ``'Gurobi'``.
         - ``solver_parameters`` -- dict (default: ``{}``), parameters given
-          to the solver using method ``solver_parameter``. For a list of
-          available parameters for example for the Gurobi backend, see
+          to the MILP solver using method ``solver_parameter``. For a list
+          of available parameters for example for the Gurobi backend, see
           dictionary ``parameters_type`` in the file
           ``sage/numerical/backends/gurobi_backend.pyx``
 
@@ -942,132 +946,182 @@ class WangTileSolver(object):
             How do I set solver_parameter to make Gurobi use more than one
             processor?, https://ask.sagemath.org/question/37726/
         """
-        p,x = self.milp(solver=solver)
-        if solver_parameters is None:
-            solver_parameters = {}
-        for key, value in solver_parameters.items():
-            p.solver_parameter(key, value)
-        p.solve()
-        soln = p.get_values(x)
-        support = [key for key in soln if soln[key]]
-        assert len(support) == self._width * self._height, "yoo"
-        table = [[0]*self._height for _ in range(self._width)]
-        for i,j,k in support:
-            table[j][k] = i
-        return WangTiling(table, self._tiles, color=self._color)
+        if solver == 'dancing_links':
+            return next(self.solutions_iterator())
+        else:
+            p,x = self.milp(solver=solver)
+            if solver_parameters is None:
+                solver_parameters = {}
+            for key, value in solver_parameters.items():
+                p.solver_parameter(key, value)
+            p.solve()
+            soln = p.get_values(x)
+            support = [key for key in soln if soln[key]]
+            assert len(support) == self._width * self._height, "yoo"
+            table = [[None]*self._height for _ in range(self._width)]
+            for i,j,k in support:
+                table[j][k] = i
+            return WangTiling(table, self._tiles, color=self._color)
 
-    def rows(self):
+    def rows_and_information(self):
         r"""
+        Return the rows to give to the dancing links solver.
+
+        OUTPUT:
+
+        Two lists:
+
+            - the rows
+            - row information (j,k,i) meaning tile i is at position (j,k)
 
         EXAMPLES::
 
             sage: from slabbe import WangTileSolver
-            sage: tiles = [(0,1,2,3), (1,2,3,4), (2,3,4,5), (3,4,5,6)]
-            sage: W = WangTileSolver(tiles, 3, 4)
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+            sage: W = WangTileSolver(tiles, 4, 1)
+            sage: rows,row_info = W.rows_and_information()
+            sage: rows
+            [[1, 2],
+             [0, 2],
+             [2],
+             [0, 4, 5],
+             [1, 3, 5],
+             [0, 1, 5],
+             [3, 7, 8],
+             [4, 6, 8],
+             [3, 4, 8],
+             [6],
+             [7],
+             [6, 7]]
+            sage: row_info
+            [(0, 0, 0),
+             (0, 0, 1),
+             (0, 0, 2),
+             (1, 0, 0),
+             (1, 0, 1),
+             (1, 0, 2),
+             (2, 0, 0),
+             (2, 0, 1),
+             (2, 0, 2),
+             (3, 0, 0),
+             (3, 0, 1),
+             (3, 0, 2)]
+            sage: from sage.combinat.matrices.dancing_links import dlx_solver
+            sage: dlx = dlx_solver(rows)
+            sage: dlx
+            Dancing links solver for 9 columns and 12 rows
+            sage: dlx.search()
+            1
+            sage: dlx.get_solution()
+            [1, 4, 7, 10]
+            sage: row_info[1]
+            (0, 0, 1)
+            sage: row_info[4]
+            (1, 0, 1)
+            sage: row_info[7]
+            (2, 0, 1)
+            sage: row_info[10]
+            (3, 0, 1)
 
-        There is a problem in the code::
+        ... which means tile 1 is at position (0,0), (1,0), (2,0) and (3,0)
+
+        TESTS::
 
             sage: tiles = [(0,0,0,0), (1,1,1,1)]
-            sage: W = WangTileSolver(tiles, 3, 4)
-            sage: d = W.rows()
-            sage: rows = d.values()
-            sage: rows
-            [[8, 19, 22],
-            [25, 28],
-            [11, 14, 24, 27],
-            [5, 6, 22, 23],
-            [4, 20],
-            [15, 18],
-            [3, 6, 23],
-            [17, 18],
-            [7, 8, 21, 22],
-            [12, 21, 24],
-            [16],
-            [7, 10, 22, 25],
-            [11, 12, 23, 24],
-            [27, 28],
-            [27, 30],
-            [9, 10, 24, 25],
-            [29, 30],
-            [15, 16],
-            [3, 4, 19, 20],
-            [26],
-            [13, 14, 26, 27],
-            [25, 26]]
-            sage: dlx = dlx_solver(rows)
-            sage: dlx.number_of_solutions()
-            0
+            sage: W = WangTileSolver(tiles, 4, 1)
+            sage: W.rows_and_information()
+            ([[1, 2], [0, 2], [0, 4, 5], [1, 3, 5], [3, 7, 8], [4, 6, 8], [6], [7]],
+             [(0, 0, 0),
+              (0, 0, 1),
+              (1, 0, 0),
+              (1, 0, 1),
+              (2, 0, 0),
+              (2, 0, 1),
+              (3, 0, 0),
+              (3, 0, 1)])
+
+        ::
+
+            sage: tiles = [(0,0,0,0)]
+            sage: W = WangTileSolver(tiles, 4, 1)
+            sage: W.rows_and_information()
+            ([[1], [0, 3], [2, 5], [4]], [(0, 0, 0), (1, 0, 0), (2, 0, 0), (3, 0, 0)])
         """
+        if any(d for d in self._preassigned):
+            raise NotImplementedError("preassigned colors were given (={}) "
+                "but the current reduction to dancing links ignores "
+                "preassigned colors".format(self._preassigned))
+
         from math import log, ceil
+
+        # mapping the vertical colors to complementary binary strings
         vertical_alphabet = sorted(self.vertical_alphabet())
-        padtoV = int(ceil(log(len(vertical_alphabet), 2)))+1
-        #left_color_to_int = {c:i for i,c in enumerate(vertical_alphabet)}
-        #right_color_to_int = {c:2**padtoV-1-i for i,c in enumerate(vertical_alphabet)}
-        #def integer_to_digits(a, padto):
-        #    return ZZ(a).digits(2, padto=padto)
-        #def digits_to_integer(digits):
-        #    return sum(2**k for k in digits)
-        left_color_to_digits = {c:[2**k for (k,d) in 
-                                enumerate(ZZ(i).digits(2,padto=padtoV)) if d!=0]
+        padtoV = int(ceil(log(len(vertical_alphabet)+1, 2)))+1
+        left_color_to_digits = {c:[k for (k,d) in 
+                                enumerate(ZZ(i+1).digits(2,padto=padtoV)) if d!=0]
                                 for i,c in enumerate(vertical_alphabet)}
-        right_color_to_digits = {c:[2**k for (k,d) in 
-                                enumerate(ZZ(2**padtoV-1-i).digits(2,padto=padtoV)) if d!=0]
+        right_color_to_digits = {c:[k for (k,d) in 
+                                enumerate(ZZ(2**padtoV-1-i-1).digits(2,padto=padtoV)) if d!=0]
                                 for i,c in enumerate(vertical_alphabet)}
 
+        # mapping the horizontal colors to complementary binary strings
         horizontal_alphabet = sorted(self.horizontal_alphabet())
-        padtoH = int(ceil(log(len(horizontal_alphabet), 2)))+1
-        bottom_color_to_digits = {c:[2**k for (k,d) in 
-                                enumerate(ZZ(i).digits(2,padto=padtoH)) if d!=0]
+        padtoH = int(ceil(log(len(horizontal_alphabet)+1, 2)))+1
+        bottom_color_to_digits = {c:[k for (k,d) in 
+                                enumerate(ZZ(i+1).digits(2,padto=padtoH)) if d!=0]
                                 for i,c in enumerate(horizontal_alphabet)}
-        top_color_to_digits = {c:[2**k for (k,d) in 
-                                enumerate(ZZ(2**padtoH-1-i).digits(2,padto=padtoH)) if d!=0]
+        top_color_to_digits = {c:[k for (k,d) in 
+                                enumerate(ZZ(2**padtoH-1-i-1).digits(2,padto=padtoH)) if d!=0]
                                 for i,c in enumerate(horizontal_alphabet)}
 
-        tiles = self._tiles
-        indices = range(len(tiles))
+        # Note: above, we want to avoid the binary string 0000 which may
+        # create empty rows below for the dlx solver which is not good we
+        # want each color to be map to a binary string containing both 0's
+        # and 1's
 
         W = self._width
         H = self._height
-        from collections import defaultdict
         dict_of_rows = defaultdict(list)
 
         # matching vertical colors
-        for j in range(W-1):
+        for j in range(W):
             for k in range(H):
-                for i,tile in enumerate(tiles):
+                position = (k*(W-1)+j)*padtoV
+                for i,tile in enumerate(self._tiles):
                     # the tile i at position (j,k)
                     right,top,left,bottom = tile
                     A = left_color_to_digits[left]
                     B = right_color_to_digits[right]
-                    position = (k*(W-1)+j)*padtoV
                     row = []
                     if j > 0:
-                        row.extend([position+a for a in A])
+                        row.extend([position+a-padtoV for a in A])
                     if j < W-1:
-                        row.extend([position+padtoV+b for b in B])
+                        row.extend([position+b for b in B])
                     dict_of_rows[(j,k,i)] = row
 
         shift = H*(W-1)*padtoV
 
         # matching horizontal colors
         for j in range(W):
-            for k in range(H-1):
-                for i,tile in enumerate(tiles):
+            for k in range(H):
+                position = (j*(H-1)+k)*padtoH
+                for i,tile in enumerate(self._tiles):
                     # the tile i at position (j,k)
                     right,top,left,bottom = tile
                     A = bottom_color_to_digits[bottom]
                     B = top_color_to_digits[top]
-                    position = j*(H-1)+k*padtoH
                     row = []
                     if k > 0:
-                        row.extend([shift+position+a for a in A])
+                        row.extend([shift+position-padtoH+a for a in A])
                     if k < H-1:
-                        row.extend([shift+position+padtoH+b for b in B])
+                        row.extend([shift+position+b for b in B])
                     dict_of_rows[(j,k,i)].extend(row)
 
         dict_of_rows = dict(dict_of_rows)
+        sorted_keys = sorted(dict_of_rows)
+        rows = [dict_of_rows[key] for key in sorted_keys]
 
-        return dict_of_rows
+        return rows, sorted_keys
 
     def dlx_solver(self):
         r"""
@@ -1082,13 +1136,63 @@ class WangTileSolver(object):
             sage: from slabbe import WangTileSolver
             sage: tiles = [(0,3,1,4), (1,4,0,3)]
             sage: W = WangTileSolver(tiles,3,4)
-            sage: W.dlx_solver()
-            Dancing links solver for 9 columns and 15 rows
+            sage: dlx = W.dlx_solver()
+            sage: dlx
+            Dancing links solver for 51 columns and 24 rows
+            sage: dlx.number_of_solutions()
+            2
         """
         from sage.combinat.matrices.dancing_links import dlx_solver
-        return dlx_solver(self.rows())
+        rows,row_info = self.rows_and_information()
+        return dlx_solver(rows)
 
+    def number_of_solutions(self, ncpus=8):
+        r"""
+        EXAMPLES::
 
+            sage: from slabbe import WangTileSolver
+            sage: tiles = [(2,4,2,1), (2,2,2,0), (1,1,3,1), (1,2,3,2), (3,1,3,3),
+            ....: (0,1,3,1), (0,0,0,1), (3,1,0,2), (0,2,1,2), (1,2,1,4), (3,3,1,2)]
+            sage: W = WangTileSolver(tiles,3,4)
+            sage: W.number_of_solutions()
+            908
+        """
+        return self.dlx_solver().number_of_solutions(ncpus=ncpus)
+
+    def solutions_iterator(self):
+        r"""
+        Iterator over all solutions
+
+        .. NOTE::
+
+            This uses the reduction to dancing links.
+
+        OUTPUT:
+
+            iterator of wang tilings
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSolver
+            sage: tiles = [(2,4,2,1), (2,2,2,0), (1,1,3,1), (1,2,3,2), (3,1,3,3),
+            ....: (0,1,3,1), (0,0,0,1), (3,1,0,2), (0,2,1,2), (1,2,1,4), (3,3,1,2)]
+            sage: W = WangTileSolver(tiles,3,4)
+            sage: it = W.solutions_iterator()
+            sage: next(it)
+            A wang tiling of a 3 x 4 rectangle
+            sage: next(it)
+            A wang tiling of a 3 x 4 rectangle
+        """
+        from sage.combinat.matrices.dancing_links import dlx_solver
+        rows,row_info = self.rows_and_information()
+        dlx = dlx_solver(rows)
+        for solution in dlx.solutions_iterator():
+            table = [[None]*self._height for _ in range(self._width)]
+            for a in solution:
+                j,k,i = row_info[a]
+                assert table[j][k] is None, "table[{}][{}](={}) is not None".format(j,k,table[j][k])
+                table[j][k] = i
+            yield WangTiling(table, self._tiles, color=self._color)
 
 class WangTiling(object):
     r"""
