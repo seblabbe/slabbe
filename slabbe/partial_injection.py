@@ -90,7 +90,7 @@ def number_of_partial_injection(n):
 
 def random_partial_injection(n):
     r"""
-    Return a uniformly chosen random partial injection on 0, 1, ..., n-1.
+    Return a uniformly chosen random partial injection on 1, 2, ..., n.
 
     INPUT:
 
