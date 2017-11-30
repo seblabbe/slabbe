@@ -22,9 +22,9 @@ EXAMPLES::
 
     sage: from slabbe import random_partial_injection
     sage: random_partial_injection(7)
-    [None, None, 3, 0, None, 1, None]
+    [None, None, 1, 3, None, 0, None]
     sage: random_partial_injection(7)
-    [0, 5, 1, 4, None, 3, None]
+    [5, 1, 0, 3, None, 4, None]
 
 REFERENCES:
 
@@ -39,8 +39,7 @@ AUTHORS:
 """
 from sage.rings.integer_ring import ZZ
 from sage.probability.probability_distribution import GeneralDiscreteDistribution
-from sage.combinat.subset import Subsets
-from sage.misc.prandom import shuffle
+from sage.misc.prandom import shuffle, sample
 
 def number_of_partial_injection(n):
     r"""
@@ -105,18 +104,17 @@ def random_partial_injection(n):
 
         sage: from slabbe import random_partial_injection
         sage: random_partial_injection(10)
-        [3, 0, 2, None, 5, None, 1, 7, 8, 6]
+        [3, 5, 2, None, 1, None, 0, 8, 7, 6]
         sage: random_partial_injection(10)
-        [8, 4, 5, 1, 3, 7, 6, None, 9, None]
+        [1, 7, 4, 8, 3, 5, 9, None, 6, None]
         sage: random_partial_injection(10)
-        [4, 6, 8, None, 5, 7, 0, 9, None, None]
+        [5, 6, 8, None, 7, 4, 0, 9, None, None]
     """
     L = number_of_partial_injection(n)
     X = GeneralDiscreteDistribution(L)
     k = X.get_random_element()
-    S = Subsets(range(n), k)
-    codomain = list(S.random_element())
-    missing = [None]*(n-len(codomain))
+    codomain = sample(range(n), k)
+    missing = [None]*(n-k)
     codomain.extend(missing)
     shuffle(codomain)
     return codomain
