@@ -3,6 +3,9 @@ all: install test
 install:
 	sage -pip install --upgrade --no-index -v .
 
+install-internet:
+	sage -pip install --upgrade -v .
+
 develop:
 	# python setup.py develop
 	sage -pip install --upgrade -e .
