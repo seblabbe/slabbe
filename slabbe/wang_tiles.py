@@ -534,9 +534,6 @@ class WangTileSet(WangTileSet_generic):
             sage: T.create_tikz_pdf_files() # not tested
 
         This creates tile0.pdf, tile1.pdf, etc. in the repository.
-
-        TODO: turn this into something which creates tex macros into a
-        single tex file
         """
         if color is None:
             color = {0:'white',1:'red',2:'cyan',3:'green',4:'white'}
@@ -671,20 +668,93 @@ class WangTileSet(WangTileSet_generic):
         from sage.misc.latex import LatexExpr
         return LatexExpr('\n'.join(lines))
 
-    def admissible_horizontal_words(self, length, width, heigth):
+    def admissible_horizontal_words(self, length, width, height):
         r"""
+        Return the horizontal word of given length appearing in every
+        position inside a rectangle of given width and height.
+
         INPUT:
 
         - ``length`` -- integer
         - ``width`` -- integer
         - ``height`` -- integer
 
+        OUTPUT:
+
+            set of tuples
+
         EXAMPLES::
 
-        TODO: complete this code
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+            sage: T = WangTileSet(tiles)
+            sage: T.admissible_horizontal_words(2,2,2)
+            {(0, 0), (1, 1), (2, 2)}
+
+        The horizontal word 22 is impossible after looking at large enough
+        boxes::
+
+            sage: tiles = [(0,0,0,2), (1,0,0,1), (2,1,0,0), (0,0,1,0),
+            ....:          (1,2,1,1), (1,1,2,0), (2,0,2,1)]
+            sage: T = WangTileSet(tiles)
+            sage: T.admissible_horizontal_words(2,2,2)
+            {(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (2, 0), (2, 2)}
+            sage: T.admissible_horizontal_words(2,3,3)
+            {(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (2, 0)}
+            sage: T.admissible_horizontal_words(2,4,4)
+            {(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (2, 0)}
+            sage: T.admissible_horizontal_words(2,5,5)
+            {(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (2, 0)}
+
         """
         wang_tile_solver = WangTileSolver(self._tiles, width, height)
-        it = wang_tile_solver.solutions_iterator()
+        seen = defaultdict(set)
+        for tiling in wang_tile_solver.solutions_iterator():
+            for pos,word in tiling.horizontal_words_dict(length).items():
+                seen[pos].add(word)
+        return set.intersection(*seen.values())
+
+    def admissible_vertical_words(self, length, width, height):
+        r"""
+        Return the vertical word of given length appearing in every
+        position inside a rectangle of given width and height.
+
+        INPUT:
+
+        - ``length`` -- integer
+        - ``width`` -- integer
+        - ``height`` -- integer
+
+        OUTPUT:
+
+            set of tuples
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+            sage: T = WangTileSet(tiles)
+            sage: T.admissible_vertical_words(2,2,2)
+            {(0, 0), (1, 1), (2, 2)}
+
+        Every word of length 2 appear as a vertical word in every position
+        of a `5\times 5` box::
+
+            sage: tiles = [(0,0,0,2), (1,0,0,1), (2,1,0,0), (0,0,1,0),
+            ....:          (1,2,1,1), (1,1,2,0), (2,0,2,1)]
+            sage: T = WangTileSet(tiles)
+            sage: T.admissible_vertical_words(2,2,2)
+            {(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1), (2, 2)}
+            sage: T.admissible_vertical_words(2,5,5)
+            {(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1), (2, 2)}
+
+        """
+        wang_tile_solver = WangTileSolver(self._tiles, width, height)
+        seen = defaultdict(set)
+        for tiling in wang_tile_solver.solutions_iterator():
+            for pos,word in tiling.vertical_words_dict(length).items():
+                seen[pos].add(word)
+        return set.intersection(*seen.values())
 
 class HexagonalWangTileSet(WangTileSet_generic):
     r"""
@@ -977,9 +1047,13 @@ class WangTileSolver(object):
                 table[j][k] = i
             return WangTiling(table, self._tiles, color=self._color)
 
-    def rows_and_information(self):
+    def rows_and_information(self, verbose=False):
         r"""
         Return the rows to give to the dancing links solver.
+
+        INPUT:
+
+        - ``verbose`` -- bool (default: ``False``)
 
         OUTPUT:
 
@@ -995,18 +1069,18 @@ class WangTileSolver(object):
             sage: W = WangTileSolver(tiles, 4, 1)
             sage: rows,row_info = W.rows_and_information()
             sage: rows
-            [[1, 2],
-             [0, 2],
-             [2],
-             [0, 4, 5],
-             [1, 3, 5],
-             [0, 1, 5],
-             [3, 7, 8],
-             [4, 6, 8],
-             [3, 4, 8],
-             [6],
-             [7],
-             [6, 7]]
+            [[1, 2, 9],
+             [0, 2, 9],
+             [2, 9],
+             [0, 4, 5, 10],
+             [1, 3, 5, 10],
+             [0, 1, 5, 10],
+             [3, 7, 8, 11],
+             [4, 6, 8, 11],
+             [3, 4, 8, 11],
+             [6, 12],
+             [7, 12],
+             [6, 7, 12]]
             sage: row_info
             [(0, 0, 0),
              (0, 0, 1),
@@ -1023,7 +1097,7 @@ class WangTileSolver(object):
             sage: from sage.combinat.matrices.dancing_links import dlx_solver
             sage: dlx = dlx_solver(rows)
             sage: dlx
-            Dancing links solver for 9 columns and 12 rows
+            Dancing links solver for 13 columns and 12 rows
             sage: dlx.search()
             1
             sage: dlx.get_solution()
@@ -1043,8 +1117,25 @@ class WangTileSolver(object):
 
             sage: tiles = [(0,0,0,0), (1,1,1,1)]
             sage: W = WangTileSolver(tiles, 4, 1)
-            sage: W.rows_and_information()
-            ([[1, 2], [0, 2], [0, 4, 5], [1, 3, 5], [3, 7, 8], [4, 6, 8], [6], [7]],
+            sage: W.rows_and_information(verbose=True)
+            Vertical colors (coded using 3 bits):
+            color 0 represented by bits [0] when on left
+            color 0 represented by bits [1, 2] when on right
+            color 1 represented by bits [1] when on left
+            color 1 represented by bits [0, 2] when on right
+            Horizontal colors (coded using 3 bits):
+            color 0 represented by bits [0] when on bottom
+            color 0 represented by bits [1, 2] when on top
+            color 1 represented by bits [1] when on bottom
+            color 1 represented by bits [0, 2] when on top
+            ([[1, 2, 9],
+              [0, 2, 9],
+              [0, 4, 5, 10],
+              [1, 3, 5, 10],
+              [3, 7, 8, 11],
+              [4, 6, 8, 11],
+              [6, 12],
+              [7, 12]],
              [(0, 0, 0),
               (0, 0, 1),
               (1, 0, 0),
@@ -1058,8 +1149,16 @@ class WangTileSolver(object):
 
             sage: tiles = [(0,0,0,0)]
             sage: W = WangTileSolver(tiles, 4, 1)
-            sage: W.rows_and_information()
-            ([[1], [0, 3], [2, 5], [4]], [(0, 0, 0), (1, 0, 0), (2, 0, 0), (3, 0, 0)])
+            sage: W.rows_and_information(verbose=True)
+            Vertical colors (coded using 2 bits):
+            color 0 represented by bits [0] when on left
+            color 0 represented by bits [1] when on right
+            Horizontal colors (coded using 2 bits):
+            color 0 represented by bits [0] when on bottom
+            color 0 represented by bits [1] when on top
+            ([[1, 6], [0, 3, 7], [2, 5, 8], [4, 9]],
+             [(0, 0, 0), (1, 0, 0), (2, 0, 0), (3, 0, 0)])
+
         """
         if any(d for d in self._preassigned):
             raise NotImplementedError("preassigned colors were given (={}) "
@@ -1093,6 +1192,22 @@ class WangTileSolver(object):
         # want each color to be map to a binary string containing both 0's
         # and 1's
 
+        if verbose:
+            phrase = "color {} represented by bits {} when on {}"
+            print "Vertical colors (coded using {} bits):".format(padtoV)
+            for color in left_color_to_digits:
+                digits_left = left_color_to_digits[color]
+                digits_right = right_color_to_digits[color]
+                print phrase.format(color, digits_left, 'left')
+                print phrase.format(color, digits_right, 'right')
+            #
+            print "Horizontal colors (coded using {} bits):".format(padtoH)
+            for color in bottom_color_to_digits:
+                digits_bottom = bottom_color_to_digits[color]
+                digits_top = top_color_to_digits[color]
+                print phrase.format(color, digits_bottom, 'bottom')
+                print phrase.format(color, digits_top, 'top')
+
         W = self._width
         H = self._height
         dict_of_rows = defaultdict(list)
@@ -1113,7 +1228,7 @@ class WangTileSolver(object):
                         row.extend([position+b for b in B])
                     dict_of_rows[(j,k,i)] = row
 
-        shift = H*(W-1)*padtoV
+        column_shift = H*(W-1)*padtoV
 
         # matching horizontal colors
         for j in range(W):
@@ -1126,10 +1241,20 @@ class WangTileSolver(object):
                     B = top_color_to_digits[top]
                     row = []
                     if k > 0:
-                        row.extend([shift+position-padtoH+a for a in A])
+                        row.extend([column_shift+position-padtoH+a for a in A])
                     if k < H-1:
-                        row.extend([shift+position+b for b in B])
+                        row.extend([column_shift+position+b for b in B])
                     dict_of_rows[(j,k,i)].extend(row)
+
+        column_shift += W*(H-1)*padtoH
+
+        # exactly one tile at each position
+        for j in range(W):
+            for k in range(H):
+                position = j*H + k
+                for i,tile in enumerate(self._tiles):
+                    # the tile i at position (j,k)
+                    dict_of_rows[(j,k,i)].append(column_shift+position)
 
         dict_of_rows = dict(dict_of_rows)
         sorted_keys = sorted(dict_of_rows)
@@ -1152,9 +1277,17 @@ class WangTileSolver(object):
             sage: W = WangTileSolver(tiles,3,4)
             sage: dlx = W.dlx_solver()
             sage: dlx
-            Dancing links solver for 51 columns and 24 rows
+            Dancing links solver for 63 columns and 24 rows
             sage: dlx.number_of_solutions()
             2
+
+        TESTS::
+
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+            sage: W = WangTileSolver(tiles,2,2)
+            sage: dlx = W.dlx_solver()
+            sage: list(dlx.solutions_iterator())
+            [[1, 7, 4, 10], [6, 0, 9, 3], [8, 2, 5, 11]]
         """
         from sage.combinat.matrices.dancing_links import dlx_solver
         rows,row_info = self.rows_and_information()
@@ -1170,6 +1303,13 @@ class WangTileSolver(object):
             sage: W = WangTileSolver(tiles,3,4)
             sage: W.number_of_solutions()
             908
+
+        ::
+
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+            sage: W = WangTileSolver(tiles,2,2)
+            sage: W.number_of_solutions()
+            3
         """
         return self.dlx_solver().number_of_solutions(ncpus=ncpus)
 
@@ -1196,6 +1336,15 @@ class WangTileSolver(object):
             A wang tiling of a 3 x 4 rectangle
             sage: next(it)
             A wang tiling of a 3 x 4 rectangle
+
+        ::
+
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+            sage: W = WangTileSolver(tiles,2,2)
+            sage: list(W.solutions_iterator())
+            [A wang tiling of a 2 x 2 rectangle,
+             A wang tiling of a 2 x 2 rectangle,
+             A wang tiling of a 2 x 2 rectangle]
         """
         from sage.combinat.matrices.dancing_links import dlx_solver
         rows,row_info = self.rows_and_information()
@@ -1314,12 +1463,16 @@ class WangTiling(object):
 
     def horizontal_words_dict(self, length):
         r"""
-        Return a dict of horizontal words of given length appearing at each
-        position.
+        Return a dict of horizontal words (left to right) of given length
+        starting at each position (x,y).
 
-        INPUT
+        INPUT:
 
         - ``length`` -- integer
+
+        OUTPUT:
+
+            dict position -> word
 
         EXAMPLES::
 
@@ -1352,6 +1505,63 @@ class WangTiling(object):
             tile_sequence = [self._table[i+k][H-1] for k in range(length)]
             color_sequence = tuple(self._tiles[r][1] for r in tile_sequence)
             d[(i,H)] = color_sequence
+        return d
+
+    def vertical_words_dict(self, length):
+        r"""
+        Return a dict of vertical words (bottom to top) of given length
+        starting at each position (x,y).
+
+        INPUT:
+
+        - ``length`` -- integer
+
+        OUTPUT:
+
+            dict position -> word
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTiling
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+            sage: tiling = WangTiling(table, tiles)
+            sage: tiling.vertical_words_dict(2)
+            {(0, 0): (1, 0),
+             (0, 1): (0, 1),
+             (0, 2): (1, 0),
+             (1, 0): (0, 1),
+             (1, 1): (1, 0),
+             (1, 2): (0, 1),
+             (2, 0): (1, 0),
+             (2, 1): (0, 1),
+             (2, 2): (1, 0),
+             (3, 0): (0, 1),
+             (3, 1): (1, 0),
+             (3, 2): (0, 1)}
+            sage: tiling.vertical_words_dict(3)
+            {(0, 0): (1, 0, 1),
+             (0, 1): (0, 1, 0),
+             (1, 0): (0, 1, 0),
+             (1, 1): (1, 0, 1),
+             (2, 0): (1, 0, 1),
+             (2, 1): (0, 1, 0),
+             (3, 0): (0, 1, 0),
+             (3, 1): (1, 0, 1)}
+
+        """
+        d = {}
+        for i in range(self.width()):
+            for j in range(self.height()+1-length):
+                tile_sequence = [self._table[i][j+k] for k in range(length)]
+                color_sequence = tuple(self._tiles[r][2] for r in tile_sequence)
+                d[(i,j)] = color_sequence
+        # we do once more for the right color of the right-most column
+        W = self.width()
+        for j in range(self.height()+1-length):
+            tile_sequence = [self._table[W-1][j+k] for k in range(length)]
+            color_sequence = tuple(self._tiles[r][0] for r in tile_sequence)
+            d[(W,j)] = color_sequence
         return d
 
     def number_of_occurences(self, pattern, avoid_border=0):
