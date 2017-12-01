@@ -671,6 +671,20 @@ class WangTileSet(WangTileSet_generic):
         from sage.misc.latex import LatexExpr
         return LatexExpr('\n'.join(lines))
 
+    def admissible_horizontal_words(self, length, width, heigth):
+        r"""
+        INPUT:
+
+        - ``length`` -- integer
+        - ``width`` -- integer
+        - ``height`` -- integer
+
+        EXAMPLES::
+
+        TODO: complete this code
+        """
+        wang_tile_solver = WangTileSolver(self._tiles, width, height)
+        it = wang_tile_solver.solutions_iterator()
 
 class HexagonalWangTileSet(WangTileSet_generic):
     r"""
@@ -1297,6 +1311,48 @@ class WangTiling(object):
             L = [self._tiles[r][side] for r in row]
             rep.append(L)
         return rep
+
+    def horizontal_words_dict(self, length):
+        r"""
+        Return a dict of horizontal words of given length appearing at each
+        position.
+
+        INPUT
+
+        - ``length`` -- integer
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTiling
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+            sage: tiling = WangTiling(table, tiles)
+            sage: tiling.horizontal_words_dict(2)
+            {(0, 0): (4, 3),
+             (0, 1): (3, 4),
+             (0, 2): (4, 3),
+             (0, 3): (3, 4),
+             (0, 4): (4, 3),
+             (1, 0): (3, 4),
+             (1, 1): (4, 3),
+             (1, 2): (3, 4),
+             (1, 3): (4, 3),
+             (1, 4): (3, 4)}
+
+        """
+        d = {}
+        for i in range(self.width()+1-length):
+            for j in range(self.height()):
+                tile_sequence = [self._table[i+k][j] for k in range(length)]
+                color_sequence = tuple(self._tiles[r][3] for r in tile_sequence)
+                d[(i,j)] = color_sequence
+        # we do once more for the top color of the top row
+        H = self.height()
+        for i in range(self.width()+1-length):
+            tile_sequence = [self._table[i+k][H-1] for k in range(length)]
+            color_sequence = tuple(self._tiles[r][1] for r in tile_sequence)
+            d[(i,H)] = color_sequence
+        return d
 
     def number_of_occurences(self, pattern, avoid_border=0):
         r"""
