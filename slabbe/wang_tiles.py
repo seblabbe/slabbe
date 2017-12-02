@@ -386,31 +386,38 @@ class WangTileSet(WangTileSet_generic):
 
     def to_transducer_graph(self):
         r"""
+        Return the graph of the transducer.
+
+        Labels are cleaned. Label of multiedges are merged with commas.
+
         EXAMPLES::
 
             sage: from slabbe import WangTileSet
-            sage: tiles = ['ABCD', 'EFGH', 'UVWX']
+            sage: tiles = ['ABCD', 'EFGH', 'AXCY']
             sage: tiles = map(tuple, tiles)
             sage: T = WangTileSet(tiles)
             sage: G = T.to_transducer_graph()
             sage: G
-            Looped digraph on 6 vertices
+            Looped digraph on 4 vertices
 
         The edge labels are clean::
 
             sage: G.edges()
-            [('C', 'A', 'D|B'), ('G', 'E', 'H|F'), ('W', 'U', 'X|V')]
+            [('C', 'A', 'D|B,Y|X'), ('G', 'E', 'H|F')]
 
         compared to::
 
             sage: T.to_transducer().graph().edges()
-            [('C', 'A', "'D'|'B'"), ('G', 'E', "'H'|'F'"), ('W', 'U', "'X'|'V'")]
+            [('C', 'A', "'D'|'B'"), ('C', 'A', "'Y'|'X'"), ('G', 'E', "'H'|'F'")]
         """
         from sage.graphs.digraph import DiGraph
         G = self.to_transducer().graph()
-        edges = [(u,v,label.replace("'","")) for (u,v,label) in G.edges()]
-        return DiGraph(edges, format='list_of_edges', 
-                       loops=True, multiedges=True)
+        d = defaultdict(list)
+        for (u,v,label) in G.edges():
+            d[(u,v)].append(label.replace("'",""))
+        edges = [(u,v,','.join(label_list))
+                 for (u,v),label_list in d.items()]
+        return DiGraph(edges, format='list_of_edges', loops=True)
 
     def system_of_density_equations(self):
         r"""
