@@ -409,7 +409,8 @@ class WangTileSet(WangTileSet_generic):
         from sage.graphs.digraph import DiGraph
         G = self.to_transducer().graph()
         edges = [(u,v,label.replace("'","")) for (u,v,label) in G.edges()]
-        return DiGraph(edges, format='list_of_edges', loops=True)
+        return DiGraph(edges, format='list_of_edges', 
+                       loops=True, multiedges=True)
 
     def system_of_density_equations(self):
         r"""
