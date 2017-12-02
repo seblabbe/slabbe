@@ -659,7 +659,8 @@ class WangTileSet(WangTileSet_generic):
             image_a = substitution._d[a]
             tiling = WangTiling(image_a, self._tiles, color)
             tikz = tiling.tikz(color=color, fontsize=fontsize, rotate=(0,0,0,0),
-                    label_shift=label_shift, scale=1, transformation_matrix=transformation_matrix)
+                    label_shift=label_shift, scale=scale,
+                    transformation_matrix=transformation_matrix)
             yshift = 2.0 + .5 * len(image_a)
             lines.append(r'\node at ({},.5) {{{}}};'.format(yshift,
                                              tikz.tikz_picture_code()))
