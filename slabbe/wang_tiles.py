@@ -594,7 +594,7 @@ class WangTileSet(WangTileSet_generic):
 
 
     def substitution_tikz(self, substitution, function=None, color=None,
-            size=1, fontsize=r'\normalsize', rotate=(0,0,0,0),
+            size=1, scale=1, fontsize=r'\normalsize', rotate=(0,0,0,0),
             label_shift=.2, transformation_matrix=None):
         r"""
         Return the tikz code showing what the substitution A->B* does on
@@ -609,6 +609,7 @@ class WangTileSet(WangTileSet_generic):
           new colors which are tuple of previous colors
         - ``color`` -- dict (default: ``None``) from tile values -> tikz colors
         - ``size`` -- number (default: ``1``), size of the tile
+        - ``scale`` -- number (default: ``1``), scale of tikzpicture
         - ``fontsize`` -- string (default: ``r'\normalsize'``
         - ``rotate`` -- list (default:``(0,0,0,0)``) of four angles in
           degrees, the rotation angle to apply to each label of Wang tiles
@@ -647,6 +648,7 @@ class WangTileSet(WangTileSet_generic):
         for a in d:
             desubstituted_tile = d[a] 
             lines.append(r'\begin{tikzpicture}')
+            lines.append(r'[scale={}]'.format(scale))
             new_lines = tile_to_tikz(desubstituted_tile, (0,0), color=color,
                     size=size, fontsize=fontsize, rotate=rotate,
                     label_shift=label_shift, top_right_edges=True)
@@ -657,7 +659,7 @@ class WangTileSet(WangTileSet_generic):
             image_a = substitution._d[a]
             tiling = WangTiling(image_a, self._tiles, color)
             tikz = tiling.tikz(color=color, fontsize=fontsize, rotate=(0,0,0,0),
-                    label_shift=.2, scale=1, transformation_matrix=transformation_matrix)
+                    label_shift=label_shift, scale=1, transformation_matrix=transformation_matrix)
             yshift = 2.0 + .5 * len(image_a)
             lines.append(r'\node at ({},.5) {{{}}};'.format(yshift,
                                              tikz.tikz_picture_code()))
@@ -984,8 +986,9 @@ class WangTileSolver(object):
 
         .. TODO::
 
-            Currently, the dancing links reduction ignores the preassigned
-            parameters.
+            - Currently, the dancing links reduction ignores the
+              preassigned parameters.
+            - Use the new parallel search of dancing links (#24315)
 
         INPUT:
 
