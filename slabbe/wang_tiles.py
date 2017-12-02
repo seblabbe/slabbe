@@ -794,6 +794,9 @@ class WangTileSet(WangTileSet_generic):
                 seen[pos].add(word)
         return set.intersection(*seen.values())
 
+    def composition(self, nstep=1, direction='vertical'):
+        raise NotImplementedError
+
 class HexagonalWangTileSet(WangTileSet_generic):
     r"""
     Construct an hexagonal Wang tile set.
@@ -891,17 +894,6 @@ class WangTileSolver(object):
         Traceback (most recent call last):
         ...
         MIPSolverException: GLPK: Problem has no feasible solution
-
-    TESTS:
-
-    Colors must be convertable to float::
-
-        sage: tiles = [('a','a','a','a'), ('b','b','b','b')]
-        sage: W = WangTileSolver(tiles,3,4)
-        sage: tiling = W.solve()
-        Traceback (most recent call last):
-        ...
-        ValueError: could not convert string to float: a
     """
     def __init__(self, tiles, width, height, preassigned=None, color=None):
         r"""
@@ -973,6 +965,15 @@ class WangTileSolver(object):
         Other solver can be used::
 
             sage: p,x = W.milp(solver='Gurobi')   # optional gurobi
+
+        TESTS:
+
+        Colors do not have to be integers::
+
+            sage: tiles = [('a','a','a','a'), ('b','b','b','b')]
+            sage: W = WangTileSolver(tiles,3,4)
+            sage: p,x = W.milp()
+            sage: tiling = W.solve()
         """
         tiles = self._tiles
         indices = range(len(tiles))
@@ -989,28 +990,36 @@ class WangTileSolver(object):
                 p.add_constraint(S==1, name=name)
 
         # matching vertical colors
+        Va = sorted(self.vertical_alphabet())
+        Va_to_int = {a:i for i,a in enumerate(Va)}
         for j in range(self._width-1):
             for k in range(self._height):
-                A = p.sum(tiles[i][0]*x[i,j,k] for i in indices)
-                B = p.sum(tiles[i][2]*x[i,j+1,k] for i in indices)
+                A = p.sum(Va_to_int[tiles[i][0]]*x[i,j,k] for i in indices)
+                B = p.sum(Va_to_int[tiles[i][2]]*x[i,j+1,k] for i in indices)
                 name = "matching right of {}".format((j,k))
                 p.add_constraint(A==B, name=name)
 
         # matching horizontal colors
+        Ha = sorted(self.horizontal_alphabet())
+        Ha_to_int = {a:i for i,a in enumerate(Ha)}
         for j in range(self._width):
             for k in range(self._height-1):
-                A = p.sum(tiles[i][1]*x[i,j,k] for i in indices)
-                B = p.sum(tiles[i][3]*x[i,j,k+1] for i in indices)
+                A = p.sum(Ha_to_int[tiles[i][1]]*x[i,j,k] for i in indices)
+                B = p.sum(Ha_to_int[tiles[i][3]]*x[i,j,k+1] for i in indices)
                 name = "matching top of {}".format((j,k))
                 p.add_constraint(A==B, name=name)
 
         # matching preassigned color constraints
         legend = {0:'right',1:'top',2:'left',3:'bottom'}
         for angle, D in enumerate(self._preassigned):
+            if angle == 0 or angle == 2:
+                to_int = Va_to_int
+            else:
+                to_int = Ha_to_int
             for j,k in D:
-                A = p.sum(tiles[i][angle]*x[i,j,k] for i in indices)
+                A = p.sum(to_int[tiles[i][angle]]*x[i,j,k] for i in indices)
                 name = "preassigned {} of {}".format(legend[angle], (j,k))
-                p.add_constraint(A==D[(j,k)], name=name)
+                p.add_constraint(A==to_int[D[(j,k)]], name=name)
 
         p.set_objective(x[0,0,0])
         return p, x
