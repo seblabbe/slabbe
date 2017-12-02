@@ -384,6 +384,33 @@ class WangTileSet(WangTileSet_generic):
             transitions.append(transition)
         return Transducer(transitions)
 
+    def to_transducer_graph(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = ['ABCD', 'EFGH', 'UVWX']
+            sage: tiles = map(tuple, tiles)
+            sage: T = WangTileSet(tiles)
+            sage: G = T.to_transducer_graph()
+            sage: G
+            Looped digraph on 6 vertices
+
+        The edge labels are clean::
+
+            sage: G.edges()
+            [('C', 'A', 'D|B'), ('G', 'E', 'H|F'), ('W', 'U', 'X|V')]
+
+        compared to::
+
+            sage: T.to_transducer().graph().edges()
+            [('C', 'A', "'D'|'B'"), ('G', 'E', "'H'|'F'"), ('W', 'U', "'X'|'V'")]
+        """
+        from sage.graphs.digraph import DiGraph
+        G = self.to_transducer().graph()
+        edges = [(u,v,label.replace("'","")) for (u,v,label) in G.edges()]
+        return DiGraph(edges, format='list_of_edges', loops=True)
+
     def system_of_density_equations(self):
         r"""
         EXAMPLES::
