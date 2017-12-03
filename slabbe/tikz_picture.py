@@ -196,6 +196,60 @@ class TikzPicture(SageObject):
         return TikzPicture(tikz, standalone_options=["border=4mm"])
 
     @classmethod
+    def from_graph_merge_multiedges(cls, graph, map_str=True, **kwds):
+        r"""
+        Convert a graph to a tikzpicture using graphviz and dot2tex after
+        merging the labels of multiedges.
+
+        .. NOTE::
+
+            Prerequisite: dot2tex optional Sage package and graphviz must be
+            installed.
+
+        INPUT:
+
+        - ``graph`` -- graph
+        - ``map_str`` -- bool (default:``True``), whether to map the label
+          to strings before adding commas between them. If False, it
+          creates tuple of labels.
+        - ``prog`` -- string (default: ``'dot'``) the program used for the
+          layout corresponding to one of the software of the graphviz
+          suite: 'dot', 'neato', 'twopi', 'circo' or 'fdp'.
+        - ``edge_labels`` -- bool (default: ``True``)
+        - ``color_by_label`` -- bool (default: ``False``)
+        - ``rankdir`` -- string (default: ``'down'``)
+
+        EXAMPLES::
+
+            sage: from slabbe import TikzPicture
+            sage: G = DiGraph([(0,1,'a'), (0,1,'b'), (0,2,'c')], multiedges=True)
+            sage: tikz = TikzPicture.from_graph_merge_multiedges(G) # optional dot2tex
+
+        ::
+
+            sage: G = DiGraph([(0,1,7), (0,1,8), (0,2,9)], multiedges=True)
+            sage: tikz = TikzPicture.from_graph_merge_multiedges(G) # optional dot2tex
+
+        When the labels are mathematical objects, you may avoid mapping the
+        labels to strings to keep latex displaying::
+
+            sage: alpha = var('alpha')
+            sage: G = DiGraph([(0,1,alpha), (0,1,8), (0,2,9)], multiedges=True)
+            sage: tikz = TikzPicture.from_graph_merge_multiedges(G, map_str=False) # optional dot2tex
+        """
+        from collections import defaultdict
+        from sage.graphs.digraph import DiGraph
+        d = defaultdict(list)
+        for (u,v,label) in graph.edges():
+            d[(u,v)].append(label)
+        if map_str:
+            edges = [(u,v,','.join(map(str, label_list))) for (u,v),label_list in d.items()]
+        else:
+            edges = [(u,v,tuple(label_list)) for (u,v),label_list in d.items()]
+        G = DiGraph(edges, format='list_of_edges', loops=True)
+        return TikzPicture.from_graph(G, **kwds)
+
+    @classmethod
     def from_graph_with_pos(cls, graph, **kwds):
         r"""
         Convert a graph with positions defined for vertices to a tikzpicture.
