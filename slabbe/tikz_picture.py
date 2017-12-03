@@ -69,10 +69,9 @@ one liner works::
 AUTHORS:
 
 - Sébastien Labbé, initial version in slabbe-0.2.spkg, nov 2015.
-- Sébastien Labbé, inclusion in Sage, 2016.
 """
 #*****************************************************************************
-#       Copyright (C) 2015-2016 Sébastien Labbé <slabqc@gmail.com>
+#       Copyright (C) 2015-2017 Sébastien Labbé <slabqc@gmail.com>
 #
 #  Distributed under the terms of the GNU General Public License version 2 (GPLv2)
 #
@@ -657,4 +656,55 @@ class TikzPicture(SageObject):
             check_call(cmd, shell=True, stdout=PIPE, stderr=PIPE)
 
         return _filename_svg
+
+    def tex(self, filename=None, include_header=True):
+        """
+        Writes the latex code to a file.
+
+        INPUT:
+
+        - ``filename`` -- string (default:``None``), the output filename.
+          If ``None``, it saves the file in a temporary directory.
+        - ``include_header`` -- bool (default:``True``) whether to include
+          the header latex part. If ``False``, it prints only the
+          tikzpicture part to the file.
+
+        OUTPUT:
+
+            string, path to tex file
+
+        EXAMPLES::
+
+            sage: from slabbe import TikzPicture
+            sage: V = [[1,0,1],[1,0,0],[1,1,0],[0,0,-1],[0,1,0],[-1,0,0],[0,1,1],[0,0,1],[0,-1,0]]
+            sage: P = Polyhedron(vertices=V).polar()
+            sage: s = P.projection().tikz([674,108,-731],112)
+            sage: t = TikzPicture(s)
+            sage: _ = t.tex()
+
+        Write only the tikzpicture without header and begin/end document::
+
+            sage: _ = t.tex(include_header=False)
+
+        Write to a given filename::
+
+            sage: from sage.misc.temporary_file import tmp_filename
+            sage: filename = tmp_filename('temp','.tex')
+            sage: _ = t.tex(filename)
+
+        """
+        if filename is None:
+            filename = tmp_filename('tikz_','.tex')
+        else:
+            filename = os.path.abspath(filename)
+
+        if include_header:
+            output = str(self)
+        else:
+            output = self.tikz_picture_code()
+
+        with open(filename, 'w') as f:
+            f.write(output)
+
+        return filename
 
