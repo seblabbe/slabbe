@@ -68,7 +68,7 @@ from sage.numerical.mip import MixedIntegerLinearProgram
 from sage.rings.integer_ring import ZZ
 
 def tile_to_tikz(tile, position, color=None, size=1,
-        fontsize=r'\normalsize', rotate=(0,0,0,0), label_shift=.2,
+        fontsize=r'\normalsize', rotate=None, label_shift=.2,
         top_right_edges=True):
     r"""
 
@@ -79,8 +79,10 @@ def tile_to_tikz(tile, position, color=None, size=1,
     - ``color`` -- dict (default: ``None``) from tile values -> tikz colors
     - ``size`` -- number (default: ``1``), size of the tile
     - ``fontsize`` -- string (default: ``r'\normalsize'``
-    - ``rotate`` -- list (default:``(0,0,0,0)``) of four angles in
-      degrees, the rotation angle to apply to each label of Wang tiles
+    - ``rotate`` -- list or ``None`` (default:``None``) list of four angles
+      in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
+      label of Wang tiles. If ``None``, it performs a 90 degres rotation
+      for left and right labels taking more than one character.
     - ``label_shift`` -- number (default: ``.2``) translation distance of the
       label from the edge
     - ``top_right_edges`` -- bool (default: ``True``) 
@@ -137,12 +139,32 @@ def tile_to_tikz(tile, position, color=None, size=1,
          '\\node[rotate=0,font=\\normalsize] at (10.5, 100.900000000000) {2};',
          '\\node[rotate=0,font=\\normalsize] at (10.1000000000000, 100.5) {3};',
          '\\node[rotate=0,font=\\normalsize] at (10.5, 100.100000000000) {4};']
+
+    ::
+
+        sage: tile_to_tikz((10,20,30,40), (10,100), color=None)
+        ['% tile at position (x,y)=(10, 100)',
+         '\\draw (10, 100) -- (11, 100);',
+         '\\draw (10, 100) -- (10, 101);',
+         '\\draw (11, 101) -- (11, 100);',
+         '\\draw (11, 101) -- (10, 101);',
+         '\\node[rotate=90,font=\\normalsize] at (10.8, 100.5) {10};',
+         '\\node[rotate=0,font=\\normalsize] at (10.5, 100.8) {20};',
+         '\\node[rotate=90,font=\\normalsize] at (10.2, 100.5) {30};',
+         '\\node[rotate=0,font=\\normalsize] at (10.5, 100.2) {40};']
     """
-    lines = []
-    #lines.append(r'\begin{tikzpicture}')
+    if rotate is None:
+        rotate = []
+        for i,a in enumerate(tile):
+            if (i == 0 or i == 2) and len(str(a)) > 1:
+                rotate.append(90)
+            else:
+                rotate.append(0)
     s = size        # because it is shorter to write below
     t = label_shift # because it is shorter to write below
     x,y = position
+    lines = []
+    #lines.append(r'\begin{tikzpicture}')
     lines.append('% tile at position (x,y)={}'.format((x,y)))
     if color:
         triangle = r'\fill[{}] {} -- {} -- {};'
@@ -519,7 +541,7 @@ class WangTileSet(WangTileSet_generic):
         return Polyhedron(ieqs=ieqs, eqns=eqns)
 
     def tikz(self, ncolumns=10, color=None, size=1, space=.1, scale=1,
-             fontsize=r'\normalsize', rotate=(0,0,0,0), label_shift=.2):
+             fontsize=r'\normalsize', rotate=None, label_shift=.2):
         r"""
         INPUT:
 
@@ -529,8 +551,10 @@ class WangTileSet(WangTileSet_generic):
         - ``space`` -- number (default: ``.1``)
         - ``scale`` -- number (default: ``1``)
         - ``fontsize`` -- string (default: ``r'\normalsize'``)
-        - ``rotate`` -- list (default:``(0,0,0,0)``) of four angles in
-          degrees, the rotation angle to apply to each label of Wang tiles
+        - ``rotate`` -- list or ``None`` (default:``None``) list of four angles
+          in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
+          label of Wang tiles. If ``None``, it performs a 90 degres rotation
+          for left and right labels taking more than one character.
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
 
@@ -579,7 +603,7 @@ class WangTileSet(WangTileSet_generic):
 
     def create_macro_file(self, filename='macro.tex', command_name='Tile',
             color=None, size=1, scale=1, fontsize=r'\normalsize',
-            rotate=(0,0,0,0), label_shift=.2):
+            rotate=None, label_shift=.2):
         r"""
         INPUT:
 
@@ -589,8 +613,10 @@ class WangTileSet(WangTileSet_generic):
         - ``size`` -- number (default: ``1``)
         - ``scale`` -- number (default: ``1``)
         - ``fontsize`` -- string (default: ``r'\normalsize'``)
-        - ``rotate`` -- list (default:``(0,0,0,0)``) of four angles in
-          degrees, the rotation angle to apply to each label of Wang tiles
+        - ``rotate`` -- list or ``None`` (default:``None``) list of four angles
+          in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
+          label of Wang tiles. If ``None``, it performs a 90 degres rotation
+          for left and right labels taking more than one character.
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
 
@@ -629,7 +655,7 @@ class WangTileSet(WangTileSet_generic):
 
 
     def substitution_tikz(self, substitution, function=None, color=None,
-            size=1, scale=1, fontsize=r'\normalsize', rotate=(0,0,0,0),
+            size=1, scale=1, fontsize=r'\normalsize', rotate=None,
             label_shift=.2, transformation_matrix=None):
         r"""
         Return the tikz code showing what the substitution A->B* does on
@@ -646,8 +672,10 @@ class WangTileSet(WangTileSet_generic):
         - ``size`` -- number (default: ``1``), size of the tile
         - ``scale`` -- number (default: ``1``), scale of tikzpicture
         - ``fontsize`` -- string (default: ``r'\normalsize'``
-        - ``rotate`` -- list (default:``(0,0,0,0)``) of four angles in
-          degrees, the rotation angle to apply to each label of Wang tiles
+        - ``rotate`` -- list or ``None`` (default:``None``) list of four angles
+          in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
+          label of Wang tiles. If ``None``, it performs a 90 degres rotation
+          for left and right labels taking more than one character.
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
         - ``transformation_matrix`` -- matrix (default: ``None``), a matrix
@@ -1751,7 +1779,7 @@ class WangTiling(object):
         s = sum(C.values())
         return {k:QQ((v,s)) for k,v in C.items()}
 
-    def tikz(self, color=None, fontsize=r'\normalsize', rotate=(0,0,0,0),
+    def tikz(self, color=None, fontsize=r'\normalsize', rotate=None,
             label_shift=.2, scale=1, transformation_matrix=None):
         r"""
         Return a tikzpicture showing one solution.
@@ -1760,8 +1788,10 @@ class WangTiling(object):
 
         - ``color`` -- None or dict from tile values -> tikz colors
         - ``fontsize`` -- string (default: ``r'\normalsize'``
-        - ``rotate`` -- list (default:``(0,0,0,0)``) of four angles in
-          degrees, the rotation angle to apply to each label of Wang tiles
+        - ``rotate`` -- list or ``None`` (default:``None``) list of four angles
+          in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
+          label of Wang tiles. If ``None``, it performs a 90 degres rotation
+          for left and right labels taking more than one character.
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
         - ``scale`` -- number (default: ``1``), tikzpicture scale
