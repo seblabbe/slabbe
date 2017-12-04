@@ -61,8 +61,17 @@ class Substitution2d(object):
         """
         return "Substitution 2d: {}".format(self._d)
 
-    def _latex_(self, ncolumns=8):
+    def _latex_(self, ncolumns=8, align='l', variableA=None,
+            variableB=None):
         r"""
+        INPUT:
+
+        - ``ncolumns`` -- integer
+        - ``align`` -- character (default:``'l'``), latex alignment symbol
+          ``'l'``, ``'r'`` or ``'c'``.
+        - ``variableA`` -- string or ``None``
+        - ``variableB`` -- string or ``None``
+
         EXAMPLES::
 
             sage: from slabbe import Substitution2d
@@ -71,34 +80,55 @@ class Substitution2d(object):
             sage: d = {0:A, 1:B}
             sage: s = Substitution2d(d)
             sage: latex(s)
-            \begin{equation*}
-            \begin{split}
-            &
+            \begin{array}{llllllll}
             0\mapsto \left(\begin{array}{rr}
             1 & 3 \\
             0 & 2
             \end{array}\right),
+            &
             1\mapsto \left(\begin{array}{r}
             5 \\
             4
             \end{array}\right),
-            \end{split}
-            \end{equation*}
+            &
+            \end{array}
+
+        ::
+
+            sage: s._latex_(2, 'c', variableA='x', variableB='y')
+            \begin{array}{cc}
+            x_{0}\mapsto \left(\begin{array}{rr}
+            y_{1} & y_{3} \\
+            y_{0} & y_{2}
+            \end{array}\right),
+            &
+            x_{1}\mapsto \left(\begin{array}{r}
+            y_{5} \\
+            y_{4}
+            \end{array}\right),
+            \\
+            \end{array}
+
         """
         from sage.matrix.constructor import matrix
         from sage.misc.latex import latex
         from sage.misc.latex import LatexExpr
+        from sage.calculus.var import var
+        from slabbe.matrices import map_coefficients_to_variable_index
         lines = []
-        lines.append(r'\begin{equation*}')
-        lines.append(r'\begin{split}')
-        lines.append(r'&')
+        lines.append(r'\begin{{array}}{{{}}}'.format(align*ncolumns))
         for i,(key,table) in enumerate(self._d.items()):
             M = matrix.column([col[::-1] for col in table])
+            if variableA:
+                key = var('{}_{}'.format(variableA, key))
+            if variableB:
+                M = map_coefficients_to_variable_index(M, variableB)
             lines.append(r'{}\mapsto {},'.format(latex(key), latex(M)))
             if (i+1) % ncolumns == 0:
-                lines.append(r'\\&\quad')
-        lines.append(r'\end{split}')
-        lines.append(r'\end{equation*}')
+                lines.append(r'\\')
+            else:
+                lines.append(r'&')
+        lines.append(r'\end{array}')
         return LatexExpr('\n'.join(lines))
 
     @classmethod
