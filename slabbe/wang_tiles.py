@@ -733,11 +733,13 @@ class WangTileSet(WangTileSet_generic):
             lines.append(r'\node at ({},.5) {{{}}};'.format(yshift,
                                              tikz.tikz_picture_code()))
 
-            lines.append(r'\end{tikzpicture},')
-            if (i+1) % ncolumns == 0:
-                lines.append(r'\\')
+            lines.append(r'\end{tikzpicture}')
+            if (i+1) == len(d):
+                lines.append(r'.\\')
+            elif (i+1) % ncolumns == 0:
+                lines.append(r',\\')
             else:
-                lines.append(r'&')
+                lines.append(r',&')
         lines.append(r'\end{array}')
         from sage.misc.latex import LatexExpr
         return LatexExpr('\n'.join(lines))

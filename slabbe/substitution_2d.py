@@ -84,13 +84,13 @@ class Substitution2d(object):
             0\mapsto \left(\begin{array}{rr}
             1 & 3 \\
             0 & 2
-            \end{array}\right),
-            &
+            \end{array}\right)
+            ,&
             1\mapsto \left(\begin{array}{r}
             5 \\
             4
-            \end{array}\right),
-            &
+            \end{array}\right)
+            .
             \end{array}
 
         ::
@@ -100,13 +100,13 @@ class Substitution2d(object):
             x_{0}\mapsto \left(\begin{array}{rr}
             y_{1} & y_{3} \\
             y_{0} & y_{2}
-            \end{array}\right),
-            &
+            \end{array}\right)
+            ,&
             x_{1}\mapsto \left(\begin{array}{r}
             y_{5} \\
             y_{4}
-            \end{array}\right),
-            \\
+            \end{array}\right)
+            .
             \end{array}
 
         """
@@ -123,11 +123,13 @@ class Substitution2d(object):
                 key = var('{}_{}'.format(variableA, key))
             if variableB:
                 M = map_coefficients_to_variable_index(M, variableB)
-            lines.append(r'{}\mapsto {},'.format(latex(key), latex(M)))
-            if (i+1) % ncolumns == 0:
-                lines.append(r'\\')
+            lines.append(r'{}\mapsto {}'.format(latex(key), latex(M)))
+            if (i+1) == len(self._d):
+                lines.append(r'.')
+            elif (i+1) % ncolumns == 0:
+                lines.append(r',\\')
             else:
-                lines.append(r'&')
+                lines.append(r',&')
         lines.append(r'\end{array}')
         return LatexExpr('\n'.join(lines))
 
