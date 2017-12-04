@@ -712,7 +712,7 @@ class WangTileSet(WangTileSet_generic):
         """
         d = substitution.desubstitute(self._tiles, function)
         lines = []
-        lines.append(r'\begin{{array}}{{{}}}'.format(align*ncolumns))
+        lines.append(r'\begin{{tabular}}{{{}}}'.format(align*ncolumns))
         for i,a in enumerate(d):
             desubstituted_tile = d[a] 
             lines.append(r'\begin{tikzpicture}')
@@ -735,12 +735,12 @@ class WangTileSet(WangTileSet_generic):
 
             lines.append(r'\end{tikzpicture}')
             if (i+1) == len(d):
-                lines.append(r'.\\')
+                lines.append(r'.')
             elif (i+1) % ncolumns == 0:
                 lines.append(r',\\')
             else:
                 lines.append(r',&')
-        lines.append(r'\end{array}')
+        lines.append(r'\end{tabular}')
         from sage.misc.latex import LatexExpr
         return LatexExpr('\n'.join(lines))
 
