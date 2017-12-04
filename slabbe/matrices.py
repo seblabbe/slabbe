@@ -254,3 +254,28 @@ def spectrum(M):
     """
     return max(map(abs, M.eigenvalues()))
 
+def map_coefficients_to_variable_index(M, x):
+    r"""
+    INPUT:
+
+    - ``M`` -- matrix
+    - ``x`` -- string, variable
+
+    EXAMPLES::
+
+        sage: from slabbe.matrices import map_coefficients_to_variable_index
+        sage: M = matrix(2, range(4))
+        sage: map_coefficients_to_variable_index(M, 's')
+        [s_0 s_1]
+        [s_2 s_3]
+        sage: latex(_)
+        \left(\begin{array}{rr}
+        s_{0} & s_{1} \\
+        s_{2} & s_{3}
+        \end{array}\right)
+    """
+    from sage.calculus.var import var
+    L = [var('{}_{}'.format(x,a)) for a in M.list()]
+    return matrix(M.nrows(), L)
+
+
