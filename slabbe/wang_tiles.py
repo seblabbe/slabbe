@@ -657,7 +657,7 @@ class WangTileSet(WangTileSet_generic):
     def substitution_tikz(self, substitution, function=None, color=None,
             size=1, scale=1, fontsize=r'\normalsize', rotate=None,
             label_shift=.2, transformation_matrix=None, ncolumns=4,
-            align='l'):
+            tabular='tabular', align='l'):
         r"""
         Return the tikz code showing what the substitution A->B* does on
         Wang tiles.
@@ -683,6 +683,7 @@ class WangTileSet(WangTileSet_generic):
           to apply to the coordinate before drawing, it can be in
           ``SL(2,ZZ)`` or not.
         - ``ncolumns`` -- integer (default: ``4``)
+        - ``tabular`` -- string (default: ``'tabular'``) or ``'longtable'``
         - ``align`` -- character (default:``'l'``), latex alignment symbol
           ``'l'``, ``'r'`` or ``'c'``.
 
@@ -712,7 +713,7 @@ class WangTileSet(WangTileSet_generic):
         """
         d = substitution.desubstitute(self._tiles, function)
         lines = []
-        lines.append(r'\begin{{longtable}}{{{}}}'.format(align*ncolumns))
+        lines.append(r'\begin{{{}}}{{{}}}'.format(tabular, align*ncolumns))
         for i,a in enumerate(d):
             desubstituted_tile = d[a] 
             lines.append(r'\begin{tikzpicture}')
@@ -740,7 +741,7 @@ class WangTileSet(WangTileSet_generic):
                 lines.append(r',\\')
             else:
                 lines.append(r',&')
-        lines.append(r'\end{longtable}')
+        lines.append(r'\end{{{}}}'.format(tabular))
         from sage.misc.latex import LatexExpr
         return LatexExpr('\n'.join(lines))
 
