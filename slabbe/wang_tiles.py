@@ -690,60 +690,68 @@ class WangTileSet(WangTileSet_generic):
         OUTPUT:
 
             dict, key -> tile
+        """
+        raise NotImplementedError("use method of the substitution instead")
+
+    def desubstitute(self, substitution, function=None):
+        r"""
+        Return the Wang tile set obtained from the desubstitution of the
+        given Wang tile set.
+
+        INPUT:
+
+        - ``substitution`` -- substitution 2d
+        - ``fn`` -- a function (default: ``None``) to apply to the
+          new colors which are tuple of previous colors
+
+        OUTPUT:
+
+            dict, key -> tile
 
         EXAMPLES::
 
-            sage: from slabbe import WangTileSet, Substitution2d
+            sage: from slabbe import Substitution2d, WangTileSet
             sage: A = [[0,1,2],[1,0,0]]
             sage: B = [[0,1,2]]
             sage: d = {4:A, 5:B}
             sage: s = Substitution2d(d)
             sage: tiles = [(0,3,1,4), (1,4,0,3), (5,6,7,8)]
             sage: W = WangTileSet(tiles)
+            sage: W.desubstitute(s)
+            {4: ((1, 0, 0), (6, 3), (1, 0, 7), (4, 3)),
+             5: ((0, 1, 5), (6,), (1, 0, 7), (4,))}
+
+        Providing a function which gets back to integers::
+
+            sage: fn = lambda colors:int(''.join(map(str, colors)))
+            sage: W.desubstitute(s, fn)
+            {4: (100, 63, 107, 43), 5: (15, 6, 107, 4)}
+
+        Providing a function which concatenate label as strings::
+
             sage: fn = lambda colors:''.join(map(str, colors))
-            sage: output = W.substitution_tikz(s, fn, rotate=(90,0,90,0))
-            sage: view(output)    # not tested
-
-        ::
-
-            sage: M = matrix(2, [1,1,0,1])
-            sage: output = W.substitution_tikz(s, fn, rotate=(90,0,90,0),
-            ....:                    transformation_matrix=M)
-            sage: view(output)    # not tested
+            sage: W.desubstitute(s, fn)
+            {4: ('100', '63', '107', '43'), 5: ('015', '6', '107', '4')}
         """
-        d = substitution.desubstitute(self._tiles, function)
-        lines = []
-        lines.append(r'\begin{{{}}}{{{}}}'.format(tabular, align*ncolumns))
-        for i,a in enumerate(d):
-            desubstituted_tile = d[a] 
-            lines.append(r'\begin{tikzpicture}')
-            lines.append(r'[scale={}]'.format(scale))
-            new_lines = tile_to_tikz(desubstituted_tile, (0,0), color=color,
-                    size=size, fontsize=fontsize, rotate=rotate,
-                    label_shift=label_shift, top_right_edges=True)
-            lines.extend(new_lines)
+        if function is None:
+            function = lambda x:x
+        d = {}
+        for a,image_a in substitution._d.items():
+            # get the border tiles
+            west = image_a[0]
+            east = image_a[-1]
+            north = [column[-1] for column in image_a]
+            south = [column[0] for column in image_a]
+            # get the good color for each
+            west = tuple(self._tiles[b][2] for b in west)
+            east = tuple(self._tiles[b][0] for b in east)
+            north = tuple(self._tiles[b][1] for b in north)
+            south = tuple(self._tiles[b][3] for b in south)
+            # create the tile and save
+            tile = tuple(function(color) for color in (east, north, west, south))
+            d[a] = tile
+        return d
 
-            lines.append(r'\node at (1.5,.5) {$\mapsto$};')
-
-            image_a = substitution._d[a]
-            tiling = WangTiling(image_a, self._tiles, color)
-            tikz = tiling.tikz(color=color, fontsize=fontsize, rotate=rotate,
-                    label_shift=label_shift, scale=scale,
-                    transformation_matrix=transformation_matrix)
-            yshift = 2.0 + .5 * len(image_a)
-            lines.append(r'\node at ({},.5) {{{}}};'.format(yshift,
-                                             tikz.tikz_picture_code()))
-
-            lines.append(r'\end{tikzpicture}')
-            if (i+1) == len(d):
-                lines.append(r'.')
-            elif (i+1) % ncolumns == 0:
-                lines.append(r',\\')
-            else:
-                lines.append(r',&')
-        lines.append(r'\end{{{}}}'.format(tabular))
-        from sage.misc.latex import LatexExpr
-        return LatexExpr('\n'.join(lines))
 
     def admissible_horizontal_words(self, length, width, height):
         r"""

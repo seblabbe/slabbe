@@ -461,46 +461,102 @@ class Substitution2d(object):
 
         EXAMPLES::
 
-            sage: from slabbe import Substitution2d
+        """
+        raise NotImplementedError('method desubstitute moved to wang tile')
+
+    def wang_tikz(self, domain_tiles, codomain_tiles, color=None, size=1,
+            scale=1, fontsize=r'\normalsize', rotate=None, label_shift=.2,
+            transformation_matrix=None, ncolumns=4, tabular='tabular',
+            align='l'):
+        r"""
+        Return the tikz code showing what the substitution A->B* does on
+        Wang tiles.
+
+        INPUT:
+
+        - ``domain_tiles`` -- tiles of the domain
+        - ``codomain_tiles`` -- tiles of the codomain
+        - ``color`` -- dict (default: ``None``) from tile values -> tikz colors
+        - ``size`` -- number (default: ``1``), size of the tile
+        - ``scale`` -- number (default: ``1``), scale of tikzpicture
+        - ``fontsize`` -- string (default: ``r'\normalsize'``
+        - ``rotate`` -- list or ``None`` (default:``None``) list of four angles
+          in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
+          label of Wang tiles. If ``None``, it performs a 90 degres rotation
+          for left and right labels taking more than one character.
+        - ``label_shift`` -- number (default: ``.2``) translation distance
+          of the label from the edge
+        - ``transformation_matrix`` -- matrix (default: ``None``), a matrix
+          to apply to the coordinate before drawing, it can be in
+          ``SL(2,ZZ)`` or not.
+        - ``ncolumns`` -- integer (default: ``4``)
+        - ``tabular`` -- string (default: ``'tabular'``) or ``'longtable'``
+        - ``align`` -- character (default:``'l'``), latex alignment symbol
+          ``'l'``, ``'r'`` or ``'c'``.
+
+        OUTPUT:
+
+            dict, key -> tile
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet, Substitution2d
             sage: A = [[0,1,2],[1,0,0]]
             sage: B = [[0,1,2]]
             sage: d = {4:A, 5:B}
             sage: s = Substitution2d(d)
-            sage: tiles = [(0,3,1,4), (1,4,0,3), (5,6,7,8)]
-            sage: s.desubstitute(tiles)
-            {4: ((1, 0, 0), (6, 3), (1, 0, 7), (4, 3)),
-             5: ((0, 1, 5), (6,), (1, 0, 7), (4,))}
-
-        Providing a function which gets back to integers::
-
-            sage: fn = lambda colors:int(''.join(map(str, colors)))
-            sage: s.desubstitute(tiles, fn)
-            {4: (100, 63, 107, 43), 5: (15, 6, 107, 4)}
-
-        Providing a function which concatenate label as strings::
-
+            sage: codomain_tiles = [(0,3,1,4), (1,4,0,3), (5,6,7,8)]
+            sage: W = WangTileSet(codomain_tiles)
             sage: fn = lambda colors:''.join(map(str, colors))
-            sage: s.desubstitute(tiles, fn)
-            {4: ('100', '63', '107', '43'), 5: ('015', '6', '107', '4')}
+            sage: domain_tiles = W.desubstitute(s, fn)
+            sage: output = s.wang_tikz(domain_tiles, codomain_tiles, rotate=(90,0,90,0))
+            sage: view(output)    # not tested
+
+        ::
+
+            sage: M = matrix(2, [1,1,0,1])
+            sage: output = s.wang_tikz(domain_tiles, codomain_tiles, 
+            ....:                    transformation_matrix=M)
+            sage: view(output)    # not tested
         """
-        if function is None:
-            function = lambda x:x
-        d = {}
-        for a,image_a in self._d.items():
-            # get the border tiles
-            west = image_a[0]
-            east = image_a[-1]
-            north = [column[-1] for column in image_a]
-            south = [column[0] for column in image_a]
-            # get the good color for each
-            west = tuple(tiles[b][2] for b in west)
-            east = tuple(tiles[b][0] for b in east)
-            north = tuple(tiles[b][1] for b in north)
-            south = tuple(tiles[b][3] for b in south)
-            # create the tile and save
-            tile = tuple(function(color) for color in (east, north, west, south))
-            d[a] = tile
-        return d
+        from slabbe.wang_tiles import tile_to_tikz, WangTileSet, WangTiling
+        if isinstance(codomain_tiles, WangTileSet):
+            codomain_tiles = codomain_tiles._tiles
+        if isinstance(domain_tiles, WangTileSet):
+            domain_tiles = domain_tiles._tiles
+        lines = []
+        lines.append(r'\begin{{{}}}{{{}}}'.format(tabular, align*ncolumns))
+        for i,a in enumerate(self._d):
+            desubstituted_tile = domain_tiles[a] 
+
+            lines.append(r'\begin{tikzpicture}')
+            lines.append(r'[scale={}]'.format(scale))
+            new_lines = tile_to_tikz(desubstituted_tile, (0,0), color=color,
+                    size=size, fontsize=fontsize, rotate=rotate,
+                    label_shift=label_shift, top_right_edges=True)
+            lines.extend(new_lines)
+
+            lines.append(r'\node at (1.5,.5) {$\mapsto$};')
+
+            image_a = self._d[a]
+            tiling = WangTiling(image_a, codomain_tiles, color)
+            tikz = tiling.tikz(color=color, fontsize=fontsize, rotate=rotate,
+                    label_shift=label_shift, scale=scale,
+                    transformation_matrix=transformation_matrix)
+            yshift = 2.0 + .5 * len(image_a)
+            lines.append(r'\node at ({},.5) {{{}}};'.format(yshift,
+                                             tikz.tikz_picture_code()))
+
+            lines.append(r'\end{tikzpicture}')
+            if (i+1) == len(self._d):
+                lines.append(r'.')
+            elif (i+1) % ncolumns == 0:
+                lines.append(r',\\')
+            else:
+                lines.append(r',&')
+        lines.append(r'\end{{{}}}'.format(tabular))
+        from sage.misc.latex import LatexExpr
+        return LatexExpr('\n'.join(lines))
 
     _matrix_ = incidence_matrix
 
