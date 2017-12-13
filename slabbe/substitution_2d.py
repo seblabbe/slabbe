@@ -524,6 +524,22 @@ class Substitution2d(object):
             codomain_tiles = codomain_tiles._tiles
         if isinstance(domain_tiles, WangTileSet):
             domain_tiles = domain_tiles._tiles
+
+        for a in self.codomain_alphabet():
+            try:
+                codomain_tiles[a]
+            except IndexError:
+                raise ValueError("codomain_alphabet={}, but tiles are"
+                        " {}".format(self.codomain_alphabet(),
+                        codomain_tiles))
+        for a in self.domain_alphabet():
+            try:
+                domain_tiles[a]
+            except IndexError:
+                raise ValueError("domain_alphabet={}, but tiles are"
+                        " {}".format(self.domain_alphabet(),
+                        domain_tiles))
+
         lines = []
         lines.append(r'\begin{{{}}}{{{}}}'.format(tabular, align*ncolumns))
         for i,a in enumerate(self._d):
