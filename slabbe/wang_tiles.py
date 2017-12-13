@@ -431,6 +431,16 @@ class WangTileSet(WangTileSet_generic):
 
             sage: T.to_transducer().graph().edges()
             [('C', 'A', "'D'|'B'"), ('C', 'A', "'Y'|'X'"), ('G', 'E', "'H'|'F'")]
+
+        It works for integers entries::
+
+            sage: tiles = [(0,1,2,3), (0,5,2,3)]
+            sage: T = WangTileSet(tiles)
+            sage: G = T.to_transducer_graph()
+            sage: G
+            Looped digraph on 2 vertices
+            sage: G.edges()
+            [(2, 0, '3|1,3|5')]
         """
         from sage.graphs.digraph import DiGraph
         G = self.to_transducer().graph()
@@ -841,11 +851,17 @@ class WangTileSet(WangTileSet_generic):
                 seen[pos].add(word)
         return set.intersection(*seen.values())
 
-    def composition(self, nstep=1, direction='vertical'):
+    def composition(self, other, map_str=True):
         r"""
         Return the composition of the wang tile set with itself (as transducer).
 
         We keep only the strongly connected components.
+
+        INPUT:
+
+        - ``other`` -- WangTileSet
+        - ``map_str`` -- bool (default:``True``), whether to map states to
+          strings
 
         EXAMPLES::
 
@@ -853,29 +869,50 @@ class WangTileSet(WangTileSet_generic):
             sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB']
             sage: tiles = map(tuple, tiles)
             sage: T = WangTileSet(tiles)
-            sage: TT = T.composition()
+            sage: TT = T.composition(T)
             sage: TT
             Wang tile set of cardinality 1
             sage: TT.tiles()
             [('AA', 'B', 'AA', 'B')]
+
+        ::
+
+            sage: tiles = [(0,1,0,1)]
+            sage: T = WangTileSet(tiles)
+            sage: TT = T.composition(T)
+            sage: TT
+            Wang tile set of cardinality 1
+            sage: TT.tiles()
+            [('00', '1', '00', '1')]
+
+        Keeping the states as integers::
+
+            sage: TT = T.composition(T, map_str=False)
+            sage: TT.tiles()
+            [((0, 0), (1,), (0, 0), (1,))]
         """
+        if not isinstance(other, WangTileSet):
+            raise TypeError('other(={}) must be a'
+                    ' WangTileSet'.format(other))
         T = self.to_transducer()
-        for _ in range(nstep):
-            T = T.composition(T)
-        T_graph = T.graph()
-        SCC = [g for g in T_graph.strongly_connected_components_subgraphs() if g.num_edges()]
+        U = other.to_transducer()
+        TU = T.composition(U)
+        TU_graph = TU.graph()
+        SCC = [g for g in TU_graph.strongly_connected_components_subgraphs()
+                 if g.num_edges()]
         V = set.union(*[set(s.vertices()) for s in SCC])
         V = set(tuple(a.label() for a in state) for state in V)
         tiles = []
-        for t in T.transitions():
+        for t in TU.transitions():
             right = tuple(a.label() for a in t.to_state.label())
             left = tuple(a.label() for a in t.from_state.label())
             if right in V and left in V:
-                top = t.word_out
-                bottom = t.word_in
+                top = tuple(t.word_out)
+                bottom = tuple(t.word_in)
                 tile = (right, top, left, bottom)
                 tiles.append(tile)
-        tiles = [tuple(''.join(a) for a in tile) for tile in tiles]
+        if map_str:
+            tiles = [tuple(''.join(map(str,a)) for a in tile) for tile in tiles]
         return WangTileSet(tiles)
 
 class HexagonalWangTileSet(WangTileSet_generic):
