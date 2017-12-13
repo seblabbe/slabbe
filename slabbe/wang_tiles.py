@@ -361,6 +361,32 @@ class WangTileSet(WangTileSet_generic):
         ....:          (1,2,1,1), (1,1,2,0), (2,0,2,1)]
         sage: T = WangTileSet(tiles)
     """
+    def vertical_alphabet(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,1,2,3), (4,5,6,7), (8,9,10,11)]
+            sage: T = WangTileSet(tiles)
+            sage: T.vertical_alphabet()
+            {0, 2, 4, 6, 8, 10}
+        """
+        right, top, left, bottom = zip(*self._tiles)
+        return set(left) | set(right)
+
+    def horizontal_alphabet(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,1,2,3), (4,5,6,7), (8,9,10,11)]
+            sage: T = WangTileSet(tiles)
+            sage: T.horizontal_alphabet()
+            {1, 3, 5, 7, 9, 11}
+        """
+        right, top, left, bottom = zip(*self._tiles)
+        return set(top) | set(bottom)
+
     def dual(self):
         r"""
         EXAMPLES::
