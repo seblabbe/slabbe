@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 r"""
+Functions on graphs
+
 .. TODO::
 
     - Make the doctests more simple
 """
 #*****************************************************************************
-#       Copyright (C) 2016 Sébastien Labbé <slabqc@gmail.com>
+#       Copyright (C) 2016-2017 Sébastien Labbé <slabqc@gmail.com>
 #
 #  Distributed under the terms of the GNU General Public License version 2 (GPLv2)
 #
@@ -13,9 +15,10 @@ r"""
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from collections import Counter
+from collections import Counter, defaultdict
 import itertools
 from sage.graphs.digraph import DiGraph
+from sage.graphs.graph import Graph
 
 def projection_graph(G, proj_fn, filename=None, verbose=False):
     r"""
@@ -87,14 +90,14 @@ def digraph_move_label_to_edge(G, label_function=None, loops=True,
         Digraph on 30 vertices
         sage: from slabbe.graph import digraph_move_label_to_edge
         sage: digraph_move_label_to_edge(G)
-        Looped multi-digraph on 10 vertices
+        Looped digraph on 10 vertices
 
     Using a function to modify the labels::
 
         sage: f = lambda label:"A"+label
         sage: GG = digraph_move_label_to_edge(G, label_function=f)
         sage: GG
-        Looped multi-digraph on 10 vertices
+        Looped digraph on 10 vertices
         sage: GG.edges()[0]
         (0, 1, 'Aplusone')
     """
@@ -150,4 +153,57 @@ def induced_subgraph(G, filter):
             x,_,labelin = a
             GG.add_edge(x,y, labelout + b + labelin)
     return GG
+
+def merge_multiedges(G):
+    r"""
+    Return the (di)graph where multiedges are merged into one.
+
+    INPUT:
+
+    - ``G`` -- graph
+
+    EXAMPLES::
+
+        sage: from slabbe.graph import merge_multiedges
+        sage: G = DiGraph(multiedges=True)
+        sage: G.add_edge(0,1,'one')
+        sage: G.add_edge(0,1,'two')
+        sage: G.add_edge(0,1,'three')
+        sage: GG = merge_multiedges(G)
+        sage: GG
+        Looped digraph on 2 vertices
+        sage: GG.edges()
+        [(0, 1, 'one,three,two')]
+
+    A graph::
+
+        sage: G = Graph(multiedges=True)
+        sage: G.add_edge(0,1,'one')
+        sage: G.add_edge(0,1,'two')
+        sage: G.add_edge(0,1,'three')
+        sage: GG = merge_multiedges(G)
+        sage: GG
+        Looped graph on 2 vertices
+        sage: GG.edges()
+        [(0, 1, 'one,three,two')]
+
+    With integer labels::
+
+        sage: G = Graph(multiedges=True)
+        sage: G.add_edge(0,1,7)
+        sage: G.add_edge(0,1,8)
+        sage: G.add_edge(0,1,9)
+        sage: GG = merge_multiedges(G)
+        sage: GG.edges()
+        [(0, 1, '7,8,9')]
+    """
+    d = defaultdict(list)
+    for (u,v,label) in G.edges():
+        d[(u,v)].append(str(label))
+    edges = [(u,v,','.join(label_list))
+                for (u,v),label_list in d.items()]
+    if G.is_directed():
+        return DiGraph(edges, format='list_of_edges', loops=True)
+    else:
+        return Graph(edges, format='list_of_edges', loops=True)
 

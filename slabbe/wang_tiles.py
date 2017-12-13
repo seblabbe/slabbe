@@ -443,13 +443,13 @@ class WangTileSet(WangTileSet_generic):
             [(2, 0, '3|1,3|5')]
         """
         from sage.graphs.digraph import DiGraph
+        from slabbe.graph import merge_multiedges
         G = self.to_transducer().graph()
-        d = defaultdict(list)
-        for (u,v,label) in G.edges():
-            d[(u,v)].append(label.replace("'",""))
-        edges = [(u,v,','.join(label_list))
-                 for (u,v),label_list in d.items()]
-        return DiGraph(edges, format='list_of_edges', loops=True)
+        # first clean the label of the edges
+        edges = [(u,v,label.replace("'","")) for (u,v,label) in G.edges()]
+        G = DiGraph(edges, format='list_of_edges',
+                    loops=True, multiedges=True)
+        return merge_multiedges(G)
 
     def system_of_density_equations(self):
         r"""
