@@ -40,6 +40,7 @@ AUTHORS:
 from sage.rings.integer_ring import ZZ
 from sage.probability.probability_distribution import GeneralDiscreteDistribution
 from sage.misc.prandom import shuffle, sample
+from sage.graphs.digraph import DiGraph
 
 def number_of_partial_injection(n):
     r"""
@@ -118,4 +119,89 @@ def random_partial_injection(n):
     codomain.extend(missing)
     shuffle(codomain)
     return codomain
+
+def random_stallings_graph(n, r=2, verbose=False, merge=False):
+    r"""
+    Return a uniformly chosen Stallings graph of n vertices over r letters.
+
+    INPUT:
+
+    - ``n`` -- integer, size of graph
+    - ``r`` -- integer (default: ``2``), number of generators of the free
+      group
+    - ``verbose`` -- bool (default: ``False``)
+    - ``merge`` -- bool (default: ``False``), whether to merge the
+      multiedges
+
+    .. NOTE::
+
+        The probability that G is connected is 1 - 2^r / n^(r-1) +
+        o(1/n^(r-1)) which is approx. 1
+
+    OUTPUT:
+
+        digraph
+
+    EXAMPLES::
+
+        sage: from slabbe import random_stallings_graph
+        sage: G = random_stallings_graph(20, 2)
+        sage: G
+        Looped multi-digraph on 20 vertices
+
+    ::
+
+        sage: random_stallings_graph(20, 5)
+        Looped multi-digraph on 20 vertices
+
+    With verbose output::
+
+        sage: G = random_stallings_graph(20, 2, verbose=True)   # random
+        rejecting because graph is not connected
+        rejecting because graph has a vertex of degree <=1
+        rejecting because graph has a vertex of degree <=1
+        rejecting because graph has a vertex of degree <=1
+
+    For displaying purpose, one can merge the multiedges::
+
+        sage: G = random_stallings_graph(20, 2, merge=True)
+        sage: from slabbe import TikzPicture
+        sage: _ = TikzPicture.from_graph(G).pdf(view=False)
+
+    AUTHORS:
+
+    - Sébastien Labbé and Pascal Weil, Dec 14, 2017, Sage Thursdays at LaBRI
+
+    """
+    from sage.misc.latex import LatexExpr
+    from slabbe.graph import merge_multiedges
+
+    while True:
+        injections = [random_partial_injection(n) for _ in range(r)]
+
+        edges = []
+        for i,injection in enumerate(injections):
+            label = LatexExpr('a_{}'.format(i))
+            edges.extend([(j,image_j,label) for (j,image_j) in enumerate(injection)
+                                        if not image_j is None])
+
+        G = DiGraph([range(n), edges], format='vertices_and_edges',
+                loops=True, multiedges=True)
+
+        if not G.is_connected():
+            if verbose:
+                print "rejecting because graph is not connected"
+            continue
+
+        if not all(d>=2 for d in G.degree_iterator()):
+            if verbose:
+                print "rejecting because graph has a vertex of degree <=1"
+            continue
+
+        if merge:
+            G = merge_multiedges(G)
+            edges = [(a,b,LatexExpr(label)) for (a,b,label) in G.edges()]
+            return DiGraph(edges, format='list_of_edges', loops=True)
+        else:
+            return G
 

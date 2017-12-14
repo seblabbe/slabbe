@@ -32,6 +32,7 @@ from polyhedron_partition import PolyhedronPartition, rotation_mod
 
 
 from partial_injection import number_of_partial_injection, random_partial_injection
+from partial_injection import random_stallings_graph
 
 # BUG (sometimes, cython code does not work properly)
 try:
