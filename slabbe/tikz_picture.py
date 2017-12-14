@@ -167,11 +167,13 @@ class TikzPicture(SageObject):
         INPUT:
 
         - ``graph`` -- graph
-        - ``merge_multiedges`` -- bool (default: ``True``), whether to
-          merge the multiedges into one single edge
+        - ``merge_multiedges`` -- bool (default: ``True``), if the graph
+          has multiple edges, whether to merge the multiedges into one
+          single edge
         - ``merge_label_function`` -- function (default:``tuple``), a function to
           apply to each list of labels to be merged. It is ignored if
-          ``merge_multiedges`` is not ``True``.
+          ``merge_multiedges`` is not ``True`` or if the graph has no
+          multiple edges.
 
         Other inputs are used for latex drawing with dot2tex and graphviz:
 
@@ -216,7 +218,7 @@ class TikzPicture(SageObject):
             sage: _ = tikz.pdf()      # not tested
 
         """
-        if merge_multiedges:
+        if graph.has_multiple_edges() and merge_multiedges:
             from slabbe.graph import merge_multiedges
             graph = merge_multiedges(graph,
                     label_function=merge_label_function)

@@ -176,7 +176,7 @@ def merge_multiedges(G, label_function=tuple):
         sage: G.add_edge(0,1,alpha)
         sage: GG = merge_multiedges(G)
         sage: GG
-        Looped digraph on 2 vertices
+        Digraph on 2 vertices
         sage: GG.edges()
         [(0, 1, (alpha, 2, 'one'))]
 
@@ -188,7 +188,7 @@ def merge_multiedges(G, label_function=tuple):
         sage: G.add_edge(0,1,alpha)
         sage: GG = merge_multiedges(G)
         sage: GG
-        Looped graph on 2 vertices
+        Graph on 2 vertices
         sage: GG.edges()
         [(0, 1, (alpha, 2, 'one'))]
 
@@ -206,8 +206,9 @@ def merge_multiedges(G, label_function=tuple):
 
     edges = [(u,v,label_function(label_list)) for (u,v),label_list in d.items()]
 
+    loops = G.has_loops()
     if G.is_directed():
-        return DiGraph(edges, format='list_of_edges', loops=True)
+        return DiGraph(edges, format='list_of_edges', loops=loops)
     else:
-        return Graph(edges, format='list_of_edges', loops=True)
+        return Graph(edges, format='list_of_edges', loops=loops)
 
