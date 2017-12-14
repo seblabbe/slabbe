@@ -154,7 +154,8 @@ class TikzPicture(SageObject):
             self._macros.extend(sage_latex_macros())
 
     @classmethod
-    def from_graph(cls, graph, **kwds):
+    def from_graph(cls, graph, merge_multiedges=True,
+            merge_label_function=tuple, **kwds):
         r"""
         Convert a graph to a tikzpicture using graphviz and dot2tex.
 
@@ -166,6 +167,14 @@ class TikzPicture(SageObject):
         INPUT:
 
         - ``graph`` -- graph
+        - ``merge_multiedges`` -- bool (default: ``True``), whether to
+          merge the multiedges into one single edge
+        - ``merge_label_function`` -- function (default:``tuple``), a function to
+          apply to each list of labels to be merged. It is ignored if
+          ``merge_multiedges`` is not ``True``.
+
+        Other inputs are used for latex drawing with dot2tex and graphviz:
+
         - ``prog`` -- string (default: ``'dot'``) the program used for the
           layout corresponding to one of the software of the graphviz
           suite: 'dot', 'neato', 'twopi', 'circo' or 'fdp'.
@@ -178,75 +187,47 @@ class TikzPicture(SageObject):
             sage: from slabbe import TikzPicture
             sage: g = graphs.PetersenGraph()
             sage: tikz = TikzPicture.from_graph(g) # optional dot2tex # long time (3s)
+            sage: _ = tikz.pdf()      # not tested
 
-        ::
+        Using ``prog``::
 
             sage: tikz = TikzPicture.from_graph(g, prog='neato', color_by_label=True) # optional dot2tex # long time (3s)
+            sage: _ = tikz.pdf()      # not tested
 
-        ::
+        Using ``rankdir``::
 
             sage: tikz = TikzPicture.from_graph(g, rankdir='right') # optional dot2tex # long time (3s)
+            sage: _ = tikz.pdf()      # not tested
+
+        Using ``merge_multiedges``::
+
+            sage: alpha = var('alpha')
+            sage: m = matrix(2,range(4)); m.set_immutable()
+            sage: G = DiGraph([(0,1,alpha), (0,1,'a'), (0,2,9), (0,2,m)], multiedges=True)
+            sage: tikz = TikzPicture.from_graph(G, merge_multiedges=True) # optional dot2tex
+            sage: _ = tikz.pdf()      # not tested
+
+        Using ``merge_multiedges`` with ``merge_label_function``::
+
+            sage: fn = lambda L: LatexExpr(','.join(map(str, L)))
+            sage: G = DiGraph([(0,1,'a'), (0,1,'b'), (0,2,'c'), (0,2,'d')], multiedges=True)
+            sage: tikz = TikzPicture.from_graph(G, merge_multiedges=True,
+            ....:               merge_label_function=fn) # optional dot2tex
+            sage: _ = tikz.pdf()      # not tested
+
         """
+        if merge_multiedges:
+            from slabbe.graph import merge_multiedges
+            graph = merge_multiedges(graph,
+                    label_function=merge_label_function)
+
         default = dict(format='dot2tex', edge_labels=True,
-                color_by_label=False, prog='dot', rankdir='down')
+                       color_by_label=False, prog='dot', rankdir='down')
         default.update(kwds)
+
         graph.latex_options().set_options(**default)
         tikz = graph._latex_()
         return TikzPicture(tikz, standalone_options=["border=4mm"])
-
-    @classmethod
-    def from_graph_merge_multiedges(cls, graph, map_str=True, **kwds):
-        r"""
-        Convert a graph to a tikzpicture using graphviz and dot2tex after
-        merging the labels of multiedges.
-
-        .. NOTE::
-
-            Prerequisite: dot2tex optional Sage package and graphviz must be
-            installed.
-
-        INPUT:
-
-        - ``graph`` -- graph
-        - ``map_str`` -- bool (default:``True``), whether to map the label
-          to strings before adding commas between them. If False, it
-          creates tuple of labels.
-        - ``prog`` -- string (default: ``'dot'``) the program used for the
-          layout corresponding to one of the software of the graphviz
-          suite: 'dot', 'neato', 'twopi', 'circo' or 'fdp'.
-        - ``edge_labels`` -- bool (default: ``True``)
-        - ``color_by_label`` -- bool (default: ``False``)
-        - ``rankdir`` -- string (default: ``'down'``)
-
-        EXAMPLES::
-
-            sage: from slabbe import TikzPicture
-            sage: G = DiGraph([(0,1,'a'), (0,1,'b'), (0,2,'c')], multiedges=True)
-            sage: tikz = TikzPicture.from_graph_merge_multiedges(G) # optional dot2tex
-
-        ::
-
-            sage: G = DiGraph([(0,1,7), (0,1,8), (0,2,9)], multiedges=True)
-            sage: tikz = TikzPicture.from_graph_merge_multiedges(G) # optional dot2tex
-
-        When the labels are mathematical objects, you may avoid mapping the
-        labels to strings to keep latex displaying::
-
-            sage: alpha = var('alpha')
-            sage: G = DiGraph([(0,1,alpha), (0,1,8), (0,2,9)], multiedges=True)
-            sage: tikz = TikzPicture.from_graph_merge_multiedges(G, map_str=False) # optional dot2tex
-        """
-        from collections import defaultdict
-        from sage.graphs.digraph import DiGraph
-        d = defaultdict(list)
-        for (u,v,label) in graph.edges():
-            d[(u,v)].append(label)
-        if map_str:
-            edges = [(u,v,','.join(map(str, label_list))) for (u,v),label_list in d.items()]
-        else:
-            edges = [(u,v,tuple(label_list)) for (u,v),label_list in d.items()]
-        G = DiGraph(edges, format='list_of_edges', loops=True)
-        return TikzPicture.from_graph(G, **kwds)
 
     @classmethod
     def from_graph_with_pos(cls, graph, **kwds):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 r"""
-Partial injections
+Random partial injections and Stallings graphs
 
 EXAMPLES::
 
@@ -18,7 +18,7 @@ EXAMPLES::
     36288000,
     3628800]
 
-::
+Random partial injections on ``[0, 1, ..., 6]``::
 
     sage: from slabbe import random_partial_injection
     sage: random_partial_injection(7)
@@ -26,17 +26,35 @@ EXAMPLES::
     sage: random_partial_injection(7)
     [5, 1, 0, 3, None, 4, None]
 
+Random Stallings graph on ``[0, 1, ..., 19]`` over 2 letters::
+
+    sage: from slabbe import random_stallings_graph
+    sage: G = random_stallings_graph(20, 2)
+    sage: G
+    Looped multi-digraph on 20 vertices
+
+Visualisation of the graph::
+
+    sage: from slabbe import TikzPicture
+    sage: tikz = TikzPicture.from_graph(G)
+    sage: path_to_file = tikz.pdf()    # not tested
+
 REFERENCES:
 
 - Bassino, Frédérique; Nicaud, Cyril; Weil, Pascal Random generation of
   finitely generated subgroups of a free group.  Internat. J. Algebra
   Comput. 18 (2008), no. 2, 375–405. 
 
-AUTHORS:
-
-- Sébastien Labbé and Vincent Delecroix, Nov 30, 2017, Sage Thursdays at LaBRI
-
 """
+#*****************************************************************************
+#       Copyright (C) 2017 Sébastien Labbé <slabqc@gmail.com>
+#
+#  Distributed under the terms of the GNU General Public License version 2 (GPLv2)
+#
+#  The full text of the GPLv2 is available at:
+#
+#                  http://www.gnu.org/licenses/
+#*****************************************************************************
 from sage.rings.integer_ring import ZZ
 from sage.probability.probability_distribution import GeneralDiscreteDistribution
 from sage.misc.prandom import shuffle, sample
@@ -81,6 +99,11 @@ def number_of_partial_injection(n):
         [1, 49, 882, 7350, 29400, 52920, 35280, 5040]
         sage: number_of_partial_injection(8)
         [1, 64, 1568, 18816, 117600, 376320, 564480, 322560, 40320]
+
+    AUTHORS:
+
+    - Sébastien Labbé and Vincent Delecroix, Nov 30, 2017, Sage Thursdays
+      at LaBRI
     """
     L = [ZZ(1)]
     for t in range(1, n+1):
@@ -110,6 +133,11 @@ def random_partial_injection(n):
         [1, 7, 4, 8, 3, 5, 9, None, 6, None]
         sage: random_partial_injection(10)
         [5, 6, 8, None, 7, 4, 0, 9, None, None]
+
+    AUTHORS:
+
+    - Sébastien Labbé and Vincent Delecroix, Nov 30, 2017, Sage Thursdays
+      at LaBRI
     """
     L = number_of_partial_injection(n)
     X = GeneralDiscreteDistribution(L)
@@ -130,8 +158,6 @@ def random_stallings_graph(n, r=2, verbose=False, merge=False):
     - ``r`` -- integer (default: ``2``), number of generators of the free
       group
     - ``verbose`` -- bool (default: ``False``)
-    - ``merge`` -- bool (default: ``False``), whether to merge the
-      multiedges
 
     .. NOTE::
 
@@ -162,19 +188,19 @@ def random_stallings_graph(n, r=2, verbose=False, merge=False):
         rejecting because graph has a vertex of degree <=1
         rejecting because graph has a vertex of degree <=1
 
-    For displaying purpose, one can merge the multiedges::
+    For displaying purposes, the following merges the multiedges
+    automatically::
 
-        sage: G = random_stallings_graph(20, 2, merge=True)
+        sage: G = random_stallings_graph(20, 2)
         sage: from slabbe import TikzPicture
-        sage: _ = TikzPicture.from_graph(G).pdf(view=False)
+        sage: tikz = TikzPicture.from_graph(G)
+        sage: _ = tikz.pdf(view=False)
 
     AUTHORS:
 
     - Sébastien Labbé and Pascal Weil, Dec 14, 2017, Sage Thursdays at LaBRI
-
     """
     from sage.misc.latex import LatexExpr
-    from slabbe.graph import merge_multiedges
 
     while True:
         injections = [random_partial_injection(n) for _ in range(r)]
@@ -198,10 +224,5 @@ def random_stallings_graph(n, r=2, verbose=False, merge=False):
                 print "rejecting because graph has a vertex of degree <=1"
             continue
 
-        if merge:
-            G = merge_multiedges(G)
-            edges = [(a,b,LatexExpr(label)) for (a,b,label) in G.edges()]
-            return DiGraph(edges, format='list_of_edges', loops=True)
-        else:
-            return G
+        return G
 

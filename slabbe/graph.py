@@ -154,54 +154,58 @@ def induced_subgraph(G, filter):
             GG.add_edge(x,y, labelout + b + labelin)
     return GG
 
-def merge_multiedges(G):
+def merge_multiedges(G, label_function=tuple):
     r"""
     Return the (di)graph where multiedges are merged into one.
 
     INPUT:
 
     - ``G`` -- graph
+    - ``label_function`` -- function (default:``tuple``), a function to
+      apply to each list of labels
 
-    EXAMPLES::
+    EXAMPLES:
+
+    A digraph::
 
         sage: from slabbe.graph import merge_multiedges
         sage: G = DiGraph(multiedges=True)
+        sage: alpha = var('alpha')
         sage: G.add_edge(0,1,'one')
-        sage: G.add_edge(0,1,'two')
-        sage: G.add_edge(0,1,'three')
+        sage: G.add_edge(0,1,2)
+        sage: G.add_edge(0,1,alpha)
         sage: GG = merge_multiedges(G)
         sage: GG
         Looped digraph on 2 vertices
         sage: GG.edges()
-        [(0, 1, 'one,three,two')]
+        [(0, 1, (alpha, 2, 'one'))]
 
     A graph::
 
         sage: G = Graph(multiedges=True)
         sage: G.add_edge(0,1,'one')
-        sage: G.add_edge(0,1,'two')
-        sage: G.add_edge(0,1,'three')
+        sage: G.add_edge(0,1,2)
+        sage: G.add_edge(0,1,alpha)
         sage: GG = merge_multiedges(G)
         sage: GG
         Looped graph on 2 vertices
         sage: GG.edges()
-        [(0, 1, 'one,three,two')]
+        [(0, 1, (alpha, 2, 'one'))]
 
-    With integer labels::
+    Using ``label_function``::
 
-        sage: G = Graph(multiedges=True)
-        sage: G.add_edge(0,1,7)
-        sage: G.add_edge(0,1,8)
-        sage: G.add_edge(0,1,9)
-        sage: GG = merge_multiedges(G)
+        sage: fn = lambda L: LatexExpr(','.join(map(str, L)))
+        sage: GG = merge_multiedges(G, label_function=fn)
         sage: GG.edges()
-        [(0, 1, '7,8,9')]
+        [(0, 1, alpha,2,one)]
+
     """
     d = defaultdict(list)
     for (u,v,label) in G.edges():
-        d[(u,v)].append(str(label))
-    edges = [(u,v,','.join(label_list))
-                for (u,v),label_list in d.items()]
+        d[(u,v)].append(label)
+
+    edges = [(u,v,label_function(label_list)) for (u,v),label_list in d.items()]
+
     if G.is_directed():
         return DiGraph(edges, format='list_of_edges', loops=True)
     else:
