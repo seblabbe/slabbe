@@ -467,7 +467,7 @@ class Substitution2d(object):
     def wang_tikz(self, domain_tiles, codomain_tiles, color=None, size=1,
             scale=1, fontsize=r'\normalsize', rotate=None, label_shift=.2,
             transformation_matrix=None, ncolumns=4, tabular='tabular',
-            align='l'):
+            align='l', direction='right'):
         r"""
         Return the tikz code showing what the substitution A->B* does on
         Wang tiles.
@@ -493,6 +493,7 @@ class Substitution2d(object):
         - ``tabular`` -- string (default: ``'tabular'``) or ``'longtable'``
         - ``align`` -- character (default:``'l'``), latex alignment symbol
           ``'l'``, ``'r'`` or ``'c'``.
+        - ``direction`` -- string (default: ``'right'``) or ``'down'``
 
         OUTPUT:
 
@@ -512,11 +513,17 @@ class Substitution2d(object):
             sage: output = s.wang_tikz(domain_tiles, codomain_tiles, rotate=(90,0,90,0))
             sage: view(output)    # not tested
 
-        ::
+        Applying a transformation matrix::
 
             sage: M = matrix(2, [1,1,0,1])
             sage: output = s.wang_tikz(domain_tiles, codomain_tiles, 
             ....:                    transformation_matrix=M)
+            sage: view(output)    # not tested
+
+        Down direction::
+
+            sage: output = s.wang_tikz(domain_tiles, codomain_tiles,
+            ....:                      direction='down')
             sage: view(output)    # not tested
         """
         from slabbe.wang_tiles import tile_to_tikz, WangTileSet, WangTiling
@@ -540,6 +547,10 @@ class Substitution2d(object):
                         " {}".format(self.domain_alphabet(),
                         domain_tiles))
 
+        if not direction in ['right', 'down']:
+            raise ValueError("direction(={}) must be 'right' or"
+                    " 'down'".format(direction))
+
         lines = []
         lines.append(r'\begin{{{}}}{{{}}}'.format(tabular, align*ncolumns))
         for i,a in enumerate(self._d):
@@ -552,15 +563,23 @@ class Substitution2d(object):
                     label_shift=label_shift, top_right_edges=True)
             lines.extend(new_lines)
 
-            lines.append(r'\node at (1.5,.5) {$\mapsto$};')
+            if direction == 'right':
+                lines.append(r'\node at (1.5,.5) {$\mapsto$};')
+            elif direction == 'down':
+                lines.append(r'\node[rotate=-90] at (.5,-.5) {$\mapsto$};')
 
             image_a = self._d[a]
             tiling = WangTiling(image_a, codomain_tiles, color)
             tikz = tiling.tikz(color=color, fontsize=fontsize, rotate=rotate,
                     label_shift=label_shift, scale=scale,
                     transformation_matrix=transformation_matrix)
-            yshift = 2.0 + .5 * len(image_a)
-            lines.append(r'\node at ({},.5) {{{}}};'.format(yshift,
+            if direction == 'right':
+                xshift = 2.0 + .5 * len(image_a)
+                yshift = .5
+            elif direction == 'down':
+                xshift = .5
+                yshift = -1.0 - .5 * len(image_a[0])
+            lines.append(r'\node at ({},{}) {{{}}};'.format(xshift, yshift,
                                              tikz.tikz_picture_code()))
 
             lines.append(r'\end{tikzpicture}')
