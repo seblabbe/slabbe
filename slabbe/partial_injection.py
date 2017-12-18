@@ -59,8 +59,9 @@ from sage.rings.integer_ring import ZZ
 from sage.probability.probability_distribution import GeneralDiscreteDistribution
 from sage.misc.prandom import shuffle, sample
 from sage.graphs.digraph import DiGraph
+from sage.functions.other import binomial, factorial
 
-def number_of_partial_injection(n):
+def number_of_partial_injection(n, algorithm='binomial'):
     r"""
     Return the number of partial injections on an set of `n` elements
     defined on a subset of `k` elements for each `k` in `0, 1, ..., n`.
@@ -68,6 +69,9 @@ def number_of_partial_injection(n):
     INPUT:
 
     - ``n`` -- integer
+    - ``algorithm`` -- string (default: ``'binomial'``), ``'binomial'``
+      or ``'recursive'``. When n>50, the binomial coefficient approach is
+      faster (linear time vs quadratic time).
 
     OUTPUT:
 
@@ -75,8 +79,9 @@ def number_of_partial_injection(n):
 
     .. NOTE::
 
-        The code of this function was written by Vincent Delecroix (Nov 30,
-        2017) the day after a discussion with Pascal Weil and me at LaBRI.
+        The recursive code of this function was originally written by
+        Vincent Delecroix (Nov 30, 2017) the day after a discussion with
+        Pascal Weil and me at LaBRI.
 
     EXAMPLES::
 
@@ -100,17 +105,24 @@ def number_of_partial_injection(n):
         sage: number_of_partial_injection(8)
         [1, 64, 1568, 18816, 117600, 376320, 564480, 322560, 40320]
 
-    AUTHORS:
+    TESTS::
 
-    - Sébastien Labbé and Vincent Delecroix, Nov 30, 2017, Sage Thursdays
-      at LaBRI
+        sage: number_of_partial_injection(8, algorithm='recursive')
+        [1, 64, 1568, 18816, 117600, 376320, 564480, 322560, 40320]
+
+    REFERENCE:
+
+        https://oeis.org/A144084
     """
-    L = [ZZ(1)]
-    for t in range(1, n+1):
-        L.append(t * L[-1])
-        for k in range(t-1, 0, -1):
-            L[k] = (t * L[k]) // (t-k) + t * L[k-1]
-    return L
+    if algorithm == 'binomial':
+        return [binomial(n,k)**2*factorial(k) for k in range(n+1)]
+    elif algorithm == 'recursive':
+        L = [ZZ(1)]
+        for t in range(1, n+1):
+            L.append(t * L[-1])
+            for k in range(t-1, 0, -1):
+                L[k] = (t * L[k]) // (t-k) + t * L[k-1]
+        return L
 
 def random_partial_injection(n):
     r"""
@@ -202,6 +214,10 @@ def random_stallings_graph(n, r=2, verbose=False, merge=False):
     """
     from sage.misc.latex import LatexExpr
 
+    # reject statistics
+    not_connected_count = 0
+    has_degree_1_count = 0
+
     while True:
         injections = [random_partial_injection(n) for _ in range(r)]
 
@@ -215,14 +231,79 @@ def random_stallings_graph(n, r=2, verbose=False, merge=False):
                 loops=True, multiedges=True)
 
         if not G.is_connected():
+            not_connected_count += 1
             if verbose:
                 print "rejecting because graph is not connected"
             continue
 
         if not all(d>=2 for d in G.degree_iterator()):
+            has_degree_1_count += 1
             if verbose:
                 print "rejecting because graph has a vertex of degree <=1"
             continue
 
-        return G
+        return G, not_connected_count, has_degree_1_count
+
+def reject_statistics(n, r=2, sample_size=50, verbose=False):
+    r"""
+    Return return reject statistics when randomly chosing Stallings graph
+    of n vertices over r letters.
+
+    INPUT:
+
+    - ``n`` -- integer, size of graph
+    - ``r`` -- integer (default: ``2``), number of generators of the free
+      group
+    - ``n`` -- integer (default: ``50``), size of sample
+    - ``verbose`` -- bool (default: ``False``)
+
+    OUTPUT:
+
+        histogram
+
+    EXAMPLES::
+
+        sage: from slabbe.partial_injection import reject_statistics
+        sage: h = reject_statistics(50, verbose=True)
+        not connected: Counter({0: 48, 1: 2})
+        has degree 1: Counter({0: 27, 1: 18, 2: 3, 3: 1, 4: 1})
+        sage: h.save('h_50.png', title='size of graph=50') # not tested
+
+    ::
+
+        sage: h = reject_statistics(100, verbose=True)
+        not connected: Counter({0: 48, 1: 2})
+        has degree 1: Counter({0: 41, 1: 8, 2: 1})
+        sage: h.save('h_100.png', title='size of graph=100') # not tested
+
+    ::
+
+        sage: h = reject_statistics(500, verbose=True)       # not tested (30s)
+        not connected: Counter({2: 5, 4: 5, 5: 5, 0: 4, 1: 4, 8: 4, 3: 3, 16:
+            3, 6: 2, 11: 2, 15: 2, 18: 2, 23: 2, 7: 1, 10: 1, 44: 1, 13: 1, 49:
+            1, 19: 1, 21: 1})
+        has degree 1: Counter({0: 14, 1: 9, 3: 8, 2: 5, 4: 3, 5: 3, 6: 2, 9: 2,
+            7: 1, 8: 1, 13: 1, 15: 1})
+        sage: h.save('h_500.png', title='size of graph=500') # not tested
+
+    ::
+
+        sage: h = reject_statistics(1000, verbose=True)  # not tested (2min30s)
+        not connected: Counter({8: 4, 26: 3, 3: 2, 7: 2, 9: 2, 10: 2, 14: 2,
+        15: 2, 17: 2, 18: 2, 27: 2, 40: 2, 59: 2, 0: 1, 1: 1, 4: 1, 5: 1, 11:
+        1, 13: 1, 19: 1, 20: 1, 21: 1, 22: 1, 28: 1, 44: 1, 48: 1, 51: 1, 52:
+        1, 53: 1, 58: 1, 63: 1, 66: 1, 75: 1, 121: 1})
+        has degree 1: Counter({2: 9, 0: 7, 1: 6, 4: 6, 3: 4, 5: 4, 7: 4, 8: 2,
+            6: 1, 9: 1, 11: 1, 12: 1, 13: 1, 15: 1, 17: 1, 26: 1})
+        sage: h.save('h_1000.png', title='size of graph=1000') # not tested
+
+    """
+    A = [random_stallings_graph(n, r) for _ in range(sample_size)]
+    _,s,t = zip(*A)
+    if verbose:
+        from collections import Counter
+        print "not connected:", Counter(s)
+        print "has degree 1:", Counter(t)
+    h = histogram([s,t])
+    return h
 
