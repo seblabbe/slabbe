@@ -170,10 +170,10 @@ class TikzPicture(SageObject):
         - ``merge_multiedges`` -- bool (default: ``True``), if the graph
           has multiple edges, whether to merge the multiedges into one
           single edge
-        - ``merge_label_function`` -- function (default:``tuple``), a function to
-          apply to each list of labels to be merged. It is ignored if
-          ``merge_multiedges`` is not ``True`` or if the graph has no
-          multiple edges.
+        - ``merge_label_function`` -- function (default:``tuple``), a
+          function to apply to each list of labels to be merged. It is
+          ignored if ``merge_multiedges`` is not ``True`` or if the graph
+          has no multiple edges.
 
         Other inputs are used for latex drawing with dot2tex and graphviz:
 
@@ -218,7 +218,7 @@ class TikzPicture(SageObject):
             sage: _ = tikz.pdf()      # not tested
 
         """
-        if graph.has_multiple_edges() and merge_multiedges:
+        if merge_multiedges and graph.has_multiple_edges():
             from slabbe.graph import merge_multiedges
             graph = merge_multiedges(graph,
                     label_function=merge_label_function)
@@ -232,32 +232,92 @@ class TikzPicture(SageObject):
         return TikzPicture(tikz, standalone_options=["border=4mm"])
 
     @classmethod
-    def from_graph_with_pos(cls, graph, **kwds):
+    def from_graph_with_pos(cls, graph, scale=1, merge_multiedges=True,
+            merge_label_function=tuple):
         r"""
         Convert a graph with positions defined for vertices to a tikzpicture.
 
         INPUT:
 
-        - ``graph`` -- graph
-        - ``edge_labels`` -- bool (default: ``True``)
+        - ``graph`` -- graph (with predefined positions)
+        - ``scale`` -- number (default:``1``), tikzpicture scale
+        - ``merge_multiedges`` -- bool (default: ``True``), if the graph
+          has multiple edges, whether to merge the multiedges into one
+          single edge
+        - ``merge_label_function`` -- function (default:``tuple``), a
+          function to apply to each list of labels to be merged. It is
+          ignored if ``merge_multiedges`` is not ``True`` or if the graph
+          has no multiple edges.
 
         EXAMPLES::
 
             sage: from slabbe import TikzPicture
             sage: g = graphs.PetersenGraph()
             sage: tikz = TikzPicture.from_graph_with_pos(g)
+
+        ::
+
+            sage: edges = [(0,0,'a'),(0,1,'b'),(0,1,'c')]
+            sage: kwds = dict(format='list_of_edges', loops=True, multiedges=True)
+            sage: G = DiGraph(edges, **kwds)
+            sage: G.set_pos({0:(0,0), 1:(1,0)})
+            sage: f = lambda label:','.join(label)
+            sage: TikzPicture.from_graph_with_pos(G, merge_label_function=f)
+            \documentclass[tikz]{standalone}
+            \standaloneconfig{border=4mm}
+            \usepackage{amsmath}
+            \begin{document}
+            \begin{tikzpicture}
+            [auto,scale=1]
+            % vertices
+            \node (node_0) at (0, 0) {0};
+            \node (node_1) at (1, 0) {1};
+            % edges
+            \draw[->] (node_0) -- node {b,c} (node_1);
+            % loops
+            \draw (node_0) edge [loop above] node {a} ();
+            \end{tikzpicture}
+            \end{document}
+
+        TESTS::
+
+            sage: edges = [(0,0,'a'),(0,1,'b'),(0,1,'c')]
+            sage: kwds = dict(format='list_of_edges', loops=True, multiedges=True)
+            sage: G = DiGraph(edges, **kwds)
+            sage: TikzPicture.from_graph_with_pos(G)
+            Traceback (most recent call last):
+            ...
+            ValueError: vertex positions need to be set first
         """
-        keys_for_vertices = graph._keys_for_vertices()
         pos = graph.get_pos()
+        if pos is None:
+            raise ValueError('vertex positions need to be set first')
+
+        if merge_multiedges and graph.has_multiple_edges():
+            from slabbe.graph import merge_multiedges
+            graph = merge_multiedges(graph,
+                    label_function=merge_label_function)
+
+        keys_for_vertices = graph._keys_for_vertices()
+
         lines = []
-        lines.append(r'\begin{tikzpicture}[auto]')
+        lines.append(r'\begin{tikzpicture}')
+        lines.append(r'[auto,scale={}]'.format(scale))
+
+        # vertices
+        lines.append(r'% vertices')
         for u in graph.vertices():
             line = r'\node ({}) at {} {{{}}};'.format(keys_for_vertices(u),
-                                                      pos[u],
-                                                      u)
+                                                      pos[u], u)
             lines.append(line)
+
+        # edges
+        lines.append(r'% edges')
         arrow = '->' if graph.is_directed() else ''
         for (u,v,label) in graph.edges():
+            if u == v:
+                # loops are done below
+                continue
             if label:
                 line = r'\draw[{}] ({}) -- node {{{}}} ({});'.format(arrow,
                                                     keys_for_vertices(u),
@@ -267,8 +327,15 @@ class TikzPicture(SageObject):
                 line = r'\draw[{}] ({}) -- ({});'.format(arrow,
                                                     keys_for_vertices(u),
                                                     keys_for_vertices(v))
-
             lines.append(line)
+
+        # loops
+        lines.append(r'% loops')
+        for (u,v,label) in graph.loop_edges():
+            line = r'\draw ({}) edge [loop above] node {{{}}} ();'.format(
+                                              keys_for_vertices(u), label)
+            lines.append(line)
+
         lines.append(r'\end{tikzpicture}')
         tikz = '\n'.join(lines)
         return TikzPicture(tikz, standalone_options=["border=4mm"])
