@@ -1480,7 +1480,7 @@ class DoubleSquare(SageObject):
 
             sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(1))
-            sage: print D.latex_array()
+            sage: print(D.latex_array())
             \begin{array}{lllllll}
             i & w_i & u_i & v_i & |w_i| & d_i & n_i
             \\
@@ -1717,30 +1717,24 @@ class DoubleSquare(SageObject):
             sage: cfibo2 = DoubleSquare(fibo2)
             sage: s = cfibo2.tikz_reduction(scale=0.5,ncols=4,labels=True)
             sage: s
+            \documentclass[tikz]{standalone}
+            \usepackage{amsmath}
+            \usetikzlibrary{pgfplots.groupplots}
+            \begin{document}
             \newcommand{\TRIM}{\textsc{trim}}
             \newcommand{\EXTEND}{\textsc{extend}}
             \newcommand{\SWAP}{\textsc{swap}}
             \newcommand{\SHIFT}{\textsc{shift}}
             \newcommand{\REVERSE}{\textsc{reverse}}
-            \begin{tikzpicture}
-            [first/.style={circle,draw=black,fill=black, inner sep=0pt, minimum size=3pt},
-            second/.style={circle,draw=black,fill=white, inner sep=0pt, minimum size=3pt}]
-            \node (q0) at (0, 0) {
-            \begin{tikzpicture}
-            [scale=0.500000000000000]
             ...
-            \end{tikzpicture}
-            \\
-            $(\varepsilon,{\bf 3},\varepsilon,{\bf 2},$ \\
-            $\phantom{((}\varepsilon,{\bf 1},\varepsilon,{\bf 0})$ \\
-            \end{tabular}
-            };
-            \path[->] (q0) edge node[midway, rectangle, fill=white, rotate=90] {$\SWAP_1$} (q1);
+            ... 103 lines not printed (6363 characters in total) ...
+            ...
             \path[->] (q1) edge node[midway, rectangle, fill=white, rotate=90] {$\TRIM_1$} (q2);
             \path[->] (q2) edge node[midway, rectangle, fill=white, rotate=90] {$\TRIM_3$} (q3);
             \path[->] (q3) edge node[midway, rectangle, fill=white] {$\TRIM_0$} (q4);
             \path[->] (q4) edge node[midway, rectangle, fill=white, rotate=90] {$\TRIM_2$} (q5);
             \end{tikzpicture}
+            \end{document}
 
         ::
 
@@ -1748,30 +1742,24 @@ class DoubleSquare(SageObject):
             sage: cSfibo2 = cfibo2.apply_morphism(S)
             sage: s = cSfibo2.tikz_reduction(scale=0.15,ncols=4,labels='T')
             sage: s
+            \documentclass[tikz]{standalone}
+            \usepackage{amsmath}
+            \usetikzlibrary{pgfplots.groupplots}
+            \begin{document}
             \newcommand{\TRIM}{\textsc{trim}}
             \newcommand{\EXTEND}{\textsc{extend}}
             \newcommand{\SWAP}{\textsc{swap}}
             \newcommand{\SHIFT}{\textsc{shift}}
             \newcommand{\REVERSE}{\textsc{reverse}}
-            \begin{tikzpicture}
-            [first/.style={circle,draw=black,fill=black, inner sep=0pt, minimum size=3pt},
-            second/.style={circle,draw=black,fill=white, inner sep=0pt, minimum size=3pt}]
-            \node (q0) at (0, 0) {
-            \begin{tikzpicture}
-            [scale=0.150000000000000]
             ...
-            \end{tikzpicture}
-            \\
-            $(\varepsilon,{\bf 323},\varepsilon,{\bf 22},$ \\
-            $\phantom{((}\varepsilon,{\bf 101},\varepsilon,{\bf 00})$ \\
-            \end{tabular}
-            };
-            \path[thick, ->] (q0) edge node[midway, above] {$T_1$} (q1);
+            ... 93 lines not printed (9437 characters in total) ...
+            ...
             \path[thick, ->] (q1) edge node[midway, above] {$T_2$} (q2);
             \path[thick, ->] (q2) edge node[midway, above] {$T_3$} (q3);
             \path[thick, ->] (q3) edge node[midway, above] {$T_4$} (q4);
             \path[thick, ->] (q4) edge node[midway, above] {$T_5$} (q5);
             \end{tikzpicture}
+            \end{document}
 
         """
         s = ''
@@ -1927,6 +1915,7 @@ class DoubleSquare(SageObject):
 
         EXAMPLES::
 
+            sage: from slabbe import DoubleSquare
             sage: d = DoubleSquare((5,8,5,8))
             sage: t = d.tikz_tiling(nx=4, ny=4)
             sage: t = d.tikz_tiling(nx=4, ny=4, kind=2)
@@ -2622,7 +2611,7 @@ def christoffel_tile(p, q):
         Path: 03010301010301012123212323212323
         sage: christoffel_tile(0,1)
         Path: 03012123
-        sage: print christoffel_tile(4,5)
+        sage: print(christoffel_tile(4,5))
         03010301010301010301010301012123212323212323212323212323
     """
     from sage.combinat.words.paths import WordPaths

@@ -24,6 +24,7 @@ AUTHOR:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
 from sage.rings.continued_fraction import continued_fraction
 from sage.rings.infinity import Infinity
 
@@ -57,7 +58,7 @@ def ostrowski_integer(n, alpha):
 
     ::
 
-        sage: for i in range(10): print i, ostrowski_integer(i, golden_ratio)
+        sage: for i in range(10): print(i, ostrowski_integer(i, golden_ratio))
         0 ([], [])
         1 ([0, 1], [1, 1])
         2 ([0, 0, 1], [1, 1, 2])
@@ -127,9 +128,7 @@ def ostrowski_real(beta, alpha, stop=10, verbose=False):
     EXAMPLES::
 
         sage: from slabbe.ostrowski import ostrowski_real
-        sage: ostrowski_real(golden_ratio^-2, golden_ratio-1, stop=5)
-        golden_ratio - 1 0 golden_ratio^(-2)
-        golden_ratio - 2 1 -golden_ratio + 1/golden_ratio^2 + 2
+        sage: ostrowski_real(golden_ratio^-2, golden_ratio-1, stop=5)   # not tested
         Traceback (most recent call last):
         ...
         AssertionError: 0 <= b_2(=3) <= a_2(=1) is false
@@ -144,6 +143,8 @@ def ostrowski_real(beta, alpha, stop=10, verbose=False):
         3*golden_ratio - 5,
         5*golden_ratio - 8])
     """
+    from sage.functions.other import floor
+
     alpha_cf = continued_fraction(alpha)
     if alpha_cf.length() < Infinity:
         raise ValueError('alpha (={}) must be irrational'.format(alpha))
@@ -158,7 +159,7 @@ def ostrowski_real(beta, alpha, stop=10, verbose=False):
                            " is false".format(b_i, alpha_cf.quotient(i),i=i))
         remainder -= b_i * theta_i
         if verbose:
-            print theta_i, b_i, remainder
+            print(theta_i, b_i, remainder)
 
         Digits.append(b_i)
         Theta.append(theta_i)

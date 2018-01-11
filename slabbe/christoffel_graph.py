@@ -208,7 +208,7 @@ class ChristoffelGraph(DiscreteSubset):
             [(-1, -1, 1), (3, -4, 0)]
 
         """
-        from sage.rings.arith import gcd
+        from sage.arith.misc import gcd
         if way == 'vect_gcd':
             a,b,c = self._v
             gcd_ac = gcd(a,c)

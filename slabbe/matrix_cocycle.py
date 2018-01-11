@@ -392,7 +392,7 @@ class MatrixCocycle(object):
             sage: from slabbe.matrix_cocycle import cocycles
             sage: C = cocycles.ARP()
             sage: it = C.n_matrices_semi_norm_iterator(1, p=1)
-            sage: for _ in range(5): print next(it) # tolerance 0.0001
+            sage: for _ in range(5): print(next(it)) # tolerance 0.0001
             (word: 1, 1.0, False)
             (word: 2, 1.0, False)
             (word: 3, 1.0, False)
@@ -402,7 +402,7 @@ class MatrixCocycle(object):
         For the 2-norm, AR matrices do not contract::
 
             sage: it = C.n_matrices_semi_norm_iterator(1, p=2)
-            sage: for w,s,b in it: print w,s,b   # long time (6s)
+            sage: for w,s,b in it: print(w,s,b)  # long time (6s)
             A1 1.30656296488 False
             A2 1.30656296486 False
             A3 1.30656296475 False
@@ -475,7 +475,7 @@ class MatrixCocycle(object):
             sage: from slabbe.matrix_cocycle import cocycles
             sage: C = cocycles.ARP()
             sage: it = C.n_cylinders_iterator(1)
-            sage: for w,cyl in it: print "{}\n{}".format(w,cyl)
+            sage: for w,cyl in it: print("{}\n{}".format(w,cyl))
             1
             [1 1 1]
             [0 1 0]

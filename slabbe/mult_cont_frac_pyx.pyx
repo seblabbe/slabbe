@@ -1004,6 +1004,7 @@ cdef class MCFAlgorithm(object):
 
         ::
 
+            sage: from slabbe.mult_cont_frac_pyx import Poincare
             sage: algo = Poincare(4)
             sage: it = algo.coding_iterator((1,e,pi,sqrt(2)))
             sage: [next(it) for _ in range(10)]
@@ -1813,6 +1814,7 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
+            sage: from slabbe.mult_cont_frac_pyx import Poincare
             sage: algo = Poincare(4)
             sage: algo.return_time_to_nsmall_entries(.05, 0)
             (3,

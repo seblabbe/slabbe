@@ -338,8 +338,7 @@ def curve(nb_equipes, max_points=100, K=1, R=2, base=2, verbose=False):
         -99*(p*(log(40) + 1) - p*log(p) - 20*log(40) + 20*log(20) -
         20)/(19*log(40) - 20*log(20) + 19) + 1
         sage: curve(64, 100)
-        99*(p*(7*log(2) + 1) - p*log(p) + 64*log(64) - 448*log(2) -
-        64)/(64*log(64) - 441*log(2) - 63) + 1
+        -33*(p*(7*log(2) + 1) - p*log(p) - 64*log(2) - 64)/(19*log(2) + 21) + 1
 
     ::
 
@@ -348,26 +347,26 @@ def curve(nb_equipes, max_points=100, K=1, R=2, base=2, verbose=False):
         sage: curve(64, 100)(p=1)
         100
         sage: curve(64, 100)(p=2)
-        198*(32*log(64) - 218*log(2) - 31)/(64*log(64) - 441*log(2) - 63) + 1
+        66*(26*log(2) + 31)/(19*log(2) + 21) + 1
         sage: n(curve(64, 100)(p=2))     # abs tol 1e-10
         95.6871477097753
 
     ::
 
         sage: curve(64, 100, verbose=True)
-        fn = -(p*(7*log(2) + 1) - p*log(p) + 64*log(64) - 448*log(2) - 64)/log(2)
+        fn = -(p*(7*log(2) + 1) - p*log(p) - 64*log(2) - 64)/log(2)
         aire = 147.889787576005
-        fn normalise = 99*(p*(7*log(2) + 1) - p*log(p) + 64*log(64) - 448*log(2) - 64)/(64*log(64) - 441*log(2) - 63) + 1
-        99*(p*(7*log(2) + 1) - p*log(p) + 64*log(64) - 448*log(2) - 64)/(64*log(64) - 441*log(2) - 63) + 1
+        fn normalise = -33*(p*(7*log(2) + 1) - p*log(p) - 64*log(2) - 64)/(19*log(2) + 21) + 1
+        -33*(p*(7*log(2) + 1) - p*log(p) - 64*log(2) - 64)/(19*log(2) + 21) + 1
 
     The base argument seems to be useless (why?)::
 
         sage: curve(100,100,base=3)
-        -99*(p*(log(200) + 1) - p*log(p) - 100*log(200) + 100*log(100) -
-        100)/(99*log(200) - 100*log(100) + 99) + 1
+        -99*(p*(log(200) + 1) - p*log(p) - 100*log(200) + 200*log(10) - 
+        100)/(99*log(200) - 200*log(10) + 99) + 1
         sage: curve(100,100,base=2)
-        -99*(p*(log(200) + 1) - p*log(p) - 100*log(200) + 100*log(100) -
-        100)/(99*log(200) - 100*log(100) + 99) + 1
+        -99*(p*(log(200) + 1) - p*log(p) - 100*log(200) + 200*log(10) -
+        100)/(99*log(200) - 200*log(10) + 99) + 1
         
     """
     from sage.symbolic.assumptions import forget, assume

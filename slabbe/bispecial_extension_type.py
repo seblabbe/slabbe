@@ -1031,7 +1031,7 @@ class ExtensionType(object):
             sage: prefix = algo.s_adic_word(v)[:100000]
             sage: E = ExtensionType.from_factor(prefix.parent()(), prefix, nleft=2)
             sage: E.rec_enum_set_under_language_joined(L, 123, S)
-            An enumerated set with a forest structure
+            A recursively enumerated set (breadth first search)
             sage: E.rec_enum_set_under_language_joined(L, 123, S, label='previous')
             A recursively enumerated set (breadth first search)
 
@@ -1528,7 +1528,7 @@ class ExtensionType1to1(ExtensionType):
             sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
-            sage: print E._repr_old()
+            sage: print(E._repr_old())
             _123
             1OOX
             2OOX
@@ -1537,7 +1537,7 @@ class ExtensionType1to1(ExtensionType):
         With chignons::
 
             sage: E = ExtensionType1to1(L, [1,2,3], ('a','b'))
-            sage: print E._repr_old()
+            sage: print(E._repr_old())
             awb
             _123
             1OOX
@@ -1567,7 +1567,7 @@ class ExtensionType1to1(ExtensionType):
             sage: from slabbe import ExtensionType1to1
             sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, [1,2,3])
-            sage: print E._latex_old()
+            sage: print(E._latex_old())
             \begin{array}{r|rrr}
             v & 1 & 2 & 3\\
             \hline
@@ -1579,7 +1579,7 @@ class ExtensionType1to1(ExtensionType):
         ::
 
             sage: E = ExtensionType1to1(L, [1,2,3], ('a','b'))
-            sage: print E._latex_old()
+            sage: print(E._latex_old())
             \begin{array}{r|rrr}
             awb & 1 & 2 & 3\\
             \hline

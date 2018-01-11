@@ -248,8 +248,8 @@ def minimum_lexicographic_conjugate_reversal(self):
         word: 1121322
     """
     u = minimum_lexicographic_conjugate(self)
-    C.extend(self.reversal().conjugates())
-    return min(C)
+    v = minimum_lexicographic_conjugate(self.reversal())
+    return min((u,v))
 
 def minimum_lexicographic_conjugate(self):
     r"""
@@ -274,6 +274,7 @@ def minimum_lexicographic_conjugate(self):
         word: 0000000100000010000000100000010000001000...
     """
     from sage.misc.misc_c import prod
+    from sage.combinat.words.word import Word
     f = self.lyndon_factorization()
     return f[-1]*prod(f[:-1], Word())
 
@@ -287,6 +288,7 @@ def is_lyndon_mod_reverse(self):
         sage: is_lyndon_mod_reverse(Word('1112221'))
         False
         sage: is_lyndon_mod_reverse(Word('143'))
+        False
 
     ::
 

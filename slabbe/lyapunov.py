@@ -96,20 +96,19 @@ def lyapunov_table(algo, n_orbits, n_iterations=1000):
     """
     import numpy as np
     from sage.misc.functional import numerical_approx
-    from sage.functions.other import abs, floor
-    from sage.functions.log import log
+    from sage.rings.real_mpfr import RR
     from sage.misc.table import table
     rep = lyapunov_sample(algo, n_orbits, n_iterations)
-    def my_log(number):
-        return floor(log(abs(number), 10.))
+    def floor_log(number):
+        return RR(number).abs().log10().floor()
     def my_rounded(number, s):
-        m = my_log(number)
+        m = floor_log(number)
         return numerical_approx(number, digits=m-s+1)
     names = [r"$\theta_1$", r"$\theta_2$", r"$1-\theta_2/\theta_1$"]
     rows = []
     for i, data in enumerate(rep):
         data = np.array(data)
-        s = my_log(data.std())
+        s = floor_log(data.std())
         row = [names[i]]
         row.append(my_rounded(data.min(),s))
         row.append(my_rounded(data.mean(),s))
@@ -144,20 +143,19 @@ def _lyapunov_row(algo, n_orbits, n_iterations=1000):
     """
     import numpy as np
     from sage.misc.functional import numerical_approx
-    from sage.functions.other import abs, floor
-    from sage.functions.log import log
+    from sage.rings.real_mpfr import RR
     rep = lyapunov_sample(algo, n_orbits, n_iterations)
-    def my_log(number):
-        return floor(log(abs(number), 10.))
+    def floor_log(number):
+        return RR(number).abs().log10().floor()
     def my_rounded(number, s):
-        m = my_log(number)
+        m = floor_log(number)
         return numerical_approx(number, digits=m-s+1)
     row = []
     row.append(algo.name())
     row.append(len(rep[0]))
     for data in rep:
         data = np.array(data)
-        s = my_log(data.std())
+        s = floor_log(data.std())
         val = my_rounded(data.mean(), s)
         std = my_rounded(data.std(), s)
         row.append("{} ({})".format(val, std))

@@ -451,7 +451,7 @@ class WangTileSet(WangTileSet_generic):
         The edge labels are clean::
 
             sage: G.edges()
-            [('C', 'A', ('D|B','Y|X')), ('G', 'E', ('H|F',))]
+            [('C', 'A', ('D|B', 'Y|X')), ('G', 'E', ('H|F',))]
 
         compared to::
 

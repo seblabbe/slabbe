@@ -54,42 +54,31 @@ def build_duration_logs(path_to_file, pattern=None):
 
     EXAMPLES::
 
+        sage: L = [ ('/../ptestlong.log', 'Total time for all tests: '),
+        ....:       ('/../dochtml.log', 'Elapsed time: '),
+        ....:       ('/../start.log', None),
+        ....:       ('/sagelib-7.5.beta6.log', 'real\t'),
+        ....:       ('/sqlite.log', 'real\t')]
+
+    ::
+
         sage: from slabbe.analyze_sage_build import build_duration_logs
         sage: from sage.env import SAGE_LOGS
-
-    ::
-
-        sage: file = 'ptestlong.log'
-        sage: pattern = 'Total time for all tests: '
-        sage: build_duration_logs(SAGE_LOGS+'/../'+file, pattern)
-        [datetime.timedelta(0, ..., ...)]
-
-    ::
-
-        sage: file = 'dochtml.log'
-        sage: pattern = 'Elapsed time: '
-        sage: build_duration_logs(SAGE_LOGS+'/../'+file, pattern)
-        [datetime.timedelta(0, ..., ...)]
-
-    ::
-
-        sage: file = 'start.log'
-        sage: build_duration_logs(SAGE_LOGS+'/../'+file)
+        sage: import os
+        sage: for (file, pattern) in L:                  # random
+        ....:     print(file)
+        ....:     if not os.path.exists(SAGE_LOGS+file):
+        ....:         continue
+        ....:     build_duration_logs(SAGE_LOGS+file, pattern)
+        /../ptestlong.log
+        /../dochtml.log
+        [datetime.timedelta(0, 471, 700000)]
+        /../start.log
+        []
+        /sagelib-7.5.beta6.log
+        /sqlite.log
         []
 
-    ::
-
-        sage: file = 'sagelib-7.5.beta6.log'
-        sage: pattern = 'real\t'
-        sage: build_duration_logs(SAGE_LOGS+'/'+file, pattern)
-        [datetime.timedelta(0, ..., ...)]
-
-    ::
-
-        sage: file = 'sqlite.log'
-        sage: pattern = 'real\t'
-        sage: build_duration_logs(SAGE_LOGS+'/'+file, pattern)
-        []
     """
     if pattern is None:
         return []
@@ -205,7 +194,7 @@ def draw_sage_build(start=None, stop=None, consider='last', verbose=False):
         sage: import datetime
         sage: stop = datetime.datetime.now()
         sage: start = stop - datetime.timedelta(7r)
-        sage: t = draw_sage_build(start, stop)
+        sage: t = draw_sage_build(start, stop)        # not tested
 
     ::
 

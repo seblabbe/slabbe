@@ -29,7 +29,7 @@ Random partial injections on ``[0, 1, ..., 6]``::
 Random Stallings graph on ``[0, 1, ..., 19]`` over 2 letters::
 
     sage: from slabbe import random_stallings_graph
-    sage: G = random_stallings_graph(20, 2)
+    sage: G,_,_ = random_stallings_graph(20, 2)
     sage: G
     Looped multi-digraph on 20 vertices
 
@@ -178,18 +178,18 @@ def random_stallings_graph(n, r=2, verbose=False, merge=False):
 
     OUTPUT:
 
-        digraph
+        digraph, integer, integer
 
     EXAMPLES::
 
         sage: from slabbe import random_stallings_graph
-        sage: G = random_stallings_graph(20, 2)
+        sage: G,_,_ = random_stallings_graph(20, 2)
         sage: G
         Looped multi-digraph on 20 vertices
 
     ::
 
-        sage: random_stallings_graph(20, 5)
+        sage: random_stallings_graph(20, 5)[0]
         Looped multi-digraph on 20 vertices
 
     With verbose output::
@@ -203,7 +203,7 @@ def random_stallings_graph(n, r=2, verbose=False, merge=False):
     For displaying purposes, the following merges the multiedges
     automatically::
 
-        sage: G = random_stallings_graph(20, 2)
+        sage: G,_,_ = random_stallings_graph(20, 2)
         sage: from slabbe import TikzPicture
         sage: tikz = TikzPicture.from_graph(G)
         sage: _ = tikz.pdf(view=False)
@@ -264,14 +264,14 @@ def reject_statistics(n, r=2, sample_size=50, verbose=False):
     EXAMPLES::
 
         sage: from slabbe.partial_injection import reject_statistics
-        sage: h = reject_statistics(50, verbose=True)
+        sage: h = reject_statistics(50, verbose=True)   # random
         not connected: Counter({0: 48, 1: 2})
         has degree 1: Counter({0: 27, 1: 18, 2: 3, 3: 1, 4: 1})
         sage: h.save('h_50.png', title='size of graph=50') # not tested
 
     ::
 
-        sage: h = reject_statistics(100, verbose=True)
+        sage: h = reject_statistics(100, verbose=True)  # random
         not connected: Counter({0: 48, 1: 2})
         has degree 1: Counter({0: 41, 1: 8, 2: 1})
         sage: h.save('h_100.png', title='size of graph=100') # not tested
@@ -298,6 +298,7 @@ def reject_statistics(n, r=2, sample_size=50, verbose=False):
         sage: h.save('h_1000.png', title='size of graph=1000') # not tested
 
     """
+    from sage.plot.histogram import histogram
     A = [random_stallings_graph(n, r) for _ in range(sample_size)]
     _,s,t = zip(*A)
     if verbose:
