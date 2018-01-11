@@ -42,7 +42,7 @@ TODO:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 from sage.rings.real_mpfr import RealField
 from sage.functions.other import ceil, sqrt
 from sage.modules.free_module_element import vector

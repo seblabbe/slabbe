@@ -24,7 +24,8 @@ AUTHOR:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from __future__ import print_function
+from __future__ import absolute_import, print_function
+
 from sage.rings.continued_fraction import continued_fraction
 from sage.rings.infinity import Infinity
 

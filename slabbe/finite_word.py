@@ -24,7 +24,7 @@ EXAMPLES::
 #  the License, or (at your option) any later version.
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 import itertools
 from collections import Counter
 from random import randrange

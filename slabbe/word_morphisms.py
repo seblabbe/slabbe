@@ -25,7 +25,7 @@ EXAMPLES::
 #  the License, or (at your option) any later version.
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 from sage.combinat.integer_lists.invlex import IntegerListsLex
 from sage.combinat.words.morphism import WordMorphism
 from sage.combinat.words.words import FiniteWords

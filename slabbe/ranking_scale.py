@@ -22,7 +22,7 @@ AUTHOR :
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
 import csv
 import itertools

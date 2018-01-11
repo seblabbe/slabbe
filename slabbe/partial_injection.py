@@ -55,7 +55,7 @@ REFERENCES:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 from sage.rings.integer_ring import ZZ
 from sage.probability.probability_distribution import GeneralDiscreteDistribution
 from sage.misc.prandom import shuffle, sample

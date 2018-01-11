@@ -140,6 +140,7 @@ AUTHORS:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 from __future__ import print_function
+#from __future__ import absolute_import # creates a failing test in mult_cont_frac.py ??
 
 from libc.math cimport log
 

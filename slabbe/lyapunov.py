@@ -12,7 +12,7 @@ Lyapunov parallel computation for MCF algorithms
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
 from sage.misc.prandom import random
 from sage.parallel.decorate import parallel

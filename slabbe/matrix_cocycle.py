@@ -67,13 +67,13 @@ multiplicatif (2 avril 2014)::
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 import itertools
 from collections import Counter
 from sage.matrix.constructor import matrix
 from sage.misc.cachefunc import cached_method
 from sage.misc.misc_c import prod
-from language import Language, FiniteLanguage
+from .language import Language, FiniteLanguage
 
 ######################
 # Matrix Cocycle
@@ -635,7 +635,7 @@ class MatrixCocycle(object):
         from sage.plot.graphics import Graphics
         from sage.plot.polygon import polygon
         from sage.plot.text import text
-        from matrices import M3to2
+        from .matrices import M3to2
         G = Graphics()
         for w,cyl in self.n_cylinders_iterator(n):
             columns = cyl.columns()
@@ -667,7 +667,7 @@ class MatrixCocycle(object):
         from sage.plot.text import text
         from sage.plot.colors import hue
         from sage.modules.free_module_element import vector
-        from matrices import M3to2
+        from .matrices import M3to2
         R = self.n_matrices_eigenvectors(n)
         L = [(w, M3to2*(a/sum(a)), M3to2*(b/sum(b))) for (w,a,b) in R]
         G = Graphics()
@@ -761,7 +761,7 @@ class MatrixCocycle(object):
         lines = []
         lines.append(r"\begin{tikzpicture}")
         lines.append("[scale={}]".format(scale))
-        from matrices import M3to2
+        from .matrices import M3to2
         for (u,v) in self.n_cylinders_edges(n):
             u = rounded_string_vector(M3to2 * u / u.norm(1), digits=4)
             v = rounded_string_vector(M3to2 * v / v.norm(1), digits=4)
@@ -803,7 +803,7 @@ class MatrixCocycleGenerator(object):
         cone[321] = H21 = matrix(3, [1,0,0, 0,1,0, 1,0,1])
         cone[1] = cone[2] = cone[3] = identity_matrix(3) 
 
-        from language import languages
+        from .language import languages
         return MatrixCocycle(gens, cone, language=languages.ARP())
 
     def ArnouxRauzy(self):
@@ -927,7 +927,7 @@ class MatrixCocycleGenerator(object):
         cone[312] = B31
         cone[321] = B32
 
-        from language import languages
+        from .language import languages
         return MatrixCocycle(gens, cone, language=languages.Brun())
 
     def Selmer(self):
@@ -946,7 +946,7 @@ class MatrixCocycleGenerator(object):
         cone[123] = cone[321] = matrix.column(3, [1,1,1, 0,1,1, 1,1,0])
         cone[132] = cone[231] = matrix.column(3, [1,1,1, 1,0,1, 0,1,1])
 
-        from language import languages
+        from .language import languages
         return MatrixCocycle(gens, cone, language=languages.Selmer())
 
     def Poincare(self):

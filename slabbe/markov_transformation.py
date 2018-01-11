@@ -25,14 +25,14 @@ AUTHORS:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 import itertools
 from sage.misc.cachefunc import cached_method
 from sage.misc.misc_c import prod
 from sage.matrix.constructor import matrix
 from sage.combinat.finite_state_machine import Automaton
-from language import RegularLanguage
-from matrices import projection_matrix
+from .language import RegularLanguage
+from .matrices import projection_matrix
 
 ######################
 # Markov Transformation

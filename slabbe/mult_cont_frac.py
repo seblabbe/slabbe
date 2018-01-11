@@ -49,7 +49,7 @@ AUTHORS:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
 from sage.structure.dynamic_class import dynamic_class
 from slabbe import mult_cont_frac_pyx
@@ -90,7 +90,7 @@ class _MCFAlgorithm_methods(object):
             [123, 132, 213, 231, 312, 321]
             defined by: Automaton with 6 states
         """
-        from matrix_cocycle import cocycles
+        from .matrix_cocycle import cocycles
         try:
             f = getattr(cocycles, self.class_name())
         except AttributeError:
@@ -268,7 +268,7 @@ class _MCFAlgorithm_methods(object):
              [2, 2, 1]: 4/5,
              [3, 1, 1]: 4/5}
         """
-        from finite_word import discrepancy
+        from .finite_word import discrepancy
         from sage.combinat.composition import Compositions
         D = {}
         for c in Compositions(length, length=3, min_part=1):

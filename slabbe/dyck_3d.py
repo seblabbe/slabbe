@@ -22,7 +22,7 @@ AUTHOR:
 - Sébastien Labbé, 31 october 2014
 
 """
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
 def Possible(n):
     r"""

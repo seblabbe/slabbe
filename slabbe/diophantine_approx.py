@@ -179,7 +179,7 @@ Math. Comp. 31 (1977), no. 137, 280–317.
 #  the License, or (at your option) any later version.
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 import itertools
 from collections import defaultdict
 from bisect import bisect

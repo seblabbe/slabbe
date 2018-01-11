@@ -15,7 +15,7 @@ Functions on graphs
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 from collections import Counter, defaultdict
 import itertools
 from sage.graphs.digraph import DiGraph

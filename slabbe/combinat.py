@@ -32,7 +32,7 @@ EXEMPLES::
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 from random import randint, random, randrange
 
 def non_uniform_randint(L):

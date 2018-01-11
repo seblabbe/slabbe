@@ -70,7 +70,7 @@ TODO:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
 from collections import defaultdict, Counter
 import itertools

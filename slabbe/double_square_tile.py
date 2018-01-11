@@ -175,7 +175,7 @@ also works for double square tiles that are 8-connected polyominoes::
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 import itertools
 from sage.structure.sage_object import SageObject
 from sage.rings.integer import Integer
