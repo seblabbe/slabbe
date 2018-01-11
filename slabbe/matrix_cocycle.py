@@ -880,8 +880,9 @@ class MatrixCocycleGenerator(object):
             sage: from slabbe.matrix_cocycle import cocycles
             sage: c = cocycles.Cassaigne_accelerated(order=3)
             sage: c
-            Cocycle with 6 gens over Language of finite words over alphabet
-            [11, 22, 121, 212, 1221, 2112]
+            Cocycle with 6 gens over Language of finite words over
+            alphabet ['11', '121', '12^{2}1', '212', '21^{2}2', '22']
+
         """
         C1 = matrix(3, [1,1,0, 0,0,1, 0,1,0])
         C2 = matrix(3, [0,1,0, 1,0,0, 0,1,1])

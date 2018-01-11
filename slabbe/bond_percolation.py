@@ -421,7 +421,7 @@ class BondPercolationSample(SageObject):
 
             sage: from slabbe import BondPercolationSample
             sage: S = BondPercolationSample(1,2)
-            sage: for a in S.edges_in_box(1): print a
+            sage: for a in S.edges_in_box(1): print(a)
             ((-1, -1), (0, -1))
             ((-1, -1), (-1, 0))
             ((-1, 0), (0, 0))

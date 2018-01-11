@@ -2998,7 +2998,7 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
         sage: E = ExtensionType.from_factor(prefix.parent()(), prefix, nleft=2)
         sage: pairs = [(E,123)]
         sage: rec_enum_set_under_language_joined_from_pairs(pairs, L, S)
-        An enumerated set with a forest structure
+        A recursively enumerated set (breadth first search)
         sage: rec_enum_set_under_language_joined_from_pairs(pairs, L, S, label='previous')
         A recursively enumerated set (breadth first search)
 

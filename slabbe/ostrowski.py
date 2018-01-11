@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 r"""
+Ostrowski numeration
 
 REFERENCES:
 
@@ -35,6 +36,7 @@ def ostrowski_integer(n, alpha):
 
     EXAMPLES::
 
+        sage: from slabbe.ostrowski import ostrowski_integer
         sage: ostrowski_integer(5, golden_ratio)
         ([0, 0, 0, 0, 1], [1, 1, 2, 3, 5])
         sage: ostrowski_integer(10, golden_ratio)
@@ -70,35 +72,35 @@ def ostrowski_integer(n, alpha):
     Digits of numbers from 1 to 24 in base sqrt(2)-1 where (q_k)_0^3=(1,2,5,12)
     appearing in [Bourla]_:: 
 
-	sage: rows = [[i]+ostrowski_integer(i, sqrt(2)-1)[0]+[0,0,0,0] for i in range(25)]
-	sage: table(rows=rows,header_row='N c1 c2 c3 c4'.split())
-	  N    c1   c2   c3   c4
-	+----+----+----+----+----+
-	  0    0    0    0    0
-	  1    1    0    0    0
-	  2    0    1    0    0
-	  3    1    1    0    0
-	  4    0    2    0    0
-	  5    0    0    1    0
-	  6    1    0    1    0
-	  7    0    1    1    0
-	  8    1    1    1    0
-	  9    0    2    1    0
-	  10   0    0    2    0
-	  11   1    0    2    0
-	  12   0    0    0    1
-	  13   1    0    0    1
-	  14   0    1    0    1
-	  15   1    1    0    1
-	  16   0    2    0    1
-	  17   0    0    1    1
-	  18   1    0    1    1
-	  19   0    1    1    1
-	  20   1    1    1    1
-	  21   0    2    1    1
-	  22   0    0    2    1
-	  23   1    0    2    1
-	  24   0    0    0    2
+        sage: rows = [[i]+ostrowski_integer(i, sqrt(2)-1)[0]+[0,0,0,0] for i in range(25)]
+        sage: table(rows=rows,header_row='N c1 c2 c3 c4'.split())
+          N    c1   c2   c3   c4
+        +----+----+----+----+----+
+          0    0    0    0    0
+          1    1    0    0    0
+          2    0    1    0    0
+          3    1    1    0    0
+          4    0    2    0    0
+          5    0    0    1    0
+          6    1    0    1    0
+          7    0    1    1    0
+          8    1    1    1    0
+          9    0    2    1    0
+          10   0    0    2    0
+          11   1    0    2    0
+          12   0    0    0    1
+          13   1    0    0    1
+          14   0    1    0    1
+          15   1    1    0    1
+          16   0    2    0    1
+          17   0    0    1    1
+          18   1    0    1    1
+          19   0    1    1    1
+          20   1    1    1    1
+          21   0    2    1    1
+          22   0    0    2    1
+          23   1    0    2    1
+          24   0    0    0    2
     """
     Q = [1]
     alpha_cf = continued_fraction(alpha)
@@ -124,22 +126,23 @@ def ostrowski_real(beta, alpha, stop=10, verbose=False):
 
     EXAMPLES::
 
-	sage: ostrowski_real(golden_ratio^-2, golden_ratio-1, stop=5)
-	golden_ratio - 1 0 golden_ratio^(-2)
-	golden_ratio - 2 1 -golden_ratio + 1/golden_ratio^2 + 2
-	Traceback (most recent call last):
-	...
-	AssertionError: 0 <= b_2(=3) <= a_2(=1) is false
+        sage: from slabbe.ostrowski import ostrowski_real
+        sage: ostrowski_real(golden_ratio^-2, golden_ratio-1, stop=5)
+        golden_ratio - 1 0 golden_ratio^(-2)
+        golden_ratio - 2 1 -golden_ratio + 1/golden_ratio^2 + 2
+        Traceback (most recent call last):
+        ...
+        AssertionError: 0 <= b_2(=3) <= a_2(=1) is false
 
     ::
 
-	sage: ostrowski_real(golden_ratio^-3, golden_ratio-1, stop=5)
-	([0, 0, 1, 0, 0],
-	[golden_ratio - 1,
-	golden_ratio - 2,
-	2*golden_ratio - 3,
-	3*golden_ratio - 5,
-	5*golden_ratio - 8])
+        sage: ostrowski_real(golden_ratio^-3, golden_ratio-1, stop=5)
+        ([0, 0, 1, 0, 0],
+        [golden_ratio - 1,
+        golden_ratio - 2,
+        2*golden_ratio - 3,
+        3*golden_ratio - 5,
+        5*golden_ratio - 8])
     """
     alpha_cf = continued_fraction(alpha)
     if alpha_cf.length() < Infinity:

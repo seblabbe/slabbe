@@ -296,6 +296,7 @@ cdef class PairPoint:
 
         EXAMPLES::
 
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint(4, [.4, .2, .3, .1], [4,3,2,1])
             sage: P.sort_x()
             sage: P
@@ -315,6 +316,7 @@ cdef class PairPoint:
 
         EXAMPLES::
 
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
             sage: P = PairPoint(4, [.4, .2, .3, .1], [4,3,2,1])
             sage: P.permutation()
             4231
@@ -1757,6 +1759,7 @@ cdef class MCFAlgorithm(object):
 
         EXAMPLES::
 
+            sage: from slabbe.mult_cont_frac_pyx import Poincare
             sage: algo = Poincare(4)
             sage: algo.nsmall_entries_list(.1, n_iterations=20)
             [0, 1, 1, 0, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3]

@@ -446,12 +446,12 @@ class WangTileSet(WangTileSet_generic):
             sage: T = WangTileSet(tiles)
             sage: G = T.to_transducer_graph()
             sage: G
-            Looped digraph on 4 vertices
+            Digraph on 4 vertices
 
         The edge labels are clean::
 
             sage: G.edges()
-            [('C', 'A', 'D|B,Y|X'), ('G', 'E', 'H|F')]
+            [('C', 'A', ('D|B','Y|X')), ('G', 'E', ('H|F',))]
 
         compared to::
 
@@ -464,9 +464,9 @@ class WangTileSet(WangTileSet_generic):
             sage: T = WangTileSet(tiles)
             sage: G = T.to_transducer_graph()
             sage: G
-            Looped digraph on 2 vertices
+            Digraph on 2 vertices
             sage: G.edges()
-            [(2, 0, '3|1,3|5')]
+            [(2, 0, ('3|1', '3|5'))]
         """
         from sage.graphs.digraph import DiGraph
         from slabbe.graph import merge_multiedges

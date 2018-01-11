@@ -47,7 +47,7 @@ def discrepancy(self):
 
     ::
 
-        sage: for c in w.conjugates(): print c, discrepancy(c)
+        sage: for c in w.conjugates(): print (c, discrepancy(c))
         0010010100101 12/13
         0100101001010 7/13
         1001010010100 10/13
@@ -273,6 +273,7 @@ def minimum_lexicographic_conjugate(self):
         sage: minimum_lexicographic_conjugate(w)
         word: 0000000100000010000000100000010000001000...
     """
+    from sage.misc.misc_c import prod
     f = self.lyndon_factorization()
     return f[-1]*prod(f[:-1], Word())
 

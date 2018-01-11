@@ -164,6 +164,10 @@ def merge_multiedges(G, label_function=tuple):
     - ``label_function`` -- function (default:``tuple``), a function to
       apply to each list of labels
 
+    OUTPUT:
+
+        (looped) (di)graph
+
     EXAMPLES:
 
     A digraph::
