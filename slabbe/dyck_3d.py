@@ -22,6 +22,8 @@ AUTHOR:
 - Sébastien Labbé, 31 october 2014
 
 """
+from __future__ import print_function
+
 def Possible(n):
     r"""
     Possible stack of DyckWords inside a n x n cube.

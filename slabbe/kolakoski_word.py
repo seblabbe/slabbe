@@ -65,6 +65,7 @@ AUTHORS:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
+from __future__ import print_function
 from sage.combinat.words.infinite_word import InfiniteWord_class
 from kolakoski_word_pyx import WordDatatype_Kolakoski
  

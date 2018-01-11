@@ -22,6 +22,7 @@ AUTHOR :
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
 
 import csv
 import itertools
@@ -265,7 +266,7 @@ class RankingScale(object):
             Z = itertools.izip_longest(*scales, fillvalue=0)
             Z.next() # enlever la premiere ligne de zeros
             csv_writer.writerows(Z)
-            print "Creation of file %s" % filename
+            print("Creation of file %s" % filename)
 
     def table(self):
         r"""
@@ -378,11 +379,11 @@ def curve(nb_equipes, max_points=100, K=1, R=2, base=2, verbose=False):
     assume(p - 1 > 0)
     assume(p-nb_equipes < 0)
     fn = integrate(log(R*nb_equipes, base=base) - log(x, base=base), x, p, nb_equipes)
-    if verbose: print "fn = %s" % fn
+    if verbose: print("fn = %s" % fn)
     aire = fn(p=1)
-    if verbose: print "aire = %s" % n(aire)
+    if verbose: print("aire = %s" % n(aire))
     fn_normalise = fn / aire * (max_points - K) + K
-    if verbose: print "fn normalise = %s" % fn_normalise
+    if verbose: print("fn normalise = %s" % fn_normalise)
     return fn_normalise
 
 def discrete_curve(nb_equipes, max_points=100, K=1, R=2, base=2, verbose=False):
@@ -436,8 +437,8 @@ def discrete_curve(nb_equipes, max_points=100, K=1, R=2, base=2, verbose=False):
     fn_normalise = curve(nb_equipes, max_points, K=K, R=R, base=base)
     L = [ZZ(round(fn_normalise(p=i))) for i in range(1,nb_equipes+1)]
     if verbose: 
-        print "First difference sequence is"
-        print list(Word(L).reversal().finite_differences())
+        print("First difference sequence is")
+        print(list(Word(L).reversal().finite_differences()))
     return L
 
 def discrete_curve_2(nb_equipes, max_points=100):
@@ -459,5 +460,5 @@ def table_to_csv(self, filename, dialect='excel'):
     with open(filename, 'w') as f:
         csv_writer = csv.writer(f, dialect=dialect)
         csv_writer.writerows(self._rows)
-        print "Creation of file %s" % filename
+        print("Creation of file %s" % filename)
 

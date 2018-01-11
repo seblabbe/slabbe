@@ -15,6 +15,7 @@ Functions on graphs
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
 from collections import Counter, defaultdict
 import itertools
 from sage.graphs.digraph import DiGraph
@@ -62,10 +63,10 @@ def projection_graph(G, proj_fn, filename=None, verbose=False):
         rows.sort(reverse=True,key=lambda row:row[1])
         header_row = ['Number of vertices', 'Projected vertices']
         from sage.misc.table import table
-        print table(rows=rows, header_row=header_row)
+        print(table(rows=rows, header_row=header_row))
     if filename:
         from slabbe import TikzPicture
-        print TikzPicture.from_graph(G_proj, prog='dot').pdf(filename)
+        print(TikzPicture.from_graph(G_proj, prog='dot').pdf(filename))
     return G_proj
 
 def digraph_move_label_to_edge(G, label_function=None, loops=True,

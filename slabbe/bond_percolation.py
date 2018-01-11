@@ -167,6 +167,7 @@ Methods and classes
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
 import os
 import itertools
 from sage.structure.sage_object import SageObject
@@ -556,7 +557,7 @@ class BondPercolationSample(SageObject):
         filename = prefix + '.tikz'
         with open(filename, 'w') as f:
             f.write(tikz)
-            print "Creation du fichier %s" % filename
+            print("Creation du fichier %s" % filename)
         os.system("tikz2pdf %s" % filename)
         #os.system("convert %s.pdf %s.png" % (prefix, prefix))
 
@@ -600,7 +601,7 @@ class BondPercolationSamples(SageObject):
 
             sage: d = 2
             sage: n = 5
-            sage: for p in srange(0,1,0.1): print p,BondPercolationSamples(p,d,n).cluster_cardinality(100) # optional long
+            sage: for p in srange(0,1,0.1): print(p,BondPercolationSamples(p,d,n).cluster_cardinality(100)) # optional long
             0.000000000000000 [1, 1, 1, 1, 1]
             0.100000000000000 [5, 1, 2, 1, 2]
             0.200000000000000 [3, 1, 4, 1, 1]
@@ -736,15 +737,15 @@ def compute_percolation_probability(range_p, d, n, stop):
         p=0.4780, Theta=0.200, if |C|< 2000 then max|C|=1762
         p=0.4790, Theta=0.250, if |C|< 2000 then max|C|=951
     """
-    print "d = %s, n = number of samples = %s" % (d, n)
-    print "stop counting at = %s" % stop
+    print("d = %s, n = number of samples = %s" % (d, n))
+    print("stop counting at = %s" % stop)
     for p in range_p:
         p = numerical_approx(p, digits=4)
         S = BondPercolationSamples(p,d,n)
         L = [a for a in S.cluster_cardinality(stop) if not isinstance(a, str)]
         Y = max(L) if L else -Infinity
         theta = S.percolation_probability(stop)
-        print "p=%s, Theta=%s, if |C|< %s then max|C|=%s" % (p, theta, stop, Y)
+        print("p=%s, Theta=%s, if |C|< %s then max|C|=%s" % (p, theta, stop, Y))
 
 
 class PercolationProbability(SageObject):
@@ -799,7 +800,7 @@ class PercolationProbability(SageObject):
             0.300
         """
         if self._verbose:
-            print p
+            print(p)
         S = BondPercolationSamples(p, self._dimension, self._n)
         theta = S.percolation_probability(self._stop)
         return theta

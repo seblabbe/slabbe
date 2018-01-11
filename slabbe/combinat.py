@@ -32,6 +32,7 @@ EXEMPLES::
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
 from random import randint, random, randrange
 
 def non_uniform_randint(L):
@@ -285,7 +286,7 @@ def integral_points_count_union_of_polytopes(L):
             try:
                 card = I.integral_points_count()
             except IndexError:
-                print "IndexError when indices={}, see https://trac.sagemath.org/ticket/21491".format(indices)
+                print("IndexError when indices={}, see https://trac.sagemath.org/ticket/21491".format(indices))
                 card = 0
             res += sgn * card
     return res

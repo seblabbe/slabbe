@@ -40,6 +40,7 @@ TODO:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
 import itertools
 from copy import copy
 from sage.modules.free_module_element import vector

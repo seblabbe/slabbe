@@ -10,6 +10,7 @@ Kolakoski word (datatype)
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
 import itertools
 
 cdef class WordDatatype_Kolakoski(object):

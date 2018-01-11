@@ -42,6 +42,7 @@ TODO:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
 from sage.rings.real_mpfr import RealField
 from sage.functions.other import ceil, sqrt
 from sage.modules.free_module_element import vector
@@ -135,7 +136,7 @@ class DiscreteHyperplane(DiscreteSubset):
             self._omega = RF(omega)
             self._mu = RF(mu)
         def contain(p):
-            #print "est-ce proche : ", self._v.dot_product(p) + self._mu
+            #print("est-ce proche : ", self._v.dot_product(p) + self._mu)
             return  0 <= self._v.dot_product(p) + self._mu < self._omega
         DiscreteSubset.__init__(self, dimension=len(self._v), predicate=contain)
 
@@ -225,23 +226,23 @@ class DiscreteHyperplane(DiscreteSubset):
         x_sqrt3 = ceil(x / sqrt(3))
         left  = ((a+b) * y + (a-b) * x_sqrt3 - self._mu) / (a+b+c)
         right = ((a+b) * y + (a-b) * x_sqrt3 - self._mu + self._omega) / (a+b+c)
-        #print "left, right = ", left, right
-        #print "left, right = ", ceil(left), ceil(right)-1
+        #print("left, right = ", left, right)
+        #print("left, right = ", ceil(left), ceil(right)-1)
         # left <= z <= right
         znew = ceil(left)
         xnew = znew - y - x_sqrt3
         ynew = znew - y + x_sqrt3
         znew = ceil(right)-1
-        #print xnew, ynew, znew
-        #print vector((xnew, ynew, znew)) in self
-        #print vector((x,y,ceil(right)-1)) in self
+        #print(xnew, ynew, znew)
+        #print(vector((xnew, ynew, znew)) in self)
+        #print(vector((x,y,ceil(right)-1)) in self)
         v = vector((xnew, ynew, znew))
         if v in self:
             v.set_immutable()
             return v
         else:
-            print "%s not in the plane" % v
-            print "trying similar points"
+            print("%s not in the plane" % v)
+            print("trying similar points")
             v = vector((xnew, ynew, znew-1))
             if v in self:
                 v.set_immutable()
@@ -254,7 +255,7 @@ class DiscreteHyperplane(DiscreteSubset):
 
         # minimum = - floor(self._mu)
         # maximum = ceil(self._omega - self._mu) - 1
-        # # print minimum, maximum
+        # # print(minimum, maximum)
         # # minimum <= z <= maximum
         # assert vector((0,0,maximum)) in self
         # return vector((0,0,maximum))

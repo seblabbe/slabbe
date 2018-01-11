@@ -40,6 +40,7 @@ try:
 except ImportError:
     print("There was an error while importing KolakoskiWord cython module")
     print("Maybe that's because the pwd contains the slabbe folder?")
+    print("We ignore the problem but this module won't work.")
 
 # for doctext to work, we import convex_boundary
 # from discrete_subset import convex_boundary

@@ -21,7 +21,7 @@ AUTHOR:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import os, datetime, re
 from slabbe.tikz_picture import TikzPicture
 from pytimeparse.timeparse import timeparse

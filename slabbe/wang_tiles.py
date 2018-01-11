@@ -62,6 +62,7 @@ Rao-Jeandel::
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
 from collections import Counter, defaultdict
 from sage.misc.cachefunc import cached_method
 from sage.numerical.mip import MixedIntegerLinearProgram
@@ -687,7 +688,7 @@ class WangTileSet(WangTileSet_generic):
         s = '\n'.join(lines)
         with open(filename, 'w') as f:
             f.write(s)
-            print "creation of file {}".format(filename)
+            print("creation of file {}".format(filename))
 
 
     def substitution_tikz(self, substitution, function=None, color=None,
@@ -1386,19 +1387,19 @@ class WangTileSolver(object):
 
         if verbose:
             phrase = "color {} represented by bits {} when on {}"
-            print "Vertical colors (coded using {} bits):".format(padtoV)
+            print("Vertical colors (coded using {} bits):".format(padtoV))
             for color in left_color_to_digits:
                 digits_left = left_color_to_digits[color]
                 digits_right = right_color_to_digits[color]
-                print phrase.format(color, digits_left, 'left')
-                print phrase.format(color, digits_right, 'right')
+                print(phrase.format(color, digits_left, 'left'))
+                print(phrase.format(color, digits_right, 'right'))
             #
-            print "Horizontal colors (coded using {} bits):".format(padtoH)
+            print("Horizontal colors (coded using {} bits):".format(padtoH))
             for color in bottom_color_to_digits:
                 digits_bottom = bottom_color_to_digits[color]
                 digits_top = top_color_to_digits[color]
-                print phrase.format(color, digits_bottom, 'bottom')
-                print phrase.format(color, digits_top, 'top')
+                print(phrase.format(color, digits_bottom, 'bottom'))
+                print(phrase.format(color, digits_top, 'top'))
 
         W = self._width
         H = self._height

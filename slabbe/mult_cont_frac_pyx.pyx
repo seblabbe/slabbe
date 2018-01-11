@@ -139,6 +139,8 @@ AUTHORS:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
+
 from libc.math cimport log
 
 from cysignals.signals cimport sig_check   # ctrl-c interrupt block support
@@ -1557,8 +1559,8 @@ cdef class MCFAlgorithm(object):
             C[X][Y] += 1
 
             if verbose:
-                print P.x[0],P.x[1],P.x[2]
-                print X,Y
+                print(P.x[0],P.x[1],P.x[2])
+                print(X,Y)
 
         # Translate the counter into a python dict
         D = {}

@@ -70,6 +70,7 @@ TODO:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
 
 from collections import defaultdict, Counter
 import itertools
@@ -1810,7 +1811,7 @@ class ExtensionType1to1(ExtensionType):
         A, B = zip(*word_pairs)
         left_nb = max(map(len, A))
         right_nb = max(map(len, B))
-        #print left_nb, right_nb
+        #print(left_nb, right_nb)
         L = []
         for i in range(1, left_nb+1):
             for j in range(right_nb):
@@ -1931,7 +1932,7 @@ class ExtensionType1to1(ExtensionType):
         right_most = [b for (b,v) in right_projection.iteritems() if v > 1]
         if len(right_most) != 1: 
             return False
-        #print left_most,right_most
+        #print(left_most,right_most)
         if (left_most[0],right_most[0]) not in self._pairs:
             return False
         return True
@@ -2612,8 +2613,8 @@ class ExtensionTypeLong(ExtensionType):
         F = self.factors_length_k(l+r)
 
         letters_before, letters_after = self.letters_before_and_after(F)
-        #print letters_before
-        #print letters_after
+        #print(letters_before)
+        #print(letters_after)
         word_before = defaultdict(Word)
         word_after = defaultdict(Word)
         for key,value in letters_before.iteritems():
@@ -2622,8 +2623,8 @@ class ExtensionTypeLong(ExtensionType):
             word_after[key] = longest_common_prefix(map(m, value))
         word_before = dict(word_before)
         word_after = dict(word_after)
-        #print word_before
-        #print word_after
+        #print(word_before)
+        #print(word_after)
 
         extensions = defaultdict(list)
         for a,b in self:

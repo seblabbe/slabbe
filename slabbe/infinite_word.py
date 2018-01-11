@@ -23,6 +23,7 @@ EXAMPLES::
 #  the License, or (at your option) any later version.
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
 from sage.combinat.words.words import InfiniteWords
 from sage.rings.semirings.non_negative_integer_semiring import NN
 

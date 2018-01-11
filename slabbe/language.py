@@ -47,6 +47,7 @@ AUTHORS:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
 import itertools
 from sage.combinat.words.words import Words
 from sage.combinat.finite_state_machine import Automaton

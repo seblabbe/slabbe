@@ -175,6 +175,7 @@ also works for double square tiles that are 8-connected polyominoes::
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
 import itertools
 from sage.structure.sage_object import SageObject
 from sage.rings.integer import Integer
@@ -2186,7 +2187,7 @@ def double_square_from_four_integers(l0, l1, l2, l3):
     w5 = hatA[l0:]
     w6 = hatB[:l2]
     w7 = hatB[l2:]
-    #print w0,w1,w2,w3,w4,w5,w6,w7
+    #print(w0,w1,w2,w3,w4,w5,w6,w7)
 
     # Creation of the overlap and of the resulting disjoint set
     p = hat(w1 * w2).overlap_partition(w5 * w6, 0, involution = inv)
@@ -2216,7 +2217,7 @@ def double_square_from_four_integers(l0, l1, l2, l3):
     Projection = WordMorphism(proj2, codomain=P) * WordMorphism(proj1)
     w0,w1,w2,w3,w4,w5,w6,w7 = map(Projection, (w0,w1,w2,w3,w4,w5,w6,w7))
     nbar = WordMorphism( dict((a,(a + len_A) % (2 * len_A)) for a in AB_ranged), codomain=P)
-    #print w0,w1,w2,w3,w4,w5,w6,w7
+    #print(w0,w1,w2,w3,w4,w5,w6,w7)
     return ( (w0,w1,w2,w3,w4,w5,w6,w7), nbar, steps_dict)
 
 ###############################
@@ -2364,7 +2365,7 @@ def double_hexagon_from_integers(l0, l1, l2, l3, l4, l5):
     w9 = hatB[l2:]
     w10 = hatC[:l4]
     w11 = hatC[l4:]
-    #print w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11
+    #print(w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11)
 
     # Creation of the overlap and of the resulting disjoint set
     p = hat(w1 * w2).overlap_partition(w7 * w8, 0, involution = inv)
@@ -2396,7 +2397,7 @@ def double_hexagon_from_integers(l0, l1, l2, l3, l4, l5):
     rep = map(Projection, (w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11))
     w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11 = rep
     nbar = WordMorphism( dict((a,(a + len_A) % (2 * len_A)) for a in AB_ranged), codomain=P)
-    #print w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11
+    #print(w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11)
     return ( (w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,w11), nbar, steps_dict)
 
 ###############################

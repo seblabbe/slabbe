@@ -25,6 +25,7 @@ EXAMPLES::
 #  the License, or (at your option) any later version.
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
 from sage.combinat.integer_lists.invlex import IntegerListsLex
 from sage.combinat.words.morphism import WordMorphism
 from sage.combinat.words.words import FiniteWords
@@ -405,7 +406,7 @@ def return_substitution(self, u, coding=False, length=1000):
             msg = ("non unique desubstitution, "
                    "{}={}".format(s,self_key))
             raise ValueError(msg)
-        #print key,value,self_key,L[0]
+        #print(key,value,self_key,L[0])
         preimage = L[0]
         rep[value] = preimage
     m = WordMorphism(rep) 
@@ -439,16 +440,16 @@ def compute_xsi(self, u):
     """
     sigma_u, theta_u = return_substitution(self, u, coding=True)
     assert theta_u*sigma_u == self*theta_u, "identity is not verified"
-    print "sigma_u=", sigma_u
-    print "theta_u=", theta_u
+    print("sigma_u=", sigma_u)
+    print("theta_u=", theta_u)
     d = {k:[(k,i) for i in range(len(v))] for k,v in theta_u._morph.iteritems()}
     psi = WordMorphism(d)
-    print "psi=", psi
-    print "psi*sigma_u=", psi*sigma_u
-    print psi.codomain()
-    print psi.incidence_matrix()
-    print "We want zeta such that:"
+    print("psi=", psi)
+    print("psi*sigma_u=", psi*sigma_u)
+    print(psi.codomain())
+    print(psi.incidence_matrix())
+    print("We want zeta such that:")
     for k,v in psi._morph.iteritems():
-        print "zeta({}) = {}".format(v, psi(sigma_u(k)))
+        print("zeta({}) = {}".format(v, psi(sigma_u(k))))
 
 

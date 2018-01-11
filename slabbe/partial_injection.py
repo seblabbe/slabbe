@@ -55,6 +55,7 @@ REFERENCES:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
 from sage.rings.integer_ring import ZZ
 from sage.probability.probability_distribution import GeneralDiscreteDistribution
 from sage.misc.prandom import shuffle, sample
@@ -233,13 +234,13 @@ def random_stallings_graph(n, r=2, verbose=False, merge=False):
         if not G.is_connected():
             not_connected_count += 1
             if verbose:
-                print "rejecting because graph is not connected"
+                print("rejecting because graph is not connected")
             continue
 
         if not all(d>=2 for d in G.degree_iterator()):
             has_degree_1_count += 1
             if verbose:
-                print "rejecting because graph has a vertex of degree <=1"
+                print("rejecting because graph has a vertex of degree <=1")
             continue
 
         return G, not_connected_count, has_degree_1_count
@@ -303,8 +304,8 @@ def reject_statistics(n, r=2, sample_size=50, verbose=False):
     _,s,t = zip(*A)
     if verbose:
         from collections import Counter
-        print "not connected:", Counter(s)
-        print "has degree 1:", Counter(t)
+        print("not connected:", Counter(s))
+        print("has degree 1:", Counter(t))
     h = histogram([s,t])
     return h
 

@@ -179,6 +179,7 @@ Math. Comp. 31 (1977), no. 137, 280–317.
 #  the License, or (at your option) any later version.
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
 import itertools
 from collections import defaultdict
 from bisect import bisect
@@ -273,7 +274,7 @@ def _best_simultaneous_convergents_upto(v, Q, start=1, verbose=False):
         q_v = q*v
         frac_q_v = map(frac, q_v)
         if verbose:
-            print q,[a.n() for a in frac_q_v]
+            print(q,[a.n() for a in frac_q_v])
         if all(a <= Qinv or un_moins_Qinv <= a for a in frac_q_v):
             p = map(round, q_v)
             p.append(q)
@@ -350,7 +351,8 @@ def best_simultaneous_convergents_upto(v, Q, start=1, verbose=False):
         error = max((a if a < .5 else 1-a) for a in frac_q_v)
         error_inv = 1. / error.n(digits=50)
         if verbose:
-            print "q={}, error_inv={}, best_error_inv={}".format(q, error_inv, best_error_inv)
+            print("q={}, error_inv={}, best_error_inv={}".format(q,
+                error_inv, best_error_inv))
         if error_inv > best_error_inv:
             p = [round(a) for a in q_v]
             p.append(q)
@@ -492,11 +494,12 @@ def dirichlet_convergents_dependance(v, n, verbose=False):
             if t == 0:
                 if verbose:
                     c = ','.join("v{}".format(len(L)-j) for j in range(len(M)))
-                    print "v{} = {} = <{}>.<{}>".format(i, vi, M, c)
+                    print("v{} = {} = <{}>.<{}>".format(i, vi, M, c))
                 break
         else:
             if verbose:
-                print "v{} = {} = <{}>.<v{}, ..., v0> + {}".format(i, vi, M, i-1, t)
+                print("v{} = {} = <{}>.<v{}, ..., v0> + {}".format(i, vi,
+                    M, i-1, t))
         L.append(vi)
         row = [i, vi, M, t]
         rows.append(row)

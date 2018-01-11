@@ -265,6 +265,7 @@ When the extension of the file is .spyx::
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
 from copy import copy
 from sage.misc.flatten import flatten
 from sage.graphs.graph import Graph

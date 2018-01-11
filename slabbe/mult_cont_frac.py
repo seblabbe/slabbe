@@ -49,6 +49,8 @@ AUTHORS:
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
+
 from sage.structure.dynamic_class import dynamic_class
 from slabbe import mult_cont_frac_pyx
 
@@ -720,11 +722,12 @@ class _MCFAlgorithm_methods(object):
         for key,value in data.iteritems():
             if limit_nb_points and len(value) > limit_nb_points:
                 if verbose:
-                    print "Taking only {} points instead of {} for key {}".format(
-                            limit_nb_points, len(value), key)
+                    print("Taking only {} points instead of {} for key {}".format(
+                            limit_nb_points, len(value), key))
                 value = value[:limit_nb_points]
             elif verbose:
-                print "Taking {} points for key {}".format(len(value), key)
+                print("Taking {} points for key {}".format(len(value),
+                    key))
 
             s += "\\addplot+[only marks,mark=*,mark options={color=%s}," % color_dict[key]
             s += "mark size=%s]\n" % marksize
@@ -928,10 +931,11 @@ class _MCFAlgorithm_methods(object):
             raise ValueError("Unkown value for draw(={})".format(draw))
 
         if verbose:
-            print "nombre diterations dans la fenetre : ", len(L)
-            print "{} pixels touchés parmi limage {}^2 ".format(len(S), ndivs)
+            print("nombre diterations dans la fenetre : ", len(L))
+            print("{} pixels touchés parmi limage {}^2 ".format(len(S),
+                ndivs))
 
-        print float(len(S) / ndivs**2)
+        print(float(len(S) / ndivs**2))
 
 ########################
 # Dynamic class creation

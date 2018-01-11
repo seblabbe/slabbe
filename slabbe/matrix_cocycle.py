@@ -67,6 +67,7 @@ multiplicatif (2 avril 2014)::
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
+from __future__ import print_function
 import itertools
 from collections import Counter
 from sage.matrix.constructor import matrix
@@ -330,13 +331,13 @@ class MatrixCocycle(object):
                 a,v_right = perron_right_eigenvector(m)
                 b,v_left = perron_right_eigenvector(m.transpose())
             except ValueError:
-                print "problem with :\n",m
+                print("problem with :\n",m)
             else:
                 R.append((w, v_right,v_left))
                 if verbose:
-                    print "indices of matrices:", w
-                    print m
-                    print "eigenvectors:", v_right, v_left
+                    print("indices of matrices:", w)
+                    print(m)
+                    print("eigenvectors:", v_right, v_left)
         return R
     @cached_method
     def n_matrices_non_pisot(self,n, verbose=False):
@@ -416,7 +417,7 @@ class MatrixCocycle(object):
         When, the 1-norm is < 1, the product is pisot::
 
             sage: it = C.n_matrices_semi_norm_iterator(2, p=1)
-            sage: for w,s,b in it: print w,s,b   # long time
+            sage: for w,s,b in it: print(w,s,b)  # long time
             A1,A1 1.0 False
             A1,A2 1.0 False
             A1,A3 1.0 False
@@ -1076,7 +1077,7 @@ def semi_norm_v(M, v,  p=2, verbose=False):
     x0[1] = -v[0]
     rep = minimize_constrained(func, cons, x0)
     if verbose:
-        print rep, rep.norm(), rep*v
+        print(rep, rep.norm(), rep*v)
     return -func(rep)
 
 def semi_norm_cone(M, cone,  p=2, verbose=False):
@@ -1165,7 +1166,7 @@ def semi_norm_cone(M, cone,  p=2, verbose=False):
     if not all(r >= 0 or abs(r) < 1e-7 for r in rep):
         raise ValueError("the answer (={}) should be positive".format(rep))
     if verbose:
-        print "optimal found at ", rep / rep.norm(p)
+        print("optimal found at ", rep / rep.norm(p))
     return -func(rep)
 
 ####################
