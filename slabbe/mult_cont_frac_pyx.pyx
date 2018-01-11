@@ -12,12 +12,12 @@ EXAMPLES::
 Orbit in the cone (with dual coordinates)::
 
     sage: algo.cone_orbit_list((10,23,15), 6)
-    [(10.0, 8.0, 15.0, 1.0, 1.0, 2.0, 132),
-     (10.0, 8.0, 5.0, 3.0, 1.0, 2.0, 213),
-     (2.0, 8.0, 5.0, 3.0, 4.0, 2.0, 321),
-     (2.0, 3.0, 5.0, 3.0, 4.0, 6.0, 132),
-     (2.0, 3.0, 2.0, 3.0, 10.0, 6.0, 123),
-     (2.0, 1.0, 2.0, 3.0, 10.0, 16.0, 132)]
+    [(((10.0, 8.0, 15.0), (1.0, 1.0, 2.0)), 132),
+     (((10.0, 8.0, 5.0), (3.0, 1.0, 2.0)), 213),
+     (((2.0, 8.0, 5.0), (3.0, 4.0, 2.0)), 321),
+     (((2.0, 3.0, 5.0), (3.0, 4.0, 6.0)), 132),
+     (((2.0, 3.0, 2.0), (3.0, 10.0, 6.0)), 123),
+     (((2.0, 1.0, 2.0), (3.0, 10.0, 16.0)), 132)]
 
 Orbit in the simplex::
 
@@ -113,6 +113,10 @@ With slabbe-0.3.b2, 215 ms on priminfo in Liège::
     - Code qsort and sort and permutation (21 Feb 2017) so that we can use
       this code in multidimensional case
 
+    - In order for TestSuite(Brun()).run() to work properly, Brun must be an
+      instance of SageObject. Is this a bug? But then using SageObject does
+      not compile to c. Need to check this...
+
 Question:
 
     - Comment factoriser le code sans utiliser les yield?
@@ -123,10 +127,11 @@ AUTHORS:
  - Sébastien Labbé, Invariant measures, Lyapounov exponents and natural
    extensions for a dozen of algorithms, October 2013.
  - Sébastien Labbé, Cleaning the code, Fall 2015
+ - Sébastien Labbé, Making use of PairPoint to prepare for higher dimension, Fall 2016
 
 """
 #*****************************************************************************
-#       Copyright (C) 2013-2016 Sébastien Labbé <slabqc@gmail.com>
+#       Copyright (C) 2013-2018 Sébastien Labbé <slabqc@gmail.com>
 #
 #  Distributed under the terms of the GNU General Public License version 2 (GPLv2)
 #
@@ -665,12 +670,26 @@ cdef class PairPoint:
         self.sort()
         return 100
 
+
 cdef class MCFAlgorithm(object):
     cdef int dim
     def __cinit__(self, int dim=3):
         self.dim = dim
     #def __init__(self, int dim=3):
     #    self.dim = dim
+    def __reduce__(self):
+        r"""
+        Default pickle support
+
+        TESTS::
+
+            sage: from slabbe.mult_cont_frac_pyx import Brun
+            sage: algo = Brun()
+            sage: algo.__reduce__()
+            (<type 'slabbe.mult_cont_frac_pyx.Brun'>, ())
+        """
+        return self.__class__, tuple()
+
     ########################################
     # METHODS IMPLEMENTED IN HERITED CLASSES
     ########################################
@@ -1346,23 +1365,23 @@ cdef class MCFAlgorithm(object):
 
         OUTPUT:
 
-            iterator
+            iterator of tuples (PairPoint, integer)
 
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: it = Brun().cone_orbit_iterator((13,17,29))
             sage: for _ in range(10): next(it)
-            ((13.0, 17.0, 12.0), (1.0, 2.0, 1.0), 123)
-            ((13.0, 4.0, 12.0), (3.0, 2.0, 1.0), 312)
-            ((1.0, 4.0, 12.0), (3.0, 2.0, 4.0), 231)
-            ((1.0, 4.0, 8.0), (3.0, 6.0, 4.0), 123)
-            ((1.0, 4.0, 4.0), (3.0, 10.0, 4.0), 123)
-            ((1.0, 4.0, 0.0), (3.0, 14.0, 4.0), 123)
-            ((1.0, 3.0, 0.0), (17.0, 14.0, 4.0), 312)
-            ((1.0, 2.0, 0.0), (31.0, 14.0, 4.0), 312)
-            ((1.0, 1.0, 0.0), (45.0, 14.0, 4.0), 312)
-            ((1.0, 0.0, 0.0), (59.0, 14.0, 4.0), 312)
+            (((13.0, 17.0, 12.0), (1.0, 2.0, 1.0)), 123)
+            (((13.0, 4.0, 12.0), (3.0, 2.0, 1.0)), 312)
+            (((1.0, 4.0, 12.0), (3.0, 2.0, 4.0)), 231)
+            (((1.0, 4.0, 8.0), (3.0, 6.0, 4.0)), 123)
+            (((1.0, 4.0, 4.0), (3.0, 10.0, 4.0)), 123)
+            (((1.0, 4.0, 0.0), (3.0, 14.0, 4.0)), 123)
+            (((1.0, 3.0, 0.0), (17.0, 14.0, 4.0)), 312)
+            (((1.0, 2.0, 0.0), (31.0, 14.0, 4.0)), 312)
+            (((1.0, 1.0, 0.0), (45.0, 14.0, 4.0)), 312)
+            (((1.0, 0.0, 0.0), (59.0, 14.0, 4.0)), 312)
         """
         cdef int branch,i
         cdef PairPoint P
@@ -1387,14 +1406,14 @@ cdef class MCFAlgorithm(object):
 
         OUTPUT:
 
-            list
+            list of tuples (PairPoint, integer)
 
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: L = Brun().cone_orbit_list((10, 21, 37), 20)
             sage: L[-1]
-            (1.0, 0.0, 0.0, 68.0, 55.0, 658.0, 231)
+            (((1.0, 0.0, 0.0), (68.0, 55.0, 658.0)), 231)
 
         .. TODO::
 
@@ -1762,27 +1781,15 @@ cdef class MCFAlgorithm(object):
 
             sage: from slabbe.mult_cont_frac_pyx import Poincare
             sage: algo = Poincare(4)
-            sage: algo.nsmall_entries_list(.1, n_iterations=20)
-            [0, 1, 1, 0, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3]
+            sage: algo.nsmall_entries_list(.1, (1,e,pi,sqrt(2)), n_iterations=20)
+            [0, 1, 1, 1, 1, 0, 0, 1, 0, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3]
 
         ::
 
             sage: from slabbe.finite_word import run_length_encoding
-            sage: L = algo.nsmall_entries_list(.01, n_iterations=1000)
+            sage: L = algo.nsmall_entries_list(.01, (1,e,pi,sqrt(2)), n_iterations=1000)
             sage: run_length_encoding(L)
-            [(0, 1),
-            (1, 4),
-            (0, 11),
-            (2, 151),
-            (1, 7),
-            (2, 1),
-            (3, 51),
-            (2, 353),
-            (1, 8),
-            (2, 178),
-            (1, 10),
-            (2, 4),
-            (3, 221)]
+            [(0, 1), (1, 1), (0, 7), (1, 1), (0, 3), (1, 2), (2, 1), (3, 984)]
 
         """
         cdef unsigned int i         # loop counter
@@ -1812,23 +1819,30 @@ cdef class MCFAlgorithm(object):
           initial point is random
         - ``p`` -- integer, p-norm
 
+        OUTPUT:
+
+            a tuple (integer, PairPoint)
+
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Poincare
             sage: algo = Poincare(4)
-            sage: algo.return_time_to_nsmall_entries(.05, 0)
+            sage: algo.return_time_to_nsmall_entries(.05, 0, (1,e,pi,sqrt(2)))
             (3,
-             ((0.17178638839414534, 0.1795717682823472, 0.3283120296944157,
-             0.3203298136290918), (0.0, 0.0, 0.0, 0.0)))
+             ((0.31830988618379064, 0.41509782135371204, 
+               0.13474402056773493, 0.1318482718947624), 
+              (0.0, 0.0, 0.0, 0.0)))
 
         ::
 
             sage: algo = Poincare(6)
-            sage: algo.return_time_to_nsmall_entries(.05, 0)
-            (13,
-             ((0.09245603108045694, 0.05458251789275042,
-             0.06004337427302976, 0.5889911219490447, 0.10991340769388094,
-             0.09401354711083737), (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)))
+            sage: start = (1,e,pi,sqrt(2),sqrt(3),sqrt(5))
+            sage: algo.return_time_to_nsmall_entries(.05, 0, start)
+            (5,
+             ((0.3183098861837907, 0.153493436015088, 0.134744020567735,
+             0.1318482718947624, 0.1011707373432389, 0.16043364799538504),
+             (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)))
+
         """
         cdef unsigned int i=0         # loop counter
         cdef int branch
