@@ -570,7 +570,7 @@ class BondPercolationSamples(SageObject):
 
         sage: from slabbe import BondPercolationSamples
         sage: BondPercolationSamples(0.2,2,3)
-        <class 'slabbe.bond_percolation.BondPercolationSamples'>
+        <slabbe.bond_percolation.BondPercolationSamples object at ...>
     """
     def __init__(self, p, d, n):
         r"""
