@@ -292,13 +292,14 @@ class Substitution2d(object):
                 rep[i].extend(col)
         return rep
 
-    def __call__(self, table):
+    def __call__(self, table, order=1):
         r"""
         INPUT:
 
         - ``table`` -- list of list, such that table[x][y] refers to the
           tile at position (x,y) in cartesian coordinates (*not* in the
           matrix-like coordinates)
+        -  ``order`` - integer or plus ``Infinity`` (default: 1)
 
         TODO: implement another call on table with matrix like coordinates
         
@@ -314,9 +315,34 @@ class Substitution2d(object):
             sage: s(table)
             [[0, 1, 4, 5], [2, 3, 6, 7], [4, 5, 4, 5], [6, 7, 6, 7]]
 
+        ::
+
+            sage: A = [[0,1],[2,0]]
+            sage: B = [[2,1],[2,0]]
+            sage: C = [[1,2],[1,1]]
+            sage: d = {0:A, 1:B, 2:C}
+            sage: s = Substitution2d(d)
+            sage: s([[0]])
+            [[0, 1], [2, 0]]
+            sage: s([[0]],2)
+            [[0, 1, 2, 1], [2, 0, 2, 0], [1, 2, 0, 1], [1, 1, 2, 0]]
+            sage: s([[0]],3)
+            [[0, 1, 2, 1, 1, 2, 2, 1],
+             [2, 0, 2, 0, 1, 1, 2, 0],
+             [1, 2, 0, 1, 1, 2, 0, 1],
+             [1, 1, 2, 0, 1, 1, 2, 0],
+             [2, 1, 1, 2, 0, 1, 2, 1],
+             [2, 0, 1, 1, 2, 0, 2, 0],
+             [2, 1, 2, 1, 1, 2, 0, 1],
+             [2, 0, 2, 0, 1, 1, 2, 0]]
 
         TESTS::
 
+            sage: A = [[0,1],[2,3]]
+            sage: B = [[4,5],[6,7]]
+            sage: C = [[8,9]]
+            sage: d = {0:A, 1:B, 2:C}
+            sage: s = Substitution2d(d)
             sage: s([])
             []
             sage: s([[0,1], [1,2]])
@@ -325,11 +351,18 @@ class Substitution2d(object):
             ValueError: the image of 2 in the column (=[1, 2]) has width 1
             but the image of another has width 2
         """
-        columns = []
-        for col in table:
-            col_image = self.call_on_column(col)
-            columns.extend(col_image)
-        return columns
+        if order == 1:
+            columns = []
+            for col in table:
+                col_image = self.call_on_column(col)
+                columns.extend(col_image)
+            return columns
+        elif order > 1:
+            return self(self(table, order-1))
+        elif order == 0:
+            return table
+        else:
+            raise TypeError("order (%s) must be a positive integer" % order)
 
     def __mul__(self, other):
         r"""
