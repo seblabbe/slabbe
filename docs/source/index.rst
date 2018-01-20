@@ -7,6 +7,7 @@ This is the reference manual for the `Sébastien Labbé
 the `Sage <http://sagemath.org/>`_ mathematical software system.  Sage is free
 open source math software that supports research and teaching in algebra,
 geometry, number theory, cryptography, and related areas.  
+
 Sébastien Labbé Research Code implements digital geometry, combinatorics on
 words and symbolic dynamical systems simulation code in Sage, via a set of new
 Python classes. 
@@ -16,6 +17,10 @@ It is meant to be reused and reusable (full documentation including doctests).
 Comments are welcome.
 
 .. [BBL2012]_, [BBGL2011]_, [BGL2012]_
+
+To install this module, you do::
+
+    sage -pip install slabbe
 
 To use this module, you need to import it:: 
 
@@ -35,7 +40,7 @@ Digital Geometry
 ================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    discrete_subset
    discrete_plane
@@ -47,7 +52,7 @@ Combinatorics on words
 ======================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    kolakoski_word
    bispecial_extension_type
@@ -55,38 +60,43 @@ Combinatorics on words
    infinite_word
    language
    word_morphisms
-
+   ostrowski
 
 Combinatorics
 =============
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    joyal_bijection
    bond_percolation
    dyck_3d
    combinat
    graph
+   partial_injection
 
 Dynamical systems
 =================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    matrix_cocycle
    mult_cont_frac
-   diophantine_approximation
+   diophantine_approx
    lyapunov
    markov_transformation
    matrices
+   polyhedron_partition
+   substitution_2d
+   wang_tiles
 
 Miscellaneous
 =============
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
+   analyze_sage_build
    tikz_picture
    ranking_scale
    fruit
