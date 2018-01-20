@@ -2,14 +2,16 @@
 r"""
 Ostrowski numeration
 
+See [Ber2001]_.
+
 REFERENCES:
 
-    - Valérie Berthé. Autour du système de numération d’Ostrowski. Bull.
-      Belg. Math. Soc.  Simon Stevin, 8(2):209–239, 2001. Journées
-      Montoises d’Informatique Théorique (Marne-la-Vallée, 2000).
+.. [Ber2001] Valérie Berthé. Autour du système de numération d’Ostrowski.
+   Bull.  Belg. Math. Soc.  Simon Stevin, 8(2):209–239, 2001. Journées
+   Montoises d’Informatique Théorique (Marne-la-Vallée, 2000).
 
-    - Bourla, Avraham. « Irrational Base Counting ». arXiv:1511.02179
-      [math], 6 novembre 2015. http://arxiv.org/abs/1511.02179.
+.. [Bou2015] Bourla, Avraham. « Irrational Base Counting ».
+    arXiv:1511.02179 [math], 6 novembre 2015. http://arxiv.org/abs/1511.02179.
 
 AUTHOR:
 
@@ -72,7 +74,7 @@ def ostrowski_integer(n, alpha):
         9 ([0, 1, 0, 0, 0, 1], [1, 1, 2, 3, 5, 8])
 
     Digits of numbers from 1 to 24 in base sqrt(2)-1 where (q_k)_0^3=(1,2,5,12)
-    appearing in [Bourla]_:: 
+    appearing in [Bou2015]_:: 
 
         sage: rows = [[i]+ostrowski_integer(i, sqrt(2)-1)[0]+[0,0,0,0] for i in range(25)]
         sage: table(rows=rows,header_row='N c1 c2 c3 c4'.split())
@@ -103,6 +105,7 @@ def ostrowski_integer(n, alpha):
           22   0    0    2    1
           23   1    0    2    1
           24   0    0    0    2
+
     """
     Q = [1]
     alpha_cf = continued_fraction(alpha)

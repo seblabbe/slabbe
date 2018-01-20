@@ -4,6 +4,12 @@ r"""
 
 EXAMPLES::
 
+    sage: from slabbe import Substitution2d
+    sage: A = [[0,1],[2,3]]
+    sage: B = [[4,5]]
+    sage: d = {0:A, 1:B}
+    sage: Substitution2d(d)
+    Substitution 2d: {0: [[0, 1], [2, 3]], 1: [[4, 5]]}
 """
 #*****************************************************************************
 #       Copyright (C) 2017 Sebastien Labbe <slabqc@gmail.com>
@@ -492,8 +498,6 @@ class Substitution2d(object):
         OUTPUT:
 
             dict, key -> tile
-
-        EXAMPLES::
 
         """
         raise NotImplementedError('method desubstitute moved to wang tile')
