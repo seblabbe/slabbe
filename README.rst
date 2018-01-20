@@ -6,7 +6,9 @@ of my own research code. It contains modules on digital geometry,
 combinatorics, combinatorics on words, multidimensional continued fraction
 algorithms, matrix cocycles, languages, substitutions, bispecial factors,
 double square tiles, Oldenburger sequence, Joyal bijection, Dyck word in 3D,
-Markov transformations, some graphs and matrix methods, tikzpictures.
+Markov transformations, Wang tilings, 2d substitutions, polyhedron partitions,
+partial injections, ostrowski numeration tikzpictures, some graphs and matrix
+methods.
 
 Installation::
 
@@ -16,11 +18,18 @@ Usage::
 
     sage: from slabbe import *
 
-Links: slabbe.org__, Github__, `Python Package Index`__
+Links: slabbe.org__, `slabbe on Github`__, `slabbe on pypi`__
 
 __ http://www.slabbe.org/Sage/
 __ http://github.com/seblabbe/slabbe
 __ http://pypi.python.org/pypi/slabbe
+
+Version 0.4 (January 20, 2018)
+------------------------------
+
+Version ``0.4`` includes new modules for Wang tilings, 2d substitutions,
+polyhedron partitions, partial injections, ostrowski numeration, and many
+improvements to other modules.
 
 Version 0.3b2 (December 11, 2016)
 ---------------------------------
@@ -46,19 +55,12 @@ continued fraction algorithms, matrix cocycles, languages and tikzpictures.
 __ http://www.slabbe.org/Sage/slabbe-0.2.spkg
 __ http://www.slabbe.org/Sage/slabbe-0.2.pdf
 
-Installation::
-
-    sage -p http://www.slabbe.org/Sage/slabbe-0.2.spkg  # sage-6.9 or newer
-    sage -i http://www.slabbe.org/Sage/slabbe-0.2.spkg  # sage-6.8 or earlier
-
 Version 0.1.1 (June 3, 2015)
 ----------------------------
 
 slabbe-0.1.1.spkg__ fixes a bug with ``gcd`` import error.
 
 __ http://www.slabbe.org/Sage/slabbe-0.1.1.spkg
-
-Installation: ``sage -i http://www.slabbe.org/Sage/slabbe-0.1.1.spkg``
 
 Version 0.1 (August 27, 2014)
 -----------------------------
@@ -69,4 +71,3 @@ combinatorics on words and more.
 __ http://www.slabbe.org/Sage/slabbe-0.1.spkg
 __ http://www.slabbe.org/Sage/slabbe-0.1.pdf
 
-Installation: ``sage -i http://www.slabbe.org/Sage/slabbe-0.1.spkg``
