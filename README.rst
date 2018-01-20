@@ -7,7 +7,7 @@ combinatorics, combinatorics on words, multidimensional continued fraction
 algorithms, matrix cocycles, languages, substitutions, bispecial factors,
 double square tiles, Oldenburger sequence, Joyal bijection, Dyck word in 3D,
 Markov transformations, Wang tilings, 2d substitutions, polyhedron partitions,
-partial injections, ostrowski numeration tikzpictures, some graphs and matrix
+partial injections, ostrowski numeration, tikzpictures, some graphs and matrix
 methods.
 
 Installation::

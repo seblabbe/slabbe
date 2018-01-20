@@ -13,6 +13,9 @@ develop:
 test: 
 	sage -tp --force-lib --show-skipped slabbe/*.py slabbe/*.pyx
 
+testlong:
+	sage -tp --long --force-lib --show-skipped slabbe/*.py slabbe/*.pyx
+
 coverage:
 	sage -coverage slabbe/*
 
@@ -25,10 +28,7 @@ doc-pdf:
 dist:
 	sage -python setup.py sdist
 
-register: dist
-	VERSION=`cat VERSION`; sage -sh -c "twine register dist/slabbe-$$VERSION.tar.gz"
-
-upload:
+upload: dist
 	VERSION=`cat VERSION`; sage -sh -c "twine upload dist/slabbe-$$VERSION.tar.gz"
 
 clean: clean-doc
