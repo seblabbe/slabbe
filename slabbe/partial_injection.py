@@ -28,8 +28,8 @@ Random partial injections on ``[0, 1, ..., 6]``::
 
 Random Stallings graph on ``[0, 1, ..., 19]`` over 2 letters::
 
-    sage: from slabbe import random_stallings_graph
-    sage: G,_,_ = random_stallings_graph(20, 2)
+    sage: from slabbe import random_cyclically_reduced_stallings_graph
+    sage: G,_,_ = random_cyclically_reduced_stallings_graph(20, 2)
     sage: G
     Looped multi-digraph on 20 vertices
 
@@ -147,12 +147,20 @@ def random_partial_injection(n):
         sage: random_partial_injection(10)
         [5, 6, 8, None, 7, 4, 0, 9, None, None]
 
+    TODO::
+
+        Adapt the code once this is merged:
+
+        https://trac.sagemath.org/ticket/24416
+
     AUTHORS:
 
     - Sébastien Labbé and Vincent Delecroix, Nov 30, 2017, Sage Thursdays
       at LaBRI
     """
     L = number_of_partial_injection(n)
+    s = sum(L).n()
+    L = [a/s for a in L]   # because of the bug #24416
     X = GeneralDiscreteDistribution(L)
     k = X.get_random_element()
     codomain = sample(range(n), k)
@@ -161,7 +169,7 @@ def random_partial_injection(n):
     shuffle(codomain)
     return codomain
 
-def random_stallings_graph(n, r=2, verbose=False, merge=False):
+def random_cyclically_reduced_stallings_graph(n, r=2, verbose=False, merge=False):
     r"""
     Return a uniformly chosen Stallings graph of n vertices over r letters.
 
@@ -183,19 +191,19 @@ def random_stallings_graph(n, r=2, verbose=False, merge=False):
 
     EXAMPLES::
 
-        sage: from slabbe import random_stallings_graph
-        sage: G,_,_ = random_stallings_graph(20, 2)
+        sage: from slabbe import random_cyclically_reduced_stallings_graph
+        sage: G,_,_ = random_cyclically_reduced_stallings_graph(20, 2)
         sage: G
         Looped multi-digraph on 20 vertices
 
     ::
 
-        sage: random_stallings_graph(20, 5)[0]
+        sage: random_cyclically_reduced_stallings_graph(20, 5)[0]
         Looped multi-digraph on 20 vertices
 
     With verbose output::
 
-        sage: G = random_stallings_graph(20, 2, verbose=True)   # random
+        sage: G = random_cyclically_reduced_stallings_graph(20, 2, verbose=True)   # random
         rejecting because graph is not connected
         rejecting because graph has a vertex of degree <=1
         rejecting because graph has a vertex of degree <=1
@@ -204,7 +212,7 @@ def random_stallings_graph(n, r=2, verbose=False, merge=False):
     For displaying purposes, the following merges the multiedges
     automatically::
 
-        sage: G,_,_ = random_stallings_graph(20, 2)
+        sage: G,_,_ = random_cyclically_reduced_stallings_graph(20, 2)
         sage: from slabbe import TikzPicture
         sage: tikz = TikzPicture.from_graph(G)
         sage: _ = tikz.pdf(view=False)
@@ -300,7 +308,7 @@ def reject_statistics(n, r=2, sample_size=50, verbose=False):
 
     """
     from sage.plot.histogram import histogram
-    A = [random_stallings_graph(n, r) for _ in range(sample_size)]
+    A = [random_cyclically_reduced_stallings_graph(n, r) for _ in range(sample_size)]
     _,s,t = zip(*A)
     if verbose:
         from collections import Counter
