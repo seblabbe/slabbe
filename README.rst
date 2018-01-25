@@ -28,8 +28,8 @@ Version 0.4 (January 20, 2018)
 ------------------------------
 
 Version ``0.4`` includes new modules for Wang tilings, 2d substitutions,
-polyhedron partitions, partial injections, ostrowski numeration, analyse Sage
-build and many improvements to other modules.
+polyhedron partitions, partial injections, ostrowski numeration and many
+improvements to other modules.
 
 Version 0.3b2 (December 11, 2016)
 ---------------------------------
