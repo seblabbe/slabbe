@@ -1169,7 +1169,7 @@ class WangTileSolver(object):
         p.set_objective(x[0,0,0])
         return p, x
 
-    def solve(self, solver=None, solver_parameters=None):
+    def solve(self, solver=None, solver_parameters=None, ncpus=1):
         r"""
         Return a dictionary associating to each tile a list of positions
         where to find this tile.
@@ -1178,7 +1178,6 @@ class WangTileSolver(object):
 
             - Currently, the dancing links reduction ignores the
               preassigned parameters.
-            - Use the new parallel search of dancing links (#24315)
 
         INPUT:
 
@@ -1190,6 +1189,9 @@ class WangTileSolver(object):
           of available parameters for example for the Gurobi backend, see
           dictionary ``parameters_type`` in the file
           ``sage/numerical/backends/gurobi_backend.pyx``
+        - ``ncpus`` -- integer (default: ``1``), maximal number of
+          subprocesses to use at the same time, used only if ``solver`` is
+          ``'dancing_links'``.
 
         OUTPUT:
 
@@ -1218,13 +1220,29 @@ class WangTileSolver(object):
             sage: tiling._table                           # optional Gurobi
             [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
 
+        Using dancing links::
+
+            sage: W = WangTileSolver(tiles,3,4)
+            sage: tiling = W.solve(solver='dancing_links', ncpus=8)
+            sage: tiling
+            A wang tiling of a 3 x 4 rectangle
+
         REFERENCES:
 
             How do I set solver_parameter to make Gurobi use more than one
             processor?, https://ask.sagemath.org/question/37726/
         """
         if solver == 'dancing_links':
-            return next(self.solutions_iterator())
+            from sage.combinat.matrices.dancing_links import dlx_solver
+            rows,row_info = self.rows_and_information()
+            dlx = dlx_solver(rows)
+            solution = dlx.one_solution(ncpus=ncpus)
+            table = [[None]*self._height for _ in range(self._width)]
+            for a in solution:
+                j,k,i = row_info[a]
+                assert table[j][k] is None, "table[{}][{}](={}) is not None".format(j,k,table[j][k])
+                table[j][k] = i
+            return WangTiling(table, self._tiles, color=self._color)
         else:
             p,x = self.milp(solver=solver)
             if solver_parameters is None:
