@@ -1645,6 +1645,11 @@ class WangTiling(object):
         """
         return len(self._table)
 
+    def transpose(self):
+        table = [[column[j] for column in self._table]
+                            for j in range(self.height())]
+        return WangTiling(table, self._tiles, self._color)
+
     def horizontal_words_list(self, side=3):
         r"""
         Return a list of horizontal words of colors appearing on a given
@@ -1774,6 +1779,78 @@ class WangTiling(object):
             color_sequence = tuple(self._tiles[r][0] for r in tile_sequence)
             d[(W,j)] = color_sequence
         return d
+
+    def plot_points_on_torus(self, M, pointsize=5, color_dict=None):
+        r"""
+        Plot points modulo some values in x and y.
+
+        INPUT
+
+        - ``M`` -- M is the matrix projection to `\RR^2/\ZZ^2`
+        - ``pointsize`` -- positive real number (default:``5``)
+        - ``color_dict`` -- dict, tile index -> color or None
+          (default:``None``)
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTiling
+            sage: z = polygen(QQ, 'z')
+            sage: K.<phi> = NumberField(z^2-z-1, 'phi', embedding=AA(golden_ratio))
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+            sage: T = WangTiling(table, tiles)
+            sage: M = matrix(2, [phi, 0, 0, 0.01])
+            sage: G = T.plot_points_on_torus(M)
+        """
+        number_of_tiles = len(self._tiles)
+        alphabet = range(number_of_tiles)
+
+        # Create the color dict
+        if color_dict is None:
+            from sage.plot.colors import hue
+            from random import shuffle
+            color = [hue(i/float(number_of_tiles)) for i in range(number_of_tiles)]
+            shuffle(color)
+            color_dict = dict(zip(alphabet, color))
+
+        from sage.functions.other import floor
+        def frac(x):
+            return x-floor(x)
+
+        # compute the points
+        from sage.modules.free_module_element import vector
+        PTS = {a:[] for a in alphabet}
+        for i,column in enumerate(self._table):
+            for j,a in enumerate(column):
+                x,y = M*vector((i,j))
+                PTS[a].append((frac(x),frac(y)))
+
+        from sage.plot.graphics import Graphics
+        from sage.plot.point import points
+        from sage.plot.text import text
+        from random import randrange
+
+        G = Graphics()
+        title = r"Drawing {} on $R^2/Z^2$ with ${}$".format(self, latex(M))
+        G += text(title, (.5,1.), axis_coords=True)
+
+        # draw the points
+        for a in alphabet:
+            PTSa = PTS[a]
+            if not PTSa:
+                continue
+            color = color_dict[a]
+            G += points(PTSa, color=color, size=pointsize)
+            # add a label on one of them
+            px,py = PTSa[randrange(len(PTSa))]
+            G += text(str(a), (px,py), color=color)
+
+        # color of points in legend
+        for d,a in enumerate(alphabet):
+            color = color_dict[a]
+            G += points([(-.1,0)], color=color, size=pointsize, legend_label=str(d))
+
+        return G
 
     def number_of_occurences(self, pattern, avoid_border=0):
         r"""
