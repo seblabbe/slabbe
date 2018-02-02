@@ -68,9 +68,10 @@ from sage.misc.cachefunc import cached_method
 from sage.numerical.mip import MixedIntegerLinearProgram
 from sage.rings.integer_ring import ZZ
 
+from sage.misc.decorators import rename_keyword
+
 def tile_to_tikz(tile, position, color=None, size=1,
-        fontsize=r'\normalsize', rotate=None, label_shift=.2,
-        top_right_edges=True):
+        rotate=None, label_shift=.2, top_right_edges=True):
     r"""
 
     INPUT:
@@ -79,7 +80,6 @@ def tile_to_tikz(tile, position, color=None, size=1,
     - ``position`` -- tuple of two numbers
     - ``color`` -- dict (default: ``None``) from tile values -> tikz colors
     - ``size`` -- number (default: ``1``), size of the tile
-    - ``fontsize`` -- string (default: ``r'\normalsize'``
     - ``rotate`` -- list or ``None`` (default:``None``) list of four angles
       in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
       label of Wang tiles. If ``None``, it performs a 90 degres rotation
@@ -106,40 +106,40 @@ def tile_to_tikz(tile, position, color=None, size=1,
          '\\draw (10, 100) -- (10, 101);',
          '\\draw (11, 101) -- (11, 100);',
          '\\draw (11, 101) -- (10, 101);',
-         '\\node[rotate=0,font=\\normalsize] at (10.8, 100.5) {1};',
-         '\\node[rotate=0,font=\\normalsize] at (10.5, 100.8) {2};',
-         '\\node[rotate=0,font=\\normalsize] at (10.2, 100.5) {3};',
-         '\\node[rotate=0,font=\\normalsize] at (10.5, 100.2) {4};']
+         '\\node[rotate=0] at (10.8, 100.5) {1};',
+         '\\node[rotate=0] at (10.5, 100.8) {2};',
+         '\\node[rotate=0] at (10.2, 100.5) {3};',
+         '\\node[rotate=0] at (10.5, 100.2) {4};']
         sage: tile_to_tikz((1,2,3,4), (10,100), color=None)
         ['% tile at position (x,y)=(10, 100)',
          '\\draw (10, 100) -- (11, 100);',
          '\\draw (10, 100) -- (10, 101);',
          '\\draw (11, 101) -- (11, 100);',
          '\\draw (11, 101) -- (10, 101);',
-         '\\node[rotate=0,font=\\normalsize] at (10.8, 100.5) {1};',
-         '\\node[rotate=0,font=\\normalsize] at (10.5, 100.8) {2};',
-         '\\node[rotate=0,font=\\normalsize] at (10.2, 100.5) {3};',
-         '\\node[rotate=0,font=\\normalsize] at (10.5, 100.2) {4};']
+         '\\node[rotate=0] at (10.8, 100.5) {1};',
+         '\\node[rotate=0] at (10.5, 100.8) {2};',
+         '\\node[rotate=0] at (10.2, 100.5) {3};',
+         '\\node[rotate=0] at (10.5, 100.2) {4};']
         sage: tile_to_tikz((1,2,3,4), (10,100), color=None, rotate=(0,90,0,0))
         ['% tile at position (x,y)=(10, 100)',
          '\\draw (10, 100) -- (11, 100);',
          '\\draw (10, 100) -- (10, 101);',
          '\\draw (11, 101) -- (11, 100);',
          '\\draw (11, 101) -- (10, 101);',
-         '\\node[rotate=0,font=\\normalsize] at (10.8, 100.5) {1};',
-         '\\node[rotate=90,font=\\normalsize] at (10.5, 100.8) {2};',
-         '\\node[rotate=0,font=\\normalsize] at (10.2, 100.5) {3};',
-         '\\node[rotate=0,font=\\normalsize] at (10.5, 100.2) {4};']
+         '\\node[rotate=0] at (10.8, 100.5) {1};',
+         '\\node[rotate=90] at (10.5, 100.8) {2};',
+         '\\node[rotate=0] at (10.2, 100.5) {3};',
+         '\\node[rotate=0] at (10.5, 100.2) {4};']
         sage: tile_to_tikz((1,2,3,4), (10,100), color=None, label_shift=.1)
         ['% tile at position (x,y)=(10, 100)',
          '\\draw (10, 100) -- (11, 100);',
          '\\draw (10, 100) -- (10, 101);',
          '\\draw (11, 101) -- (11, 100);',
          '\\draw (11, 101) -- (10, 101);',
-         '\\node[rotate=0,font=\\normalsize] at (10.9000000000000, 100.5) {1};',
-         '\\node[rotate=0,font=\\normalsize] at (10.5, 100.900000000000) {2};',
-         '\\node[rotate=0,font=\\normalsize] at (10.1000000000000, 100.5) {3};',
-         '\\node[rotate=0,font=\\normalsize] at (10.5, 100.100000000000) {4};']
+         '\\node[rotate=0] at (10.9000000000000, 100.5) {1};',
+         '\\node[rotate=0] at (10.5, 100.900000000000) {2};',
+         '\\node[rotate=0] at (10.1000000000000, 100.5) {3};',
+         '\\node[rotate=0] at (10.5, 100.100000000000) {4};']
 
     ::
 
@@ -149,10 +149,10 @@ def tile_to_tikz(tile, position, color=None, size=1,
          '\\draw (10, 100) -- (10, 101);',
          '\\draw (11, 101) -- (11, 100);',
          '\\draw (11, 101) -- (10, 101);',
-         '\\node[rotate=90,font=\\normalsize] at (10.8, 100.5) {10};',
-         '\\node[rotate=0,font=\\normalsize] at (10.5, 100.8) {20};',
-         '\\node[rotate=90,font=\\normalsize] at (10.2, 100.5) {30};',
-         '\\node[rotate=0,font=\\normalsize] at (10.5, 100.2) {40};']
+         '\\node[rotate=90] at (10.8, 100.5) {10};',
+         '\\node[rotate=0] at (10.5, 100.8) {20};',
+         '\\node[rotate=90] at (10.2, 100.5) {30};',
+         '\\node[rotate=0] at (10.5, 100.2) {40};']
     """
     if rotate is None:
         rotate = []
@@ -179,18 +179,18 @@ def tile_to_tikz(tile, position, color=None, size=1,
     if top_right_edges:
         lines.append(r'\draw {} -- {};'.format((x+s,y+s), (x+s,y)))
         lines.append(r'\draw {} -- {};'.format((x+s,y+s), (x,y+s)))
-    node_str = r'\node[rotate={},font={}] at {} {{{}}};'
-    lines.append(node_str.format(rotate[0],fontsize,(x+s-t,y+.5),  tile[0]))
-    lines.append(node_str.format(rotate[1],fontsize,(x+.5, y+s-t), tile[1]))
-    lines.append(node_str.format(rotate[2],fontsize,(x+t,  y+.5),  tile[2]))
-    lines.append(node_str.format(rotate[3],fontsize,(x+.5, y+t),   tile[3]))
+    node_str = r'\node[rotate={}] at {} {{{}}};'
+    lines.append(node_str.format(rotate[0],(x+s-t,y+.5),  tile[0]))
+    lines.append(node_str.format(rotate[1],(x+.5, y+s-t), tile[1]))
+    lines.append(node_str.format(rotate[2],(x+t,  y+.5),  tile[2]))
+    lines.append(node_str.format(rotate[3],(x+.5, y+t),   tile[3]))
     #lines.append(r'\end{tikzpicture}')
     return lines
     #return TikzPicture('\n'.join(lines))
 
 
 def hexagonal_tile_to_tikz(tile, position, color=None, radius=1,
-        fontsize=r'\normalsize', rotate=(0,0,0,0,0,0), label_shift=.2, digits=5):
+        rotate=(0,0,0,0,0,0), label_shift=.2, digits=5):
     r"""
 
     INPUT:
@@ -199,7 +199,6 @@ def hexagonal_tile_to_tikz(tile, position, color=None, radius=1,
     - ``position`` -- tuple of two numbers
     - ``color`` -- dict (default: ``None``) from tile values -> tikz colors
     - ``radius`` -- number (default: ``1``), radius of the tile
-    - ``fontsize`` -- string (default: ``r'\normalsize'``
     - ``rotate`` -- list (default:``(0,0,0,0,0,0)``) of four angles in
       degrees, the rotation angle to apply to each label of Wang tiles
     - ``label_shift`` -- number (default: ``.2``) translation distance of the
@@ -223,12 +222,12 @@ def hexagonal_tile_to_tikz(tile, position, color=None, radius=1,
          '\\fill[red] (10, 10) -- (9.1340, 9.5000) -- (10.000, 9.0000) -- cycle;',
          '\\fill[cyan] (10, 10) -- (10.000, 9.0000) -- (10.866, 9.5000) -- cycle;',
          '\\draw (10.866, 9.5000) -- (10.866, 10.500) -- (10.000, 11.000) -- (9.1340, 10.500) -- (9.1340, 9.5000) -- (10.000, 9.0000) -- (10.866, 9.5000);',
-         '\\node[rotate=0,font=\\normalsize] at (10.666, 10.000) {1};',
-         '\\node[rotate=0,font=\\normalsize] at (10.333, 10.577) {2};',
-         '\\node[rotate=0,font=\\normalsize] at (9.6670, 10.577) {3};',
-         '\\node[rotate=0,font=\\normalsize] at (9.3340, 10.000) {4};',
-         '\\node[rotate=0,font=\\normalsize] at (9.6670, 9.4232) {1};',
-         '\\node[rotate=0,font=\\normalsize] at (10.333, 9.4232) {2};']
+         '\\node[rotate=0] at (10.666, 10.000) {1};',
+         '\\node[rotate=0] at (10.333, 10.577) {2};',
+         '\\node[rotate=0] at (9.6670, 10.577) {3};',
+         '\\node[rotate=0] at (9.3340, 10.000) {4};',
+         '\\node[rotate=0] at (9.6670, 9.4232) {1};',
+         '\\node[rotate=0] at (10.333, 9.4232) {2};']
     """
     from sage.modules.free_module_element import vector
     from sage.symbolic.constants import pi
@@ -249,12 +248,12 @@ def hexagonal_tile_to_tikz(tile, position, color=None, radius=1,
             lines.append(triangle.format(color[tile[i]],c,p.n(digits=digits),q.n(digits=digits)))
     contour = ' -- '.join(['{}'.format(v.n(digits=digits)) for v in vertices])
     lines.append(r'\draw {};'.format(contour))
-    node_str = r'\node[rotate={},font={}] at {} {{{}}};'
+    node_str = r'\node[rotate={}] at {} {{{}}};'
     for i in range(6):
         angle = i*pi/3
         coeff = radius*cos(pi/6) - label_shift
         p = position + coeff*vector((cos(angle), sin(angle)))
-        lines.append(node_str.format(rotate[i],fontsize,p.n(digits=digits),tile[i]))
+        lines.append(node_str.format(rotate[i],p.n(digits=digits),tile[i]))
     return lines
     #lines.append(r'\end{tikzpicture}')
     #return TikzPicture('\n'.join(lines))
@@ -577,8 +576,9 @@ class WangTileSet(WangTileSet_generic):
             ieqs.append(v)
         return Polyhedron(ieqs=ieqs, eqns=eqns)
 
+    @rename_keyword(fontsize='font')
     def tikz(self, ncolumns=10, color=None, size=1, space=.1, scale=1,
-             fontsize=r'\normalsize', rotate=None, label_shift=.2):
+             font=r'\normalsize', rotate=None, label_shift=.2):
         r"""
         INPUT:
 
@@ -587,7 +587,7 @@ class WangTileSet(WangTileSet_generic):
         - ``size`` -- number (default: ``1``)
         - ``space`` -- number (default: ``.1``)
         - ``scale`` -- number (default: ``1``)
-        - ``fontsize`` -- string (default: ``r'\normalsize'``)
+        - ``font`` -- string (default: ``r'\normalsize'``)
         - ``rotate`` -- list or ``None`` (default:``None``) list of four angles
           in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
           label of Wang tiles. If ``None``, it performs a 90 degres rotation
@@ -608,13 +608,14 @@ class WangTileSet(WangTileSet_generic):
         lines = []
         lines.append(r'\begin{tikzpicture}')
         lines.append('[scale={}]'.format(scale))
+        lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
         for i,tile in enumerate(self):
             x = i % ncolumns
             y = - (i // ncolumns)
             position = (x * (size + space), y * (size + space))
             new_lines = tile_to_tikz(tile, position, color=color,
-                    size=size, fontsize=fontsize, rotate=rotate,
-                    label_shift=label_shift, top_right_edges=True)
+                    size=size, rotate=rotate, label_shift=label_shift,
+                    top_right_edges=True)
             lines.extend(new_lines)
         lines.append(r'\end{tikzpicture}')
         return TikzPicture('\n'.join(lines))
@@ -638,8 +639,9 @@ class WangTileSet(WangTileSet_generic):
             tiling.tikz().pdf('{}-{}.pdf'.format(prefix,i))
             tiling.tikz(color).pdf('{}-{}_colored.pdf'.format(prefix,i))
 
+    @rename_keyword(fontsize='font')
     def create_macro_file(self, filename='macro.tex', command_name='Tile',
-            color=None, size=1, scale=1, fontsize=r'\normalsize',
+            color=None, size=1, scale=1, font=r'\normalsize',
             rotate=None, label_shift=.2):
         r"""
         INPUT:
@@ -649,7 +651,7 @@ class WangTileSet(WangTileSet_generic):
         - ``color`` -- dict (default: None)
         - ``size`` -- number (default: ``1``)
         - ``scale`` -- number (default: ``1``)
-        - ``fontsize`` -- string (default: ``r'\normalsize'``)
+        - ``font`` -- string (default: ``r'\normalsize'``)
         - ``rotate`` -- list or ``None`` (default:``None``) list of four angles
           in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
           label of Wang tiles. If ``None``, it performs a 90 degres rotation
@@ -679,9 +681,10 @@ class WangTileSet(WangTileSet_generic):
             lines.append(r'\newcommand\{}{}{{'.format(command_name, roman_i))
             lines.append(r'\begin{tikzpicture}')
             lines.append('[scale={}]'.format(scale))
+            lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
             new_lines = tile_to_tikz(tile, position=(0,0), color=color,
-                    size=size, fontsize=fontsize, rotate=rotate,
-                    label_shift=label_shift, top_right_edges=True)
+                    size=size, rotate=rotate, label_shift=label_shift,
+                    top_right_edges=True)
             lines.extend(new_lines)
             lines.append(r'\end{tikzpicture}')
             lines.append(r'} % end of newcommand')
@@ -690,9 +693,9 @@ class WangTileSet(WangTileSet_generic):
             f.write(s)
             print("creation of file {}".format(filename))
 
-
+    @rename_keyword(fontsize='font')
     def substitution_tikz(self, substitution, function=None, color=None,
-            size=1, scale=1, fontsize=r'\normalsize', rotate=None,
+            size=1, scale=1, font=r'\normalsize', rotate=None,
             label_shift=.2, transformation_matrix=None, ncolumns=4,
             tabular='tabular', align='l'):
         r"""
@@ -709,7 +712,7 @@ class WangTileSet(WangTileSet_generic):
         - ``color`` -- dict (default: ``None``) from tile values -> tikz colors
         - ``size`` -- number (default: ``1``), size of the tile
         - ``scale`` -- number (default: ``1``), scale of tikzpicture
-        - ``fontsize`` -- string (default: ``r'\normalsize'``
+        - ``font`` -- string (default: ``r'\normalsize'``
         - ``rotate`` -- list or ``None`` (default:``None``) list of four angles
           in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
           label of Wang tiles. If ``None``, it performs a 90 degres rotation
@@ -957,8 +960,9 @@ class HexagonalWangTileSet(WangTileSet_generic):
         sage: tiles = [(0,0,0,0,0,0), (1,1,1,1,1,1), (2,2,2,2,2,2)]
         sage: T = HexagonalWangTileSet(tiles)
     """
+    @rename_keyword(fontsize='font')
     def tikz(self, ncolumns=10, color=None, radius=1, space=.1, scale=1,
-             fontsize=r'\normalsize', rotate=(0,0,0,0,0,0), label_shift=.2):
+             font=r'\normalsize', rotate=(0,0,0,0,0,0), label_shift=.2):
         r"""
         INPUT:
 
@@ -967,7 +971,7 @@ class HexagonalWangTileSet(WangTileSet_generic):
         - ``radius`` -- number (default: ``1``)
         - ``space`` -- number (default: ``.1``)
         - ``scale`` -- number (default: ``1``)
-        - ``fontsize`` -- string (default: ``r'\normalsize'``
+        - ``font`` -- string (default: ``r'\normalsize'``
         - ``rotate`` -- list (default:``(0,0,0,0,0,0)``) of four angles in
           degrees, the rotation angle to apply to each label of Wang tiles
         - ``label_shift`` -- number (default: ``.2``) translation distance
@@ -990,13 +994,13 @@ class HexagonalWangTileSet(WangTileSet_generic):
         lines = []
         lines.append(r'\begin{tikzpicture}')
         lines.append('[scale={}]'.format(scale))
+        lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
         for i,tile in enumerate(self):
             x = i % ncolumns
             y = - (i // ncolumns)
             position = (x * (2*radius + space), y * (2*radius + space))
             new_lines = hexagonal_tile_to_tikz(tile, position, color=color,
-                    radius=radius, fontsize=fontsize, rotate=rotate,
-                    label_shift=label_shift)
+                    radius=radius, rotate=rotate, label_shift=label_shift)
             lines.extend(new_lines)
         lines.append(r'\end{tikzpicture}')
         return TikzPicture('\n'.join(lines))
@@ -1828,6 +1832,7 @@ class WangTiling(object):
         from sage.plot.graphics import Graphics
         from sage.plot.point import points
         from sage.plot.text import text
+        from sage.misc.latex import latex
         from random import randrange
 
         G = Graphics()
@@ -1991,7 +1996,8 @@ class WangTiling(object):
         s = sum(C.values())
         return {k:QQ((v,s)) for k,v in C.items()}
 
-    def tikz(self, color=None, fontsize=r'\normalsize', rotate=None,
+    @rename_keyword(fontsize='font')
+    def tikz(self, color=None, font=r'\normalsize', rotate=None,
             label_shift=.2, scale=1, transformation_matrix=None):
         r"""
         Return a tikzpicture showing one solution.
@@ -1999,7 +2005,7 @@ class WangTiling(object):
         INPUT:
 
         - ``color`` -- None or dict from tile values -> tikz colors
-        - ``fontsize`` -- string (default: ``r'\normalsize'``
+        - ``font`` -- string (default: ``r'\normalsize'``
         - ``rotate`` -- list or ``None`` (default:``None``) list of four angles
           in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
           label of Wang tiles. If ``None``, it performs a 90 degres rotation
@@ -2029,17 +2035,17 @@ class WangTiling(object):
             \usepackage{amsmath}
             \begin{document}
             \begin{tikzpicture}[scale=1]
+            \tikzstyle{every node}=[font=\normalsize]
             % tile at position (x,y)=(0, 0)
             \draw (0, 0) -- (1, 0);
             \draw (0, 0) -- (0, 1);
-            \draw (1, 1) -- (1, 0);
             ...
-            ... 100 lines not printed (4078 characters in total) ...
+            ... 101 lines not printed (3304 characters in total) ...
             ...
-            \node[rotate=0,font=\normalsize] at (2.8, 3.5) {0};
-            \node[rotate=0,font=\normalsize] at (2.5, 3.8) {0};
-            \node[rotate=0,font=\normalsize] at (2.2, 3.5) {0};
-            \node[rotate=0,font=\normalsize] at (2.5, 3.2) {0};
+            \node[rotate=0] at (2.8, 3.5) {0};
+            \node[rotate=0] at (2.5, 3.8) {0};
+            \node[rotate=0] at (2.2, 3.5) {0};
+            \node[rotate=0] at (2.5, 3.2) {0};
             \end{tikzpicture}
             \end{document}
 
@@ -2073,7 +2079,7 @@ class WangTiling(object):
             sage: tiles = [(0,3,1,2), (1,2,0,3)]
             sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
             sage: color = {0:'white',1:'red',2:'blue',3:'green'}
-            sage: t = WangTiling(table, tiles, color).tikz(fontsize=r'\Huge')
+            sage: t = WangTiling(table, tiles, color).tikz(font=r'\Huge')
             sage: t = WangTiling(table, tiles, color).tikz(rotate=(0,90,0,0))
             sage: t = WangTiling(table, tiles, color).tikz(label_shift=.05)
             sage: t = WangTiling(table, tiles, color).tikz(scale=4)
@@ -2088,6 +2094,7 @@ class WangTiling(object):
             transformation_matrix = matrix.identity(2)
         lines = []
         lines.append(r'\begin{{tikzpicture}}[scale={}]'.format(scale))
+        lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
         W = self.width()
         H = self.height()
         ## missing lines on the top
@@ -2106,8 +2113,8 @@ class WangTiling(object):
                 position = transformation_matrix*vector((j,k))
                 tile = self._tiles[i]
                 more_lines = tile_to_tikz(tile, position, color=color,
-                        size=1, fontsize=fontsize, rotate=rotate,
-                        label_shift=label_shift, top_right_edges=True)
+                        size=1, rotate=rotate, label_shift=label_shift,
+                        top_right_edges=True)
                 lines.extend(more_lines)
         lines.append(r'\end{tikzpicture}')
         from slabbe import TikzPicture
