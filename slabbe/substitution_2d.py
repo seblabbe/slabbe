@@ -22,6 +22,8 @@ EXAMPLES::
 from __future__ import absolute_import, print_function
 import itertools
 
+from sage.misc.decorators import rename_keyword
+
 class Substitution2d(object):
     r"""
     INPUT:
@@ -502,8 +504,9 @@ class Substitution2d(object):
         """
         raise NotImplementedError('method desubstitute moved to wang tile')
 
+    @rename_keyword(fontsize='font')
     def wang_tikz(self, domain_tiles, codomain_tiles, color=None, size=1,
-            scale=1, fontsize=r'\normalsize', rotate=None, label_shift=.2,
+            scale=1, font=r'\normalsize', rotate=None, label_shift=.2,
             transformation_matrix=None, ncolumns=4, tabular='tabular',
             align='l', direction='right'):
         r"""
@@ -517,7 +520,7 @@ class Substitution2d(object):
         - ``color`` -- dict (default: ``None``) from tile values -> tikz colors
         - ``size`` -- number (default: ``1``), size of the tile
         - ``scale`` -- number (default: ``1``), scale of tikzpicture
-        - ``fontsize`` -- string (default: ``r'\normalsize'``
+        - ``font`` -- string (default: ``r'\normalsize'``
         - ``rotate`` -- list or ``None`` (default:``None``) list of four angles
           in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
           label of Wang tiles. If ``None``, it performs a 90 degres rotation
@@ -596,9 +599,10 @@ class Substitution2d(object):
 
             lines.append(r'\begin{tikzpicture}')
             lines.append(r'[scale={}]'.format(scale))
+            lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
             new_lines = tile_to_tikz(desubstituted_tile, (0,0), color=color,
-                    size=size, fontsize=fontsize, rotate=rotate,
-                    label_shift=label_shift, top_right_edges=True)
+                    size=size, rotate=rotate, label_shift=label_shift,
+                    top_right_edges=True)
             lines.extend(new_lines)
 
             if direction == 'right':
@@ -608,7 +612,7 @@ class Substitution2d(object):
 
             image_a = self._d[a]
             tiling = WangTiling(image_a, codomain_tiles, color)
-            tikz = tiling.tikz(color=color, fontsize=fontsize, rotate=rotate,
+            tikz = tiling.tikz(color=color, font=font, rotate=rotate,
                     label_shift=label_shift, scale=scale,
                     transformation_matrix=transformation_matrix)
             if direction == 'right':
@@ -631,5 +635,91 @@ class Substitution2d(object):
         from sage.misc.latex import LatexExpr
         return LatexExpr('\n'.join(lines))
 
+    def list_2x2_factors(self):
+        r"""
+        Return the list of 2x2 factors in the associated substitutive shift.
+
+        INPUT:
+
+        - ``self`` -- expansive and primitive 2d substitution
+
+        OUTPUT:
+
+            list of tables
+
+        EXAMPLES::
+
+            sage: from slabbe import Substitution2d
+            sage: A = [[0,1],[0,1]]
+            sage: B = [[1,0],[1,1]]
+            sage: d = {0:A, 1:B}
+            sage: s = Substitution2d(d)
+            sage: s.list_2x2_factors()
+            [[[0, 1], [0, 1]],
+             [[1, 0], [1, 1]],
+             [[1, 1], [1, 0]],
+             [[1, 1], [1, 1]],
+             [[1, 1], [0, 1]],
+             [[1, 1], [0, 0]],
+             [[0, 1], [1, 1]],
+             [[1, 0], [0, 1]],
+             [[0, 0], [1, 0]],
+             [[0, 1], [1, 0]],
+             [[1, 0], [1, 0]],
+             [[1, 0], [0, 0]]]
+
+        """
+        from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
+        alphabet = self.domain_alphabet()
+        a = next(iter(alphabet))
+        table = [[a]]
+        while len(table) < 2 or len(table[0]) < 2:
+            table = self(table)
+        shape = [(0,0), (0,1), (1,0), (1,1)]
+        seeds = set_of_factors(table, shape)
+        def children(factor):
+            table = [[factor[0], factor[1]],
+                     [factor[2], factor[3]]]
+            image = self(table)
+            S = set_of_factors(image, shape)
+            return S
+        R = RecursivelyEnumeratedSet(seeds, children)
+        return [ [[a, b], [c, d]] for (a,b,c,d) in R]
+
     _matrix_ = incidence_matrix
+
+def set_of_factors(table, shape, avoid_border=0):
+    r"""
+    Return the set of factors of given shape in the table.
+
+    INPUT
+
+    - ``table`` -- list of lists
+    - ``shape`` -- list, list of coordinates
+    - ``avoid_border`` -- integer (default: 0), the size of the border
+        to avoid during the computation
+
+    OUTPUT:
+
+        set of tuple of integers
+
+    EXAMPLES::
+
+        sage: from slabbe.substitution_2d import set_of_factors
+        sage: table = [[0,1,2], [3,4,5], [6,7,8]]
+        sage: set_of_factors(table, shape=[(0,0), (1,0), (0,1), (1,1)])
+        {(0, 3, 1, 4), (1, 4, 2, 5), (3, 6, 4, 7), (4, 7, 5, 8)}
+    """
+    xmin = min(x for (x,y) in shape)
+    xmax = max(x for (x,y) in shape)
+    ymin = min(y for (x,y) in shape)
+    ymax = max(y for (x,y) in shape)
+    width = len(table)
+    height = len(table[0])
+    S = set()
+    for i in range(0-xmin+avoid_border, width-xmax-avoid_border):
+        for j in range(0-ymin+avoid_border, height-ymax-avoid_border):
+            pattern = tuple(table[i+x][j+y] for (x,y) in shape)
+            S.add(pattern)
+    return S
 
