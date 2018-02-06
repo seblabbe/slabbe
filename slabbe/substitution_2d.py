@@ -595,11 +595,12 @@ class Substitution2d(object):
         lines = []
         lines.append(r'\begin{{{}}}{{{}}}'.format(tabular, align*ncolumns))
         for i,a in enumerate(self._d):
-            desubstituted_tile = domain_tiles[a] 
 
             lines.append(r'\begin{tikzpicture}')
             lines.append(r'[scale={}]'.format(scale))
             lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
+
+            desubstituted_tile = domain_tiles[a] 
             new_lines = tile_to_tikz(desubstituted_tile, (0,0), color=color,
                     size=size, rotate=rotate, label_shift=label_shift,
                     top_right_edges=True)
@@ -615,6 +616,7 @@ class Substitution2d(object):
             tikz = tiling.tikz(color=color, font=font, rotate=rotate,
                     label_shift=label_shift, scale=scale,
                     transformation_matrix=transformation_matrix)
+
             if direction == 'right':
                 xshift = 2.0 + .5 * len(image_a)
                 yshift = .5

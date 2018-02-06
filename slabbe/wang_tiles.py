@@ -938,7 +938,7 @@ class WangTileSet(WangTileSet_generic):
         TU_graph = TU.graph()
         SCC = [g for g in TU_graph.strongly_connected_components_subgraphs()
                  if g.num_edges()]
-        V = set.union(*[set(s.vertices()) for s in SCC])
+        V = set().union(*[set(s.vertices()) for s in SCC])
         V = set(tuple(a.label() for a in state) for state in V)
         tiles = []
         for t in TU.transitions():
@@ -1010,6 +1010,7 @@ class WangTileSet(WangTileSet_generic):
 
         - ``radius`` - integer
         - ``solver`` - string or None
+        - ``verbose`` - boolean
 
         EXAMPLES::
 
@@ -1045,6 +1046,42 @@ class WangTileSet(WangTileSet_generic):
                                 s.solve(solver)._table))
                 L.append(t)
         return WangTileSet(L)
+
+    def allowed_tilings(self, width, height, radius=1, solver=None, verbose=False):
+        r"""
+        Return the set of valid of a rectangle of given width and height
+        allowing a surrounding of itself of given radius.
+
+        INPUT:
+
+        - ``width`` - integer
+        - ``height`` - integer
+        - ``radius`` - integer
+        - ``solver`` - string or None
+        - ``verbose`` - boolean
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
+            sage: tiles = [map(str, tile) for tile in tiles]
+            sage: T = WangTileSet(tiles)
+            sage: T.allowed_tilings(2,2)
+
+        """
+        T = base = self
+        for _ in range(width-1):
+            T = T.fusion(base, 1, map_str=True)
+        base = T
+        for _ in range(height-1):
+            T = T.fusion(base, 2, map_str=True)
+        if verbose:
+            print("After fusion: ", T)
+        T = T.tiles_allowing_surrounding(1)
+        if verbose:
+            print("After surrounding: ", T)
+        raise NotImplementedError('code is not finished')
+        return T
 
 class HexagonalWangTileSet(WangTileSet_generic):
     r"""
