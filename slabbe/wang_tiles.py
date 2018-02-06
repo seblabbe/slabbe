@@ -881,15 +881,16 @@ class WangTileSet(WangTileSet_generic):
                 seen[pos].add(word)
         return set.intersection(*seen.values())
 
-    def composition(self, other, map_str=True):
+    def fusion(self, other, direction, map_str=True):
         r"""
-        Return the composition of the wang tile set with itself (as transducer).
+        Return the fusion of wang tile sets in the given direction.
 
         We keep only the strongly connected components.
 
         INPUT:
 
         - ``other`` -- WangTileSet
+        - ``direction`` -- integer (1 or 2)
         - ``map_str`` -- bool (default:``True``), whether to map states to
           strings
 
@@ -899,34 +900,41 @@ class WangTileSet(WangTileSet_generic):
             sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB']
             sage: tiles = map(tuple, tiles)
             sage: T = WangTileSet(tiles)
-            sage: TT = T.composition(T)
-            sage: TT
-            Wang tile set of cardinality 1
-            sage: TT.tiles()
+            sage: T1T = T.fusion(T, 1)
+            sage: T1T.tiles()
+            [('A', 'BB', 'A', 'BB')]
+            sage: T2T = T.fusion(T, 2)
+            sage: T2T.tiles()
             [('AA', 'B', 'AA', 'B')]
 
         ::
 
             sage: tiles = [(0,1,0,1)]
             sage: T = WangTileSet(tiles)
-            sage: TT = T.composition(T)
-            sage: TT
-            Wang tile set of cardinality 1
-            sage: TT.tiles()
+            sage: T.fusion(T, 2).tiles()
             [('00', '1', '00', '1')]
+            sage: T.fusion(T, 1).tiles()
+            [('0', '11', '0', '11')]
 
         Keeping the states as integers::
 
-            sage: TT = T.composition(T, map_str=False)
+            sage: TT = T.fusion(T, 2, map_str=False)
             sage: TT.tiles()
             [((0, 0), (1,), (0, 0), (1,))]
         """
         if not isinstance(other, WangTileSet):
             raise TypeError('other(={}) must be a'
                     ' WangTileSet'.format(other))
+        if direction == 1:
+            return self.dual().fusion(other.dual(), direction=2,
+                    map_str=map_str).dual()
+        if not direction == 2:
+            raise ValueError('direction(={}) must be 1 or 2'.format(direction))
+
         T = self.to_transducer()
         U = other.to_transducer()
         TU = T.composition(U)
+
         TU_graph = TU.graph()
         SCC = [g for g in TU_graph.strongly_connected_components_subgraphs()
                  if g.num_edges()]
@@ -944,6 +952,99 @@ class WangTileSet(WangTileSet_generic):
         if map_str:
             tiles = [tuple(''.join(map(str,a)) for a in tile) for tile in tiles]
         return WangTileSet(tiles)
+
+    def solver(self, width, height, preassigned_color=None,
+            preassigned_tiles=None, color=None):
+        r"""
+        Return the Wang tile solver of this Wang tile set inside a
+        rectangle of given width and height.
+
+        INPUT:
+
+        - ``width`` -- integer
+        - ``height`` -- integer
+        - ``preassigned_color`` -- None or list of 4 dict or the form ``[{},
+          {}, {}, {}]`` right, top, left, bottom colors preassigned to some
+          positions (on the border or inside)
+        - ``preassigned_tiles`` -- None or dict of tiles preassigned to some
+          positions
+        - ``color`` -- None or dict
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
+            sage: T = WangTileSet(tiles)
+            sage: W = T.solver(3,3)
+            sage: W.solve()
+            A wang tiling of a 3 x 3 rectangle
+
+        TESTS::
+
+            sage: W = T.solver(3,3, preassigned_tiles={(1,1):0})
+            sage: W.solve()._table
+            [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+            sage: W = T.solver(3,3, preassigned_tiles={(1,1):1})
+            sage: W.solve()._table
+            [[1, 1, 1], [1, 1, 1], [1, 1, 1]]
+            sage: W = T.solver(3,3, preassigned_tiles={(1,1):2})
+            sage: W.solve()._table
+            [[2, 2, 2], [2, 2, 2], [2, 2, 2]]
+            sage: W = T.solver(3,3, preassigned_tiles={(1,1):3})
+            sage: W.solve()._table
+            Traceback (most recent call last):
+            ...
+            MIPSolverException: ...
+
+        """
+        return WangTileSolver(self._tiles, width, height,
+                preassigned_color=preassigned_color,
+                preassigned_tiles=preassigned_tiles,
+                color=color)
+
+    def tiles_allowing_surrounding(self, radius, solver=None, verbose=False):
+        r"""
+        Return the subset of tiles allowing a surrounding of given radius.
+
+        INPUT:
+
+        - ``radius`` - integer
+        - ``solver`` - string or None
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
+            sage: T = WangTileSet(tiles)
+            sage: U = T.tiles_allowing_surrounding(1)
+            sage: U
+            Wang tile set of cardinality 3
+            sage: U.tiles()
+            [(0, 0, 0, 0), (1, 1, 1, 1), (2, 2, 2, 2)]
+
+        ::
+
+            sage: T.tiles_allowing_surrounding(1, verbose=True)
+            Solution found for tile 0:
+            [[0, 0, 3], [0, 0, 0], [0, 0, 0]]
+            Solution found for tile 1:
+            [[1, 1, 1], [1, 1, 1], [1, 1, 1]]
+            Solution found for tile 2:
+            [[2, 2, 2], [2, 2, 2], [2, 2, 2]]
+            Wang tile set of cardinality 3
+
+        """
+        diameter = 2*radius+1
+        L = []
+        for i,t in enumerate(self):
+            d = {(radius,radius):i}
+            s = self.solver(diameter, diameter, preassigned_tiles=d)
+            if s.has_solution(solver=solver):
+                if verbose:
+                    print("Solution found for tile {}:\n{}".format(i,
+                                s.solve(solver)._table))
+                L.append(t)
+        return WangTileSet(L)
 
 class HexagonalWangTileSet(WangTileSet_generic):
     r"""
@@ -1007,6 +1108,8 @@ class HexagonalWangTileSet(WangTileSet_generic):
 
 class WangTileSolver(object):
     r"""
+    Wang tile solver inside a rectangle of given width and height.
+
     INPUT:
 
     - ``tiles`` -- list of tiles, a tile is a 4-tuple (right color, top
@@ -1055,6 +1158,15 @@ class WangTileSolver(object):
         Traceback (most recent call last):
         ...
         MIPSolverException: GLPK: Problem has no feasible solution
+
+    TESTS::
+
+        sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
+        sage: preassigned = {(0,1):1}
+        sage: W = WangTileSolver(tiles,3,3,preassigned_tiles=preassigned)
+        sage: tiling = W.solve()
+        sage: tiling._table
+        [[1, 1, 1], [1, 1, 1], [1, 1, 1]]
     """
     def __init__(self, tiles, width, height, preassigned_color=None,
             preassigned_tiles=None, color=None):
@@ -1283,6 +1395,73 @@ class WangTileSolver(object):
             for i,j,k in support:
                 table[j][k] = i
             return WangTiling(table, self._tiles, color=self._color)
+
+    def has_solution(self, solver=None, solver_parameters=None, ncpus=1):
+        r"""
+        Return whether there is a solution.
+
+        .. TODO::
+
+            - Currently, the dancing links reduction ignores the
+              preassigned parameters.
+
+        INPUT:
+
+        - ``solver`` -- string or None (default: ``None``),
+          ``'dancing_links'`` or the name of a MILP solver in Sage like
+          ``'GLPK'``, ``'Coin'`` or ``'Gurobi'``.
+        - ``solver_parameters`` -- dict (default: ``{}``), parameters given
+          to the MILP solver using method ``solver_parameter``. For a list
+          of available parameters for example for the Gurobi backend, see
+          dictionary ``parameters_type`` in the file
+          ``sage/numerical/backends/gurobi_backend.pyx``
+        - ``ncpus`` -- integer (default: ``1``), maximal number of
+          subprocesses to use at the same time, used only if ``solver`` is
+          ``'dancing_links'``.
+
+        OUTPUT:
+
+            a wang tiling object
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSolver
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: W = WangTileSolver(tiles,3,4)
+            sage: W.has_solution()
+            True
+
+        Allowing more threads while using Gurobi::
+
+            sage: W = WangTileSolver(tiles,3,4)
+            sage: kwds = dict(Threads=4)
+            sage: tiling = W.has_solution(solver='Gurobi', kwds) # optional Gurobi
+            True
+
+        Using dancing links::
+
+            sage: W = WangTileSolver(tiles,3,4)
+            sage: W.has_solution(solver='dancing_links', ncpus=8)
+            True
+        """
+        if solver == 'dancing_links':
+            from sage.combinat.matrices.dancing_links import dlx_solver
+            rows,row_info = self.rows_and_information()
+            dlx = dlx_solver(rows)
+            solution = dlx.one_solution(ncpus=ncpus)
+            return solution is not None
+        else:
+            p,x = self.milp(solver=solver)
+            if solver_parameters is None:
+                solver_parameters = {}
+            for key, value in solver_parameters.items():
+                p.solver_parameter(key, value)
+            from sage.numerical.mip import MIPSolverException
+            try:
+                p.solve()
+            except MIPSolverException:
+                return False
+            return True
 
     def rows_and_information(self, verbose=False):
         r"""
