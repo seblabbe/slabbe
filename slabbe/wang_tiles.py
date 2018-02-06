@@ -1013,9 +1013,12 @@ class WangTileSolver(object):
       color, left color, bottom color)
     - ``width`` -- integer
     - ``height`` -- integer
-    - ``preassigned`` -- None or list of 4 dict or the form ``[{}, {}, {}, {}]``
-      right, top, left, bottom colors preassigned to some positions (on
-      the border or inside)
+    - ``preassigned_color`` -- None or list of 4 dict or the form ``[{},
+      {}, {}, {}]`` right, top, left, bottom colors preassigned to some
+      positions (on the border or inside)
+    - ``preassigned_tiles`` -- None or dict of tiles preassigned to some
+      positions
+    - ``color`` -- None or dict
 
     EXAMPLES::
 
@@ -1030,21 +1033,31 @@ class WangTileSolver(object):
 
         sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
         sage: right = {(1,1):2}
-        sage: W = WangTileSolver(tiles,3,3,preassigned=[right,{},{},{}])
+        sage: W = WangTileSolver(tiles,3,3,preassigned_color=[right,{},{},{}])
         sage: tiling = W.solve()
         sage: tiling._table
         [[2, 2, 2], [2, 2, 2], [2, 2, 2]]
 
+    With tile 2 preassigned at position (0,1)::
+
+        sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+        sage: preassigned = {(0,1):1}
+        sage: W = WangTileSolver(tiles,3,3,preassigned_tiles=preassigned)
+        sage: tiling = W.solve()
+        sage: tiling._table
+        [[1, 1, 1], [1, 1, 1], [1, 1, 1]]
+
     When constraints are inconsistent::
 
         sage: right = {(1,1):1, (2,2):0}
-        sage: W = WangTileSolver(tiles,3,3,preassigned=[right,{},{},{}])
+        sage: W = WangTileSolver(tiles,3,3,preassigned_color=[right,{},{},{}])
         sage: W.solve(solver='GLPK')
         Traceback (most recent call last):
         ...
         MIPSolverException: GLPK: Problem has no feasible solution
     """
-    def __init__(self, tiles, width, height, preassigned=None, color=None):
+    def __init__(self, tiles, width, height, preassigned_color=None,
+            preassigned_tiles=None, color=None):
         r"""
         See class for documentation.
 
@@ -1057,9 +1070,12 @@ class WangTileSolver(object):
         self._tiles = tiles
         self._width = width
         self._height = height
-        if preassigned is None:
-            preassigned = [{}, {}, {}, {}]
-        self._preassigned = preassigned
+        if preassigned_color is None:
+            preassigned_color = [{}, {}, {}, {}]
+        self._preassigned_color = preassigned_color
+        if preassigned_tiles is None:
+            preassigned_tiles = {}
+        self._preassigned_tiles = preassigned_tiles
         self._color = color
 
     def vertical_alphabet(self):
@@ -1138,6 +1154,12 @@ class WangTileSolver(object):
                 name = "one tile at {}".format((j,k))
                 p.add_constraint(S==1, name=name)
 
+        # preassigned tiles at position (j,k)
+        for j,k in self._preassigned_tiles:
+            i = self._preassigned_tiles[(j,k)]
+            name = "preassisgned tile {} at {}".format(i, (j,k))
+            p.add_constraint(x[i,j,k]==1, name=name)
+
         # matching vertical colors
         Va = sorted(self.vertical_alphabet())
         Va_to_int = {a:i for i,a in enumerate(Va)}
@@ -1160,14 +1182,14 @@ class WangTileSolver(object):
 
         # matching preassigned color constraints
         legend = {0:'right',1:'top',2:'left',3:'bottom'}
-        for angle, D in enumerate(self._preassigned):
+        for angle, D in enumerate(self._preassigned_color):
             if angle == 0 or angle == 2:
                 to_int = Va_to_int
             else:
                 to_int = Ha_to_int
             for j,k in D:
                 A = p.sum(to_int[tiles[i][angle]]*x[i,j,k] for i in indices)
-                name = "preassigned {} of {}".format(legend[angle], (j,k))
+                name = "preassigned color {} of {}".format(legend[angle], (j,k))
                 p.add_constraint(A==to_int[D[(j,k)]], name=name)
 
         p.set_objective(x[0,0,0])
@@ -1375,10 +1397,15 @@ class WangTileSolver(object):
              [(0, 0, 0), (1, 0, 0), (2, 0, 0), (3, 0, 0)])
 
         """
-        if any(d for d in self._preassigned):
+        if any(d for d in self._preassigned_color):
             raise NotImplementedError("preassigned colors were given (={}) "
                 "but the current reduction to dancing links ignores "
-                "preassigned colors".format(self._preassigned))
+                "preassigned colors".format(self._preassigned_color))
+
+        if self._preassigned_tiles:
+            raise NotImplementedError("preassigned tiles were given (={}) "
+                "but the current reduction to dancing links ignores "
+                "preassigned tiles".format(self._preassigned_tiles))
 
         from math import log, ceil
 
