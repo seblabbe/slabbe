@@ -63,6 +63,7 @@ Rao-Jeandel::
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 from __future__ import absolute_import, print_function
+import itertools
 from collections import Counter, defaultdict
 from sage.misc.cachefunc import cached_method
 from sage.numerical.mip import MixedIntegerLinearProgram
@@ -1066,7 +1067,13 @@ class WangTileSet(WangTileSet_generic):
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
             sage: tiles = [map(str, tile) for tile in tiles]
             sage: T = WangTileSet(tiles)
-            sage: T.allowed_tilings(2,2)
+            sage: S = T.allowed_tilings(2,2)
+            sage: S
+            [A wang tiling of a 2 x 2 rectangle,
+             A wang tiling of a 2 x 2 rectangle,
+             A wang tiling of a 2 x 2 rectangle]
+            sage: [a._table for a in S]
+            [[[0, 0], [0, 0]], [[1, 1], [1, 1]], [[2, 2], [2, 2]]]
 
         """
         T = base = self
@@ -1080,8 +1087,17 @@ class WangTileSet(WangTileSet_generic):
         T = T.tiles_allowing_surrounding(1)
         if verbose:
             print("After surrounding: ", T)
-        raise NotImplementedError('code is not finished')
-        return T
+        L = []
+        for t in T:
+            right = {(width-1,i):a for (i,a) in enumerate(t[0])}
+            top = {(i,height-1):a for (i,a) in enumerate(t[1])}
+            left = {(0,i):a for (i,a) in enumerate(t[2])}
+            bottom = {(i,0):a for (i,a) in enumerate(t[3])}
+            preassigned_color=[right,top,left,bottom]
+            W = self.solver(width, height,
+                    preassigned_color=preassigned_color)
+            L.extend(W.solutions_iterator())
+        return L
 
 class HexagonalWangTileSet(WangTileSet_generic):
     r"""
@@ -1306,7 +1322,7 @@ class WangTileSolver(object):
         # preassigned tiles at position (j,k)
         for j,k in self._preassigned_tiles:
             i = self._preassigned_tiles[(j,k)]
-            name = "preassisgned tile {} at {}".format(i, (j,k))
+            name = "preassigned tile {} at {}".format(i, (j,k))
             p.add_constraint(x[i,j,k]==1, name=name)
 
         # matching vertical colors
@@ -1348,11 +1364,6 @@ class WangTileSolver(object):
         r"""
         Return a dictionary associating to each tile a list of positions
         where to find this tile.
-
-        .. TODO::
-
-            - Currently, the dancing links reduction ignores the
-              preassigned parameters.
 
         INPUT:
 
@@ -1402,6 +1413,24 @@ class WangTileSolver(object):
             sage: tiling
             A wang tiling of a 3 x 4 rectangle
 
+        Using dancing links with tile 2 preassigned at position (0,1)::
+
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+            sage: preassigned = {(0,1):1}
+            sage: W = WangTileSolver(tiles,3,3,preassigned_tiles=preassigned)
+            sage: tiling = W.solve(solver='dancing_links')
+            sage: tiling._table
+            [[1, 1, 1], [1, 1, 1], [1, 1, 1]]
+
+        Using dancing links when constraints are inconsistent::
+
+            sage: right = {(1,1):1, (2,2):0}
+            sage: W = WangTileSolver(tiles,3,3,preassigned_color=[right,{},{},{}])
+            sage: W.solve(solver='dancing_links')
+            Traceback (most recent call last):
+            ...
+            ValueError: no solution found using dancing links
+
         REFERENCES:
 
             How do I set solver_parameter to make Gurobi use more than one
@@ -1412,6 +1441,8 @@ class WangTileSolver(object):
             rows,row_info = self.rows_and_information()
             dlx = dlx_solver(rows)
             solution = dlx.one_solution(ncpus=ncpus)
+            if solution is None:
+                raise ValueError('no solution found using dancing links')
             table = [[None]*self._height for _ in range(self._width)]
             for a in solution:
                 j,k,i = row_info[a]
@@ -1613,16 +1644,6 @@ class WangTileSolver(object):
              [(0, 0, 0), (1, 0, 0), (2, 0, 0), (3, 0, 0)])
 
         """
-        if any(d for d in self._preassigned_color):
-            raise NotImplementedError("preassigned colors were given (={}) "
-                "but the current reduction to dancing links ignores "
-                "preassigned colors".format(self._preassigned_color))
-
-        if self._preassigned_tiles:
-            raise NotImplementedError("preassigned tiles were given (={}) "
-                "but the current reduction to dancing links ignores "
-                "preassigned tiles".format(self._preassigned_tiles))
-
         from math import log, ceil
 
         # mapping the vertical colors to complementary binary strings
@@ -1670,6 +1691,9 @@ class WangTileSolver(object):
         H = self._height
         dict_of_rows = defaultdict(list)
 
+        # Preassigned colors
+        rightPRE,topPRE,leftPRE,bottomPRE = self._preassigned_color
+
         # matching vertical colors
         for j in range(W):
             for k in range(H):
@@ -1677,6 +1701,10 @@ class WangTileSolver(object):
                 for i,tile in enumerate(self._tiles):
                     # the tile i at position (j,k)
                     right,top,left,bottom = tile
+                    if (j,k) in rightPRE and rightPRE[(j,k)] != right:
+                        continue
+                    if (j,k) in leftPRE and leftPRE[(j,k)] != left:
+                        continue
                     A = left_color_to_digits[left]
                     B = right_color_to_digits[right]
                     row = []
@@ -1685,7 +1713,6 @@ class WangTileSolver(object):
                     if j < W-1:
                         row.extend([position+b for b in B])
                     dict_of_rows[(j,k,i)] = row
-
         column_shift = H*(W-1)*padtoV
 
         # matching horizontal colors
@@ -1695,6 +1722,10 @@ class WangTileSolver(object):
                 for i,tile in enumerate(self._tiles):
                     # the tile i at position (j,k)
                     right,top,left,bottom = tile
+                    if (j,k) in bottomPRE and bottomPRE[(j,k)] != bottom:
+                        continue
+                    if (j,k) in topPRE and topPRE[(j,k)] != top:
+                        continue
                     A = bottom_color_to_digits[bottom]
                     B = top_color_to_digits[top]
                     row = []
@@ -1703,7 +1734,6 @@ class WangTileSolver(object):
                     if k < H-1:
                         row.extend([column_shift+position+b for b in B])
                     dict_of_rows[(j,k,i)].extend(row)
-
         column_shift += W*(H-1)*padtoH
 
         # exactly one tile at each position
@@ -1713,7 +1743,14 @@ class WangTileSolver(object):
                 for i,tile in enumerate(self._tiles):
                     # the tile i at position (j,k)
                     dict_of_rows[(j,k,i)].append(column_shift+position)
+        column_shift += W*H
 
+        # Preassigned tiles
+        col = itertools.count(column_shift)
+        for (j,k),i in self._preassigned_tiles.items():
+            dict_of_rows[(j,k,i)].append(next(col))
+
+        # Creation of the rows and row information
         dict_of_rows = dict(dict_of_rows)
         sorted_keys = sorted(dict_of_rows)
         rows = [dict_of_rows[key] for key in sorted_keys]
@@ -1803,6 +1840,18 @@ class WangTileSolver(object):
             [A wang tiling of a 2 x 2 rectangle,
              A wang tiling of a 2 x 2 rectangle,
              A wang tiling of a 2 x 2 rectangle]
+
+        With preassigned colors and tiles::
+
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
+            sage: t = {(0,1):0}
+            sage: c = [{},{},{(1,1):0},{}]
+            sage: W = WangTileSolver(tiles,3,3,preassigned_tiles=t,preassigned_color=c)
+            sage: S = list(W.solutions_iterator())
+            sage: [s._table for s in S]
+            [[[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+             [[0, 0, 3], [0, 0, 0], [0, 0, 0]]]
+
         """
         from sage.combinat.matrices.dancing_links import dlx_solver
         rows,row_info = self.rows_and_information()
