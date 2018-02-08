@@ -1051,7 +1051,7 @@ class WangTileSet(WangTileSet_generic):
                 L.append(t)
         return WangTileSet(L)
 
-    def allowed_tilings(self, width, height, radius=1, solver=None, verbose=False):
+    def not_forbidden_tilings(self, width, height, radius=1, verbose=False):
         r"""
         Return the set of valid of a rectangle of given width and height
         allowing a surrounding of itself of given radius.
@@ -1061,8 +1061,9 @@ class WangTileSet(WangTileSet_generic):
         - ``width`` - integer
         - ``height`` - integer
         - ``radius`` - integer
-        - ``solver`` - string or None
         - ``verbose`` - boolean
+
+        .. TODO:: clean the map_str stuff
 
         EXAMPLES::
 
@@ -1070,7 +1071,7 @@ class WangTileSet(WangTileSet_generic):
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
             sage: tiles = [map(str, tile) for tile in tiles]
             sage: T = WangTileSet(tiles)
-            sage: S = T.allowed_tilings(2,2)
+            sage: S = T.not_forbidden_tilings(2,2)
             sage: S
             [A wang tiling of a 2 x 2 rectangle,
              A wang tiling of a 2 x 2 rectangle,
@@ -1082,14 +1083,17 @@ class WangTileSet(WangTileSet_generic):
         T = base = self
         for _ in range(width-1):
             T = T.fusion(base, 1, map_str=True)
+        if verbose:
+            print("After fusion in the direction e1: ", T)
         base = T
         for _ in range(height-1):
             T = T.fusion(base, 2, map_str=True)
         if verbose:
-            print("After fusion: ", T)
+            print("After fusion in the direction e2: ", T)
         T = T.tiles_allowing_surrounding(1)
         if verbose:
-            print("After surrounding: ", T)
+            print("After filtering tiles without surrounding of "
+                  "radius {} : {}".format(radius, T))
         L = []
         for t in T:
             right = {(width-1,i):a for (i,a) in enumerate(t[0])}
@@ -1943,6 +1947,19 @@ class WangTiling(object):
             3
         """
         return len(self._table)
+
+    def table(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTiling
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+            sage: tiling = WangTiling(table, tiles)
+            sage: tiling.table()
+            [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+        """
+        return self._table
 
     def transpose(self):
         table = [[column[j] for column in self._table]
