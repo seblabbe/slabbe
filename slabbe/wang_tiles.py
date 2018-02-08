@@ -433,11 +433,16 @@ class WangTileSet(WangTileSet_generic):
             transitions.append(transition)
         return Transducer(transitions)
 
-    def to_transducer_graph(self):
+    def to_transducer_graph(self, label_function=tuple):
         r"""
         Return the graph of the transducer.
 
         Labels are cleaned. Label of multiedges are merged with commas.
+
+        INPUT:
+
+        - ``label_function`` -- function (default:``tuple``), a function to
+          apply to each list of labels when merging multiedges into one
 
         EXAMPLES::
 
@@ -454,7 +459,21 @@ class WangTileSet(WangTileSet_generic):
             sage: G.edges()
             [('C', 'A', ('D|B', 'Y|X')), ('G', 'E', ('H|F',))]
 
-        compared to::
+        Using ``label_function``::
+
+            sage: fn = lambda L: ','.join(map(str, L))
+            sage: G = T.to_transducer_graph(label_function=fn)
+            sage: G.edges()
+            [('C', 'A', 'D|B,Y|X'), ('G', 'E', 'H|F')]
+
+        Using ``label_function`` with latex expressions::
+
+            sage: fn = lambda L: LatexExpr(','.join(map(str, L)))
+            sage: G = T.to_transducer_graph(label_function=fn)
+            sage: G.edges()
+            [('C', 'A', D|B,Y|X), ('G', 'E', H|F)]
+
+        This is to compared to::
 
             sage: T.to_transducer().graph().edges()
             [('C', 'A', "'D'|'B'"), ('C', 'A', "'Y'|'X'"), ('G', 'E', "'H'|'F'")]
@@ -469,15 +488,13 @@ class WangTileSet(WangTileSet_generic):
             sage: G.edges()
             [(2, 0, ('3|1', '3|5'))]
         """
-        from sage.graphs.digraph import DiGraph
         from slabbe.graph import merge_multiedges
-        edge_labels = lambda t:"{}|{}".format(t.word_in, t.word_out)
+        def edge_labels(t):
+            assert len(t.word_in) == 1, "we assume word_in is of length 1"
+            assert len(t.word_out) == 1, "we assume word_out is of length 1"
+            return "{}|{}".format(t.word_in[0], t.word_out[0])
         G = self.to_transducer().graph(edge_labels)
-        # first clean the label of the edges
-        edges = [(u,v,label.replace("'","")) for (u,v,label) in G.edges()]
-        G = DiGraph(edges, format='list_of_edges',
-                    loops=True, multiedges=True)
-        return merge_multiedges(G)
+        return merge_multiedges(G, label_function)
 
     def system_of_density_equations(self):
         r"""
@@ -883,7 +900,7 @@ class WangTileSet(WangTileSet_generic):
                 seen[pos].add(word)
         return set.intersection(*seen.values())
 
-    def fusion(self, other, direction, map_str=True):
+    def fusion(self, other, direction, function=str.__add__, initial=''):
         r"""
         Return the fusion of wang tile sets in the given direction.
 
@@ -893,8 +910,9 @@ class WangTileSet(WangTileSet_generic):
 
         - ``other`` -- WangTileSet
         - ``direction`` -- integer (1 or 2)
-        - ``map_str`` -- bool (default:``True``), whether to map states to
-          strings
+        - ``function`` -- function (default:``str.__add__``), monoid
+          operation
+        - ``initial`` -- object (default:``''``), monoid neutral
 
         EXAMPLES::
 
@@ -909,27 +927,24 @@ class WangTileSet(WangTileSet_generic):
             sage: T2T.tiles()
             [('AA', 'B', 'AA', 'B')]
 
-        ::
+        To keep integers, one way is to wrap them into a tuple and do tuple
+        operations::
 
             sage: tiles = [(0,1,0,1)]
+            sage: tiles = [tuple((a,) for a in tile) for tile in tiles]
             sage: T = WangTileSet(tiles)
-            sage: T.fusion(T, 2).tiles()
-            [('00', '1', '00', '1')]
-            sage: T.fusion(T, 1).tiles()
-            [('0', '11', '0', '11')]
+            sage: T2T = T.fusion(T, 2, function=tuple.__add__, initial=tuple())
+            sage: T2T2T = T2T.fusion(T, 2, function=tuple.__add__, initial=tuple())
+            sage: T2T2T.tiles()
+            [((0, 0, 0), (1,), (0, 0, 0), (1,))]
 
-        Keeping the states as integers::
-
-            sage: TT = T.fusion(T, 2, map_str=False)
-            sage: TT.tiles()
-            [((0, 0), (1,), (0, 0), (1,))]
         """
         if not isinstance(other, WangTileSet):
             raise TypeError('other(={}) must be a'
                     ' WangTileSet'.format(other))
         if direction == 1:
             return self.dual().fusion(other.dual(), direction=2,
-                    map_str=map_str).dual()
+                    function=function, initial=initial).dual()
         if not direction == 2:
             raise ValueError('direction(={}) must be 1 or 2'.format(direction))
 
@@ -944,17 +959,12 @@ class WangTileSet(WangTileSet_generic):
         H = clean_sources_and_sinks(G)
 
         tiles = []
-        for (u,v,label) in H.edges():
-            left = tuple(a.label() for a in u)
-            right = tuple(a.label() for a in v)
-            word_in, word_out = label
-            bottom = tuple(word_in)
-            top = tuple(word_out)
-            tile = (right, top, left, bottom)
-            tiles.append(tile)
-
-        if map_str:
-            tiles = [tuple(''.join(map(str,a)) for a in tile) for tile in tiles]
+        for (u,v,(word_in, word_out)) in H.edges():
+            left = reduce(function, (a.label() for a in u), initial)
+            right = reduce(function, (a.label() for a in v), initial)
+            bottom = reduce(function, word_in, initial)
+            top = reduce(function, word_out, initial)
+            tiles.append((right, top, left, bottom))
         return WangTileSet(tiles)
 
     def solver(self, width, height, preassigned_color=None,
@@ -983,19 +993,26 @@ class WangTileSet(WangTileSet_generic):
             sage: W.solve()
             A wang tiling of a 3 x 3 rectangle
 
-        TESTS::
+        ::
 
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+            sage: T = WangTileSet(tiles)
             sage: W = T.solver(3,3, preassigned_tiles={(1,1):0})
-            sage: W.solve()._table
+            sage: W.solve().table()
             [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
             sage: W = T.solver(3,3, preassigned_tiles={(1,1):1})
-            sage: W.solve()._table
+            sage: W.solve().table()
             [[1, 1, 1], [1, 1, 1], [1, 1, 1]]
             sage: W = T.solver(3,3, preassigned_tiles={(1,1):2})
-            sage: W.solve()._table
+            sage: W.solve().table()
             [[2, 2, 2], [2, 2, 2], [2, 2, 2]]
+
+        TESTS::
+
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
+            sage: T = WangTileSet(tiles)
             sage: W = T.solver(3,3, preassigned_tiles={(1,1):3})
-            sage: W.solve()._table
+            sage: W.solve().table()
             Traceback (most recent call last):
             ...
             MIPSolverException: ...
@@ -1051,7 +1068,8 @@ class WangTileSet(WangTileSet_generic):
                 L.append(t)
         return WangTileSet(L)
 
-    def not_forbidden_tilings(self, width, height, radius=1, verbose=False):
+    def not_forbidden_tilings(self, width, height, radius=1,
+            function=str.__add__, initial='', verbose=False):
         r"""
         Return the set of valid of a rectangle of given width and height
         allowing a surrounding of itself of given radius.
@@ -1061,9 +1079,11 @@ class WangTileSet(WangTileSet_generic):
         - ``width`` - integer
         - ``height`` - integer
         - ``radius`` - integer
+        - ``function`` -- function (default:``str.__add__``), monoid
+          operation for fusion of colors
+        - ``initial`` -- object (default:``''``), monoid neutral, for
+          fusion of colors
         - ``verbose`` - boolean
-
-        .. TODO:: clean the map_str stuff
 
         EXAMPLES::
 
@@ -1076,18 +1096,30 @@ class WangTileSet(WangTileSet_generic):
             [A wang tiling of a 2 x 2 rectangle,
              A wang tiling of a 2 x 2 rectangle,
              A wang tiling of a 2 x 2 rectangle]
-            sage: [a._table for a in S]
+            sage: [a.table() for a in S]
             [[[0, 0], [0, 0]], [[1, 1], [1, 1]], [[2, 2], [2, 2]]]
+
+        ::
+
+            sage: S = T.not_forbidden_tilings(3,3)
+            sage: S
+            [A wang tiling of a 3 x 3 rectangle,
+             A wang tiling of a 3 x 3 rectangle,
+             A wang tiling of a 3 x 3 rectangle]
+            sage: [a.table() for a in S]
+            [[[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+             [[1, 1, 1], [1, 1, 1], [1, 1, 1]],
+             [[2, 2, 2], [2, 2, 2], [2, 2, 2]]]
 
         """
         T = base = self
         for _ in range(width-1):
-            T = T.fusion(base, 1, map_str=True)
+            T = T.fusion(base, 1, function=function, initial=initial)
         if verbose:
             print("After fusion in the direction e1: ", T)
         base = T
         for _ in range(height-1):
-            T = T.fusion(base, 2, map_str=True)
+            T = T.fusion(base, 2, function=function, initial=initial)
         if verbose:
             print("After fusion in the direction e2: ", T)
         T = T.tiles_allowing_surrounding(1)
@@ -1465,7 +1497,8 @@ class WangTileSolver(object):
             p.solve()
             soln = p.get_values(x)
             support = [key for key in soln if soln[key]]
-            assert len(support) == self._width * self._height, "yoo"
+            assert len(support) == self._width * self._height, ("len(support)={} "
+                    "!= width*height".format(len(support)))
             table = [[None]*self._height for _ in range(self._width)]
             for i,j,k in support:
                 table[j][k] = i
