@@ -471,7 +471,8 @@ class WangTileSet(WangTileSet_generic):
         """
         from sage.graphs.digraph import DiGraph
         from slabbe.graph import merge_multiedges
-        G = self.to_transducer().graph()
+        edge_labels = lambda t:"{}|{}".format(t.word_in, t.word_out)
+        G = self.to_transducer().graph(edge_labels)
         # first clean the label of the edges
         edges = [(u,v,label.replace("'","")) for (u,v,label) in G.edges()]
         G = DiGraph(edges, format='list_of_edges',
@@ -936,20 +937,22 @@ class WangTileSet(WangTileSet_generic):
         U = other.to_transducer()
         TU = T.composition(U)
 
-        TU_graph = TU.graph()
-        SCC = [g for g in TU_graph.strongly_connected_components_subgraphs()
-                 if g.num_edges()]
-        V = set().union(*[set(s.vertices()) for s in SCC])
-        V = set(tuple(a.label() for a in state) for state in V)
+        #edge_labels = lambda t:"{}|{}".format(t.word_in, t.word_out)
+        edge_labels = lambda t:(t.word_in, t.word_out)
+        G = TU.graph(edge_labels)
+        from slabbe.graph import clean_sources_and_sinks
+        H = clean_sources_and_sinks(G)
+
         tiles = []
-        for t in TU.transitions():
-            right = tuple(a.label() for a in t.to_state.label())
-            left = tuple(a.label() for a in t.from_state.label())
-            if right in V and left in V:
-                top = tuple(t.word_out)
-                bottom = tuple(t.word_in)
-                tile = (right, top, left, bottom)
-                tiles.append(tile)
+        for (u,v,label) in H.edges():
+            left = tuple(a.label() for a in u)
+            right = tuple(a.label() for a in v)
+            word_in, word_out = label
+            bottom = tuple(word_in)
+            top = tuple(word_out)
+            tile = (right, top, left, bottom)
+            tiles.append(tile)
+
         if map_str:
             tiles = [tuple(''.join(map(str,a)) for a in tile) for tile in tiles]
         return WangTileSet(tiles)
