@@ -217,3 +217,37 @@ def merge_multiedges(G, label_function=tuple):
     else:
         return Graph(edges, format='list_of_edges', loops=loops)
 
+def clean_sources_and_sinks(G):
+    r"""
+    Return a copy of the graph where every vertices of the graph that have
+    in or out degree 0 is removed (recursively).
+
+        sage: from slabbe.graph import clean_sources_and_sinks
+        sage: L = [(0,1),(1,2),(2,3),(3,4),(4,5),(5,3)]
+        sage: G = DiGraph(L,format='list_of_edges')
+        sage: H = clean_sources_and_sinks(G)
+        sage: H
+        Digraph on 3 vertices
+        sage: H.vertices()
+        [3, 4, 5]
+
+    ::
+
+        sage: L = [(0,1),(1,2),(2,3),(3,4),(4,5),(5,3),(1,0)]
+        sage: G = DiGraph(L, format='list_of_edges')
+        sage: H = clean_sources_and_sinks(G)
+        sage: H
+        Digraph on 6 vertices
+        sage: H.vertices()
+        [0, 1, 2, 3, 4, 5]
+
+    """
+    H = G.copy()
+    done = False
+    while not done:
+        done = True
+        for v in H.vertices():
+            if H.in_degree(v) == 0 or H.out_degree(v) == 0:
+                done = False
+                H.delete_vertex(v)
+    return H
