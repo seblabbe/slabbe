@@ -24,6 +24,12 @@ __ http://www.slabbe.org/Sage/
 __ http://github.com/seblabbe/slabbe
 __ http://pypi.python.org/pypi/slabbe
 
+Version 0.4.1 (February 9, 2018)
+--------------------------------
+
+Few fixes for the publication of "A self-similar aperiodic set of 19 Wang tiles".
+New module to solve the Magic hexagon problem.
+
 Version 0.4 (January 20, 2018)
 ------------------------------
 
