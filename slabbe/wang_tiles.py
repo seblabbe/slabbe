@@ -2135,7 +2135,7 @@ class WangTiling(object):
 
         INPUT
 
-        - ``M`` -- M is the matrix projection to `\RR^2/\ZZ^2`
+        - ``M`` -- M is the matrix projection to `\mathbb{R}^2/\mathbb{Z}^2`
         - ``pointsize`` -- positive real number (default:``5``)
         - ``color_dict`` -- dict, tile index -> color or None
           (default:``None``)
