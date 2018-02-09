@@ -54,7 +54,7 @@ Rao-Jeandel::
                                          
 """
 #*****************************************************************************
-#       Copyright (C) 2017 Sébastien Labbé <slabqc@gmail.com>
+#       Copyright (C) 2017-2018 Sébastien Labbé <slabqc@gmail.com>
 #
 #  Distributed under the terms of the GNU General Public License version 2 (GPLv2)
 #
