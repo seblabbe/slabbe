@@ -4,6 +4,15 @@ Magic hexagon solver
 
 We reduce the problem to an integer linear program.
 
+EXAMPLES:
+
+It allows to compare the efficiency of LP solvers::
+
+    sage: from slabbe.magic_hexagon import solve_magic_hexagon
+    sage: _ = solve_magic_hexagon(solver='Coin')   # not tested (>5min?)
+    sage: _ = solve_magic_hexagon(solver='GLPK')   # not tested (90s)
+    sage: _ = solve_magic_hexagon(solver='Gurobi') # not tested (<1s)
+
 See https://en.wikipedia.org/wiki/Magic_hexagon
 """
 #*****************************************************************************
