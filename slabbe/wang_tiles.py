@@ -72,7 +72,8 @@ from sage.rings.integer_ring import ZZ
 from sage.misc.decorators import rename_keyword
 
 def tile_to_tikz(tile, position, color=None, size=1,
-        rotate=None, label_shift=.2, top_right_edges=True):
+        rotate=None, label=True, label_shift=.2, top_right_edges=True,
+        draw_H=None, draw_V=None):
     r"""
 
     INPUT:
@@ -85,9 +86,20 @@ def tile_to_tikz(tile, position, color=None, size=1,
       in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
       label of Wang tiles. If ``None``, it performs a 90 degres rotation
       for left and right labels taking more than one character.
+    - ``label`` -- boolean (default: ``True``) 
     - ``label_shift`` -- number (default: ``.2``) translation distance of the
       label from the edge
     - ``top_right_edges`` -- bool (default: ``True``) 
+    - ``draw_H`` -- dict (default: ``None``) from tile values -> tikz
+      draw commands. If ``None`` the values of the dict get replaced by
+      straight lines, more precisely by ``r'\draw {{}} -- ++ (1,0);'``.
+      Dict values must be strings ``s`` such that ``s.format((x,y))``
+      works.
+    - ``draw_V`` -- dict (default: ``None``) from tile values -> tikz
+      draw commands. If ``None`` the values of the dict get replaced by
+      straight lines, more precisely by ``r'\draw {{}} -- ++ (0,1);'``.
+      Dict values must be strings ``s`` such that ``s.format((x,y))``
+      works.
 
     OUTPUT:
 
@@ -103,40 +115,40 @@ def tile_to_tikz(tile, position, color=None, size=1,
          '\\fill[cyan] (10, 101) -- (10.5, 100.5) -- (11, 101);',
          '\\fill[green] (10, 100) -- (10.5, 100.5) -- (10, 101);',
          '\\fill[white] (10, 100) -- (10.5, 100.5) -- (11, 100);',
-         '\\draw (10, 100) -- (11, 100);',
-         '\\draw (10, 100) -- (10, 101);',
-         '\\draw (11, 101) -- (11, 100);',
-         '\\draw (11, 101) -- (10, 101);',
+         '\\draw (10, 100) -- ++ (0,1);',
+         '\\draw (10, 100) -- ++ (1,0);',
+         '\\draw (11, 100) -- ++ (0,1);',
+         '\\draw (10, 101) -- ++ (1,0);',
          '\\node[rotate=0] at (10.8, 100.5) {1};',
          '\\node[rotate=0] at (10.5, 100.8) {2};',
          '\\node[rotate=0] at (10.2, 100.5) {3};',
          '\\node[rotate=0] at (10.5, 100.2) {4};']
         sage: tile_to_tikz((1,2,3,4), (10,100), color=None)
         ['% tile at position (x,y)=(10, 100)',
-         '\\draw (10, 100) -- (11, 100);',
-         '\\draw (10, 100) -- (10, 101);',
-         '\\draw (11, 101) -- (11, 100);',
-         '\\draw (11, 101) -- (10, 101);',
+         '\\draw (10, 100) -- ++ (0,1);',
+         '\\draw (10, 100) -- ++ (1,0);',
+         '\\draw (11, 100) -- ++ (0,1);',
+         '\\draw (10, 101) -- ++ (1,0);',
          '\\node[rotate=0] at (10.8, 100.5) {1};',
          '\\node[rotate=0] at (10.5, 100.8) {2};',
          '\\node[rotate=0] at (10.2, 100.5) {3};',
          '\\node[rotate=0] at (10.5, 100.2) {4};']
         sage: tile_to_tikz((1,2,3,4), (10,100), color=None, rotate=(0,90,0,0))
         ['% tile at position (x,y)=(10, 100)',
-         '\\draw (10, 100) -- (11, 100);',
-         '\\draw (10, 100) -- (10, 101);',
-         '\\draw (11, 101) -- (11, 100);',
-         '\\draw (11, 101) -- (10, 101);',
+         '\\draw (10, 100) -- ++ (0,1);',
+         '\\draw (10, 100) -- ++ (1,0);',
+         '\\draw (11, 100) -- ++ (0,1);',
+         '\\draw (10, 101) -- ++ (1,0);',
          '\\node[rotate=0] at (10.8, 100.5) {1};',
          '\\node[rotate=90] at (10.5, 100.8) {2};',
          '\\node[rotate=0] at (10.2, 100.5) {3};',
          '\\node[rotate=0] at (10.5, 100.2) {4};']
         sage: tile_to_tikz((1,2,3,4), (10,100), color=None, label_shift=.1)
         ['% tile at position (x,y)=(10, 100)',
-         '\\draw (10, 100) -- (11, 100);',
-         '\\draw (10, 100) -- (10, 101);',
-         '\\draw (11, 101) -- (11, 100);',
-         '\\draw (11, 101) -- (10, 101);',
+         '\\draw (10, 100) -- ++ (0,1);',
+         '\\draw (10, 100) -- ++ (1,0);',
+         '\\draw (11, 100) -- ++ (0,1);',
+         '\\draw (10, 101) -- ++ (1,0);',
          '\\node[rotate=0] at (10.9000000000000, 100.5) {1};',
          '\\node[rotate=0] at (10.5, 100.900000000000) {2};',
          '\\node[rotate=0] at (10.1000000000000, 100.5) {3};',
@@ -146,10 +158,10 @@ def tile_to_tikz(tile, position, color=None, size=1,
 
         sage: tile_to_tikz((10,20,30,40), (10,100), color=None)
         ['% tile at position (x,y)=(10, 100)',
-         '\\draw (10, 100) -- (11, 100);',
-         '\\draw (10, 100) -- (10, 101);',
-         '\\draw (11, 101) -- (11, 100);',
-         '\\draw (11, 101) -- (10, 101);',
+         '\\draw (10, 100) -- ++ (0,1);',
+         '\\draw (10, 100) -- ++ (1,0);',
+         '\\draw (11, 100) -- ++ (0,1);',
+         '\\draw (10, 101) -- ++ (1,0);',
          '\\node[rotate=90] at (10.8, 100.5) {10};',
          '\\node[rotate=0] at (10.5, 100.8) {20};',
          '\\node[rotate=90] at (10.2, 100.5) {30};',
@@ -175,16 +187,26 @@ def tile_to_tikz(tile, position, color=None, size=1,
         lines.append(triangle.format(color[tile[1]],(x,y+s),c,(x+s,y+s)))
         lines.append(triangle.format(color[tile[2]],(x,y),c,(x,y+s)))
         lines.append(triangle.format(color[tile[3]],(x,y),c,(x+s,y)))
-    lines.append(r'\draw {} -- {};'.format((x,y), (x+s,y)))
-    lines.append(r'\draw {} -- {};'.format((x,y), (x,y+s)))
+
+    if draw_H is None:
+        draw_H = {tile[1]:r'\draw {{}} -- ++ ({},0);'.format(s),
+                  tile[3]:r'\draw {{}} -- ++ ({},0);'.format(s)}
+    if draw_V is None:
+        draw_V = {tile[0]:r'\draw {{}} -- ++ (0,{});'.format(s),
+                  tile[2]:r'\draw {{}} -- ++ (0,{});'.format(s)}
+
+    lines.append(draw_V[tile[2]].format((x,y)))
+    lines.append(draw_H[tile[3]].format((x,y)))
     if top_right_edges:
-        lines.append(r'\draw {} -- {};'.format((x+s,y+s), (x+s,y)))
-        lines.append(r'\draw {} -- {};'.format((x+s,y+s), (x,y+s)))
-    node_str = r'\node[rotate={}] at {} {{{}}};'
-    lines.append(node_str.format(rotate[0],(x+s-t,y+.5),  tile[0]))
-    lines.append(node_str.format(rotate[1],(x+.5, y+s-t), tile[1]))
-    lines.append(node_str.format(rotate[2],(x+t,  y+.5),  tile[2]))
-    lines.append(node_str.format(rotate[3],(x+.5, y+t),   tile[3]))
+        lines.append(draw_V[tile[0]].format((x+s,y)))
+        lines.append(draw_H[tile[1]].format((x,y+s)))
+
+    if label:
+        node_str = r'\node[rotate={}] at {} {{{}}};'
+        lines.append(node_str.format(rotate[0],(x+s-t,y+.5),  tile[0]))
+        lines.append(node_str.format(rotate[1],(x+.5, y+s-t), tile[1]))
+        lines.append(node_str.format(rotate[2],(x+t,  y+.5),  tile[2]))
+        lines.append(node_str.format(rotate[3],(x+.5, y+t),   tile[3]))
     #lines.append(r'\end{tikzpicture}')
     return lines
     #return TikzPicture('\n'.join(lines))
@@ -597,7 +619,8 @@ class WangTileSet(WangTileSet_generic):
 
     @rename_keyword(fontsize='font')
     def tikz(self, ncolumns=10, color=None, size=1, space=.1, scale=1,
-             font=r'\normalsize', rotate=None, label_shift=.2):
+             font=r'\normalsize', rotate=None, label=True, label_shift=.2,
+             draw_H=None, draw_V=None):
         r"""
         INPUT:
 
@@ -611,8 +634,20 @@ class WangTileSet(WangTileSet_generic):
           in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
           label of Wang tiles. If ``None``, it performs a 90 degres rotation
           for left and right labels taking more than one character.
-        - ``label_shift`` -- number (default: ``.2``) translation distance
-          of the label from the edge
+        - ``label`` -- boolean (default: ``True``) 
+        - ``label_shift`` -- number (default: ``.2``) translation distance of the
+          label from the edge
+        - ``top_right_edges`` -- bool (default: ``True``) 
+        - ``draw_H`` -- dict (default: ``None``) from tile values -> tikz
+          draw commands. If ``None`` the values of the dict get replaced by
+          straight lines, more precisely by ``r'\draw {{}} -- ++ (1,0);'``.
+          Dict values must be strings ``s`` such that ``s.format((x,y))``
+          works.
+        - ``draw_V`` -- dict (default: ``None``) from tile values -> tikz
+          draw commands. If ``None`` the values of the dict get replaced by
+          straight lines, more precisely by ``r'\draw {{}} -- ++ (0,1);'``.
+          Dict values must be strings ``s`` such that ``s.format((x,y))``
+          works.
 
         EXAMPLES::
 
@@ -633,8 +668,9 @@ class WangTileSet(WangTileSet_generic):
             y = - (i // ncolumns)
             position = (x * (size + space), y * (size + space))
             new_lines = tile_to_tikz(tile, position, color=color,
-                    size=size, rotate=rotate, label_shift=label_shift,
-                    top_right_edges=True)
+                    size=size, rotate=rotate, label=label,
+                    label_shift=label_shift, top_right_edges=True,
+                    draw_H=draw_H, draw_V=draw_V)
             lines.extend(new_lines)
         lines.append(r'\end{tikzpicture}')
         return TikzPicture('\n'.join(lines))
@@ -2343,7 +2379,8 @@ class WangTiling(object):
 
     @rename_keyword(fontsize='font')
     def tikz(self, color=None, font=r'\normalsize', rotate=None,
-            label_shift=.2, scale=1, transformation_matrix=None):
+            label=True, label_shift=.2, scale=1,
+            transformation_matrix=None, draw_H=None, draw_V=None):
         r"""
         Return a tikzpicture showing one solution.
 
@@ -2355,12 +2392,23 @@ class WangTiling(object):
           in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
           label of Wang tiles. If ``None``, it performs a 90 degres rotation
           for left and right labels taking more than one character.
+        - ``label`` -- boolean (default: ``True``) 
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
         - ``scale`` -- number (default: ``1``), tikzpicture scale
         - ``transformation_matrix`` -- matrix (default: ``None``), a matrix
           to apply to the coordinate before drawing, it can be in
           ``SL(2,ZZ)`` or not.
+        - ``draw_H`` -- dict (default: ``None``) from tile values -> tikz
+          draw commands. If ``None`` the values of the dict get replaced by
+          straight lines, more precisely by ``r'\draw {{}} -- ++ (1,0);'``.
+          Dict values must be strings ``s`` such that ``s.format((x,y))``
+          works.
+        - ``draw_V`` -- dict (default: ``None``) from tile values -> tikz
+          draw commands. If ``None`` the values of the dict get replaced by
+          straight lines, more precisely by ``r'\draw {{}} -- ++ (0,1);'``.
+          Dict values must be strings ``s`` such that ``s.format((x,y))``
+          works.
 
         .. TODO::
 
@@ -2382,10 +2430,10 @@ class WangTiling(object):
             \begin{tikzpicture}[scale=1]
             \tikzstyle{every node}=[font=\normalsize]
             % tile at position (x,y)=(0, 0)
-            \draw (0, 0) -- (1, 0);
-            \draw (0, 0) -- (0, 1);
+            \draw (0, 0) -- ++ (0,1);
+            \draw (0, 0) -- ++ (1,0);
             ...
-            ... 101 lines not printed (3304 characters in total) ...
+            ... 101 lines not printed (3400 characters in total) ...
             ...
             \node[rotate=0] at (2.8, 3.5) {0};
             \node[rotate=0] at (2.5, 3.8) {0};
@@ -2430,6 +2478,19 @@ class WangTiling(object):
             sage: t = WangTiling(table, tiles, color).tikz(scale=4)
             sage: m = matrix(2,[1,1,0,1])
             sage: t = WangTiling(table, tiles, color).tikz(transformation_matrix=m)
+
+        Using puzzle boundary instead of colors::
+
+            sage: tiles = [(0,3,1,2), (1,2,0,3)]
+            sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+            sage: t = WangTiling(table, tiles)
+            sage: draw_H = {0:r'\draw {} -- ++ (1/2,.2) -- ++ (1/2,-.2);',
+            ....:           1:r'\draw {} -- ++ (1/2,.2) -- ++ (1/2,-.2);',
+            ....:           2:r'\draw {} -- ++ (1/2,.2) -- ++ (1/2,-.2);',
+            ....:           3:r'\draw {} -- ++ (1/2,.2) -- ++ (1/2,-.2);'}
+            sage: v = r'\draw {} -- ++ (0,.4) -- ++ (.2,0) -- ++ (0,.2) -- ++ (-.2,0) -- ++ (0,.4);'
+            sage: draw_V = {0:v, 1:v, 2:v, 3:v}
+            sage: tikz = t.tikz(label=False, draw_H=draw_H, draw_V=draw_V)
         """
         from sage.matrix.constructor import matrix
         from sage.modules.free_module_element import vector
@@ -2458,8 +2519,8 @@ class WangTiling(object):
                 position = transformation_matrix*vector((j,k))
                 tile = self._tiles[i]
                 more_lines = tile_to_tikz(tile, position, color=color,
-                        size=1, rotate=rotate, label_shift=label_shift,
-                        top_right_edges=True)
+                        size=1, rotate=rotate, label=label, label_shift=label_shift,
+                        top_right_edges=True, draw_H=draw_H, draw_V=draw_V)
                 lines.extend(more_lines)
         lines.append(r'\end{tikzpicture}')
         from slabbe import TikzPicture
