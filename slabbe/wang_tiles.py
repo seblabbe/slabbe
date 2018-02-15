@@ -1116,8 +1116,8 @@ class WangTileSet(WangTileSet_generic):
     def not_forbidden_tilings(self, width, height, radius=1,
             function=str.__add__, initial='', verbose=False):
         r"""
-        Return the set of valid of a rectangle of given width and height
-        allowing a surrounding of itself of given radius.
+        Return the set of valid tiling of a rectangle of given width and
+        height allowing a surrounding of itself of given radius.
 
         INPUT:
 
@@ -1156,6 +1156,8 @@ class WangTileSet(WangTileSet_generic):
              [[1, 1, 1], [1, 1, 1], [1, 1, 1]],
              [[2, 2, 2], [2, 2, 2], [2, 2, 2]]]
 
+        TODO: check this function
+
         """
         T = base = self
         for _ in range(width-1):
@@ -1171,6 +1173,7 @@ class WangTileSet(WangTileSet_generic):
         if verbose:
             print("After filtering tiles without surrounding of "
                   "radius {} : {}".format(radius, T))
+            print(T.tiles())
         L = []
         for t in T:
             right = {(width-1,i):a for (i,a) in enumerate(t[0])}
@@ -1178,10 +1181,47 @@ class WangTileSet(WangTileSet_generic):
             left = {(0,i):a for (i,a) in enumerate(t[2])}
             bottom = {(i,0):a for (i,a) in enumerate(t[3])}
             preassigned_color=[right,top,left,bottom]
+            print(preassigned_color)
             W = self.solver(width, height,
                     preassigned_color=preassigned_color)
             L.extend(W.solutions_iterator())
+            print(len(L))
         return L
+
+    def not_forbidden_dominoes(self, i=2, radius=1):
+        r"""
+        
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB', 'EBEB']
+            sage: T = WangTileSet(tiles)
+            sage: T.not_forbidden_dominoes(1)
+            [(3, 3), (4, 4)]
+
+        BUG???::
+
+            sage: T.not_forbidden_dominoes(i=2)
+            [(3, 3), (4, 3), (3, 4), (4, 4), (3, 3), (4, 3), (3, 4), (4,
+            4), (3, 3), (4, 3), (3, 4), (4, 4), (3, 3), (4, 3), (3, 4), (4,
+            4)]
+
+        """
+        if i == 2:
+            width = 1
+            height = 2
+        elif i == 1:
+            width = 2
+            height = 1
+        else:
+            raise ValueError('i={} must be 1 or 2'.format(i))
+        T = self.not_forbidden_tilings(width, height, radius=radius,
+            function=str.__add__, initial='', verbose=False)
+        tables = [t.table() for t in T]
+        if i == 2:
+            return [tuple(t[0]) for t in tables]
+        elif i == 1:
+            return [(t[0][0],t[1][0]) for t in tables]
 
     def partition_of_tiles(self, i=2):
         r"""
@@ -1237,6 +1277,8 @@ class WangTileSet(WangTileSet_generic):
 
         U = set(range(len(self)))
         parts = self.partition_of_tiles(i)
+        dominoes = self.not_forbidden_dominoes(i=i)
+
         for indices in Subsets(range(len(parts))):
             if len(indices) == 0:
                 continue
@@ -1259,6 +1301,8 @@ class WangTileSet(WangTileSet_generic):
                 print("good:R=",R)
                 print("good:K_L=",K_L)
                 print("good:U=",U)
+
+                # check that L \odot L and L\odot K is forbidden
                 raise NotImplementedError
 
 
