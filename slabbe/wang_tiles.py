@@ -68,6 +68,7 @@ from collections import Counter, defaultdict
 from sage.misc.cachefunc import cached_method
 from sage.numerical.mip import MixedIntegerLinearProgram
 from sage.rings.integer_ring import ZZ
+from sage.graphs.graph import Graph
 
 from sage.misc.decorators import rename_keyword
 
@@ -1173,6 +1174,71 @@ class WangTileSet(WangTileSet_generic):
                     preassigned_color=preassigned_color)
             L.extend(W.solutions_iterator())
         return L
+
+    def partition_of_tiles(self, i=2):
+        r"""
+        Return a partition of tiles that can go on the same horizontal or
+        vertical line.
+
+        The result means that tiles in the same subset can be adjacent on
+        an edge `e_i`.
+
+        INPUT:
+
+        - ``i`` -- integer (default:``2``), 1 or 2. 
+
+        OUTPUT:
+
+            list of sets
+        
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB']
+            sage: T = WangTileSet(tiles)
+            sage: T.partition_of_tiles(i=1)
+            [{0, 3}, {1}, {2}]
+            sage: T.partition_of_tiles(i=2)
+            [{0, 2, 3}, {1}]
+
+        """
+        edges = []
+        for k,tile in enumerate(self):
+            right, top, left, bottom = tile
+            if i == 1:
+                edges.append((bottom,top,k))
+            elif i == 2:
+                edges.append((right,left,k))
+        G = Graph(edges, format='list_of_edges', loops=True,
+                multiedges=True)
+        subgraphs = G.connected_components_subgraphs()
+        return sorted(set(k for (u,v,k) in subgraph.edges()) for subgraph in subgraphs)
+
+    def is_square_domino_recognizable(self, i=2):
+        r"""
+        """
+        from sage.combinat.subset import Subsets
+
+        parts = self.partition_of_tiles(i)
+        nparts = len(parts)
+        for indices in Subsets(range(nparts)):
+            if len(indices) == 0:
+                continue
+            R = set().union(*[parts[i] for i in indices])
+            print(R)
+
+        diameter = 2*radius+2
+        L = []
+        for i,t in enumerate(self):
+            d = {(radius,radius):ta,
+                 (radius,radius+1):tb}
+            s = self.solver(diameter, diameter, preassigned_tiles=d)
+            if s.has_solution(solver=solver):
+                if verbose:
+                    print("Solution found for tile {}:\n{}".format(i,
+                                s.solve(solver)._table))
+                L.append(t)
+        return WangTileSet(L)
 
 class HexagonalWangTileSet(WangTileSet_generic):
     r"""
