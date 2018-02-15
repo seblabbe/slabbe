@@ -1044,6 +1044,14 @@ class WangTileSet(WangTileSet_generic):
             sage: W.solve().table()
             [[2, 2, 2], [2, 2, 2], [2, 2, 2]]
 
+        When incompatible preassigned tiles::
+
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+            sage: T = WangTileSet(tiles)
+            sage: W = T.solver(3,3, preassigned_tiles={(0,0):0,(0,1):1})
+            sage: W.has_solution()
+            False
+
         TESTS::
 
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
@@ -1214,31 +1222,45 @@ class WangTileSet(WangTileSet_generic):
         subgraphs = G.connected_components_subgraphs()
         return sorted(set(k for (u,v,k) in subgraph.edges()) for subgraph in subgraphs)
 
-    def is_square_domino_recognizable(self, i=2):
+    def is_square_domino_recognizable(self, i=2, radius=1, solver=None):
         r"""
+        
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB']
+            sage: T = WangTileSet(tiles)
+            sage: T.is_square_domino_recognizable(i=1)
+
         """
         from sage.combinat.subset import Subsets
 
+        U = set(range(len(self)))
         parts = self.partition_of_tiles(i)
-        nparts = len(parts)
-        for indices in Subsets(range(nparts)):
+        for indices in Subsets(range(len(parts))):
             if len(indices) == 0:
                 continue
-            R = set().union(*[parts[i] for i in indices])
-            print(R)
+            R = set().union(*[parts[j] for j in indices])
+            print("R=",R)
 
-        diameter = 2*radius+2
-        L = []
-        for i,t in enumerate(self):
-            d = {(radius,radius):ta,
-                 (radius,radius+1):tb}
-            s = self.solver(diameter, diameter, preassigned_tiles=d)
-            if s.has_solution(solver=solver):
-                if verbose:
-                    print("Solution found for tile {}:\n{}".format(i,
-                                s.solve(solver)._table))
-                L.append(t)
-        return WangTileSet(L)
+            # Check that R \odot^i R is forbidden
+            for ta,tb in itertools.product(R,repeat=2):
+                diameter = 2*radius+2
+                if i == 1:
+                    d = {(radius,radius):ta, (radius+1,radius):tb}
+                elif i == 2:
+                    d = {(radius,radius):ta, (radius,radius+1):tb}
+                s = self.solver(diameter, diameter, preassigned_tiles=d)
+                if s.has_solution(solver=solver):
+                    break
+            else:
+                # Here we know that R\odot^i R is forbidden
+                K_L = U.difference(R)
+                print("good:R=",R)
+                print("good:K_L=",K_L)
+                print("good:U=",U)
+                raise NotImplementedError
+
 
 class HexagonalWangTileSet(WangTileSet_generic):
     r"""
