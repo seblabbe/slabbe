@@ -73,7 +73,7 @@ from collections import Counter
 from sage.matrix.constructor import matrix
 from sage.misc.cachefunc import cached_method
 from sage.misc.misc_c import prod
-from .language import Language, FiniteLanguage
+from slabbe.language import Language, FiniteLanguage
 
 ######################
 # Matrix Cocycle
@@ -1049,6 +1049,16 @@ def perron_right_eigenvector(M):
         vec_sage = vector(CC, rightv)
     return eig_sage, vec_sage/sum(vec_sage)
 
+def semi_norm_D(v):
+    r"""
+    EXAMPLES::
+
+        sage: semi_norm_D((1,2,3,-5))
+        8
+
+    """
+    return max(v)-min(v)
+
 def semi_norm_v(M, v,  p=2, verbose=False):
     r"""
     Return the semi norm on the hyperplane orthogonal to v.
@@ -1064,12 +1074,21 @@ def semi_norm_v(M, v,  p=2, verbose=False):
         sage: semi_norm_v(A1, vector( (1,1,1)), p=oo)   # tolerance 0.0001
         1.0
 
+    ::
+
+        sage: m = matrix(3,[0,0,0, 1,0,1, 0,-1,0])
+        sage: semi_norm_v(m, vector((1,1,1)), p='D')  # tolerance 0.0001
+        0.6666436827952827
+
     """
     from sage.modules.free_module_element import vector
     from sage.numerical.optimize import minimize_constrained
     def func(z):
         vz = vector(z)
-        return - (M*vz).norm(p) / vz.norm(p)
+        if p == 'D':
+            return - semi_norm_D(M*vz) / semi_norm_D(vz)
+        else:
+            return - (M*vz).norm(p) / vz.norm(p)
     cons = [lambda z: v * vector(z),
             lambda z: - v * vector(z)]
     x0 = range(len(v))
@@ -1078,7 +1097,7 @@ def semi_norm_v(M, v,  p=2, verbose=False):
     rep = minimize_constrained(func, cons, x0)
     if verbose:
         print(rep, rep.norm(), rep*v)
-    return -func(rep)
+    return -func(rep), rep
 
 def semi_norm_cone(M, cone,  p=2, verbose=False):
     r"""
@@ -1135,6 +1154,13 @@ def semi_norm_cone(M, cone,  p=2, verbose=False):
         0.9999935206958908
         sage: semi_norm_cone(M.transpose(), cone, p=2)   # tolerance 0.00001
         0.7529377601317161
+
+    ::
+
+        sage: M = cone = matrix(3,[2,3,2, 2,2,1, 1,2,1])
+        sage: semi_norm_cone(M.T, cone, p='D')  # tolerance 0.00001
+        0.7499977852638109
+
     """
     from sage.modules.free_module_element import vector
     from sage.numerical.optimize import minimize_constrained
@@ -1157,8 +1183,8 @@ def semi_norm_cone(M, cone,  p=2, verbose=False):
     else:
         cons.append(lambda z: bc * vector(z))
     if not all(con(middle) > 0 for con in cons):
-        raise ValueError("the middle should be in the cone")
-    func = lambda v : - semi_norm_v(M,vector(v),p)
+        raise ValueError("the middle(={}) should be in the cone".format(middle))
+    func = lambda v : - semi_norm_v(M,vector(v),p)[0]
     x0 = middle
     rep = minimize_constrained(func, cons, x0)
     if not all((con(rep) >= 0 or abs(con(rep)) < 1e-7) for con in cons):
@@ -1166,7 +1192,11 @@ def semi_norm_cone(M, cone,  p=2, verbose=False):
     if not all(r >= 0 or abs(r) < 1e-7 for r in rep):
         raise ValueError("the answer (={}) should be positive".format(rep))
     if verbose:
-        print("optimal found at ", rep / rep.norm(p))
+        print("optimal found at v = {}".format(rep / rep.norm(1)))
+        val,z = semi_norm_v(M,rep,p,verbose=False)
+        z /= z.norm(1)
+        print("vector z (orthogonal to v) = {}".format(z.n(15)))
+        print("||M z|| / ||z|| = {}".format(val))
     return -func(rep)
 
 ####################
