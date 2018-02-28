@@ -1113,7 +1113,7 @@ class WangTileSet(WangTileSet_generic):
                 L.append(t)
         return WangTileSet(L)
 
-    def not_forbidden_tilings(self, width, height, radius=1,
+    def not_forbidden_tilings(self, width, height, radius=1, solver=None,
             function=str.__add__, initial='', verbose=False):
         r"""
         Return the set of valid tiling of a rectangle of given width and
@@ -1124,6 +1124,7 @@ class WangTileSet(WangTileSet_generic):
         - ``width`` - integer
         - ``height`` - integer
         - ``radius`` - integer
+        - ``solver`` - string or None
         - ``function`` -- function (default:``str.__add__``), monoid
           operation for fusion of colors
         - ``initial`` -- object (default:``''``), monoid neutral, for
@@ -1156,7 +1157,13 @@ class WangTileSet(WangTileSet_generic):
              [[1, 1, 1], [1, 1, 1], [1, 1, 1]],
              [[2, 2, 2], [2, 2, 2], [2, 2, 2]]]
 
-        TODO: check this function
+        TESTS::
+
+            sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB', 'EBEB']
+            sage: T = WangTileSet(tiles)
+            sage: solutions = T.not_forbidden_tilings(1,2)
+            sage: [t.table() for t in solutions]
+            [[[3, 3]], [[3, 4]], [[4, 3]], [[4, 4]]]
 
         """
         T = base = self
@@ -1169,7 +1176,7 @@ class WangTileSet(WangTileSet_generic):
             T = T.fusion(base, 2, function=function, initial=initial)
         if verbose:
             print("After fusion in the direction e2: ", T)
-        T = T.tiles_allowing_surrounding(1)
+        T = T.tiles_allowing_surrounding(1, solver=solver)
         if verbose:
             print("After filtering tiles without surrounding of "
                   "radius {} : {}".format(radius, T))
@@ -1181,15 +1188,21 @@ class WangTileSet(WangTileSet_generic):
             left = {(0,i):a for (i,a) in enumerate(t[2])}
             bottom = {(i,0):a for (i,a) in enumerate(t[3])}
             preassigned_color=[right,top,left,bottom]
-            print(preassigned_color)
             W = self.solver(width, height,
                     preassigned_color=preassigned_color)
             L.extend(W.solutions_iterator())
-            print(len(L))
         return L
 
-    def not_forbidden_dominoes(self, i=2, radius=1):
+    def not_forbidden_dominoes(self, i=2, radius=1, solver=None,
+            verbose=False):
         r"""
+
+        INPUT:
+
+        - ``i`` - integer (default: ``2``), 1 or 2
+        - ``radius`` - integer (default: ``1``)
+        - ``solver`` - string or None (default: ``None``)
+        - ``verbose`` - bool
         
         EXAMPLES::
 
@@ -1199,12 +1212,12 @@ class WangTileSet(WangTileSet_generic):
             sage: T.not_forbidden_dominoes(1)
             [(3, 3), (4, 4)]
 
-        BUG???::
+        ::
 
+            sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB', 'EBEB']
+            sage: T = WangTileSet(tiles)
             sage: T.not_forbidden_dominoes(i=2)
-            [(3, 3), (4, 3), (3, 4), (4, 4), (3, 3), (4, 3), (3, 4), (4,
-            4), (3, 3), (4, 3), (3, 4), (4, 4), (3, 3), (4, 3), (3, 4), (4,
-            4)]
+            [(3, 3), (3, 4), (4, 3), (4, 4)]
 
         """
         if i == 2:
@@ -1216,7 +1229,8 @@ class WangTileSet(WangTileSet_generic):
         else:
             raise ValueError('i={} must be 1 or 2'.format(i))
         T = self.not_forbidden_tilings(width, height, radius=radius,
-            function=str.__add__, initial='', verbose=False)
+                solver=solver, function=str.__add__, initial='',
+                verbose=verbose)
         tables = [t.table() for t in T]
         if i == 2:
             return [tuple(t[0]) for t in tables]
@@ -1851,6 +1865,28 @@ class WangTileSolver(object):
             ([[1, 6], [0, 3, 7], [2, 5, 8], [4, 9]],
              [(0, 0, 0), (1, 0, 0), (2, 0, 0), (3, 0, 0)])
 
+        With preassigned colors::
+
+            sage: right = {(0, 1): 'A', (0, 0): 'A'}
+            sage: top = {(0, 1): 'B'}
+            sage: left = {(0, 1): 'A', (0, 0): 'A'}
+            sage: bottom = {(0, 0): 'B'}
+            sage: preassigned_color=[right,top,left,bottom]
+            sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB', 'EBEB']
+            sage: W = WangTileSolver(tiles, 1, 2, preassigned_color=preassigned_color)
+            sage: W.rows_and_information()
+            ([[4], [4], [4], [1, 2, 3, 4], [4], [5], [5], [5], [0, 5], [5]],
+             [(0, 0, 0),
+              (0, 0, 1),
+              (0, 0, 2),
+              (0, 0, 3),
+              (0, 0, 4),
+              (0, 1, 0),
+              (0, 1, 1),
+              (0, 1, 2),
+              (0, 1, 3),
+              (0, 1, 4)])
+
         """
         from math import log, ceil
 
@@ -1902,17 +1938,22 @@ class WangTileSolver(object):
         # Preassigned colors
         rightPRE,topPRE,leftPRE,bottomPRE = self._preassigned_color
 
+        def is_forbidden_at_position(tile, j, k):
+            right,top,left,bottom = tile
+            return ((j,k) in rightPRE and rightPRE[(j,k)] != right
+                 or (j,k) in leftPRE and leftPRE[(j,k)] != left
+                 or (j,k) in bottomPRE and bottomPRE[(j,k)] != bottom
+                 or (j,k) in topPRE and topPRE[(j,k)] != top)
+
         # matching vertical colors
         for j in range(W):
             for k in range(H):
                 position = (k*(W-1)+j)*padtoV
                 for i,tile in enumerate(self._tiles):
+                    if is_forbidden_at_position(tile, j, k):
+                        continue
                     # the tile i at position (j,k)
                     right,top,left,bottom = tile
-                    if (j,k) in rightPRE and rightPRE[(j,k)] != right:
-                        continue
-                    if (j,k) in leftPRE and leftPRE[(j,k)] != left:
-                        continue
                     A = left_color_to_digits[left]
                     B = right_color_to_digits[right]
                     row = []
@@ -1928,12 +1969,10 @@ class WangTileSolver(object):
             for k in range(H):
                 position = (j*(H-1)+k)*padtoH
                 for i,tile in enumerate(self._tiles):
+                    if is_forbidden_at_position(tile, j, k):
+                        continue
                     # the tile i at position (j,k)
                     right,top,left,bottom = tile
-                    if (j,k) in bottomPRE and bottomPRE[(j,k)] != bottom:
-                        continue
-                    if (j,k) in topPRE and topPRE[(j,k)] != top:
-                        continue
                     A = bottom_color_to_digits[bottom]
                     B = top_color_to_digits[top]
                     row = []
@@ -2059,6 +2098,19 @@ class WangTileSolver(object):
             sage: [s._table for s in S]
             [[[0, 0, 0], [0, 0, 0], [0, 0, 0]],
              [[0, 0, 3], [0, 0, 0], [0, 0, 0]]]
+
+        With preassigned colors and tiles::
+
+            sage: right = {(0, 1): 'A', (0, 0): 'A'}
+            sage: top = {(0, 1): 'B'}
+            sage: left = {(0, 1): 'A', (0, 0): 'A'}
+            sage: bottom = {(0, 0): 'B'}
+            sage: preassigned_color=[right,top,left,bottom]
+            sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB', 'EBEB']
+            sage: W = WangTileSolver(tiles, 1, 2, preassigned_color=preassigned_color)
+            sage: solutions = list(W.solutions_iterator())
+            sage: [t.table() for t in solutions]
+            [[[3, 3]]]
 
         """
         from sage.combinat.matrices.dancing_links import dlx_solver
