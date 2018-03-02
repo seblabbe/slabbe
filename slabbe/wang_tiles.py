@@ -1276,8 +1276,63 @@ class WangTileSet(WangTileSet_generic):
         subgraphs = G.connected_components_subgraphs()
         return sorted(set(k for (u,v,k) in subgraph.edges()) for subgraph in subgraphs)
 
-    def is_square_domino_recognizable(self, i=2, radius=1, solver=None):
+    def is_forbidden_product(self, A, B, i=2, radius=1, solver=None):
         r"""
+        Return whether A \odot^i B is forbidden using a given radius around
+        the product and a given solver.
+
+        INPUT:
+
+        - ``A`` -- list of tile indices
+        - ``B`` -- list of tile indices
+        - ``i`` -- integer, 1 or 2
+        - ``radius`` -- integer (default:``1``)
+        - ``solver`` -- string (default:``None``)
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB']
+            sage: T = WangTileSet(tiles)
+            sage: T.is_forbidden_product([3],[3])
+            False
+            sage: T.is_forbidden_product([0],[0])
+            True
+            sage: T.is_forbidden_product([0,1],[0,1])
+            True
+            sage: T.is_forbidden_product([0,1],[0,1,2])
+            True
+            sage: T.is_forbidden_product([0,1],[0,1,2,3])
+            True
+            sage: T.is_forbidden_product([0,1,3],[0,1,2,3])
+            False
+
+        """
+        if i == 1:
+            p = (radius,radius)
+            q = (radius+1,radius)
+            width = 2*radius + 2
+            height = 2*radius + 1
+        elif i == 2:
+            p = (radius,radius)
+            q = (radius,radius+1)
+            width = 2*radius + 1
+            height = 2*radius + 2
+        for ta,tb in itertools.product(A, B):
+            s = self.solver(width, height, preassigned_tiles={p:ta, q:tb})
+            if s.has_solution(solver=solver):
+                return False
+        return True
+
+    def is_square_domino_recognizable(self, i=2, radius=1, solver=None,
+            verbose=False):
+        r"""
+
+        INPUT:
+
+        - ``i`` -- integer, 1 or 2
+        - ``radius`` -- integer (default:``1``)
+        - ``solver`` -- string (default:``None``)
         
         EXAMPLES::
 
@@ -1285,40 +1340,64 @@ class WangTileSet(WangTileSet_generic):
             sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB']
             sage: T = WangTileSet(tiles)
             sage: T.is_square_domino_recognizable(i=1)
+            [(([3], [0, 2], [1]), []), (([3], [0, 1], [2]), []), (([3], [0], [1, 2]), [])]
+            sage: T.is_square_domino_recognizable(i=2)
+            [(([3], [0, 2], [1]), [])]
 
         """
         from sage.combinat.subset import Subsets
 
         U = set(range(len(self)))
         parts = self.partition_of_tiles(i)
-        dominoes = self.not_forbidden_dominoes(i=i)
+        if verbose:
+            print("parts=",parts)
+        parts_indices = set(range(len(parts)))
+        dominoes = self.not_forbidden_dominoes(i=i, radius=radius, solver=solver)
 
-        for indices in Subsets(range(len(parts))):
+        right_extensions = defaultdict(set)
+        for a,b in dominoes:
+            right_extensions[a].add(b)
+
+        KLR_list = []
+
+        for indices in Subsets(parts_indices):
             if len(indices) == 0:
                 continue
             R = set().union(*[parts[j] for j in indices])
-            print("R=",R)
+            if verbose:
+                print("R=",R)
 
             # Check that R \odot^i R is forbidden
-            for ta,tb in itertools.product(R,repeat=2):
-                diameter = 2*radius+2
-                if i == 1:
-                    d = {(radius,radius):ta, (radius+1,radius):tb}
-                elif i == 2:
-                    d = {(radius,radius):ta, (radius,radius+1):tb}
-                s = self.solver(diameter, diameter, preassigned_tiles=d)
-                if s.has_solution(solver=solver):
-                    break
-            else:
-                # Here we know that R\odot^i R is forbidden
-                K_L = U.difference(R)
-                print("good:R=",R)
-                print("good:K_L=",K_L)
-                print("good:U=",U)
+            if not self.is_forbidden_product(R, R, i=i, radius=radius, solver=solver):	
+                if verbose:
+                    print("R odot^i R not forbidden, so we continue")
+                continue
+            # Here we know that R\odot^i R is forbidden
 
-                # check that L \odot L and L\odot K is forbidden
-                raise NotImplementedError
+            # compute L and K
+            K_L = U.difference(R)
+            L = [t for t in K_L if right_extensions[t] <= R]
+            K = K_L.difference(L)
+            if verbose:
+                print("L=",L)
+                print("K=",K)
 
+            # by definition : L \odot L and L\odot K is forbidden
+
+            # Check that L \odot^i L is forbidden
+            if not self.is_forbidden_product(L, L, i=i, radius=radius, solver=solver):	
+                raise ValueError("PROBLEM!! L odot^i L should be forbidden")
+
+            # Check that L \odot^i K is forbidden
+            if not self.is_forbidden_product(L, K, i=i, radius=radius, solver=solver):	
+                raise ValueError("PROBLEM!! L odot^i K should be forbidden")
+
+            KLR = (sorted(K),L,sorted(R))
+            dominoes_R = [(a,b) for (a,b) in dominoes if b in R]
+
+            KLR_list.append((KLR, dominoes_R))
+
+        return KLR_list
 
 class HexagonalWangTileSet(WangTileSet_generic):
     r"""
