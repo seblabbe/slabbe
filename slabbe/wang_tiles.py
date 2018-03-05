@@ -1504,10 +1504,13 @@ class WangTileSet(WangTileSet_generic):
             d[next(it)] = [a,b]
             new_tiles.append(t)
 
+        from slabbe.substitution_2d import Substitution2d
         if i == 1:
             s = Substitution2d.from_1d_row_substitution(d)
         elif i == 2:
             s = Substitution2d.from_1d_column_substitution(d)
+        else:
+            raise ValueError('i(={}) must be 1 or 2'.format(i))
 
         return WangTileSet(new_tiles), s
 
