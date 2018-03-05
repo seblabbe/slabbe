@@ -282,6 +282,55 @@ def hexagonal_tile_to_tikz(tile, position, color=None, radius=1,
     #lines.append(r'\end{tikzpicture}')
     #return TikzPicture('\n'.join(lines))
 
+def fusion(tile0, tile1, direction, function=str.__add__, initial=''):
+    r"""
+    Return the fusion of wang tile sets in the given direction.
+
+    We keep only the strongly connected components.
+
+    INPUT:
+
+    - ``tile0`` -- 4-uple
+    - ``tile1`` -- 4-uple
+    - ``direction`` -- integer (1 or 2)
+    - ``function`` -- function (default:``str.__add__``), monoid
+        operation
+    - ``initial`` -- object (default:``''``), monoid neutral
+
+    EXAMPLES::
+
+        sage: from slabbe.wang_tiles import fusion
+        sage: t0 = 'abcd'
+        sage: t1 = 'xyaz'
+        sage: fusion(t0,t1,1)
+        ('x', 'by', 'c', 'dz')
+
+    ::
+
+        sage: t0 = 'abcd'
+        sage: t1 = 'xyzb'
+        sage: fusion(t0,t1,2)
+        ('ax', 'y', 'cz', 'd')
+
+    TESTS::
+
+        sage: t0 = 'abcd'
+        sage: t1 = 'efgh'
+        sage: fusion(t0,t1,1)
+        Traceback (most recent call last):
+        ...
+        AssertionError: A must be equal to Y
+
+    """
+    A,B,C,D = tile0
+    W,X,Y,Z = tile1
+    if direction == 1:
+        assert A == Y, "A must be equal to Y"
+        t = ((W,), (B,X), (C,), (D,Z))
+    elif direction == 2:
+        assert B == Z, "B must be equal to Z"
+        t = ((A,W), (X,), (C,Y), (D,))
+    return tuple(reduce(function, a, initial) for a in t)
 
 class WangTileSet_generic(object):
     r"""
@@ -975,6 +1024,14 @@ class WangTileSet(WangTileSet_generic):
             sage: T2T2T.tiles()
             [((0, 0, 0), (1,), (0, 0, 0), (1,))]
 
+        TESTS::
+
+            sage: tiles = [('02', '2', '02', '2'), ('32', '2', '02', '2')]
+            sage: T = WangTileSet(tiles)
+            sage: T.fusion(T, 1)
+            Wang tile set of cardinality 2
+            sage: T.fusion(T, 2)
+            Wang tile set of cardinality 1
         """
         if not isinstance(other, WangTileSet):
             raise TypeError('other(={}) must be a'
@@ -1114,7 +1171,7 @@ class WangTileSet(WangTileSet_generic):
         return WangTileSet(L)
 
     def not_forbidden_tilings(self, width, height, radius=1, solver=None,
-            function=str.__add__, initial='', verbose=False):
+            verbose=False):
         r"""
         Return the set of valid tiling of a rectangle of given width and
         height allowing a surrounding of itself of given radius.
@@ -1125,10 +1182,6 @@ class WangTileSet(WangTileSet_generic):
         - ``height`` - integer
         - ``radius`` - integer
         - ``solver`` - string or None
-        - ``function`` -- function (default:``str.__add__``), monoid
-          operation for fusion of colors
-        - ``initial`` -- object (default:``''``), monoid neutral, for
-          fusion of colors
         - ``verbose`` - boolean
 
         EXAMPLES::
@@ -1165,15 +1218,25 @@ class WangTileSet(WangTileSet_generic):
             sage: [t.table() for t in solutions]
             [[[3, 3]], [[3, 4]], [[4, 3]], [[4, 4]]]
 
+        ::
+
+            sage: tiles = [('02', '4', '02', '4'), ('32', '4', '02', '4')]
+            sage: T = WangTileSet(tiles)
+            sage: [t.table() for t in T.not_forbidden_tilings(1,2)]
+            [[[0, 0]]]
+            sage: [t.table() for t in T.not_forbidden_tilings(2,1)]
+            [[[0], [0]]]
+
         """
-        T = base = self
+        tiles_tuple = [tuple((a,) for a in t) for t in self.tiles()]
+        T = base = WangTileSet(tiles_tuple)
         for _ in range(width-1):
-            T = T.fusion(base, 1, function=function, initial=initial)
+            T = T.fusion(base, 1, function=tuple.__add__, initial=tuple())
         if verbose:
             print("After fusion in the direction e1: ", T)
         base = T
         for _ in range(height-1):
-            T = T.fusion(base, 2, function=function, initial=initial)
+            T = T.fusion(base, 2, function=tuple.__add__, initial=tuple())
         if verbose:
             print("After fusion in the direction e2: ", T)
         T = T.tiles_allowing_surrounding(1, solver=solver)
@@ -1183,6 +1246,10 @@ class WangTileSet(WangTileSet_generic):
             print(T.tiles())
         L = []
         for t in T:
+            assert len(t[0]) == height
+            assert len(t[1]) == width
+            assert len(t[2]) == height
+            assert len(t[3]) == width
             right = {(width-1,i):a for (i,a) in enumerate(t[0])}
             top = {(i,height-1):a for (i,a) in enumerate(t[1])}
             left = {(0,i):a for (i,a) in enumerate(t[2])}
@@ -1219,6 +1286,15 @@ class WangTileSet(WangTileSet_generic):
             sage: T.not_forbidden_dominoes(i=2)
             [(3, 3), (3, 4), (4, 3), (4, 4)]
 
+        TESTS::
+
+            sage: tiles = [('02', '4', '02', '4'), ('32', '4', '02', '4')]
+            sage: T = WangTileSet(tiles)
+            sage: T.not_forbidden_dominoes(1)
+            [(0, 0)]
+            sage: T.not_forbidden_dominoes(2)
+            [(0, 0)]
+
         """
         if i == 2:
             width = 1
@@ -1229,8 +1305,7 @@ class WangTileSet(WangTileSet_generic):
         else:
             raise ValueError('i={} must be 1 or 2'.format(i))
         T = self.not_forbidden_tilings(width, height, radius=radius,
-                solver=solver, function=str.__add__, initial='',
-                verbose=verbose)
+                solver=solver, verbose=verbose)
         tables = [t.table() for t in T]
         if i == 2:
             return [tuple(t[0]) for t in tables]
@@ -1352,7 +1427,10 @@ class WangTileSet(WangTileSet_generic):
         if verbose:
             print("parts=",parts)
         parts_indices = set(range(len(parts)))
-        dominoes = self.not_forbidden_dominoes(i=i, radius=radius, solver=solver)
+        dominoes = self.not_forbidden_dominoes(i=i, radius=radius,
+                solver=solver)
+        if verbose:
+            print("dominoes=",dominoes)
 
         right_extensions = defaultdict(set)
         for a,b in dominoes:
@@ -1368,7 +1446,7 @@ class WangTileSet(WangTileSet_generic):
                 print("R=",R)
 
             # Check that R \odot^i R is forbidden
-            if not self.is_forbidden_product(R, R, i=i, radius=radius, solver=solver):	
+            if not self.is_forbidden_product(R, R, i=i, radius=radius, solver=solver):
                 if verbose:
                     print("R odot^i R not forbidden, so we continue")
                 continue
@@ -1385,11 +1463,11 @@ class WangTileSet(WangTileSet_generic):
             # by definition : L \odot L and L\odot K is forbidden
 
             # Check that L \odot^i L is forbidden
-            if not self.is_forbidden_product(L, L, i=i, radius=radius, solver=solver):	
+            if not self.is_forbidden_product(L, L, i=i, radius=radius, solver=solver):
                 raise ValueError("PROBLEM!! L odot^i L should be forbidden")
 
             # Check that L \odot^i K is forbidden
-            if not self.is_forbidden_product(L, K, i=i, radius=radius, solver=solver):	
+            if not self.is_forbidden_product(L, K, i=i, radius=radius, solver=solver):
                 raise ValueError("PROBLEM!! L odot^i K should be forbidden")
 
             KLR = (sorted(K),L,sorted(R))
@@ -1398,6 +1476,40 @@ class WangTileSet(WangTileSet_generic):
             KLR_list.append((KLR, dominoes_R))
 
         return KLR_list
+
+    def derived_wang_tile_set(self, i=2, radius=1, solver=None,
+                              function=str.__add__, initial=''):
+        r"""
+        Return the derived Wang tile set.
+        """
+        KLR_list = self.is_square_domino_recognizable(i=i,
+                radius=radius, solver=solver)
+        if not KLR_list:
+            raise ValueError("no recognizable substitution found")
+        if len(KLR_list) > 1:
+            raise ValueError("more than one recognizable substitution found")
+        KLR, dominoes_R = KLR_list[0]
+        K,L,R = KLR
+        tiles = self.tiles()
+
+        d = {}
+        new_tiles = []
+        it = itertools.count()
+        for k in K:
+            d[next(it)] = k
+            new_tiles.append(tiles[k])
+
+        for (a,b) in dominoes_R:
+            t = fusion(tiles[a],tiles[b],i,function=function,initial=initial)
+            d[next(it)] = [a,b]
+            new_tiles.append(t)
+
+        if i == 1:
+            s = Substitution2d.from_1d_row_substitution(d)
+        elif i == 2:
+            s = Substitution2d.from_1d_column_substitution(d)
+
+        return WangTileSet(new_tiles), s
 
 class HexagonalWangTileSet(WangTileSet_generic):
     r"""
@@ -1531,6 +1643,23 @@ class WangTileSolver(object):
             sage: from slabbe import WangTileSolver
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
             sage: W = WangTileSolver(tiles, 3, 4)
+
+        ::
+
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
+            sage: t = {(0,2):0}
+            sage: c = [{},{},{(2,2):0},{}]
+            sage: W = WangTileSolver(tiles,3,3,preassigned_tiles=t,preassigned_color=c)
+
+        TESTS::
+
+            sage: t = {(0,2):0}
+            sage: c = [{},{},{(2,3):0},{}]
+            sage: W = WangTileSolver(tiles,3,3,preassigned_tiles=t,preassigned_color=c)
+            Traceback (most recent call last):
+            ...
+            AssertionError
+
         """
         self._tiles = tiles
         self._width = width
@@ -1542,6 +1671,11 @@ class WangTileSolver(object):
             preassigned_tiles = {}
         self._preassigned_tiles = preassigned_tiles
         self._color = color
+
+        assert all(0 <= j < self._width for (j,k) in self._preassigned_tiles)
+        assert all(0 <= k < self._height for (j,k) in self._preassigned_tiles)
+        assert all(0 <= j < self._width for d in self._preassigned_color for (j,k) in d)
+        assert all(0 <= k < self._height for d in self._preassigned_color for (j,k) in d)
 
     def vertical_alphabet(self):
         right, top, left, bottom = zip(*self._tiles)
@@ -2202,6 +2336,23 @@ class WangTileSolver(object):
                 assert table[j][k] is None, "table[{}][{}](={}) is not None".format(j,k,table[j][k])
                 table[j][k] = i
             yield WangTiling(table, self._tiles, color=self._color)
+
+    def all_solutions_tikz(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSolver
+            sage: tiles = [(2,4,2,1), (2,2,2,0), (1,1,3,1), (1,2,3,2), (3,1,3,3),
+            ....: (0,1,3,1), (0,0,0,1), (3,1,0,2), (0,2,1,2), (1,2,1,4), (3,3,1,2)]
+            sage: W = WangTileSolver(tiles,2,2)
+            sage: t = W.all_solutions_tikz()
+            sage: view(t)    # long # not tested
+        """
+        solutions = list(self.solutions_iterator())
+        L = [sol.tikz(scale=.7,fontsize=r'\tiny').tikz_picture_code() for sol in solutions]
+        bigtikz = '\n'.join(L)
+        from sage.misc.latex import LatexExpr
+        return LatexExpr(bigtikz)
 
 class WangTiling(object):
     r"""
