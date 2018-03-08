@@ -279,4 +279,165 @@ def map_coefficients_to_variable_index(M, x):
     L = [var('{}_{}'.format(x,a)) for a in M.list()]
     return matrix(M.nrows(), L)
 
+def Minkowski_embedding_without_sqrt2(self, B=None, prec=None):
+    r"""
+    This method is a modification of the ``Minkowski_embedding`` method of
+    NumberField in sage (without sqrt2).
+
+    EXAMPLES::
+
+        sage: from slabbe.matrices import Minkowski_embedding_without_sqrt2
+        sage: F.<alpha> = NumberField(x^3+2)
+        sage: Minkowski_embedding_without_sqrt2(F)
+        [  1.00000000000000  -1.25992104989487   1.58740105196820]
+        [  1.00000000000000  0.629960524947437 -0.793700525984099]
+        [ 0.000000000000000   1.09112363597172   1.37472963699860]
+        sage: Minkowski_embedding_without_sqrt2(F, [1, alpha+2, alpha^2-alpha])
+        [ 1.00000000000000 0.740078950105127  2.84732210186307]
+        [ 1.00000000000000  2.62996052494744 -1.42366105093154]
+        [0.000000000000000  1.09112363597172 0.283606001026881]
+        sage: Minkowski_embedding_without_sqrt2(F) * (alpha + 2).vector().column()
+        [0.740078950105127]
+        [ 2.62996052494744]
+        [ 1.09112363597172]
+
+    """
+    r,s = self.signature()
+    places = self.places(prec=prec)
+
+    if B is None:
+        B = [(self.gen(0))**i for i in range(self.degree())]
+
+    d = {}
+    for col,B_col in enumerate(B):
+        for row in range(r):
+            d[(row,col)] = places[row](B_col)
+        for i in range(s):
+            z = places[r+i](B_col)
+            d[(r+2*i,col)] = z.real()
+            d[(r+2*i+1,col)] = z.imag()
+
+    return matrix(d)
+
+def rauzy_projection(M, beta=None, prec=53):
+    r"""
+    Returns a projection matrix of the canonical basis using the Minkowski
+    embedding associated to the left eigenvector of the given eigenvalue.
+
+    INPUT:
+
+    - ``beta`` - a real element of ``QQbar`` of degree >= 2 (default:
+      ``None``).  The eigenvalue used for the projection.  It must be an
+      eigenvalue of ``M``.  The one used by default is the maximal
+      eigenvalue of ``M`` (usually a Pisot number), but matrices of order
+      larger than 3 letters other interesting choices are sometimes
+      possible.
+
+    - ``prec`` - integer (default: ``53``), the number of bits used in the
+      floating point representations of the coordinates.
+
+    OUTPUT:
+
+        matrix
+
+    EXAMPLES:
+
+    Fibonacci::
+
+        sage: from slabbe.matrices import rauzy_projection
+        sage: m = matrix(2,(1,1,1,0))
+        sage: m
+        [1 1]
+        [1 0]
+        sage: rauzy_projection(m)
+        [ 1.000000000000000000000000000000 -1.618033988749894848204586834366]
+        [ 1.000000000000000000000000000000 0.6180339887498948482045868343656]
+
+    Tribonacci::
+
+        sage: m = matrix(3, [1,1,1, 1,0,0, 0,1,0])
+        sage: rauzy_projection(m)
+        [  1.00000000000000  0.839286755214161  0.543689012692076]
+        [  1.00000000000000  -1.41964337760708 -0.771844506346038]
+        [ 0.000000000000000  0.606290729207199  -1.11514250803994]
+        sage: matrix(2,(0,1,0, 0,0,-1))*rauzy_projection(m)
+        [  1.00000000000000  -1.41964337760708 -0.771844506346038]
+        [ 0.000000000000000 -0.606290729207199   1.11514250803994]
+
+    which corresponds to the Rauzy fractal projection coded by Timo::
+
+        sage: s = WordMorphism('1->12,2->13,3->1')
+        sage: s.rauzy_fractal_projection()
+        {'1': (1.00000000000000, 0.000000000000000),
+         '2': (-1.41964337760708, -0.606290729207199),
+         '3': (-0.771844506346038, 1.11514250803994)}
+
+    TESTS::
+
+        sage: t = WordMorphism('1->12,2->3,3->45,4->5,5->6,6->7,7->8,8->1')
+        sage: m = matrix(t)
+        sage: rauzy_projection(m).T
+        [  1.00000000000000   1.00000000000000  0.000000000000000]
+        [ 0.324717957244746  -1.66235897862237  0.562279512062301]
+        [ 0.430159709001947  0.784920145499027  -1.30714127868205]
+        [ 0.245122333753307   1.87743883312335  0.744861766619744]
+        [ 0.324717957244746  -1.66235897862237  0.562279512062301]
+        [ 0.430159709001947  0.784920145499027  -1.30714127868205]
+        [ 0.569840290998053  0.215079854500973   1.30714127868205]
+        [ 0.754877666246693 -0.877438833123346 -0.744861766619744]
+        sage: t.rauzy_fractal_projection()
+        {'1': (1.00000000000000, 0.000000000000000),
+         '2': (-1.66235897862237, -0.562279512062301),
+         '3': (0.784920145499027, 1.30714127868205),
+         '4': (1.87743883312335, -0.744861766619744),
+         '5': (-1.66235897862237, -0.562279512062301),
+         '6': (0.784920145499027, 1.30714127868205),
+         '7': (0.215079854500973, -1.30714127868205),
+         '8': (-0.877438833123346, 0.744861766619744)}
+
+    ::
+
+        sage: E = t.incidence_matrix().eigenvalues()
+        sage: x = [x for x in E if -0.8 < x < -0.7][0]
+        sage: x
+        -0.7548776662466928?
+        sage: rauzy_projection(m, beta=x).T
+        [  1.00000000000000   1.00000000000000  0.000000000000000]
+        [ -1.75487766624669 -0.122561166876654  0.744861766619744]
+        [  1.32471795724475 -0.662358978622373  0.562279512062301]
+        [ -4.07959562349144 -0.460202188254281  0.182582254557443]
+        [  3.07959562349144 -0.539797811745719 -0.182582254557443]
+        [ -2.32471795724475 -0.337641021377627 -0.562279512062301]
+        [  1.75487766624669  0.122561166876654 -0.744861766619744]
+        [ -1.32471795724475  0.662358978622373 -0.562279512062301]
+        sage: t.rauzy_fractal_projection(eig=x)
+        {'1': (1.00000000000000, 0.000000000000000),
+         '2': (-0.122561166876654, -0.744861766619744),
+         '3': (-0.662358978622373, -0.562279512062301),
+         '4': (-0.460202188254281, -0.182582254557443),
+         '5': (-0.539797811745719, 0.182582254557443),
+         '6': (-0.337641021377627, 0.562279512062301),
+         '7': (0.122561166876654, 0.744861766619744),
+         '8': (0.662358978622373, 0.562279512062301)}
+
+    AUTHORS:
+
+     - Timo Jolivet (2012-06-16) -- for substitutions in Sage
+     - Sébastien Labbé (2018-03-08) -- for matrices, using Minkowski
+       embedding
+    """
+    # Eigenvalue
+    if beta is None:
+        beta = max(M.eigenvalues(), key=abs)
+
+    # One possibility is to do:
+    # K,elt,hom = beta.as_number_field_element()
+
+    # Left eigenvector vb in the number field Q(beta)
+    from sage.rings.number_field.number_field import NumberField
+    K = NumberField(beta.minpoly(), 'b')
+    vb = (M-K.gen()).kernel().basis()[0]
+
+    return Minkowski_embedding_without_sqrt2(K, vb)
+    #return K.Minkowski_embedding(vb)
 
