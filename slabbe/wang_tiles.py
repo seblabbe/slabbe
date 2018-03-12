@@ -505,7 +505,8 @@ class WangTileSet(WangTileSet_generic):
             transitions.append(transition)
         return Transducer(transitions)
 
-    def to_transducer_graph(self, label_function=tuple):
+    def to_transducer_graph(self, label_function=tuple,
+            merge_multiedges=True):
         r"""
         Return the graph of the transducer.
 
@@ -515,6 +516,7 @@ class WangTileSet(WangTileSet_generic):
 
         - ``label_function`` -- function (default:``tuple``), a function to
           apply to each list of labels when merging multiedges into one
+        - ``merge_multiedges`` -- boolean (default:``True``)
 
         EXAMPLES::
 
@@ -560,13 +562,16 @@ class WangTileSet(WangTileSet_generic):
             sage: G.edges()
             [(2, 0, ('3|1', '3|5'))]
         """
-        from slabbe.graph import merge_multiedges
         def edge_labels(t):
             assert len(t.word_in) == 1, "we assume word_in is of length 1"
             assert len(t.word_out) == 1, "we assume word_out is of length 1"
             return "{}|{}".format(t.word_in[0], t.word_out[0])
         G = self.to_transducer().graph(edge_labels)
-        return merge_multiedges(G, label_function)
+        if merge_multiedges:
+            from slabbe.graph import merge_multiedges
+            return merge_multiedges(G, label_function)
+        else:
+            return  G
 
     def system_of_density_equations(self):
         r"""
@@ -1513,6 +1518,35 @@ class WangTileSet(WangTileSet_generic):
             raise ValueError('i(={}) must be 1 or 2'.format(i))
 
         return WangTileSet(new_tiles), s
+
+    def shift_top(self, function=str.__add__):
+        r"""
+        INPUT:
+
+        - ``function`` -- function (default:``str.__add__``), monoid
+          operation
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [('aa','bb','cc','bb'), ('cc','dd','aa','dd')]
+            sage: T = WangTileSet(tiles)
+            sage: T.shift_top().tiles()
+            [('aa', 'bd', 'cc', 'bb'), ('cc', 'db', 'aa', 'dd')]
+            sage: T.shift_top().shift_top().tiles()
+            [('aa', 'dd', 'cc', 'bb'), ('cc', 'bb', 'aa', 'dd')]
+
+        """
+        G = defaultdict(set)
+        for (e,n,w,s) in self:
+            G[w].add(n[0])
+        if not all(len(a)==1 for a in G.values()):
+            raise NotImplementedError("shift on top colors currently"
+                    " implemented only if the right extension (={}) always"
+                    " exists and is unique".format(G))
+        d = {w:G[w].pop() for w in G}
+        tiles = [(e,function(n[1:],d[e]),w,s) for (e,n,w,s) in self]
+        return WangTileSet(tiles)
 
 class HexagonalWangTileSet(WangTileSet_generic):
     r"""
