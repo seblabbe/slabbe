@@ -1501,7 +1501,7 @@ class WangTileSet(WangTileSet_generic):
         new_tiles = []
         it = itertools.count()
         for k in K:
-            d[next(it)] = k
+            d[next(it)] = [k]
             new_tiles.append(tiles[k])
 
         for (a,b) in dominoes_R:
