@@ -1634,10 +1634,14 @@ class WangTileSet(WangTileSet_generic):
                 return False
 
         # Make sure everything is ok before returning the result
-        other_tiles = sorted((V_perm[a], H_perm[b], V_perm[c], H_perm[d])
+        perm_self_tiles = sorted((V_perm[a], H_perm[b], V_perm[c], H_perm[d])
                               for (a,b,c,d) in self)
-        assert sorted(other) == other_tiles, ("something expected to be"
-                    " True is not True: need to change the code")
+        sorted_other_tiles = sorted((a,b,c,d) for (a,b,c,d) in other)
+        assert sorted_other_tiles == perm_self_tiles, ("something "
+                    "expected to be True is not True:\n"
+                    " sorted_other_tiles={}\n".format(sorted_other_tiles)+
+                    " perm_self_tiles={}\n".format(perm_self_tiles)+
+                    " need to change the code")
 
         if certificate:
             return True, V_perm, H_perm
