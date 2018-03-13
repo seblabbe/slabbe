@@ -35,6 +35,8 @@ from .partial_injection import (number_of_partial_injection,
                                 random_partial_injection,
                                 random_cyclically_reduced_stallings_graph)
 
+from .write_to_file import write_str_to_file
+
 # BUG (sometimes, cython code does not work properly)
 try:
     from .kolakoski_word import KolakoskiWord
