@@ -1585,7 +1585,7 @@ class WangTileSet(WangTileSet_generic):
 
         .. NOTE::
 
-            This code the following bug to be fixed:
+            This code depends on the following bug to be fixed:
             https://trac.sagemath.org/ticket/24964
 
         EXAMPLES::
@@ -1604,7 +1604,7 @@ class WangTileSet(WangTileSet_generic):
 
         ::
 
-            sage: L.pop()
+            sage: _ = L.pop()
             sage: U = WangTileSet(L)
             sage: T.is_equivalent(U)
             False
@@ -1634,8 +1634,8 @@ class WangTileSet(WangTileSet_generic):
                 return False
 
         # Make sure everything is ok before returning the result
-        sorted(other_tiles) = sorted((V_perm[a], H_perm[b], V_perm[c], H_perm[d])
-                                     for (a,b,c,d) in self)
+        other_tiles = sorted((V_perm[a], H_perm[b], V_perm[c], H_perm[d])
+                              for (a,b,c,d) in self)
         assert sorted(other) == other_tiles, ("something expected to be"
                     " True is not True: need to change the code")
 
