@@ -433,7 +433,34 @@ class WangTileSet(WangTileSet_generic):
         sage: tiles = [(0,0,0,2), (1,0,0,1), (2,1,0,0), (0,0,1,0),
         ....:          (1,2,1,1), (1,1,2,0), (2,0,2,1)]
         sage: T = WangTileSet(tiles)
+
     """
+    def table(self):
+        r"""
+        Return a table representation of the tile set.
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,2), (1,0,0,1), (2,1,0,0), (0,0,1,0),
+            ....:          (1,2,1,1), (1,1,2,0), (2,0,2,1)]
+            sage: T = WangTileSet(tiles)
+            sage: T.table()
+              Right   Top   Left   Bottom
+            +-------+-----+------+--------+
+              0       0     0      2
+              1       0     0      1
+              2       1     0      0
+              0       0     1      0
+              1       2     1      1
+              1       1     2      0
+              2       0     2      1
+
+        """
+        from sage.misc.table import table
+        header_row = ['Right', 'Top', 'Left', 'Bottom']
+        return table(self.tiles(), header_row=header_row)
+
     def vertical_alphabet(self):
         r"""
         EXAMPLES::
