@@ -1575,6 +1575,75 @@ class WangTileSet(WangTileSet_generic):
         tiles = [(e,function(n[1:],d[e]),w,s) for (e,n,w,s) in self]
         return WangTileSet(tiles)
 
+    def is_equivalent(self, other, certificate=False, verbose=False):
+        r"""
+        INPUT:
+
+        - ``other`` -- wang tile set
+        - ``certificate`` -- boolean (default:``False``)
+        - ``verbose`` -- boolean (default:``False``)
+
+        .. NOTE::
+
+            This code the following bug to be fixed:
+            https://trac.sagemath.org/ticket/24964
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(1,6,1,8), (2,6,1,7), (3,7,1,6), (1,6,2,6),
+            ....:          (2,8,2,7), (2,7,3,6), (3,6,3,7)]
+            sage: T = WangTileSet(tiles)
+            sage: d = {1:'a', 2:'b', 3:'c', 6:'x', 7:'y', 8:'z'}
+            sage: L = [tuple(d[a] for a in t) for t in tiles]
+            sage: U = WangTileSet(L)
+            sage: T.is_equivalent(U)
+            True
+            sage: T.is_equivalent(U,certificate=True)
+            (True, {1: 'a', 2: 'b', 3: 'c'}, {6: 'x', 7: 'y', 8: 'z'})
+
+        ::
+
+            sage: L.pop()
+            sage: U = WangTileSet(L)
+            sage: T.is_equivalent(U)
+            False
+            sage: T.is_equivalent(U,certificate=True)
+            (False, None, None)
+
+        """
+        G = self.to_transducer_graph(merge_multiedges=False)
+        H = other.to_transducer_graph(merge_multiedges=False)
+        is_iso, V_perm = G.is_isomorphic(H, certificate=True)
+        if verbose:
+            print(is_iso, "V_perm=", V_perm)
+        if not is_iso:
+            if certificate:
+                return False, None, None
+            else:
+                return False
+        G = self.dual().to_transducer_graph(merge_multiedges=False)
+        H = other.dual().to_transducer_graph(merge_multiedges=False)
+        is_iso, H_perm = G.is_isomorphic(H, certificate=True)
+        if verbose:
+            print(is_iso, "H_perm=", H_perm)
+        if not is_iso:
+            if certificate:
+                return False, None, None
+            else:
+                return False
+
+        # Make sure everything is ok before returning the result
+        sorted(other_tiles) = sorted((V_perm[a], H_perm[b], V_perm[c], H_perm[d])
+                                     for (a,b,c,d) in self)
+        assert sorted(other) == other_tiles, ("something expected to be"
+                    " True is not True: need to change the code")
+
+        if certificate:
+            return True, V_perm, H_perm
+        else:
+            return True
+
 class HexagonalWangTileSet(WangTileSet_generic):
     r"""
     Construct an hexagonal Wang tile set.
