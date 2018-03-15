@@ -1602,7 +1602,7 @@ class WangTileSet(WangTileSet_generic):
             sage: T.is_equivalent(U,certificate=True)
             (True, {1: 'a', 2: 'b', 3: 'c'}, {6: 'x', 7: 'y', 8: 'z'})
 
-        ::
+        Not equivalent example::
 
             sage: _ = L.pop()
             sage: U = WangTileSet(L)
@@ -1611,42 +1611,66 @@ class WangTileSet(WangTileSet_generic):
             sage: T.is_equivalent(U,certificate=True)
             (False, None, None)
 
+        When graphs admits non trivial automorphisms::
+
+            sage: T = WangTileSet([(1,3,0,2), (0,2,1,3)])
+            sage: U = WangTileSet([(7,'c',6,'z'), (6,'z',7,'c')])
+            sage: V = WangTileSet([(7,9,6,8), (6,8,7,9)])
+            sage: W = WangTileSet([(7,8,6,9), (6,9,7,8)])
+            sage: T.is_equivalent(T, certificate=True)
+            (True, {0: 0, 1: 1}, {2: 2, 3: 3})
+            sage: T.is_equivalent(U, certificate=True)
+            (True, {0: 6, 1: 7}, {2: 'z', 3: 'c'})
+            sage: T.is_equivalent(V, certificate=True)
+            (True, {0: 6, 1: 7}, {2: 8, 3: 9})
+            sage: T.is_equivalent(W, certificate=True)
+            (True, {0: 6, 1: 7}, {2: 9, 3: 8})
+            sage: T.is_equivalent(W, certificate=True, verbose=True)
+            True V_perm= {0: 6, 1: 7}
+            True H_perm= {2: 8, 3: 9}
+            Found automorphisms p=() and q=(2,3)
+            (True, {0: 6, 1: 7}, {2: 9, 3: 8})
+
         """
+        # Compute an isomorphism on the Vertical colors
         G = self.to_transducer_graph(merge_multiedges=False)
         H = other.to_transducer_graph(merge_multiedges=False)
         is_iso, V_perm = G.is_isomorphic(H, certificate=True)
         if verbose:
             print(is_iso, "V_perm=", V_perm)
         if not is_iso:
-            if certificate:
-                return False, None, None
-            else:
-                return False
-        G = self.dual().to_transducer_graph(merge_multiedges=False)
-        H = other.dual().to_transducer_graph(merge_multiedges=False)
-        is_iso, H_perm = G.is_isomorphic(H, certificate=True)
+            return (False, None, None) if certificate else False
+
+        # Compute an isomorphism on the Horizontal colors
+        Gd = self.dual().to_transducer_graph(merge_multiedges=False)
+        Hd = other.dual().to_transducer_graph(merge_multiedges=False)
+        is_iso, H_perm = Gd.is_isomorphic(Hd, certificate=True)
         if verbose:
             print(is_iso, "H_perm=", H_perm)
         if not is_iso:
-            if certificate:
-                return False, None, None
-            else:
-                return False
+            return (False, None, None) if certificate else False
 
-        # Make sure everything is ok before returning the result
-        perm_self_tiles = sorted((V_perm[a], H_perm[b], V_perm[c], H_perm[d])
-                              for (a,b,c,d) in self)
-        sorted_other_tiles = sorted((a,b,c,d) for (a,b,c,d) in other)
-        assert sorted_other_tiles == perm_self_tiles, ("something "
-                    "expected to be True is not True:\n"
-                    " sorted_other_tiles={}\n".format(sorted_other_tiles)+
-                    " perm_self_tiles={}\n".format(perm_self_tiles)+
-                    " need to change the code")
+        # Compute the automorphisms group on Vertical and Horizontal colors
+        # of self
+        automorphism_group_V = G.automorphism_group()
+        automorphism_group_H = Gd.automorphism_group()
 
-        if certificate:
-            return True, V_perm, H_perm
-        else:
-            return True
+        # If we find a pair (p,q) of automorphisms which works, return the result
+        for p,q in itertools.product(automorphism_group_V, automorphism_group_H):
+            perm_self_tiles = sorted((V_perm[p(a)], H_perm[q(b)],
+                                      V_perm[p(c)], H_perm[q(d)])
+                                     for (a,b,c,d) in self)
+            sorted_other_tiles = sorted((a,b,c,d) for (a,b,c,d) in other)
+            if sorted_other_tiles == perm_self_tiles:
+                if certificate:
+                    if verbose:
+                        print ("Found automorphisms p={} and q={}".format(p,q))
+                    V_perm_p = {a:V_perm[p(a)] for a in V_perm}
+                    H_perm_q = {a:H_perm[q(a)] for a in H_perm}
+                    return True, V_perm_p, H_perm_q
+                else:
+                    return True
+        return (False, None, None) if certificate else False
 
 class HexagonalWangTileSet(WangTileSet_generic):
     r"""
