@@ -1672,6 +1672,94 @@ class WangTileSet(WangTileSet_generic):
                     return True
         return (False, None, None) if certificate else False
 
+    def unsynchronized_graph(self, i=1):
+        r"""
+
+        Signification of the nodes (u,v,w,d)::
+
+               d = 0        d > 0           d < 0
+
+                 |               |         |
+                v|              v|        v|
+                 |            w  |         |
+                 +         +-----+         +-----+
+                 |         |                 w   |
+                u|        u|                    u|
+                 |         |                     |
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [('aa','bb','cc','bb'), ('cc','dd','aa','dd')]
+            sage: T = WangTileSet(tiles)
+            sage: G = T.unsynchronized_graph()
+            sage: sorted(G.vertices())
+            [('aa', 'aa', '', 0), ('cc', 'cc', '', 0)]
+
+        """
+        if i == 2:
+            raise NotImplementedError
+        elif not i == 1:
+            raise ValueError
+
+        # Prepare the seeds
+        seeds = []
+        for (a,b) in self.not_forbidden_dominoes(i=2):
+            (a0,a1,a2,a3) = self._tiles[a]
+            (b0,b1,b2,b3) = self._tiles[b]
+            assert a1 == b3
+            seed = (a0,b0,'',0)
+            seeds.append((seed,None))
+
+        # Classify the tiles by their left color
+        tile_dict = defaultdict(list)
+        for i,t in enumerate(self):
+            right,top,left,bottom = t
+            tile_dict[left].append((i,t))
+
+        # Define the children function
+        def children(node):
+            (u,v,w,d),label = node
+            L = []
+            if d == 0:
+                for i,(a0,a1,a2,a3) in tile_dict[u]:
+                    for j,(b0,b1,b2,b3) in tile_dict[v]:
+                        if a1.startswith(b3):
+                            new_node = (a0,b0,a1[len(b3):],len(b3)-len(a1))
+                            L.append((new_node,(i,j)))
+                        elif b3.startswith(a1):
+                            new_node = (a0,b0,b3[len(a1):],len(b3)-len(a1))
+                            L.append((new_node,(i,j)))
+            elif d > 0:
+                for i,(right,top,left,bottom) in tile_dict[u]:
+                    if top.startswith(w):
+                        new_node = (right,v,top[len(w):],d-len(top))
+                        L.append((new_node,(i,None)))
+                    elif w.startswith(top):
+                        new_node = (right,v,w[len(top):],d-len(top))
+                        L.append((new_node,(i,None)))
+            elif d < 0:
+                for j,(right,top,left,bottom) in tile_dict[v]:
+                    if bottom.startswith(w):
+                        new_node = (u,right,bottom[len(w):],d+len(bottom))
+                        L.append((new_node,(None,j)))
+                    elif w.startswith(bottom):
+                        new_node = (u,right,w[len(bottom):],d+len(bottom))
+                        L.append((new_node,(None,j)))
+            else:
+                assert False
+            return L
+
+        from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
+        from slabbe.graph import digraph_move_label_to_edge
+        from slabbe.graph import clean_sources_and_sinks
+        R = RecursivelyEnumeratedSet(seeds, children, structure=None)
+        G = R.to_digraph()
+        GG = digraph_move_label_to_edge(G)
+        H = clean_sources_and_sinks(GG)
+        return H
+
+
 class HexagonalWangTileSet(WangTileSet_generic):
     r"""
     Construct an hexagonal Wang tile set.

@@ -222,6 +222,8 @@ def clean_sources_and_sinks(G):
     Return a copy of the graph where every vertices of the graph that have
     in or out degree 0 is removed (recursively).
 
+    EXAMPLES::
+
         sage: from slabbe.graph import clean_sources_and_sinks
         sage: L = [(0,1),(1,2),(2,3),(3,4),(4,5),(5,3)]
         sage: G = DiGraph(L,format='list_of_edges')
