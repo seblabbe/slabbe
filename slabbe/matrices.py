@@ -288,6 +288,10 @@ def Minkowski_embedding_without_sqrt2(self, B=None, prec=None):
 
         sage: from slabbe.matrices import Minkowski_embedding_without_sqrt2
         sage: F.<alpha> = NumberField(x^3+2)
+        sage: F.minkowski_embedding()
+        [ 1.00000000000000 -1.25992104989487  1.58740105196820]
+        [ 1.41421356237309 0.890898718140339 -1.12246204830937]
+        [0.000000000000000  1.54308184421705  1.94416129723967]
         sage: Minkowski_embedding_without_sqrt2(F)
         [  1.00000000000000  -1.25992104989487   1.58740105196820]
         [  1.00000000000000  0.629960524947437 -0.793700525984099]
@@ -300,6 +304,28 @@ def Minkowski_embedding_without_sqrt2(self, B=None, prec=None):
         [0.740078950105127]
         [ 2.62996052494744]
         [ 1.09112363597172]
+
+    Tribo::
+
+        sage: F.<beta> = NumberField(x^3-x^2-x-1)
+        sage: F.minkowski_embedding()
+        [  1.00000000000000   1.83928675521416   3.38297576790624]
+        [  1.41421356237309 -0.593465355971987 -0.270804762516626]
+        [ 0.000000000000000  0.857424571985895 -0.719625086862932]
+        sage: Minkowski_embedding_without_sqrt2(F)
+        [  1.00000000000000   1.83928675521416   3.38297576790624]
+        [  1.00000000000000 -0.419643377607080 -0.191487883953119]
+        [ 0.000000000000000  0.606290729207199 -0.508851778832738]
+
+    Comprendre le problème de norme::
+
+        sage: norme = lambda v:abs(v[0]) * (v[1]^2 + v[2]^2)
+        sage: F.<beta> = NumberField(x^3-x^2-x-1)
+        sage: M = Minkowski_embedding_without_sqrt2(F)
+        sage: norme(M*vector((1,0,0)))
+        1.00000000000000
+        sage: norme(M*vector((1,0,-1)))
+        4.00000000000000
 
     """
     r,s = self.signature()
