@@ -1674,18 +1674,21 @@ class WangTileSet(WangTileSet_generic):
 
     def unsynchronized_graph(self, i=1):
         r"""
+        INPUT:
+
+        - ``i`` -- integer, 1 or 2
 
         Signification of the nodes (u,v,w,d)::
 
-               d = 0        d > 0           d < 0
+             d = 0     |w| = d > 0      -|w| = d < 0
 
-                 |               |         |
-                v|              v|        v|
-                 |            w  |         |
-                 +         +-----+         +-----+
-                 |         |                 w   |
-                u|        u|                    u|
-                 |         |                     |
+               |               |           |
+              v|              v|          v|
+               |            w  |           |
+               +         +-----+           +-----+
+               |         |                   w   |
+              u|        u|                      u|
+               |         |                       |
 
         EXAMPLES::
 
