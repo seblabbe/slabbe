@@ -332,18 +332,103 @@ def Minkowski_embedding_without_sqrt2(self, B=None, prec=None):
     places = self.places(prec=prec)
 
     if B is None:
-        B = [(self.gen(0))**i for i in range(self.degree())]
+        B = [self.gen(0)**i for i in range(self.degree())]
 
-    d = {}
-    for col,B_col in enumerate(B):
-        for row in range(r):
-            d[(row,col)] = places[row](B_col)
-        for i in range(s):
-            z = places[r+i](B_col)
-            d[(r+2*i,col)] = z.real()
-            d[(r+2*i+1,col)] = z.imag()
+    rows = []
+    for i in range(r):
+        rows.append([places[i](b) for b in B])
+    for i in range(s):
+        row_real = []
+        row_imag = []
+        for b in B:
+            z = places[r+i](b)
+            row_real.append(z.real())
+            row_imag.append(z.imag())
+        rows.append(row_real)
+        rows.append(row_imag)
 
-    return matrix(d)
+    from sage.matrix.constructor import matrix
+    return matrix(rows)
+
+def Minkowski_projection_pair(self, B=None, prec=None):
+    r"""
+    Return the projections to the expanding and contracting spaces.
+
+    OUTPUT:
+
+    - tuple (A, B) of matrices
+
+    EXAMPLES::
+
+        sage: from slabbe.matrices import Minkowski_projection_pair
+        sage: F.<alpha> = NumberField(x^3+2)
+        sage: Minkowski_projection_pair(F)
+        (
+        [  1.00000000000000  -1.25992104989487   1.58740105196820]
+        [  1.00000000000000  0.629960524947437 -0.793700525984099]
+        [ 0.000000000000000   1.09112363597172   1.37472963699860], []
+        )
+        sage: Minkowski_projection_pair(F, [1, alpha+2, alpha^2-alpha])
+        (
+        [ 1.00000000000000 0.740078950105127  2.84732210186307]
+        [ 1.00000000000000  2.62996052494744 -1.42366105093154]
+        [0.000000000000000  1.09112363597172 0.283606001026881], []
+        )
+
+    Tribo::
+
+        sage: F.<beta> = NumberField(x^3-x^2-x-1)
+        sage: Minkowski_projection_pair(F)
+        (
+        [1.000000000000000000000000000000 1.839286755214161132551852564671
+        3.382975767906237494122708536521],
+        [  1.00000000000000 -0.419643377607080 -0.191487883953119]
+        [ 0.000000000000000  0.606290729207199 -0.508851778832738]
+        )
+
+    """
+    r,s = self.signature()
+    places = self.places(prec=prec)
+    beta = self.gen()
+
+    if B is None:
+        B = [beta**i for i in range(self.degree())]
+
+    rows_expanding = []
+    rows_contracting = []
+
+    for i in range(r):
+        place = places[i]
+        row = [place(b) for b in B]
+        norm = place(beta).abs()
+        if norm < 1:
+            rows_contracting.append(row)
+        elif norm > 1:
+            rows_expanding.append(row)
+        else:
+            raise NotImplementedError
+
+    for i in range(s):
+        place = places[r+i]
+        row_real = []
+        row_imag = []
+        for b in B:
+            z = place(b)
+            row_real.append(z.real())
+            row_imag.append(z.imag())
+        norm = place(beta).abs()
+        if norm < 1:
+            rows_contracting.append(row_real)
+            rows_contracting.append(row_imag)
+        elif norm > 1:
+            rows_expanding.append(row_real)
+            rows_expanding.append(row_imag)
+        else:
+            raise NotImplementedError
+
+    from sage.matrix.constructor import matrix
+    return (matrix(len(rows_expanding), self.degree(), rows_expanding),
+            matrix(len(rows_contracting), self.degree(), rows_contracting))
 
 def rauzy_projection(M, beta=None, prec=53):
     r"""
