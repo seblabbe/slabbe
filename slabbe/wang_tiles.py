@@ -401,6 +401,22 @@ class WangTileSet_generic(object):
         """
         return r"Wang tile set of cardinality {}".format(len(self))
 
+    def __getitem__(self, i):
+        r"""
+        INPUT:
+
+        - ``i`` -- integer, index
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+            sage: T = WangTileSet(tiles)
+            sage: T[1]
+            (1, 1, 1, 1)
+        """
+        return self._tiles[i]
+
     def tiles(self):
         r"""
         EXAMPLES::
