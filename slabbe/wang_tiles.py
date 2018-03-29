@@ -1688,7 +1688,7 @@ class WangTileSet(WangTileSet_generic):
                     return True
         return (False, None, None) if certificate else False
 
-    def unsynchronized_graph(self, i=1):
+    def unsynchronized_graph_size2(self, i=1):
         r"""
         INPUT:
 
@@ -1711,7 +1711,7 @@ class WangTileSet(WangTileSet_generic):
             sage: from slabbe import WangTileSet
             sage: tiles = [('aa','bb','cc','bb'), ('cc','dd','aa','dd')]
             sage: T = WangTileSet(tiles)
-            sage: G = T.unsynchronized_graph()
+            sage: G = T.unsynchronized_graph_size2()
             sage: sorted(G.vertices())
             [('aa', 'aa', '', 0), ('cc', 'cc', '', 0)]
 
@@ -1778,6 +1778,163 @@ class WangTileSet(WangTileSet_generic):
         H = clean_sources_and_sinks(GG)
         return H
 
+
+    def unsynchronized_graph(self, i=1, size=2):
+        r"""
+        INPUT:
+
+        - ``i`` -- integer, 1 or 2
+
+        Signification of the nodes (u,v,w,d)::
+
+             d = 0     |w| = d > 0      -|w| = d < 0
+
+               |               |           |
+              v|              v|          v|
+               |            w  |           |
+               +         +-----+           +-----+
+               |         |                   w   |
+              u|        u|                      u|
+               |         |                       |
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [('aa','bb','cc','bb'), ('cc','dd','aa','dd')]
+            sage: T = WangTileSet(tiles)
+            sage: G = T.unsynchronized_graph()
+            sage: sorted(G.vertices())
+            [('aa', 'aa', '', 0), ('cc', 'cc', '', 0)]
+
+        """
+        from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
+
+        if i == 2:
+            raise NotImplementedError
+        elif not i == 1:
+            raise ValueError
+
+        # Prepare the seeds
+        seeds = []
+        for (a,b) in self.not_forbidden_dominoes(i=2):
+            (a0,a1,a2,a3) = self._tiles[a]
+            (b0,b1,b2,b3) = self._tiles[b]
+            assert a1 == b3
+            delays = (0,0)
+            blocks = (a,b)
+            node = (delays, blocks)
+            seeds.append(node)
+        #print("seeds=",seeds)
+
+        # Classify the tiles by the suffixes of their top colors
+        tile_dict_1 = defaultdict(list)
+        for i,t in enumerate(self):
+            right,top,left,bottom = t
+            for j in range(len(top)):
+                top_suffix = top[j:]
+                assert len(top_suffix) > 0
+                tile_dict_1[top_suffix].append(i)
+        tile_dict_1 = dict(tile_dict_1)
+        #print("tile_dict_1=",tile_dict_1)
+
+        # Define the children function for the seeds
+        def children_for_seeds(node):
+            (delays,blocks) = node
+            assert len(delays) == len(blocks)
+            if len(delays) >= size:
+                return []
+            u = blocks[-1]
+            (u0,u1,u2,u3) = self[u]
+            L = []
+            for i in range(1,len(u1)):
+                u1_suffix = u1[len(u1)-i:]
+                for z in tile_dict_1[u1_suffix]:
+                    (z0,z1,z2,z3) = self[z]
+                    delays_copy = list(delays)
+                    blocks_copy = list(blocks)
+                    delays_copy.append(delays[-1]-i+len(z3))
+                    blocks_copy.append(z)
+                    assert min(delays_copy) == 0
+                    node = (tuple(delays_copy), tuple(blocks_copy))
+                    L.append(node)
+            return L
+
+        R = RecursivelyEnumeratedSet(seeds, children_for_seeds, structure=None)
+        seeds_of_given_size = [(d,b) for (d,b) in R if len(d) == size]
+
+        # TODO: fix this so that the seeds always intersect a vertical line
+        
+        #print("seeds of given size", seeds_of_given_size)
+
+        # Classify the tiles by their left color
+        # and the prefixes of their top and bottom colors
+        tile_dict = defaultdict(list)
+        for i,t in enumerate(self):
+            right,top,left,bottom = t
+            for j,k in itertools.product(range(len(top)+1), repeat=2):
+                top_prefix = top[:j]
+                bottom_prefix = bottom[:k]
+                tile_dict[(top_prefix, left, bottom_prefix)].append(i)
+        tile_dict = dict(tile_dict)
+        #print("tile_dict=",tile_dict)
+
+        # Define the children function
+        def children(node):
+            (delays,blocks) = node
+            assert min(delays) == 0
+            index = delays.index(0)
+            u = blocks[index]
+            (u0,u1,u2,u3) = self[u]
+            if index > 0:
+                # there is some block below
+                v = blocks[index-1]
+                (v0,v1,v2,v3) = self[v]
+                length_below = delays[index-1]
+                assert 0 < length_below <= len(v1)
+                v1_suffix = v1[-length_below:]
+            else:
+                v1_suffix = ''
+            if index + 1 < size:
+                # there is some block above
+                w = blocks[index+1]
+                (w0,w1,w2,w3) = self[w]
+                length_above = delays[index+1]
+                assert 0 <= length_above <= len(w3)
+                w3_suffix = w3[len(w3)-length_above:]
+            else:
+                w3_suffix = ''
+
+            L = []
+            for z in tile_dict.get((w3_suffix, u0, v1_suffix), []):
+                (z0,z1,z2,z3) = self[z]
+                assert len(z1) == len(z3)
+
+                blocks_copy = list(blocks)
+                blocks_copy[index] = z
+                blocks_copy = tuple(blocks_copy)
+
+                delays_copy = list(delays)
+                delays_copy[index] += len(z1)
+                m = min(delays_copy)
+                delays_copy = tuple(a-m for a in delays_copy)
+
+                node = (delays_copy,blocks_copy)
+                L.append(node)
+
+            return L
+
+        R = RecursivelyEnumeratedSet(seeds_of_given_size, children, structure=None)
+        G = R.to_digraph()
+
+        #from slabbe.graph import digraph_move_label_to_edge
+        from slabbe.graph import clean_sources_and_sinks
+        #G = digraph_move_label_to_edge(G)
+        H = clean_sources_and_sinks(G)
+
+        print("G=",G)
+        print("H=",H)
+
+        return H
 
 class HexagonalWangTileSet(WangTileSet_generic):
     r"""
