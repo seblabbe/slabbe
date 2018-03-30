@@ -299,3 +299,41 @@ def is_lyndon_mod_reverse(self):
     """
     return self.is_lyndon() and self <= minimum_lexicographic_conjugate(self.reversal())
 
+def are_overlapping_factors(u, v, d):
+    r"""
+    Returns whether there exists a word w such that u occurs in w at position 0
+    and v occurs in w at position d.
+
+    INPUT:
+
+    - ``u`` -- word
+    - ``v`` -- word
+    - ``d`` -- integer (positive or negative)
+
+    EXAMPLES::
+
+        sage: from slabbe.finite_word import are_overlapping_factors
+        sage: are_overlapping_factors('abc', 'abc', 0)
+        True
+        sage: are_overlapping_factors('abc', 'abc', 1)
+        False
+        sage: are_overlapping_factors('abcdef', 'bc', 1)
+        True
+        sage: are_overlapping_factors('abcdef', 'bcdefgh', 1)
+        True
+        sage: are_overlapping_factors('abcdef', 'bcddefgh', 1)
+        False
+        sage: are_overlapping_factors('abcdef', 'aabcdefgh', -1)
+        True
+        sage: are_overlapping_factors('abcdef', 'aabcd', -1)
+        True
+        sage: are_overlapping_factors('abcdef', 'aabcc', -1)
+        False
+
+    """
+    start_u = max(0,d)
+    end_u = min(len(u),d+len(v))
+    fact_u = u[start_u:end_u]
+    fact_v = v[start_u-d:end_u-d]
+    return fact_u == fact_v
+
