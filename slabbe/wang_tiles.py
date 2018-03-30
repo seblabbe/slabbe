@@ -1779,11 +1779,14 @@ class WangTileSet(WangTileSet_generic):
         return H
 
 
-    def unsynchronized_graph(self, i=1, size=2):
+    @cached_method
+    def unsynchronized_graph(self, i=1, size=2, verbose=False):
         r"""
         INPUT:
 
         - ``i`` -- integer, 1 or 2
+        - ``size`` -- integer, 2 or more
+        - ``verbose`` -- boolean (default:``False``)
 
         Signification of the nodes (u,v,w,d)::
 
@@ -1814,60 +1817,51 @@ class WangTileSet(WangTileSet_generic):
         elif not i == 1:
             raise ValueError
 
-        # Prepare the seeds
-        seeds = []
-        for (a,b) in self.not_forbidden_dominoes(i=2):
-            (a0,a1,a2,a3) = self._tiles[a]
-            (b0,b1,b2,b3) = self._tiles[b]
-            assert a1 == b3
-            delays = (0,0)
-            blocks = (a,b)
-            node = (delays, blocks)
-            seeds.append(node)
-        #print("seeds=",seeds)
-
-        # Classify the tiles by the suffixes of their top colors
-        tile_dict_1 = defaultdict(list)
-        for i,t in enumerate(self):
-            right,top,left,bottom = t
-            for j in range(len(top)):
-                top_suffix = top[j:]
-                assert len(top_suffix) > 0
-                tile_dict_1[top_suffix].append(i)
-        tile_dict_1 = dict(tile_dict_1)
-        #print("tile_dict_1=",tile_dict_1)
-
-        # Define the children function for the seeds
-        def children_for_seeds(node):
-            (delays,blocks) = node
-            assert len(delays) == len(blocks)
-            if len(delays) >= size:
-                return []
-            u = blocks[-1]
-            (u0,u1,u2,u3) = self[u]
-            L = []
-            for i in range(1,len(u1)):
-                u1_suffix = u1[len(u1)-i:]
-                for z in tile_dict_1[u1_suffix]:
+        # Preparing the seeds
+        if verbose:
+            print("Computing the seeds of size {} ...".format(size))
+        if size == 2:
+            seeds = []
+            for (a,b) in self.not_forbidden_dominoes(i=2):
+                (a0,a1,a2,a3) = self._tiles[a]
+                (b0,b1,b2,b3) = self._tiles[b]
+                assert a1 == b3
+                delays = (0,0)
+                blocks = (a,b)
+                node = (delays, blocks)
+                seeds.append(node)
+        elif size > 2:
+            from slabbe.finite_word import are_overlapping_factors
+            G = self.unsynchronized_graph(i=i, size=size-1, verbose=verbose)
+            seeds = set()
+            for node in G:
+                (delays,blocks) = node
+                assert len(delays) == len(blocks)
+                u = blocks[-1]
+                (u0,u1,u2,u3) = self[u]
+                du = delays[-1]
+                for z in range(len(self)):
                     (z0,z1,z2,z3) = self[z]
-                    delays_copy = list(delays)
-                    blocks_copy = list(blocks)
-                    delays_copy.append(delays[-1]-i+len(z3))
-                    blocks_copy.append(z)
-                    assert min(delays_copy) == 0
-                    node = (tuple(delays_copy), tuple(blocks_copy))
-                    L.append(node)
-            return L
-
-        R = RecursivelyEnumeratedSet(seeds, children_for_seeds, structure=None)
-        seeds_of_given_size = [(d,b) for (d,b) in R if len(d) == size]
-
-        # TODO: fix this so that the seeds always intersect a vertical line
-        
-        #print("seeds of given size", seeds_of_given_size)
+                    for dz in range(len(z3)+1):
+                        if are_overlapping_factors(z3, u1, len(z3)-dz+du-len(u1)):
+                            delays_copy = list(delays)
+                            blocks_copy = list(blocks)
+                            delays_copy.append(dz)
+                            blocks_copy.append(z)
+                            assert min(delays_copy) == 0
+                            node = (tuple(delays_copy), tuple(blocks_copy))
+                            ## TODO: add the node only if the suffix of
+                            ## length - 1 is in G
+                            seeds.add(node)
+        else:
+            raise ValueError("size(={}) is bad input".format(size))
+        if verbose:
+            print("Set of {} seeds of size {} found".format(len(seeds), size))
 
         # Classify the tiles by their left color
         # and the prefixes of their top and bottom colors
+        if verbose:
+            print("Classifying the tiles...")
         tile_dict = defaultdict(list)
         for i,t in enumerate(self):
             right,top,left,bottom = t
@@ -1879,6 +1873,8 @@ class WangTileSet(WangTileSet_generic):
         #print("tile_dict=",tile_dict)
 
         # Define the children function
+        if verbose:
+            print("Define the children function...")
         def children(node):
             (delays,blocks) = node
             assert min(delays) == 0
@@ -1923,7 +1919,9 @@ class WangTileSet(WangTileSet_generic):
 
             return L
 
-        R = RecursivelyEnumeratedSet(seeds_of_given_size, children, structure=None)
+        if verbose:
+            print("Enumeration of the elements of size {} ...".format(size))
+        R = RecursivelyEnumeratedSet(seeds, children, structure=None)
         G = R.to_digraph()
 
         #from slabbe.graph import digraph_move_label_to_edge
@@ -1931,8 +1929,9 @@ class WangTileSet(WangTileSet_generic):
         #G = digraph_move_label_to_edge(G)
         H = clean_sources_and_sinks(G)
 
-        print("G=",G)
-        print("H=",H)
+        if verbose:
+            print("Digraph computed:",G)
+            print("Digraph computed (after removing sources and sinks):",H)
 
         return H
 
