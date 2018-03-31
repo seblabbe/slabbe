@@ -184,6 +184,10 @@ class TikzPicture(SageObject):
         - ``edge_labels`` -- bool (default: ``True``)
         - ``color_by_label`` -- bool (default: ``False``)
         - ``rankdir`` -- string (default: ``'down'``)
+        - ``subgraph_clusters`` -- (default: []) a list of lists of
+          vertices, if supported by the layout engine, nodes belonging to
+          the same cluster subgraph are drawn together, with the entire
+          drawing of the cluster contained within a bounding rectangle.
 
         EXAMPLES::
 
@@ -216,6 +220,24 @@ class TikzPicture(SageObject):
             sage: G = DiGraph([(0,1,'a'), (0,1,'b'), (0,2,'c'), (0,2,'d')], multiedges=True)
             sage: tikz = TikzPicture.from_graph(G, merge_multiedges=True,
             ....:               merge_label_function=fn) # optional dot2tex
+            sage: _ = tikz.pdf()      # not tested
+
+        Using subgraphs clusters (broken when using labels, see
+        :trac:`22070`)::
+
+            sage: S = FiniteSetMaps(5)
+            sage: I = S((0,1,2,3,4))
+            sage: a = S((0,1,3,0,0))
+            sage: b = S((0,2,4,1,0))
+            sage: roots = [I]
+            sage: succ = lambda v:[v*a,v*b,a*v,b*v]
+            sage: R = RecursivelyEnumeratedSet(roots, succ)
+            sage: G = R.to_digraph()
+            sage: G
+            Looped multi-digraph on 27 vertices
+            sage: C = G.strongly_connected_components()
+            sage: tikz = TikzPicture.from_graph(G, merge_multiedges=False,
+            ....:                               subgraph_clusters=C)
             sage: _ = tikz.pdf()      # not tested
 
         """
