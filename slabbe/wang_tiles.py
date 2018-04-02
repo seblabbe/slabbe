@@ -72,7 +72,7 @@ from sage.graphs.graph import Graph
 
 from sage.misc.decorators import rename_keyword
 
-def tile_to_tikz(tile, position, color=None, size=1,
+def tile_to_tikz(tile, position, color=None, sizex=1, sizey=1,
         rotate=None, label=True, label_shift=.2, top_right_edges=True,
         draw_H=None, draw_V=None):
     r"""
@@ -82,7 +82,8 @@ def tile_to_tikz(tile, position, color=None, size=1,
     - ``tile`` -- tuple of length 4
     - ``position`` -- tuple of two numbers
     - ``color`` -- dict (default: ``None``) from tile values -> tikz colors
-    - ``size`` -- number (default: ``1``), size of the tile
+    - ``sizex`` -- number (default: ``1``), horizontal size of the tile
+    - ``sizey`` -- number (default: ``1``), vertical size of the tile
     - ``rotate`` -- list or ``None`` (default:``None``) list of four angles
       in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
       label of Wang tiles. If ``None``, it performs a 90 degres rotation
@@ -175,7 +176,8 @@ def tile_to_tikz(tile, position, color=None, size=1,
                 rotate.append(90)
             else:
                 rotate.append(0)
-    s = size        # because it is shorter to write below
+    sx = sizex      # because it is shorter to write below
+    sy = sizey      # because it is shorter to write below
     t = label_shift # because it is shorter to write below
     x,y = position
     lines = []
@@ -183,31 +185,31 @@ def tile_to_tikz(tile, position, color=None, size=1,
     lines.append('% tile at position (x,y)={}'.format((x,y)))
     if color:
         triangle = r'\fill[{}] {} -- {} -- {};'
-        c = (x+.5*s,y+.5*s)
-        lines.append(triangle.format(color[tile[0]],(x+s,y),c,(x+s,y+s)))
-        lines.append(triangle.format(color[tile[1]],(x,y+s),c,(x+s,y+s)))
-        lines.append(triangle.format(color[tile[2]],(x,y),c,(x,y+s)))
-        lines.append(triangle.format(color[tile[3]],(x,y),c,(x+s,y)))
+        c = (x+.5*sx,y+.5*sy)
+        lines.append(triangle.format(color[tile[0]],(x+sx,y),c,(x+sx,y+sy)))
+        lines.append(triangle.format(color[tile[1]],(x,y+sy),c,(x+sx,y+sy)))
+        lines.append(triangle.format(color[tile[2]],(x,y),c,(x,y+sy)))
+        lines.append(triangle.format(color[tile[3]],(x,y),c,(x+sx,y)))
 
     if draw_H is None:
-        draw_H = {tile[1]:r'\draw {{}} -- ++ ({},0);'.format(s),
-                  tile[3]:r'\draw {{}} -- ++ ({},0);'.format(s)}
+        draw_H = {tile[1]:r'\draw {{}} -- ++ ({},0);'.format(sx),
+                  tile[3]:r'\draw {{}} -- ++ ({},0);'.format(sx)}
     if draw_V is None:
-        draw_V = {tile[0]:r'\draw {{}} -- ++ (0,{});'.format(s),
-                  tile[2]:r'\draw {{}} -- ++ (0,{});'.format(s)}
+        draw_V = {tile[0]:r'\draw {{}} -- ++ (0,{});'.format(sy),
+                  tile[2]:r'\draw {{}} -- ++ (0,{});'.format(sy)}
 
     lines.append(draw_V[tile[2]].format((x,y)))
     lines.append(draw_H[tile[3]].format((x,y)))
     if top_right_edges:
-        lines.append(draw_V[tile[0]].format((x+s,y)))
-        lines.append(draw_H[tile[1]].format((x,y+s)))
+        lines.append(draw_V[tile[0]].format((x+sx,y)))
+        lines.append(draw_H[tile[1]].format((x,y+sy)))
 
     if label:
         node_str = r'\node[rotate={}] at {} {{{}}};'
-        lines.append(node_str.format(rotate[0],(x+s-t,y+.5),  tile[0]))
-        lines.append(node_str.format(rotate[1],(x+.5, y+s-t), tile[1]))
-        lines.append(node_str.format(rotate[2],(x+t,  y+.5),  tile[2]))
-        lines.append(node_str.format(rotate[3],(x+.5, y+t),   tile[3]))
+        lines.append(node_str.format(rotate[0],(x+sx-t,  y+.5*sy),  tile[0]))
+        lines.append(node_str.format(rotate[1],(x+.5*sx, y+sy-t), tile[1]))
+        lines.append(node_str.format(rotate[2],(x+t,     y+.5*sy),  tile[2]))
+        lines.append(node_str.format(rotate[3],(x+.5*sx, y+t),   tile[3]))
     #lines.append(r'\end{tikzpicture}')
     return lines
     #return TikzPicture('\n'.join(lines))
@@ -766,7 +768,7 @@ class WangTileSet(WangTileSet_generic):
             y = - (i // ncolumns)
             position = (x * (size + space), y * (size + space))
             new_lines = tile_to_tikz(tile, position, color=color,
-                    size=size, rotate=rotate, label=label,
+                    sizex=size, sizey=size, rotate=rotate, label=label,
                     label_shift=label_shift, top_right_edges=True,
                     draw_H=draw_H, draw_V=draw_V)
             lines.extend(new_lines)
@@ -836,7 +838,7 @@ class WangTileSet(WangTileSet_generic):
             lines.append('[scale={}]'.format(scale))
             lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
             new_lines = tile_to_tikz(tile, position=(0,0), color=color,
-                    size=size, rotate=rotate, label_shift=label_shift,
+                    sizex=size, sizey=size, rotate=rotate, label_shift=label_shift,
                     top_right_edges=True)
             lines.extend(new_lines)
             lines.append(r'\end{tikzpicture}')
@@ -1788,17 +1790,23 @@ class WangTileSet(WangTileSet_generic):
         - ``size`` -- integer, 2 or more
         - ``verbose`` -- boolean (default:``False``)
 
-        Signification of the nodes (u,v,w,d)::
+        OUTPUT:
 
-             d = 0     |w| = d > 0      -|w| = d < 0
+        - graph of vertices (delays, blocks)
 
-               |               |           |
-              v|              v|          v|
-               |            w  |           |
-               +         +-----+           +-----+
-               |         |                   w   |
-              u|        u|                      u|
-               |         |                       |
+        Signification of the nodes (d,b)::
+
+                 +-----------+
+                 |           |
+                 |    b[1]   |
+                 |           |
+            +----+-----+-----+
+            |          |     |
+            |   b[0]   |    d[1]
+            |          |
+            +----------+
+                       |
+                      d[0]
 
         EXAMPLES::
 
@@ -1807,7 +1815,12 @@ class WangTileSet(WangTileSet_generic):
             sage: T = WangTileSet(tiles)
             sage: G = T.unsynchronized_graph()
             sage: sorted(G.vertices())
-            [('aa', 'aa', '', 0), ('cc', 'cc', '', 0)]
+            [(d=(0, 0), b=(0, 0)),
+             (d=(0, 0), b=(1, 1)),
+             (d=(2, 0), b=(0, 1)),
+             (d=(2, 0), b=(1, 0))]
+            sage: from slabbe import TikzPicture
+            sage: _ = TikzPicture.from_graph(G).pdf(view=False)
 
         """
         from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
@@ -1816,6 +1829,34 @@ class WangTileSet(WangTileSet_generic):
             raise NotImplementedError
         elif not i == 1:
             raise ValueError
+
+        class Node(SageObject):
+            def __init__(_self, delays, blocks):
+                _self._delays = delays
+                _self._blocks = blocks
+            def __repr__(_self):
+                return "(d={}, b={})".format(_self._delays, _self._blocks)
+            def __hash__(_self):
+                return hash(_self._delays) + hash(_self._blocks)
+            def __eq__(_self, other):
+                return (_self._delays == other._delays and
+                        _self._blocks == other._blocks)
+            def _latex_(_self):
+                lines = []
+                lines.append(r'\begin{tikzpicture}')
+                for y in range(len(_self._delays)):
+                    d = _self._delays[y]
+                    b = _self._blocks[y]
+                    tile = self[b]
+                    sizex = len(tile[1])
+                    position = (d-sizex, y)
+                    new_lines = tile_to_tikz(tile, position, color=None,
+                            sizex=sizex, sizey=1, rotate=None, label=True,
+                            label_shift=.2, top_right_edges=True,
+                            draw_H=None, draw_V=None)
+                    lines.extend(new_lines)
+                lines.append(r'\end{tikzpicture}')
+                return '\n'.join(lines)
 
         # Preparing the seeds
         if verbose:
@@ -1828,14 +1869,15 @@ class WangTileSet(WangTileSet_generic):
                 assert a1 == b3
                 delays = (0,0)
                 blocks = (a,b)
-                node = (delays, blocks)
+                node = Node(delays, blocks)
                 seeds.append(node)
         elif size > 2:
             from slabbe.finite_word import are_overlapping_factors
             G = self.unsynchronized_graph(i=i, size=size-1, verbose=verbose)
             seeds = set()
             for node in G:
-                (delays,blocks) = node
+                delays = node._delays
+                blocks = node._blocks
                 assert len(delays) == len(blocks)
                 u = blocks[-1]
                 (u0,u1,u2,u3) = self[u]
@@ -1849,7 +1891,7 @@ class WangTileSet(WangTileSet_generic):
                             delays_copy.append(dz)
                             blocks_copy.append(z)
                             assert min(delays_copy) == 0
-                            node = (tuple(delays_copy), tuple(blocks_copy))
+                            node = Node(tuple(delays_copy), tuple(blocks_copy))
                             ## TODO: add the node only if the suffix of
                             ## length - 1 is in G
                             seeds.add(node)
@@ -1876,7 +1918,8 @@ class WangTileSet(WangTileSet_generic):
         if verbose:
             print("Define the children function...")
         def children(node):
-            (delays,blocks) = node
+            delays = node._delays
+            blocks = node._blocks
             assert min(delays) == 0
             index = delays.index(0)
             u = blocks[index]
@@ -1914,9 +1957,8 @@ class WangTileSet(WangTileSet_generic):
                 m = min(delays_copy)
                 delays_copy = tuple(a-m for a in delays_copy)
 
-                node = (delays_copy,blocks_copy)
+                node = Node(delays_copy,blocks_copy)
                 L.append(node)
-
             return L
 
         if verbose:
@@ -3357,8 +3399,9 @@ class WangTiling(object):
                 position = transformation_matrix*vector((j,k))
                 tile = self._tiles[i]
                 more_lines = tile_to_tikz(tile, position, color=color,
-                        size=1, rotate=rotate, label=label, label_shift=label_shift,
-                        top_right_edges=True, draw_H=draw_H, draw_V=draw_V)
+                        sizex=1, sizey=1, rotate=rotate, label=label,
+                        label_shift=label_shift, top_right_edges=True,
+                        draw_H=draw_H, draw_V=draw_V)
                 lines.extend(more_lines)
         lines.append(r'\end{tikzpicture}')
         from slabbe import TikzPicture
