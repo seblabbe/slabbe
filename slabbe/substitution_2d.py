@@ -602,8 +602,8 @@ class Substitution2d(object):
 
             desubstituted_tile = domain_tiles[a] 
             new_lines = tile_to_tikz(desubstituted_tile, (0,0), color=color,
-                    size=size, rotate=rotate, label_shift=label_shift,
-                    top_right_edges=True)
+                    sizex=size, sizey=size, rotate=rotate,
+                    label_shift=label_shift, top_right_edges=True)
             lines.extend(new_lines)
 
             if direction == 'right':
@@ -637,13 +637,17 @@ class Substitution2d(object):
         from sage.misc.latex import LatexExpr
         return LatexExpr('\n'.join(lines))
 
-    def list_2x2_factors(self):
+    def list_2x2_factors(self, F=None):
         r"""
-        Return the list of 2x2 factors in the associated substitutive shift.
+        Return the list of 2x2 factors in the associated substitutive
+        shift. If a list of factors ``F`` is given, it restrict to the
+        factors inside the image of ``F``.
 
         INPUT:
 
         - ``self`` -- expansive and primitive 2d substitution
+        - ``F`` -- list of factors in the domain or ``None``, if given the
+          output is restricted to the factors in ``F``
 
         OUTPUT:
 
@@ -670,23 +674,54 @@ class Substitution2d(object):
              [[1, 0], [1, 0]],
              [[1, 0], [0, 0]]]
 
+        Restricting to the images of some factors::
+
+            sage: s.list_2x2_factors([A])
+            [[[1, 0], [1, 1]], [[1, 1], [1, 0]], [[1, 1], [1, 1]], [[0, 1], [0, 1]]]
+            sage: s.list_2x2_factors([B])
+            [[[1, 0], [1, 1]],
+             [[0, 1], [1, 0]],
+             [[1, 1], [1, 0]],
+             [[0, 1], [0, 1]],
+             [[0, 1], [1, 1]],
+             [[1, 0], [0, 1]],
+             [[0, 0], [1, 0]]]
+            sage: s.list_2x2_factors([A,B])
+            [[[1, 0], [1, 1]],
+             [[1, 1], [1, 0]],
+             [[0, 1], [1, 1]],
+             [[1, 1], [1, 1]],
+             [[0, 0], [1, 0]],
+             [[1, 0], [0, 1]],
+             [[0, 1], [1, 0]],
+             [[0, 1], [0, 1]]]
+            sage: s.list_2x2_factors([])
+            []
+
         """
-        from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
-        alphabet = self.domain_alphabet()
-        a = next(iter(alphabet))
-        table = [[a]]
-        while len(table) < 2 or len(table[0]) < 2:
-            table = self(table)
-        shape = [(0,0), (0,1), (1,0), (1,1)]
-        seeds = set_of_factors(table, shape)
-        def children(factor):
-            table = [[factor[0], factor[1]],
-                     [factor[2], factor[3]]]
-            image = self(table)
-            S = set_of_factors(image, shape)
-            return S
-        R = RecursivelyEnumeratedSet(seeds, children)
-        return [ [[a, b], [c, d]] for (a,b,c,d) in R]
+        if F is None:
+            from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
+            alphabet = self.domain_alphabet()
+            a = next(iter(alphabet))
+            table = [[a]]
+            while len(table) < 2 or len(table[0]) < 2:
+                table = self(table)
+            shape = [(0,0), (0,1), (1,0), (1,1)]
+            seeds = set_of_factors(table, shape)
+            def children(factor):
+                table = [[factor[0], factor[1]],
+                         [factor[2], factor[3]]]
+                image = self(table)
+                S = set_of_factors(image, shape)
+                return S
+            R = RecursivelyEnumeratedSet(seeds, children)
+            return [ [[a, b], [c, d]] for (a,b,c,d) in R]
+        else:
+            shape = [(0,0), (0,1), (1,0), (1,1)]
+            S = set()
+            for table in F:
+                S.update(set_of_factors(self(table), shape))
+            return [ [[a, b], [c, d]] for (a,b,c,d) in S]
 
     _matrix_ = incidence_matrix
 
