@@ -1819,6 +1819,15 @@ class WangTileSet(WangTileSet_generic):
              (d=(0, 0), b=(1, 1)),
              (d=(2, 0), b=(0, 1)),
              (d=(2, 0), b=(1, 0))]
+            sage: G.edges()
+            [((d=(0, 0), b=(1, 1)), (d=(2, 0), b=(0, 1)), (1, 0)),
+             ((d=(0, 0), b=(0, 0)), (d=(2, 0), b=(1, 0)), (0, 1)),
+             ((d=(2, 0), b=(1, 0)), (d=(0, 0), b=(1, 1)), (0, 1)),
+             ((d=(2, 0), b=(0, 1)), (d=(0, 0), b=(0, 0)), (1, 0))]
+            sage: [node.lengths_x() for node in G]
+            [[2, 2], [2, 2], [2, 2], [2, 2]]
+            sage: [node.is_synchronized() for node in G]
+            [True, True, True, True]
             sage: from slabbe import TikzPicture
             sage: _ = TikzPicture.from_graph(G).pdf(view=False)
 
@@ -1830,7 +1839,7 @@ class WangTileSet(WangTileSet_generic):
         elif not i == 1:
             raise ValueError
 
-        class Node(SageObject):
+        class Node(object):
             def __init__(_self, delays, blocks):
                 _self._delays = delays
                 _self._blocks = blocks
@@ -1857,6 +1866,30 @@ class WangTileSet(WangTileSet_generic):
                     lines.extend(new_lines)
                 lines.append(r'\end{tikzpicture}')
                 return '\n'.join(lines)
+            def lengths_x(_self):
+                return [len(self[b][1]) for b in _self._blocks]
+            def is_synchronized(_self):
+                delays = _self._delays
+                lengths_x = _self.lengths_x()
+                for i in range(len(delays)-1):
+                    da,db = delays[i:i+2]
+                    la,lb = lengths_x[i:i+2]
+                    if da == db:
+                        if la == lb:
+                            pass
+                        else:
+                            return  False
+                    elif da < db:
+                        if db - da == lb:
+                            pass
+                        else:
+                            return False
+                    else:
+                        if da - db == la:
+                            pass
+                        else:
+                            return False
+                return True
 
         # Preparing the seeds
         if verbose:
@@ -1870,7 +1903,7 @@ class WangTileSet(WangTileSet_generic):
                 delays = (0,0)
                 blocks = (a,b)
                 node = Node(delays, blocks)
-                seeds.append(node)
+                seeds.append((node,None))
         elif size > 2:
             from slabbe.finite_word import are_overlapping_factors
             G = self.unsynchronized_graph(i=i, size=size-1, verbose=verbose)
@@ -1894,7 +1927,7 @@ class WangTileSet(WangTileSet_generic):
                             node = Node(tuple(delays_copy), tuple(blocks_copy))
                             ## TODO: add the node only if the suffix of
                             ## length - 1 is in G
-                            seeds.add(node)
+                            seeds.add((node,None))
         else:
             raise ValueError("size(={}) is bad input".format(size))
         if verbose:
@@ -1917,7 +1950,8 @@ class WangTileSet(WangTileSet_generic):
         # Define the children function
         if verbose:
             print("Define the children function...")
-        def children(node):
+        def children(node_label):
+            node,label = node_label
             delays = node._delays
             blocks = node._blocks
             assert min(delays) == 0
@@ -1958,7 +1992,8 @@ class WangTileSet(WangTileSet_generic):
                 delays_copy = tuple(a-m for a in delays_copy)
 
                 node = Node(delays_copy,blocks_copy)
-                L.append(node)
+                label = (u,z)
+                L.append((node,label))
             return L
 
         if verbose:
@@ -1966,9 +2001,9 @@ class WangTileSet(WangTileSet_generic):
         R = RecursivelyEnumeratedSet(seeds, children, structure=None)
         G = R.to_digraph()
 
-        #from slabbe.graph import digraph_move_label_to_edge
+        from slabbe.graph import digraph_move_label_to_edge
         from slabbe.graph import clean_sources_and_sinks
-        #G = digraph_move_label_to_edge(G)
+        G = digraph_move_label_to_edge(G)
         H = clean_sources_and_sinks(G)
 
         if verbose:
