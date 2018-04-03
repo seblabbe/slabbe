@@ -601,9 +601,10 @@ class Substitution2d(object):
             lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
 
             desubstituted_tile = domain_tiles[a] 
-            new_lines = tile_to_tikz(desubstituted_tile, (0,0), color=color,
-                    sizex=size, sizey=size, rotate=rotate,
-                    label_shift=label_shift, top_right_edges=True)
+            new_lines = tile_to_tikz(desubstituted_tile, (0,0),
+                    color=color, id=a, sizex=size, sizey=size,
+                    rotate=rotate, label_shift=label_shift,
+                    top_right_edges=True)
             lines.extend(new_lines)
 
             if direction == 'right':

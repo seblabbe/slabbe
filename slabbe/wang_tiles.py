@@ -72,7 +72,7 @@ from sage.graphs.graph import Graph
 
 from sage.misc.decorators import rename_keyword
 
-def tile_to_tikz(tile, position, color=None, sizex=1, sizey=1,
+def tile_to_tikz(tile, position, color=None, id=None, sizex=1, sizey=1,
         rotate=None, label=True, label_shift=.2, top_right_edges=True,
         draw_H=None, draw_V=None):
     r"""
@@ -82,6 +82,7 @@ def tile_to_tikz(tile, position, color=None, sizex=1, sizey=1,
     - ``tile`` -- tuple of length 4
     - ``position`` -- tuple of two numbers
     - ``color`` -- dict (default: ``None``) from tile values -> tikz colors
+    - ``id`` -- id (default: ``None``) of the tile to be printed in the center
     - ``sizex`` -- number (default: ``1``), horizontal size of the tile
     - ``sizey`` -- number (default: ``1``), vertical size of the tile
     - ``rotate`` -- list or ``None`` (default:``None``) list of four angles
@@ -190,6 +191,10 @@ def tile_to_tikz(tile, position, color=None, sizex=1, sizey=1,
         lines.append(triangle.format(color[tile[1]],(x,y+sy),c,(x+sx,y+sy)))
         lines.append(triangle.format(color[tile[2]],(x,y),c,(x,y+sy)))
         lines.append(triangle.format(color[tile[3]],(x,y),c,(x+sx,y)))
+
+    if id is not None:
+        c = (x+.5*sx,y+.5*sy)
+        lines.append(r'\node at {} {{{}}};'.format(c, id))
 
     if draw_H is None:
         draw_H = {tile[1]:r'\draw {{}} -- ++ ({},0);'.format(sx),
@@ -767,7 +772,7 @@ class WangTileSet(WangTileSet_generic):
             x = i % ncolumns
             y = - (i // ncolumns)
             position = (x * (size + space), y * (size + space))
-            new_lines = tile_to_tikz(tile, position, color=color,
+            new_lines = tile_to_tikz(tile, position, color=color, id=i,
                     sizex=size, sizey=size, rotate=rotate, label=label,
                     label_shift=label_shift, top_right_edges=True,
                     draw_H=draw_H, draw_V=draw_V)
@@ -838,8 +843,8 @@ class WangTileSet(WangTileSet_generic):
             lines.append('[scale={}]'.format(scale))
             lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
             new_lines = tile_to_tikz(tile, position=(0,0), color=color,
-                    sizex=size, sizey=size, rotate=rotate, label_shift=label_shift,
-                    top_right_edges=True)
+                    id=i, sizex=size, sizey=size, rotate=rotate,
+                    label_shift=label_shift, top_right_edges=True)
             lines.extend(new_lines)
             lines.append(r'\end{tikzpicture}')
             lines.append(r'} % end of newcommand')
@@ -1860,9 +1865,9 @@ class WangTileSet(WangTileSet_generic):
                     sizex = len(tile[1])
                     position = (d-sizex, y)
                     new_lines = tile_to_tikz(tile, position, color=None,
-                            sizex=sizex, sizey=1, rotate=None, label=True,
-                            label_shift=.2, top_right_edges=True,
-                            draw_H=None, draw_V=None)
+                            id=b, sizex=sizex, sizey=1, rotate=None,
+                            label=True, label_shift=.2,
+                            top_right_edges=True, draw_H=None, draw_V=None)
                     lines.extend(new_lines)
                 lines.append(r'\end{tikzpicture}')
                 return '\n'.join(lines)
@@ -3434,7 +3439,7 @@ class WangTiling(object):
                 position = transformation_matrix*vector((j,k))
                 tile = self._tiles[i]
                 more_lines = tile_to_tikz(tile, position, color=color,
-                        sizex=1, sizey=1, rotate=rotate, label=label,
+                        id=i, sizex=1, sizey=1, rotate=rotate, label=label,
                         label_shift=label_shift, top_right_edges=True,
                         draw_H=draw_H, draw_V=draw_V)
                 lines.extend(more_lines)
