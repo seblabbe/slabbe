@@ -615,7 +615,7 @@ class Substitution2d(object):
             image_a = self._d[a]
             tiling = WangTiling(image_a, codomain_tiles, color)
             tikz = tiling.tikz(color=color, font=font, rotate=rotate,
-                    label_shift=label_shift, scale=scale,
+                    label_shift=label_shift, scale=scale, size=size,
                     transformation_matrix=transformation_matrix)
 
             if direction == 'right':

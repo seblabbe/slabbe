@@ -3299,7 +3299,7 @@ class WangTiling(object):
 
     @rename_keyword(fontsize='font')
     def tikz(self, color=None, font=r'\normalsize', rotate=None,
-            label=True, label_shift=.2, scale=1,
+            label=True, label_shift=.2, scale=1, size=1,
             transformation_matrix=None, draw_H=None, draw_V=None):
         r"""
         Return a tikzpicture showing one solution.
@@ -3316,6 +3316,7 @@ class WangTiling(object):
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
         - ``scale`` -- number (default: ``1``), tikzpicture scale
+        - ``size`` -- number (default: ``1``) size of tiles
         - ``transformation_matrix`` -- matrix (default: ``None``), a matrix
           to apply to the coordinate before drawing, it can be in
           ``SL(2,ZZ)`` or not.
@@ -3439,9 +3440,9 @@ class WangTiling(object):
                 position = transformation_matrix*vector((j,k))
                 tile = self._tiles[i]
                 more_lines = tile_to_tikz(tile, position, color=color,
-                        id=i, sizex=1, sizey=1, rotate=rotate, label=label,
-                        label_shift=label_shift, top_right_edges=True,
-                        draw_H=draw_H, draw_V=draw_V)
+                        id=i, sizex=size, sizey=size, rotate=rotate,
+                        label=label, label_shift=label_shift,
+                        top_right_edges=True, draw_H=draw_H, draw_V=draw_V)
                 lines.extend(more_lines)
         lines.append(r'\end{tikzpicture}')
         from slabbe import TikzPicture
