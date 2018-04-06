@@ -206,6 +206,8 @@ class PolyhedronPartition(object):
     r"""
     Return a partition into polyhedron.
 
+    Note: Many atoms may share the same key.
+
     INPUT:
 
     - ``atoms`` -- list of polyhedron or dict of key -> polyhedron or list
@@ -409,6 +411,26 @@ class PolyhedronPartition(object):
             3
         """
         return len(self._items)
+
+    def __getitem__(self, key):
+        r"""
+        Return the list of atoms associated with the given key.
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition
+            sage: h = 1/2
+            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
+            sage: q = Polyhedron([(0,0), (0,h), (h,1), (1,1), (1,h), (h,0)])
+            sage: r = Polyhedron([(h,0), (1,0), (1,h)])
+            sage: P = PolyhedronPartition([(0,p),(1,q),(0,r)])
+            sage: P[0]
+            Polyhedron partition of 2 atoms with 1 letters
+            sage: P[1]
+            Polyhedron partition of 1 atoms with 1 letters
+
+        """
+        return PolyhedronPartition([(k,atom) for (k,atom) in self if k == key])
 
     def alphabet(self):
         r"""
@@ -1395,4 +1417,49 @@ class PolyhedronPartition(object):
 
         return PolyhedronPartition(L), substitution
 
+    def cylinder(self, word, trans_inv):
+        r"""
+        INPUT:
+
+        - ``word`` -- list
+        - ``trans_inv`` -- a function: polyhedron -> polyhedron
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition, rotation_mod
+            sage: h = 1/2
+            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
+            sage: q = Polyhedron([(0,0), (0,h), (h,1), (1,1), (1,h), (h,0)])
+            sage: r = Polyhedron([(h,0), (1,0), (1,h)])
+            sage: P = PolyhedronPartition([p,q,r])
+            sage: u = rotation_mod(0, 1/3, 1, QQ)
+            sage: u_inv = rotation_mod(0, 2/3, 1, QQ)
+            sage: P.cylinder([2,2], u_inv)
+            Polyhedron partition of 1 atoms with 1 letters
+            sage: P.cylinder([1,1], u_inv)
+            Polyhedron partition of 1 atoms with 1 letters
+            sage: P.cylinder([1], u_inv)
+            Polyhedron partition of 1 atoms with 1 letters
+
+        TESTS::
+
+            sage: P.cylinder([0,0,0], u_inv)
+            Polyhedron partition of 0 atoms with 0 letters
+            sage: P.cylinder([2,3], u_inv)
+            Polyhedron partition of 0 atoms with 0 letters
+            sage: P.cylinder([2,1], u_inv)
+            Polyhedron partition of 0 atoms with 0 letters
+            sage: P.cylinder([], u_inv)
+            Polyhedron partition of 3 atoms with 3 letters
+
+        """
+        if not word:
+            return self
+        P = self
+        for i in range(1, len(word)):
+            a = word[-i]
+            P = P.refinement(self[a])
+            P = P.apply_transformation(trans_inv)
+        a = word[0]
+        return P.refinement(self[a])
 
