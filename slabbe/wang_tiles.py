@@ -2315,7 +2315,7 @@ class WangTileSolver(object):
           of available parameters for example for the Gurobi backend, see
           dictionary ``parameters_type`` in the file
           ``sage/numerical/backends/gurobi_backend.pyx``
-        - ``ncpus`` -- integer (default: ``1``), maximal number of
+        - ``ncpus`` -- integer (default: ``8``), maximal number of
           subprocesses to use at the same time, used only if ``solver`` is
           ``'dancing_links'``.
 
@@ -2756,6 +2756,13 @@ class WangTileSolver(object):
 
     def number_of_solutions(self, ncpus=8):
         r"""
+        Return the number of solutions
+
+        INPUT:
+
+        - ``ncpus`` -- integer (default: ``8``), maximal number of
+          subprocesses to use at the same time
+
         EXAMPLES::
 
             sage: from slabbe import WangTileSolver
@@ -2843,8 +2850,89 @@ class WangTileSolver(object):
                 table[j][k] = i
             yield WangTiling(table, self._tiles, color=self._color)
 
-    def all_solutions_tikz(self):
+    def all_solutions(self, ncpus=8):
         r"""
+        Return the list of all solutions.
+
+        .. NOTE::
+
+            This uses the reduction to dancing links.
+
+        INPUT:
+
+        - ``ncpus`` -- integer (default: ``8``), maximal number of
+          subprocesses to use at the same time
+
+        OUTPUT:
+
+            list of wang tilings
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSolver
+            sage: tiles = [(2,4,2,1), (2,2,2,0), (1,1,3,1), (1,2,3,2), (3,1,3,3),
+            ....: (0,1,3,1), (0,0,0,1), (3,1,0,2), (0,2,1,2), (1,2,1,4), (3,3,1,2)]
+            sage: W = WangTileSolver(tiles,3,4)
+            sage: W.number_of_solutions()
+            908
+            sage: L = W.all_solutions()
+            sage: len(L)
+            908
+
+        ::
+
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+            sage: W = WangTileSolver(tiles,2,2)
+            sage: W.all_solutions()
+            [A wang tiling of a 2 x 2 rectangle,
+             A wang tiling of a 2 x 2 rectangle,
+             A wang tiling of a 2 x 2 rectangle]
+
+        With preassigned colors and tiles::
+
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
+            sage: t = {(0,1):0}
+            sage: c = [{},{},{(1,1):0},{}]
+            sage: W = WangTileSolver(tiles,3,3,preassigned_tiles=t,preassigned_color=c)
+            sage: S = W.all_solutions()
+            sage: sorted([s._table for s in S])
+            [[[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+             [[0, 0, 3], [0, 0, 0], [0, 0, 0]]]
+
+        With preassigned colors and tiles::
+
+            sage: right = {(0, 1): 'A', (0, 0): 'A'}
+            sage: top = {(0, 1): 'B'}
+            sage: left = {(0, 1): 'A', (0, 0): 'A'}
+            sage: bottom = {(0, 0): 'B'}
+            sage: preassigned_color=[right,top,left,bottom]
+            sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB', 'EBEB']
+            sage: W = WangTileSolver(tiles, 1, 2, preassigned_color=preassigned_color)
+            sage: [t.table() for t in W.all_solutions()]
+            [[[3, 3]]]
+
+        """
+        from sage.combinat.matrices.dancing_links import dlx_solver
+        rows,row_info = self.rows_and_information()
+        dlx = dlx_solver(rows)
+        L = []
+        for solution in dlx.all_solutions(ncpus=ncpus):
+            table = [[None]*self._height for _ in range(self._width)]
+            for a in solution:
+                j,k,i = row_info[a]
+                assert table[j][k] is None, "table[{}][{}](={}) is not None".format(j,k,table[j][k])
+                table[j][k] = i
+            tiling = WangTiling(table, self._tiles, color=self._color)
+            L.append(tiling)
+        return L
+
+    def all_solutions_tikz(self, ncpus=8):
+        r"""
+        INPUT:
+
+        - ``ncpus`` -- integer (default: ``8``), maximal number of
+          subprocesses to use at the same time
+
         EXAMPLES::
 
             sage: from slabbe import WangTileSolver
@@ -2854,17 +2942,22 @@ class WangTileSolver(object):
             sage: t = W.all_solutions_tikz()
             sage: view(t)    # long # not tested
         """
-        solutions = list(self.solutions_iterator())
+        solutions = self.all_solutions(ncpus=ncpus)
         L = [sol.tikz(scale=.7,fontsize=r'\tiny').tikz_picture_code() for sol in solutions]
         bigtikz = '\n'.join(L)
         from sage.misc.latex import LatexExpr
         return LatexExpr(bigtikz)
 
-    def meet_of_all_solutions(self):
+    def meet_of_all_solutions(self, ncpus=8):
         r"""
         Return the tiling of the rectangle with tiles that are imposed at
         each position (this is the meet of the partially ordered set of
         all partial solutions inside the rectangle).
+
+        INPUT:
+
+        - ``ncpus`` -- integer (default: ``8``), maximal number of
+          subprocesses to use at the same time
 
         OUTPUT:
 
@@ -2895,7 +2988,7 @@ class WangTileSolver(object):
         W = self._width
         H = self._height
         d = defaultdict(set)
-        for tiling in self.solutions_iterator():
+        for tiling in self.all_solutions(ncpus=ncpus):
             for j in range(W):
                 for k in range(H):
                     table = tiling.table()
