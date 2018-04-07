@@ -2860,6 +2860,59 @@ class WangTileSolver(object):
         from sage.misc.latex import LatexExpr
         return LatexExpr(bigtikz)
 
+    def meet_of_all_solutions(self):
+        r"""
+        Return the tiling of the rectangle with tiles that are imposed at
+        each position (this is the meet of the partially ordered set of
+        all partial solutions inside the rectangle).
+
+        OUTPUT:
+
+            A Wang tiling (with ``None`` at positions where more than one
+            tile can occur)
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSolver
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
+            sage: t = {(0,1):0}
+            sage: W = WangTileSolver(tiles,3,3,preassigned_tiles=t)
+            sage: tiling = W.meet_of_all_solutions()
+            sage: tiling
+            A wang tiling of a 3 x 3 rectangle
+            sage: tiling.table()
+            [[0, 0, None], [0, 0, 0], [0, 0, 0]]
+
+        ::
+
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
+            sage: W = WangTileSolver(tiles,3,3)
+            sage: tiling = W.meet_of_all_solutions()
+            sage: tiling.table()
+            [[None, None, None], [None, None, None], [None, None, None]]
+
+        """
+        W = self._width
+        H = self._height
+        d = defaultdict(set)
+        for tiling in self.solutions_iterator():
+            for j in range(W):
+                for k in range(H):
+                    table = tiling.table()
+                    tile = table[j][k]
+                    d[(j,k)].add(tile)
+        table = []
+        for j in range(W):
+            row = []
+            for k in range(H):
+                tiles = d[(j,k)]
+                if len(tiles) == 1:
+                    row.append(tiles.pop())
+                else:
+                    row.append(None)
+            table.append(row)
+        return WangTiling(table, self._tiles, color=self._color)
+
 class WangTiling(object):
     r"""
     INPUT:
@@ -3351,10 +3404,10 @@ class WangTiling(object):
             \begin{tikzpicture}[scale=1]
             \tikzstyle{every node}=[font=\normalsize]
             % tile at position (x,y)=(0, 0)
+            \node at (0.5, 0.5) {0};
             \draw (0, 0) -- ++ (0,1);
-            \draw (0, 0) -- ++ (1,0);
             ...
-            ... 101 lines not printed (3400 characters in total) ...
+            ... 113 lines not printed (3700 characters in total) ...
             ...
             \node[rotate=0] at (2.8, 3.5) {0};
             \node[rotate=0] at (2.5, 3.8) {0};
