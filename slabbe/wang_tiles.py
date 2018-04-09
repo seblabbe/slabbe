@@ -220,75 +220,6 @@ def tile_to_tikz(tile, position, color=None, id=None, sizex=1, sizey=1,
     #return TikzPicture('\n'.join(lines))
 
 
-def hexagonal_tile_to_tikz(tile, position, color=None, radius=1,
-        rotate=(0,0,0,0,0,0), label_shift=.2, digits=5):
-    r"""
-
-    INPUT:
-
-    - ``tile`` -- tuple of length 6
-    - ``position`` -- tuple of two numbers
-    - ``color`` -- dict (default: ``None``) from tile values -> tikz colors
-    - ``radius`` -- number (default: ``1``), radius of the tile
-    - ``rotate`` -- list (default:``(0,0,0,0,0,0)``) of four angles in
-      degrees, the rotation angle to apply to each label of Wang tiles
-    - ``label_shift`` -- number (default: ``.2``) translation distance of the
-      label from the edge
-    - ``digits`` -- number (default: ``5``), number of digits of coordinates
-
-    OUTPUT:
-
-    - list of strings
-
-    EXAMPLES::
-
-        sage: from slabbe.wang_tiles import hexagonal_tile_to_tikz
-        sage: color = {0:'white',1:'red',2:'cyan',3:'green',4:'white'}
-        sage: hexagonal_tile_to_tikz((1,2,3,4,1,2), (10,10), color)
-        ['% hexagonal tile at position (x,y)=(10, 10)',
-         '\\fill[red] (10, 10) -- (10.866, 9.5000) -- (10.866, 10.500) -- cycle;',
-         '\\fill[cyan] (10, 10) -- (10.866, 10.500) -- (10.000, 11.000) -- cycle;',
-         '\\fill[green] (10, 10) -- (10.000, 11.000) -- (9.1340, 10.500) -- cycle;',
-         '\\fill[white] (10, 10) -- (9.1340, 10.500) -- (9.1340, 9.5000) -- cycle;',
-         '\\fill[red] (10, 10) -- (9.1340, 9.5000) -- (10.000, 9.0000) -- cycle;',
-         '\\fill[cyan] (10, 10) -- (10.000, 9.0000) -- (10.866, 9.5000) -- cycle;',
-         '\\draw (10.866, 9.5000) -- (10.866, 10.500) -- (10.000, 11.000) -- (9.1340, 10.500) -- (9.1340, 9.5000) -- (10.000, 9.0000) -- (10.866, 9.5000);',
-         '\\node[rotate=0] at (10.666, 10.000) {1};',
-         '\\node[rotate=0] at (10.333, 10.577) {2};',
-         '\\node[rotate=0] at (9.6670, 10.577) {3};',
-         '\\node[rotate=0] at (9.3340, 10.000) {4};',
-         '\\node[rotate=0] at (9.6670, 9.4232) {1};',
-         '\\node[rotate=0] at (10.333, 9.4232) {2};']
-    """
-    from sage.modules.free_module_element import vector
-    from sage.symbolic.constants import pi
-    from sage.functions.trig import sin,cos
-    from slabbe import TikzPicture
-    lines = []
-    #lines.append(r'\begin{tikzpicture}')
-    x,y = position = vector(position)
-    lines.append('% hexagonal tile at position (x,y)={}'.format(position))
-    angles = [-pi/6+i*pi/3 for i in range(7)]
-    vertices = [position+vector((cos(angle), sin(angle))) for angle in angles]
-    if color:
-        triangle = r'\fill[{}] {} -- {} -- {} -- cycle;'
-        c = (x,y)
-        for i in range(6):
-            p = vertices[i]
-            q = vertices[i+1]
-            lines.append(triangle.format(color[tile[i]],c,p.n(digits=digits),q.n(digits=digits)))
-    contour = ' -- '.join(['{}'.format(v.n(digits=digits)) for v in vertices])
-    lines.append(r'\draw {};'.format(contour))
-    node_str = r'\node[rotate={}] at {} {{{}}};'
-    for i in range(6):
-        angle = i*pi/3
-        coeff = radius*cos(pi/6) - label_shift
-        p = position + coeff*vector((cos(angle), sin(angle)))
-        lines.append(node_str.format(rotate[i],p.n(digits=digits),tile[i]))
-    return lines
-    #lines.append(r'\end{tikzpicture}')
-    #return TikzPicture('\n'.join(lines))
-
 def fusion(tile0, tile1, direction, function=str.__add__, initial=''):
     r"""
     Return the fusion of wang tile sets in the given direction.
@@ -339,7 +270,7 @@ def fusion(tile0, tile1, direction, function=str.__add__, initial=''):
         t = ((A,W), (X,), (C,Y), (D,))
     return tuple(reduce(function, a, initial) for a in t)
 
-class WangTileSet_generic(object):
+class WangTileSet(object):
     r"""
     Construct a Wang tile set.
 
@@ -359,6 +290,7 @@ class WangTileSet_generic(object):
         sage: tiles = [(0,0,0,2), (1,0,0,1), (2,1,0,0), (0,0,1,0),
         ....:          (1,2,1,1), (1,1,2,0), (2,0,2,1)]
         sage: T = WangTileSet(tiles)
+
     """
     def __init__(self, tiles):
         r"""
@@ -436,28 +368,6 @@ class WangTileSet_generic(object):
         """
         return self._tiles
 
-class WangTileSet(WangTileSet_generic):
-    r"""
-    Construct a Wang tile set.
-
-    INPUT:
-
-    - ``tiles`` -- list of tiles, a tile is a 4-tuple (right color, top
-        color, left color, bottom color)
-
-    EXAMPLES::
-
-        sage: from slabbe import WangTileSet
-        sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
-        sage: T = WangTileSet(tiles)
-
-    ::
-
-        sage: tiles = [(0,0,0,2), (1,0,0,1), (2,1,0,0), (0,0,1,0),
-        ....:          (1,2,1,1), (1,1,2,0), (2,0,2,1)]
-        sage: T = WangTileSet(tiles)
-
-    """
     def table(self):
         r"""
         Return a table representation of the tile set.
@@ -2016,66 +1926,6 @@ class WangTileSet(WangTileSet_generic):
             print("Digraph computed (after removing sources and sinks):",H)
 
         return H
-
-class HexagonalWangTileSet(WangTileSet_generic):
-    r"""
-    Construct an hexagonal Wang tile set.
-
-    INPUT:
-
-    - ``tiles`` -- list of tiles, a tile is a 6-tuple of colors (right, top
-      right, top left, left, bottom left, bottom right)
-
-    EXAMPLES::
-
-        sage: from slabbe import HexagonalWangTileSet
-        sage: tiles = [(0,0,0,0,0,0), (1,1,1,1,1,1), (2,2,2,2,2,2)]
-        sage: T = HexagonalWangTileSet(tiles)
-    """
-    @rename_keyword(fontsize='font')
-    def tikz(self, ncolumns=10, color=None, radius=1, space=.1, scale=1,
-             font=r'\normalsize', rotate=(0,0,0,0,0,0), label_shift=.2):
-        r"""
-        INPUT:
-
-        - ``ncolumns`` -- integer (default: ``10``)
-        - ``color`` -- dict (default: None)
-        - ``radius`` -- number (default: ``1``)
-        - ``space`` -- number (default: ``.1``)
-        - ``scale`` -- number (default: ``1``)
-        - ``font`` -- string (default: ``r'\normalsize'``
-        - ``rotate`` -- list (default:``(0,0,0,0,0,0)``) of four angles in
-          degrees, the rotation angle to apply to each label of Wang tiles
-        - ``label_shift`` -- number (default: ``.2``) translation distance
-          of the label from the edge
-
-        EXAMPLES::
-
-            sage: from slabbe import HexagonalWangTileSet
-            sage: tiles = [(0,0,0,0,0,2), (1,0,1,0,0,1), (1,0,2,1,0,0),
-            ....:          (1,2,2,1,1,1), (1,1,1,1,2,0), (0,2,2,0,2,1)]
-            sage: T = HexagonalWangTileSet(tiles)
-            sage: color = {0:'white',1:'red',2:'cyan',3:'green',4:'white'}
-            sage: _ = T.tikz(color=color).pdf(view=False)
-
-        TESTS::
-
-            sage: _ = T.tikz(color=color,label_shift=.5).pdf(view=False)
-        """
-        from slabbe import TikzPicture
-        lines = []
-        lines.append(r'\begin{tikzpicture}')
-        lines.append('[scale={}]'.format(scale))
-        lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
-        for i,tile in enumerate(self):
-            x = i % ncolumns
-            y = - (i // ncolumns)
-            position = (x * (2*radius + space), y * (2*radius + space))
-            new_lines = hexagonal_tile_to_tikz(tile, position, color=color,
-                    radius=radius, rotate=rotate, label_shift=label_shift)
-            lines.extend(new_lines)
-        lines.append(r'\end{tikzpicture}')
-        return TikzPicture('\n'.join(lines))
 
 class WangTileSolver(object):
     r"""
