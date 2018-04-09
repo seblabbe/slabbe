@@ -1496,16 +1496,22 @@ class WangTileSet(object):
             sage: T.shift_top().shift_top().tiles()
             [('aa', 'dd', 'cc', 'bb'), ('cc', 'bb', 'aa', 'dd')]
 
+        ::
+
+            sage: tiles = [('aa','bb','cc','bb'), ('aa','dd','cc','bb'), ('cc','dd','aa','dd')]
+            sage: T = WangTileSet(tiles)
+            sage: T.shift_top().tiles()
+            [('aa', 'bd', 'cc', 'bb'),
+             ('aa', 'dd', 'cc', 'bb'),
+             ('cc', 'db', 'aa', 'dd'),
+             ('cc', 'dd', 'aa', 'dd')]
+
         """
         G = defaultdict(set)
         for (e,n,w,s) in self:
             G[w].add(n[0])
-        if not all(len(a)==1 for a in G.values()):
-            raise NotImplementedError("shift on top colors currently"
-                    " implemented only if the right extension (={}) always"
-                    " exists and is unique".format(G))
-        d = {w:G[w].pop() for w in G}
-        tiles = [(e,function(n[1:],d[e]),w,s) for (e,n,w,s) in self]
+        tiles = [(e,function(n[1:],a),w,s) for (e,n,w,s) in self
+                                           for a in G[e]]
         return WangTileSet(tiles)
 
     def is_equivalent(self, other, certificate=False, verbose=False):
