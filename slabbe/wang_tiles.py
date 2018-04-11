@@ -1509,7 +1509,10 @@ class WangTileSet(object):
         dominoes_R = [(a,b) for (a,b) in dominoes if b in R]
 
         if any(a in R for (a,b) in dominoes_R):
-            print("Warning: it is expected as hypothesis that R odot^i R is forbidden")
+            L = [(a,b) for (a,b) in dominoes_R if a in R]
+            print("Warning: it is expected as hypothesis that R odot^i R is "
+                  "forbidden but the following domino admits a radius "
+                  "{} neighborhood: {}".format(radius, L))
 
         # compute L and K
         U = set(range(len(self)))
@@ -1556,12 +1559,13 @@ class WangTileSet(object):
 
         return WangTileSet(new_tiles), s
 
-    def shift_top(self, function=str.__add__):
+    def shift_top(self, function=str.__add__, verbose=False):
         r"""
         INPUT:
 
         - ``function`` -- function (default:``str.__add__``), monoid
           operation
+        - ``verbose`` -- boolean (default:``False``)
 
         EXAMPLES::
 
@@ -1587,6 +1591,8 @@ class WangTileSet(object):
         G = defaultdict(set)
         for (e,n,w,s) in self:
             G[w].add(n[0])
+        if verbose:
+            print("The map West -> North[0] is {}".format(dict(G)))
         tiles = [(e,function(n[1:],a),w,s) for (e,n,w,s) in self
                                            for a in G[e]]
         return WangTileSet(tiles)
