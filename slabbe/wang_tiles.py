@@ -379,20 +379,21 @@ class WangTileSet(object):
             ....:          (1,2,1,1), (1,1,2,0), (2,0,2,1)]
             sage: T = WangTileSet(tiles)
             sage: T.table()
-              Right   Top   Left   Bottom
-            +-------+-----+------+--------+
-              0       0     0      2
-              1       0     0      1
-              2       1     0      0
-              0       0     1      0
-              1       2     1      1
-              1       1     2      0
-              2       0     2      1
+              Id   Right   Top   Left   Bottom
+            +----+-------+-----+------+--------+
+              0    0       0     0      2
+              1    1       0     0      1
+              2    2       1     0      0
+              3    0       0     1      0
+              4    1       2     1      1
+              5    1       1     2      0
+              6    2       0     2      1
 
         """
         from sage.misc.table import table
-        header_row = ['Right', 'Top', 'Left', 'Bottom']
-        return table(self.tiles(), header_row=header_row)
+        header_row = ['Id', 'Right', 'Top', 'Left', 'Bottom']
+        rows = [(i, a, b, c, d) for i,(a,b,c,d) in enumerate(self.tiles())]
+        return table(rows, header_row=header_row)
 
     def vertical_alphabet(self):
         r"""
@@ -951,12 +952,42 @@ class WangTileSet(object):
                 seen[pos].add(word)
         return set.intersection(*seen.values())
 
-    def fusion(self, other, direction, function=str.__add__, initial=''):
+    def clean_sources_and_sinks(self):
+        r"""
+        TODO: do it for the dual?
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (3,2,4,8), (0,5,0,7)]
+            sage: T = WangTileSet(tiles)
+            sage: T.clean_sources_and_sinks().tiles()
+            [(0, 0, 0, 0), (0, 5, 0, 7), (1, 1, 1, 1)]
+            sage: T.dual().clean_sources_and_sinks().tiles()
+            [(0, 0, 0, 0), (1, 1, 1, 1)]
+
+        """
+        from slabbe.graph import clean_sources_and_sinks
+        def edge_labels(t):
+            return (t.word_in[0], t.word_out[0])
+        G = self.to_transducer().graph(edge_labels)
+        G = clean_sources_and_sinks(G)
+        tiles = []
+        for (u,v,(word_in, word_out)) in G.edges():
+            left = u
+            right = v
+            bottom = word_in
+            top = word_out
+            tiles.append((right, top, left, bottom))
+        return WangTileSet(tiles)
+
+    def fusion(self, other, direction, function=str.__add__, initial='',
+            clean_graph=True):
         r"""
         Return the fusion of wang tile sets in the given direction.
 
-        We keep only the strongly connected components.
-
+        TODO: check if and when to do the clean
+        
         INPUT:
 
         - ``other`` -- WangTileSet
@@ -964,6 +995,8 @@ class WangTileSet(object):
         - ``function`` -- function (default:``str.__add__``), monoid
           operation
         - ``initial`` -- object (default:``''``), monoid neutral
+        - ``clean_graph`` -- boolean (default: ``False``), clean the graph
+          by recursively removing sources and sinks transitions (or tiles).
 
         EXAMPLES::
 
@@ -1003,7 +1036,8 @@ class WangTileSet(object):
                     ' WangTileSet'.format(other))
         if direction == 1:
             return self.dual().fusion(other.dual(), direction=2,
-                    function=function, initial=initial).dual()
+                    function=function, initial=initial,
+                    clean_graph=clean_graph).dual()
         if not direction == 2:
             raise ValueError('direction(={}) must be 1 or 2'.format(direction))
 
@@ -1014,11 +1048,13 @@ class WangTileSet(object):
         #edge_labels = lambda t:"{}|{}".format(t.word_in, t.word_out)
         edge_labels = lambda t:(t.word_in, t.word_out)
         G = TU.graph(edge_labels)
-        from slabbe.graph import clean_sources_and_sinks
-        H = clean_sources_and_sinks(G)
+        if clean_graph:
+            # BUG? maybe this should be done after the reduce?
+            from slabbe.graph import clean_sources_and_sinks
+            G = clean_sources_and_sinks(G)
 
         tiles = []
-        for (u,v,(word_in, word_out)) in H.edges():
+        for (u,v,(word_in, word_out)) in G.edges():
             left = reduce(function, (a.label() for a in u), initial)
             right = reduce(function, (a.label() for a in v), initial)
             bottom = reduce(function, word_in, initial)
@@ -1196,15 +1232,17 @@ class WangTileSet(object):
         tiles_tuple = [tuple((a,) for a in t) for t in self.tiles()]
         T = base = WangTileSet(tiles_tuple)
         for _ in range(width-1):
-            T = T.fusion(base, 1, function=tuple.__add__, initial=tuple())
+            T = T.fusion(base, 1, function=tuple.__add__, initial=tuple(),
+                    clean_graph=False)
         if verbose:
             print("After fusion in the direction e1:\n", T.table())
         base = T
         for _ in range(height-1):
-            T = T.fusion(base, 2, function=tuple.__add__, initial=tuple())
+            T = T.fusion(base, 2, function=tuple.__add__, initial=tuple(),
+                    clean_graph=False)
         if verbose:
             print("After fusion in the direction e2:\n", T.table())
-        T = T.tiles_allowing_surrounding(radius, solver=solver)
+        T = T.tiles_allowing_surrounding(radius, solver=solver, verbose=verbose)
         if verbose:
             print("After filtering tiles without surrounding of "
                   "radius {} :\n {}".format(radius, T.table()))
@@ -1225,7 +1263,7 @@ class WangTileSet(object):
         return L
 
     def not_forbidden_dominoes(self, i=2, radius=1, solver=None,
-            verbose=False):
+            ncpus=1, verbose=False):
         r"""
 
         INPUT:
@@ -1233,6 +1271,9 @@ class WangTileSet(object):
         - ``i`` - integer (default: ``2``), 1 or 2
         - ``radius`` - integer (default: ``1``)
         - ``solver`` - string or None (default: ``None``)
+        - ``ncpus`` -- integer (default: ``1``), maximal number of
+          subprocesses to use at the same time, used only if ``solver`` is
+          ``'dancing_links'``.
         - ``verbose`` - bool
         
         EXAMPLES::
@@ -1261,20 +1302,28 @@ class WangTileSet(object):
 
         """
         if i == 2:
-            width = 1
-            height = 2
+            width = 2*radius+1
+            height = 2*radius+2
+            p = (radius,radius)
+            q = (radius,radius+1)
         elif i == 1:
-            width = 2
-            height = 1
+            width = 2*radius+2
+            height = 2*radius+1
+            p = (radius,radius)
+            q = (radius+1,radius)
         else:
             raise ValueError('i={} must be 1 or 2'.format(i))
-        T = self.not_forbidden_tilings(width, height, radius=radius,
-                solver=solver, verbose=verbose)
-        tables = [t.table() for t in T]
-        if i == 2:
-            return [tuple(t[0]) for t in tables]
-        elif i == 1:
-            return [(t[0][0],t[1][0]) for t in tables]
+
+        L = []
+        for i,j in itertools.product(range(len(self)), repeat=2):
+            d = {p:i, q:j}
+            s = self.solver(width, height, preassigned_tiles=d)
+            if s.has_solution(solver=solver, ncpus=ncpus):
+                if verbose:
+                    print("Solution found for tiles {} and {}:\n{}".format(i,j,
+                                s.solve(solver)._table))
+                L.append((i,j))
+        return L
 
     def partition_of_tiles(self, i=2):
         r"""
@@ -2292,11 +2341,6 @@ class WangTileSolver(object):
     def has_solution(self, solver=None, solver_parameters=None, ncpus=1):
         r"""
         Return whether there is a solution.
-
-        .. TODO::
-
-            - Currently, the dancing links reduction ignores the
-              preassigned parameters.
 
         INPUT:
 
