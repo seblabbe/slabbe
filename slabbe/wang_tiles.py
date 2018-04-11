@@ -1198,17 +1198,16 @@ class WangTileSet(object):
         for _ in range(width-1):
             T = T.fusion(base, 1, function=tuple.__add__, initial=tuple())
         if verbose:
-            print("After fusion in the direction e1: ", T)
+            print("After fusion in the direction e1:\n", T.table())
         base = T
         for _ in range(height-1):
             T = T.fusion(base, 2, function=tuple.__add__, initial=tuple())
         if verbose:
-            print("After fusion in the direction e2: ", T)
-        T = T.tiles_allowing_surrounding(1, solver=solver)
+            print("After fusion in the direction e2:\n", T.table())
+        T = T.tiles_allowing_surrounding(radius, solver=solver)
         if verbose:
             print("After filtering tiles without surrounding of "
-                  "radius {} : {}".format(radius, T))
-            print(T.tiles())
+                  "radius {} :\n {}".format(radius, T.table()))
         L = []
         for t in T:
             assert len(t[0]) == height
