@@ -1263,7 +1263,7 @@ class WangTileSet(object):
         return L
 
     def not_forbidden_dominoes(self, i=2, radius=1, solver=None,
-            ncpus=1, verbose=False):
+            ncpus=None, verbose=False):
         r"""
 
         INPUT:
@@ -1271,7 +1271,7 @@ class WangTileSet(object):
         - ``i`` - integer (default: ``2``), 1 or 2
         - ``radius`` - integer (default: ``1``)
         - ``solver`` - string or None (default: ``None``)
-        - ``ncpus`` -- integer (default: ``1``), maximal number of
+        - ``ncpus`` -- integer (default: ``None``), maximal number of
           subprocesses to use at the same time, used only if ``solver`` is
           ``'dancing_links'``.
         - ``verbose`` - bool
@@ -1364,7 +1364,7 @@ class WangTileSet(object):
         subgraphs = G.connected_components_subgraphs()
         return sorted(set(k for (u,v,k) in subgraph.edges()) for subgraph in subgraphs)
 
-    def is_forbidden_product(self, A, B, i=2, radius=1, solver=None):
+    def is_forbidden_product(self, A, B, i=2, radius=1, solver=None, ncpus=None):
         r"""
         Return whether A \odot^i B is forbidden using a given radius around
         the product and a given solver.
@@ -1376,6 +1376,7 @@ class WangTileSet(object):
         - ``i`` -- integer, 1 or 2
         - ``radius`` -- integer (default:``1``)
         - ``solver`` -- string (default:``None``)
+        - ``ncpus`` -- integer (default:``None``)
 
         EXAMPLES::
 
@@ -1408,11 +1409,11 @@ class WangTileSet(object):
             height = 2*radius + 2
         for ta,tb in itertools.product(A, B):
             s = self.solver(width, height, preassigned_tiles={p:ta, q:tb})
-            if s.has_solution(solver=solver):
+            if s.has_solution(solver=solver, ncpus=ncpus):
                 return False
         return True
 
-    def recognizable_markers(self, i=2, radius=1, solver=None,
+    def recognizable_markers(self, i=2, radius=1, solver=None, ncpus=None,
             verbose=False):
         r"""
 
@@ -1421,6 +1422,8 @@ class WangTileSet(object):
         - ``i`` -- integer, 1 or 2
         - ``radius`` -- integer (default:``1``)
         - ``solver`` -- string (default:``None``)
+        - ``ncpus`` -- integer (default:``None``)
+        - ``verbose`` -- boolean (default:``False``)
         
         EXAMPLES::
 
@@ -1450,15 +1453,17 @@ class WangTileSet(object):
                 print("R=",R)
 
             # Check that R \odot^i R is forbidden
-            if self.is_forbidden_product(R, R, i=i, radius=radius, solver=solver):
+            if self.is_forbidden_product(R, R, i=i, radius=radius,
+                    solver=solver, ncpus=ncpus):
                 if verbose:
                     print("R odot^i R is forbidden, so we keep this set")
                 result.append(R)
 
         return result
 
-    def derived_wang_tile_set(self, R=None, i=2, radius=1, solver=None,
-            function=str.__add__, initial='', verbose=False):
+    def derived_wang_tile_set(self, R=None, i=2, side='right', radius=1,
+            solver=None, ncpus=None, function=str.__add__, initial='',
+            verbose=False):
         r"""
         Return the derived Wang tile set obtained from removing tiles from
         ``R``.
@@ -1468,8 +1473,10 @@ class WangTileSet(object):
         - ``R`` -- set of tile indices or ``None``, if ``None``, it is
           guessed.
         - ``i`` -- integer 1 or 2
+        - ``side`` -- ``'right'`` or ``'left'``
         - ``radius`` -- integer
         - ``solver`` -- string
+        - ``ncpus`` -- integer (default:``None``)
         - ``function`` -- function (default:``str.__add__``), monoid
             operation
         - ``initial`` -- object (default:``''``), monoid neutral
@@ -1486,51 +1493,60 @@ class WangTileSet(object):
         """
         if R is None:
             R_candidates = self.recognizable_markers(i=i,
-                    radius=radius, solver=solver)
+                    radius=radius, solver=solver, ncpus=ncpus)
             if not R_candidates:
                 raise ValueError("no recognizable substitution found")
             if len(R_candidates) > 1:
-                raise ValueError("more than one recognizable substitution found")
+                raise ValueError("more than one set of markers found {}".format(R_candidates))
             R = R_candidates[0]
 
         # Make sure R is of type set
         if not isinstance(R, set):
             R = set(R)
 
-        # Compute the dominoes and right extensions
-        dominoes = self.not_forbidden_dominoes(i=i, radius=radius, solver=solver)
+        # Compute the dominoes and left or right extensions
+        dominoes = self.not_forbidden_dominoes(i=i, radius=radius, solver=solver, ncpus=ncpus)
         if verbose:
             print("dominoes=",dominoes)
         right_extensions = defaultdict(set)
+        left_extensions = defaultdict(set)
         for a,b in dominoes:
             right_extensions[a].add(b)
+            left_extensions[b].add(a)
         if verbose:
             print("right_extensions=",right_extensions)
-        dominoes_R = [(a,b) for (a,b) in dominoes if b in R]
+            print("left_extensions=",left_extensions)
+        dominoes_xR = [(a,b) for (a,b) in dominoes if b in R]
+        dominoes_Rx = [(a,b) for (a,b) in dominoes if a in R]
 
-        if any(a in R for (a,b) in dominoes_R):
-            L = [(a,b) for (a,b) in dominoes_R if a in R]
+        # Print a warning when there are some valid R x R dominoes
+        RR = [(a,b) for (a,b) in dominoes if a in R and b in R]
+        if RR:
             print("Warning: it is expected as hypothesis that R odot^i R is "
-                  "forbidden but the following domino admits a radius "
-                  "{} neighborhood: {}".format(radius, L))
+                  "forbidden but the following dominoes admit a radius "
+                  "{} neighborhood: {}".format(radius, RR))
 
         # compute L and K
         U = set(range(len(self)))
         K_L = U.difference(R)
-        L = sorted(t for t in K_L if right_extensions[t] <= R)
+        if side == 'right':
+            L = sorted(t for t in K_L if right_extensions[t] <= R)
+        elif side == 'left':
+            L = sorted(t for t in K_L if left_extensions[t] <= R)
+        else:
+            raise ValueError("side(={}) must be 'left' or 'right'".format(side))
         K = sorted(K_L.difference(L))
         if verbose:
             print("L=",L)
             print("K=",K)
 
-        # by definition : L \odot L and L\odot K is forbidden
-        # Check that L \odot^i L is forbidden
-        if not self.is_forbidden_product(L, L, i=i, radius=radius, solver=solver):
-            raise ValueError("PROBLEM!! L odot^i L should be forbidden")
-
-        # Check that L \odot^i K is forbidden
-        if not self.is_forbidden_product(L, K, i=i, radius=radius, solver=solver):
-            raise ValueError("PROBLEM!! L odot^i K should be forbidden")
+        ## by definition : L \odot L and L\odot K is forbidden
+        ## Check that L \odot^i L is forbidden
+        #if not self.is_forbidden_product(L, L, i=i, radius=radius, solver=solver):
+        #    raise ValueError("PROBLEM!! L odot^i L should be forbidden")
+        ## Check that L \odot^i K is forbidden
+        #if not self.is_forbidden_product(L, K, i=i, radius=radius, solver=solver):
+        #    raise ValueError("PROBLEM!! L odot^i K should be forbidden")
 
         # Result initialization
         tiles = self.tiles()
@@ -1543,7 +1559,15 @@ class WangTileSet(object):
             d[next(it)] = [k]
             new_tiles.append(tiles[k])
 
-        # We add fusion of dominoes ending with a tile in R
+        # dominoes starting/ending with a tile in R
+        if side == 'right':
+            dominoes_R = dominoes_xR
+        elif side == 'left':
+            dominoes_R = dominoes_Rx
+        else:
+            raise ValueError("side(={}) must be 'left' or 'right'".format(side))
+
+        # We add fusion of dominoes starting/ending with a tile in R
         for (a,b) in dominoes_R:
             t = fusion(tiles[a],tiles[b],i,function=function,initial=initial)
             d[next(it)] = [a,b]
