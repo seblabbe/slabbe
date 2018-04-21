@@ -1126,7 +1126,7 @@ class WangTileSet(object):
                 preassigned_tiles=preassigned_tiles,
                 color=color)
 
-    def tiles_allowing_surrounding(self, radius, solver=None, verbose=False):
+    def tiles_allowing_surrounding(self, radius, solver=None, ncpus=None, verbose=False):
         r"""
         Return the subset of tiles allowing a surrounding of given radius.
 
@@ -1134,6 +1134,7 @@ class WangTileSet(object):
 
         - ``radius`` - integer
         - ``solver`` - string or None
+        - ``ncpus`` - integer
         - ``verbose`` - boolean
 
         EXAMPLES::
@@ -1164,7 +1165,7 @@ class WangTileSet(object):
         for i,t in enumerate(self):
             d = {(radius,radius):i}
             s = self.solver(diameter, diameter, preassigned_tiles=d)
-            if s.has_solution(solver=solver):
+            if s.has_solution(solver=solver, ncpus=ncpus):
                 if verbose:
                     print("Solution found for tile {}:\n{}".format(i,
                                 s.solve(solver)._table))
