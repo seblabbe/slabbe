@@ -1450,7 +1450,7 @@ class WangTileSet(object):
                 continue
             R = set().union(*[parts[j] for j in indices])
             if verbose:
-                print("R=",R)
+                print("Trying R =",R)
 
             # Check that R \odot^i R is forbidden
             if self.is_forbidden_product(R, R, i=i, radius=radius,
@@ -1507,15 +1507,12 @@ class WangTileSet(object):
         # Compute the dominoes and left or right extensions
         dominoes = self.not_forbidden_dominoes(i=i, radius=radius, solver=solver, ncpus=ncpus)
         if verbose:
-            print("dominoes=",dominoes)
+            print("dominoes =",dominoes)
         right_extensions = defaultdict(set)
         left_extensions = defaultdict(set)
         for a,b in dominoes:
             right_extensions[a].add(b)
             left_extensions[b].add(a)
-        if verbose:
-            print("right_extensions=",right_extensions)
-            print("left_extensions=",left_extensions)
         dominoes_xR = [(a,b) for (a,b) in dominoes if b in R]
         dominoes_Rx = [(a,b) for (a,b) in dominoes if a in R]
 
@@ -1537,8 +1534,9 @@ class WangTileSet(object):
             raise ValueError("side(={}) must be 'left' or 'right'".format(side))
         K = sorted(K_L.difference(L))
         if verbose:
-            print("L=",L)
-            print("K=",K)
+            print("R =",R)
+            print("L =",L)
+            print("K =",K)
 
         ## by definition : L \odot L and L\odot K is forbidden
         ## Check that L \odot^i L is forbidden
