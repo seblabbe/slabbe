@@ -1616,8 +1616,12 @@ class WangTileSet(object):
             G[w].add(n[0])
         if verbose:
             print("The map West -> North[0] is {}".format(dict(G)))
-        tiles = [(e,function(n[1:],a),w,s) for (e,n,w,s) in self
-                                           for a in G[e]]
+        tiles = []
+        for (e,n,w,s) in self:
+            for a in G[e]:
+                tile = (e,function(n[1:],a),w,s)
+                if tile not in tiles:
+                    tiles.append(tile)
         return WangTileSet(tiles)
 
     def is_equivalent(self, other, certificate=False, verbose=False):
