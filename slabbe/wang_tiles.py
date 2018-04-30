@@ -1505,17 +1505,10 @@ class WangTileSet(object):
         if not isinstance(R, set):
             R = set(R)
 
-        # Compute the dominoes and left or right extensions
+        # Compute the dominoes
         dominoes = self.not_forbidden_dominoes(i=i, radius=radius, solver=solver, ncpus=ncpus)
         if verbose:
             print("dominoes =",dominoes)
-        right_extensions = defaultdict(set)
-        left_extensions = defaultdict(set)
-        for a,b in dominoes:
-            right_extensions[a].add(b)
-            left_extensions[b].add(a)
-        dominoes_xR = [(a,b) for (a,b) in dominoes if b in R]
-        dominoes_Rx = [(a,b) for (a,b) in dominoes if a in R]
 
         # Print a warning when there are some valid R x R dominoes
         RR = [(a,b) for (a,b) in dominoes if a in R and b in R]
@@ -1524,16 +1517,21 @@ class WangTileSet(object):
                   "forbidden but the following dominoes admit a radius "
                   "{} neighborhood: {}".format(radius, RR))
 
-        # compute L and K
-        U = set(range(len(self)))
-        K_L = U.difference(R)
+        # Compute K and dominoes ending in R
+        dominoes_without_R = [(a,b) for (a,b) in dominoes if a not in R and b not in R]
         if side == 'right':
-            L = sorted(t for t in K_L if right_extensions[t] <= R)
+            K = [a for (a,b) in dominoes_without_R]
+            dominoes_R = [(a,b) for (a,b) in dominoes if b in R]
         elif side == 'left':
-            L = sorted(t for t in K_L if left_extensions[t] <= R)
+            K = [b for (a,b) in dominoes_without_R]
+            dominoes_R = [(a,b) for (a,b) in dominoes if a in R]
         else:
             raise ValueError("side(={}) must be 'left' or 'right'".format(side))
-        K = sorted(K_L.difference(L))
+        K = sorted(set(K))
+
+        # compute L
+        U = set(range(len(self)))
+        L = sorted(U.difference(R).difference(K))
         if verbose:
             print("R =",R)
             print("L =",L)
@@ -1557,14 +1555,6 @@ class WangTileSet(object):
         for k in K:
             d[next(it)] = [k]
             new_tiles.append(tiles[k])
-
-        # dominoes starting/ending with a tile in R
-        if side == 'right':
-            dominoes_R = dominoes_xR
-        elif side == 'left':
-            dominoes_R = dominoes_Rx
-        else:
-            raise ValueError("side(={}) must be 'left' or 'right'".format(side))
 
         # We add fusion of dominoes starting/ending with a tile in R
         for (a,b) in dominoes_R:
