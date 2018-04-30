@@ -1263,6 +1263,7 @@ class WangTileSet(object):
             L.extend(W.solutions_iterator())
         return L
 
+    @cached_method
     def not_forbidden_dominoes(self, i=2, radius=1, solver=None,
             ncpus=None, verbose=False):
         r"""
@@ -1282,23 +1283,23 @@ class WangTileSet(object):
             sage: from slabbe import WangTileSet
             sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB', 'EBEB']
             sage: T = WangTileSet(tiles)
-            sage: T.not_forbidden_dominoes(1)
+            sage: sorted(T.not_forbidden_dominoes(1))
             [(3, 3), (4, 4)]
 
         ::
 
             sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB', 'EBEB']
             sage: T = WangTileSet(tiles)
-            sage: T.not_forbidden_dominoes(i=2)
+            sage: sorted(T.not_forbidden_dominoes(i=2))
             [(3, 3), (3, 4), (4, 3), (4, 4)]
 
         TESTS::
 
             sage: tiles = [('02', '4', '02', '4'), ('32', '4', '02', '4')]
             sage: T = WangTileSet(tiles)
-            sage: T.not_forbidden_dominoes(1)
+            sage: sorted(T.not_forbidden_dominoes(1))
             [(0, 0)]
-            sage: T.not_forbidden_dominoes(2)
+            sage: sorted(T.not_forbidden_dominoes(2))
             [(0, 0)]
 
         """
@@ -1315,7 +1316,7 @@ class WangTileSet(object):
         else:
             raise ValueError('i={} must be 1 or 2'.format(i))
 
-        L = []
+        L = set()
         for i,j in itertools.product(range(len(self)), repeat=2):
             d = {p:i, q:j}
             s = self.solver(width, height, preassigned_tiles=d)
@@ -1323,7 +1324,7 @@ class WangTileSet(object):
                 if verbose:
                     print("Solution found for tiles {} and {}:\n{}".format(i,j,
                                 s.solve(solver)._table))
-                L.append((i,j))
+                L.add((i,j))
         return L
 
     def partition_of_tiles(self, i=2):
@@ -1333,6 +1334,8 @@ class WangTileSet(object):
 
         The result means that tiles in the same subset can be adjacent on
         an edge `e_i`.
+
+        OLD METHOD
 
         INPUT:
 
@@ -1360,8 +1363,7 @@ class WangTileSet(object):
                 edges.append((bottom,top,k))
             elif i == 2:
                 edges.append((right,left,k))
-        G = Graph(edges, format='list_of_edges', loops=True,
-                multiedges=True)
+        G = Graph(edges, format='list_of_edges', loops=True, multiedges=True)
         subgraphs = G.connected_components_subgraphs()
         return sorted(set(k for (u,v,k) in subgraph.edges()) for subgraph in subgraphs)
 
@@ -1417,6 +1419,7 @@ class WangTileSet(object):
     def recognizable_markers(self, i=2, radius=1, solver=None, ncpus=None,
             verbose=False):
         r"""
+        OLD METHOD
 
         INPUT:
 
@@ -1462,9 +1465,86 @@ class WangTileSet(object):
 
         return result
 
-    def derived_wang_tile_set(self, R=None, i=2, side='right', radius=1,
-            solver=None, ncpus=None, function=str.__add__, initial='',
-            verbose=False):
+    def find_markers(self, i=2, slope=None, radius=1, solver=None,
+            ncpus=None, verbose=False):
+        r"""
+        Return a list of lists of marker tiles.
+
+        INPUT:
+
+        - ``i`` -- integer (default:``2``), 1 or 2. 
+        - ``slope`` -- -1, 0, 1 or Infinity (default:``None``)
+        - ``radius`` -- integer (default:``1``)
+        - ``solver`` -- string (default:``None``)
+        - ``ncpus`` -- integer (default:``None``)
+        - ``verbose`` -- boolean (default:``False``)
+
+        OUTPUT:
+
+            list of lists
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB']
+            sage: T = WangTileSet(tiles)
+            sage: T.find_markers(i=1, slope=1)
+            [{0, 3}, {1}, {2}]
+            sage: T.find_markers(i=2, slope=1)
+            [{0, 2, 3}, {1}]
+
+        """
+        from sage.rings.infinity import Infinity
+        if slope is None:
+            if i == 1:
+                slope = Infinity
+            elif i == 2:
+                slope = 0
+
+        if not i in [1, 2]:
+            raise ValueError("i(={}) should be 1 or 2".format(i))
+        if i == 1 and slope not in [1, -1, Infinity]:
+            raise ValueError("slope(={}) should be -1, 1 or +Infinity when i=1".format(slope))
+        elif i == 2 and slope not in [1, -1, 0]:
+            raise ValueError("slope(={}) should be 0, -1, 1 when i=2".format(slope))
+
+        edges = []
+        dominoes = self.not_forbidden_dominoes(i=i, radius=radius,
+                                        solver=solver, ncpus=ncpus)
+        if verbose:
+            print('dominoes=', dominoes)
+        for A,B in dominoes:
+            rightA, topA, leftA, bottomA = self[A]
+            rightB, topB, leftB, bottomB = self[B]
+            if i == 1:
+                if slope == Infinity:
+                    edges.append((bottomB,topB,B))
+                elif slope == 1:
+                    edges.append((bottomA,topB,B))
+                elif slope == -1:
+                    edges.append((topA,bottomB,B))
+            elif i == 2:
+                if slope == 0:
+                    edges.append((leftB,rightB,B))
+                elif slope == 1:
+                    edges.append((leftA,rightB,B))
+                elif slope == -1:
+                    edges.append((rightA,leftB,B))
+        G = Graph(edges, format='list_of_edges', loops=True, multiedges=True)
+        subgraphs = G.connected_components_subgraphs()
+        candidates = sorted(set(k for (u,v,k) in subgraph.edges()) for subgraph in subgraphs)
+        if verbose:
+            print('candidates=', candidates)
+
+        ans = []
+        for candidate in candidates:
+            if all((a,b) not in dominoes for (a,b) in itertools.product(candidate, repeat=2)):
+                ans.append(candidate)
+        return ans
+
+    def derived_wang_tile_set(self, R=None, slope=None, i=2, side='right',
+            radius=1, solver=None, ncpus=None, function=str.__add__,
+            initial='', verbose=False):
         r"""
         Return the derived Wang tile set obtained from removing tiles from
         ``R``.
@@ -1473,6 +1553,7 @@ class WangTileSet(object):
 
         - ``R`` -- set of tile indices or ``None``, if ``None``, it is
           guessed.
+        - ``slope`` -- integer or ``Infinity`` or ``None``
         - ``i`` -- integer 1 or 2
         - ``side`` -- ``'right'`` or ``'left'``
         - ``radius`` -- integer
@@ -1492,18 +1573,43 @@ class WangTileSet(object):
             (Wang tile set of cardinality 1, Substitution 2d: {0: [[3]]})
 
         """
+        # find markers
         if R is None:
-            R_candidates = self.recognizable_markers(i=i,
-                    radius=radius, solver=solver, ncpus=ncpus)
-            if not R_candidates:
-                raise ValueError("no recognizable substitution found")
-            if len(R_candidates) > 1:
-                raise ValueError("more than one set of markers found {}".format(R_candidates))
-            R = R_candidates[0]
+            if slope is None:
+                # try many slopes
+                from sage.rings.infinity import Infinity
+                if i == 1:
+                    slopes = [Infinity, 1, -1]
+                elif i == 2:
+                    slopes = [0, 1, -1]
+                for slope in slopes:
+                    markers = self.find_markers(i=i, slope=slope, radius=radius,
+                            solver=solver, ncpus=ncpus, verbose=False)
+                    if markers:
+                        break
+                else:
+                    raise ValueError("no set of markers found "
+                            "with slope in {}".format(slopes))
+            else:
+                markers = self.find_markers(i=i, slope=slope, radius=radius,
+                            solver=solver, ncpus=ncpus, verbose=False)
+            if len(markers) == 0:
+                raise ValueError("no set of markers found "
+                        "with slope={}".format(slope))
+            elif len(markers) > 1:
+                raise ValueError("more than one set of markers found {}"
+                " of slope {}: you need to choose one of "
+                "them and provide it as input".format(markers, slope))
+            else:
+                R = markers[0]
+                print("Using markers = {} found with slope {}".format(R, slope))
 
         # Make sure R is of type set
         if not isinstance(R, set):
             R = set(R)
+
+        if verbose:
+            print("markers R =",R)
 
         # Compute the dominoes
         dominoes = self.not_forbidden_dominoes(i=i, radius=radius, solver=solver, ncpus=ncpus)
@@ -1533,7 +1639,6 @@ class WangTileSet(object):
         U = set(range(len(self)))
         L = sorted(U.difference(R).difference(K))
         if verbose:
-            print("R =",R)
             print("L =",L)
             print("K =",K)
 
