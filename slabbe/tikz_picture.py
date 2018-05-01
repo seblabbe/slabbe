@@ -480,13 +480,13 @@ class TikzPicture(SageObject):
             sage: dm = get_display_manager()
             sage: g = graphs.PetersenGraph()
             sage: t = TikzPicture.from_graph(g)
-            sage: g._rich_repr_(dm)
+            sage: g._rich_repr_(dm)      # random result is Text in doctest
             OutputImagePng container
 
         Using vector svg instead of png::
 
             sage: dm.preferences.graphics = 'vector'
-            sage: g._rich_repr_(dm)
+            sage: g._rich_repr_(dm)      # random result is Text in doctest
             OutputImageSvg container
             sage: dm.preferences.graphics = 'raster'
         """
