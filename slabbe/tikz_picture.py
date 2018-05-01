@@ -467,6 +467,54 @@ class TikzPicture(SageObject):
         lines.append(r"\end{document}")
         return '\n'.join(lines)
 
+    def _rich_repr_(self, display_manager, **kwds):
+        """
+        Rich Output Magic Method
+
+        See :mod:`sage.repl.rich_output` for details.
+
+        EXAMPLES::
+
+            sage: from slabbe import TikzPicture
+            sage: from sage.repl.rich_output import get_display_manager
+            sage: dm = get_display_manager()
+            sage: g = graphs.PetersenGraph()
+            sage: t = TikzPicture.from_graph(g)
+            sage: g._rich_repr_(dm)
+            OutputImagePng container
+
+        Using vector svg instead of png::
+
+            sage: dm.preferences.graphics = 'vector'
+            sage: g._rich_repr_(dm)
+            OutputImageSvg container
+            sage: dm.preferences.graphics = 'raster'
+        """
+        types = display_manager.types
+        prefer_raster = (
+            ('png', types.OutputImagePng),
+        )
+        prefer_vector = (
+            ('svg', types.OutputImageSvg),
+            ('pdf', types.OutputImagePdf),
+        )
+        graphics = display_manager.preferences.graphics
+        if graphics == 'disable':
+            return
+        elif graphics == 'raster' or graphics is None:
+            preferred = prefer_raster + prefer_vector
+        elif graphics == 'vector':
+            preferred = prefer_vector + prefer_raster
+        else:
+            raise ValueError('unknown graphics output preference')
+
+        for format, output_container in preferred:
+            if output_container in display_manager.supported_output():
+                filename = getattr(self, format)(view=False, **kwds)
+                from sage.repl.rich_output.buffer import OutputBuffer
+                buf = OutputBuffer.from_file(filename)
+                return output_container(buf)
+
     def __str__(self):
         r"""
         Returns the complete string.
