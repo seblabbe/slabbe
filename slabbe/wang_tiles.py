@@ -194,7 +194,7 @@ def tile_to_tikz(tile, position, color=None, id=None, sizex=1, sizey=1,
 
     if id is not None:
         c = (x+.5*sx,y+.5*sy)
-        lines.append(r'\node at {} {{{}}};'.format(c, id))
+        lines.append(r'\node[fill=white] at {} {{{}}};'.format(c, id))
 
     if draw_H is None:
         draw_H = {tile[1]:r'\draw {{}} -- ++ ({},0);'.format(sx),
@@ -1452,16 +1452,16 @@ class WangTileSet(object):
         for indices in Subsets(parts_indices):
             if len(indices) == 0:
                 continue
-            R = set().union(*[parts[j] for j in indices])
+            M = set().union(*[parts[j] for j in indices])
             if verbose:
-                print("Trying R =",R)
+                print("Trying M =",M)
 
-            # Check that R \odot^i R is forbidden
-            if self.is_forbidden_product(R, R, i=i, radius=radius,
+            # Check that M \odot^i M is forbidden
+            if self.is_forbidden_product(M, M, i=i, radius=radius,
                     solver=solver, ncpus=ncpus):
                 if verbose:
-                    print("R odot^i R is forbidden, so we keep this set")
-                result.append(R)
+                    print("M odot^i M is forbidden, so we keep this set")
+                result.append(M)
 
         return result
 
@@ -1542,17 +1542,17 @@ class WangTileSet(object):
                 ans.append(candidate)
         return ans
 
-    def derived_wang_tile_set(self, R=None, slope=None, i=2, side='right',
+    def derived_wang_tile_set(self, M=None, slope=None, i=2, side='right',
             radius=1, solver=None, ncpus=None, function=str.__add__,
             initial='', verbose=False):
         r"""
         Return the derived Wang tile set obtained from removing tiles from
-        ``R``.
+        ``M``.
 
         INPUT:
 
-        - ``R`` -- set of tile indices or ``None``, if ``None``, it is
-          guessed.
+        - ``M`` -- markers, set of tile indices or ``None``, if ``None``,
+          it is guessed.
         - ``slope`` -- integer or ``Infinity`` or ``None``
         - ``i`` -- integer 1 or 2
         - ``side`` -- ``'right'`` or ``'left'``
@@ -1574,7 +1574,7 @@ class WangTileSet(object):
 
         """
         # find markers
-        if R is None:
+        if M is None:
             if slope is None:
                 # try many slopes
                 from sage.rings.infinity import Infinity
@@ -1601,43 +1601,43 @@ class WangTileSet(object):
                 " of slope {}: you need to choose one of "
                 "them and provide it as input".format(markers, slope))
             else:
-                R = markers[0]
-                print("Using markers = {} found with slope {}".format(R, slope))
+                M = markers[0]
+                print("Using markers = {} found with slope {}".format(M, slope))
 
-        # Make sure R is of type set
-        if not isinstance(R, set):
-            R = set(R)
+        # Make sure M is of type set
+        if not isinstance(M, set):
+            M = set(M)
 
         if verbose:
-            print("markers R =",R)
+            print("markers M =",M)
 
         # Compute the dominoes
         dominoes = self.not_forbidden_dominoes(i=i, radius=radius, solver=solver, ncpus=ncpus)
         if verbose:
             print("dominoes =",dominoes)
 
-        # Print a warning when there are some valid R x R dominoes
-        RR = [(a,b) for (a,b) in dominoes if a in R and b in R]
+        # Print a warning when there are some valid M x M dominoes
+        RR = [(a,b) for (a,b) in dominoes if a in M and b in M]
         if RR:
-            print("Warning: it is expected as hypothesis that R odot^i R is "
+            print("Warning: it is expected as hypothesis that M odot^i M is "
                   "forbidden but the following dominoes admit a radius "
                   "{} neighborhood: {}".format(radius, RR))
 
-        # Compute K and dominoes ending in R
-        dominoes_without_R = [(a,b) for (a,b) in dominoes if a not in R and b not in R]
+        # Compute K and dominoes ending in M
+        dominoes_without_R = [(a,b) for (a,b) in dominoes if a not in M and b not in M]
         if side == 'right':
             K = [a for (a,b) in dominoes_without_R]
-            dominoes_R = [(a,b) for (a,b) in dominoes if b in R]
+            dominoes_R = [(a,b) for (a,b) in dominoes if b in M]
         elif side == 'left':
             K = [b for (a,b) in dominoes_without_R]
-            dominoes_R = [(a,b) for (a,b) in dominoes if a in R]
+            dominoes_R = [(a,b) for (a,b) in dominoes if a in M]
         else:
             raise ValueError("side(={}) must be 'left' or 'right'".format(side))
         K = sorted(set(K))
 
         # compute L
         U = set(range(len(self)))
-        L = sorted(U.difference(R).difference(K))
+        L = sorted(U.difference(M).difference(K))
         if verbose:
             print("L =",L)
             print("K =",K)
@@ -1661,7 +1661,7 @@ class WangTileSet(object):
             d[next(it)] = [k]
             new_tiles.append(tiles[k])
 
-        # We add fusion of dominoes starting/ending with a tile in R
+        # We add fusion of dominoes starting/ending with a tile in M
         for (a,b) in dominoes_R:
             t = fusion(tiles[a],tiles[b],i,function=function,initial=initial)
             d[next(it)] = [a,b]
@@ -1675,7 +1675,7 @@ class WangTileSet(object):
         else:
             raise ValueError('i(={}) must be 1 or 2'.format(i))
 
-        return WangTileSet(new_tiles), s
+        return WangTileSet(new_tiles), s, M
 
     def shift_top(self, function=str.__add__, verbose=False):
         r"""
