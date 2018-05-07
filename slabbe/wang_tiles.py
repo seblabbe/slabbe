@@ -277,7 +277,7 @@ class WangTileSet(object):
     INPUT:
 
     - ``tiles`` -- list of tiles, a tile is a 4-tuple (right color, top
-        color, left color, bottom color)
+      color, left color, bottom color)
 
     EXAMPLES::
 
@@ -3068,7 +3068,7 @@ class WangTiling(object):
 
     - ``table`` -- list of lists
     - ``tiles`` -- list of tiles, a tile is a 4-tuple (right color, top
-        color, left color, bottom color)
+      color, left color, bottom color)
     - ``color`` -- dict (default: None)
 
     .. NOTE::
