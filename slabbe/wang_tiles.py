@@ -1271,7 +1271,8 @@ class WangTileSet(object):
         INPUT:
 
         - ``i`` - integer (default: ``2``), 1 or 2
-        - ``radius`` - integer (default: ``1``)
+        - ``radius`` - integer or 2-tuple (default: ``1``), if 2-tuple is
+          given, then it is interpreted as ``(xradius, yradius)``
         - ``solver`` - string or None (default: ``None``)
         - ``ncpus`` -- integer (default: ``None``), maximal number of
           subprocesses to use at the same time, used only if ``solver`` is
@@ -1283,14 +1284,13 @@ class WangTileSet(object):
             sage: from slabbe import WangTileSet
             sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB', 'EBEB']
             sage: T = WangTileSet(tiles)
-            sage: sorted(T.not_forbidden_dominoes(1))
+            sage: sorted(T.not_forbidden_dominoes(i=1))
             [(3, 3), (4, 4)]
-
-        ::
-
-            sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB', 'EBEB']
-            sage: T = WangTileSet(tiles)
             sage: sorted(T.not_forbidden_dominoes(i=2))
+            [(3, 3), (3, 4), (4, 3), (4, 4)]
+            sage: sorted(T.not_forbidden_dominoes(i=2, radius=2))
+            [(3, 3), (3, 4), (4, 3), (4, 4)]
+            sage: sorted(T.not_forbidden_dominoes(i=2, radius=(1,2)))
             [(3, 3), (3, 4), (4, 3), (4, 4)]
 
         TESTS::
@@ -1303,16 +1303,21 @@ class WangTileSet(object):
             [(0, 0)]
 
         """
+        if isinstance(radius, tuple):
+            xradius,yradius = radius
+        else:
+            xradius = yradius = radius
+
         if i == 2:
-            width = 2*radius+1
-            height = 2*radius+2
-            p = (radius,radius)
-            q = (radius,radius+1)
+            width = 2*xradius+1
+            height = 2*yradius+2
+            p = (xradius,yradius)
+            q = (xradius,yradius+1)
         elif i == 1:
-            width = 2*radius+2
-            height = 2*radius+1
-            p = (radius,radius)
-            q = (radius+1,radius)
+            width = 2*xradius+2
+            height = 2*yradius+1
+            p = (xradius,yradius)
+            q = (xradius+1,yradius)
         else:
             raise ValueError('i={} must be 1 or 2'.format(i))
 
@@ -1474,7 +1479,8 @@ class WangTileSet(object):
 
         - ``i`` -- integer (default:``2``), 1 or 2. 
         - ``slope`` -- -1, 0, 1 or Infinity (default:``None``)
-        - ``radius`` -- integer (default:``1``)
+        - ``radius`` - integer or 2-tuple (default: ``1``), if 2-tuple is
+          given, then it is interpreted as ``(xradius, yradius)``
         - ``solver`` -- string (default:``None``)
         - ``ncpus`` -- integer (default:``None``)
         - ``verbose`` -- boolean (default:``False``)
@@ -1561,7 +1567,8 @@ class WangTileSet(object):
         - ``slope`` -- integer or ``Infinity`` or ``None``
         - ``i`` -- integer 1 or 2
         - ``side`` -- ``'right'`` or ``'left'``
-        - ``radius`` -- integer
+        - ``radius`` - integer or 2-tuple (default: ``1``), if 2-tuple is
+          given, then it is interpreted as ``(xradius, yradius)``
         - ``solver`` -- string
         - ``ncpus`` -- integer (default:``None``)
         - ``function`` -- function (default:``str.__add__``), monoid
@@ -1687,7 +1694,8 @@ class WangTileSet(object):
         r"""
         INPUT:
 
-        - ``radius`` -- integer
+        - ``radius`` - integer or 2-tuple (default: ``0``), if 2-tuple is
+          given, then it is interpreted as ``(xradius, yradius)``
         - ``solver`` -- string
         - ``ncpus`` -- integer (default:``None``)
         - ``function`` -- function (default:``str.__add__``), monoid
