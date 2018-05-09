@@ -46,6 +46,11 @@ https://github.com/abelfunctions/abelfunctions
 https://github.com/nthiery/sage-semigroups/
 https://github.com/sagemath/cysignals
 
+Semantic Versioning
+-------------------
+
+https://semver.org/
+
 Fichiers à ajouter
 ------------------
 
@@ -84,4 +89,5 @@ NOTES
 Also works::
 
     tar -cjf slabbe-0.1.spkg slabbe-0.1
+
 
