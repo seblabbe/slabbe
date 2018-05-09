@@ -1677,10 +1677,14 @@ class WangTileSet(object):
 
         return WangTileSet(new_tiles), s, M
 
-    def shift_top(self, function=str.__add__, verbose=False):
+    def shift_top(self, radius=0, solver=None, ncpus=None,
+            function=str.__add__, verbose=False):
         r"""
         INPUT:
 
+        - ``radius`` -- integer
+        - ``solver`` -- string
+        - ``ncpus`` -- integer (default:``None``)
         - ``function`` -- function (default:``str.__add__``), monoid
           operation
         - ``verbose`` -- boolean (default:``False``)
@@ -1704,16 +1708,26 @@ class WangTileSet(object):
              ('aa', 'dd', 'cc', 'bb'),
              ('cc', 'db', 'aa', 'dd'),
              ('cc', 'dd', 'aa', 'dd')]
+            sage: T.shift_top(radius=1).tiles()
+            [('aa', 'bd', 'cc', 'bb'), ('cc', 'db', 'aa', 'dd')]
 
         """
-        G = defaultdict(set)
-        for (e,n,w,s) in self:
-            G[w].add(n[0])
+        # Compute the dominoes
+        dominoes = self.not_forbidden_dominoes(i=1, radius=radius, solver=solver, ncpus=ncpus)
         if verbose:
-            print("The map West -> North[0] is {}".format(dict(G)))
+            print("dominoes =",dominoes)
+
+        G = defaultdict(set)
+        for (u,v) in dominoes:
+            U = self[u]
+            (e,n,w,s) = self[v]
+            G[u].add(n[0])
+        if verbose:
+            print("The map Tile -> North[0] is {}".format(dict(G)))
+
         tiles = []
-        for (e,n,w,s) in self:
-            for a in G[e]:
+        for i,(e,n,w,s) in enumerate(self):
+            for a in G[i]:
                 tile = (e,function(n[1:],a),w,s)
                 if tile not in tiles:
                     tiles.append(tile)
