@@ -1538,8 +1538,13 @@ class WangTileSet(object):
 
         ans = []
         for candidate in candidates:
-            if all((a,b) not in dominoes for (a,b) in itertools.product(candidate, repeat=2)):
+            I = dominoes.intersection(itertools.product(candidate, repeat=2))
+            if len(I) == 0:
                 ans.append(candidate)
+            else:
+                if verbose:
+                    print('rejecting {} since {} allows surrounding of '
+                          'radius {}'.format(candidate, I, radius))
         return ans
 
     def derived_wang_tile_set(self, M=None, slope=None, i=2, side='right',
