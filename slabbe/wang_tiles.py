@@ -1708,20 +1708,77 @@ class WangTileSet(object):
             sage: tiles = [('aa','bb','cc','bb'), ('cc','dd','aa','dd')]
             sage: T = WangTileSet(tiles)
             sage: T.shift_top().tiles()
-            [('aa', 'bd', 'cc', 'bb'), ('cc', 'db', 'aa', 'dd')]
+            [('aadd', 'dd', 'ccbb', 'bb'), ('ccbb', 'bb', 'aadd', 'dd')]
             sage: T.shift_top().shift_top().tiles()
-            [('aa', 'dd', 'cc', 'bb'), ('cc', 'bb', 'aa', 'dd')]
+            [('aaddbb', 'bb', 'ccbbdd', 'bb'), ('ccbbdd', 'dd', 'aaddbb', 'dd')]
 
         ::
 
             sage: tiles = [('aa','bb','cc','bb'), ('aa','dd','cc','bb'), ('cc','dd','aa','dd')]
             sage: T = WangTileSet(tiles)
             sage: T.shift_top().tiles()
+            [('aadd', 'dd', 'ccbb', 'bb'),
+             ('aadd', 'dd', 'ccdd', 'bb'),
+             ('ccdd', 'dd', 'aadd', 'dd'),
+             ('ccbb', 'bb', 'aadd', 'dd')]
+            sage: T.shift_top(radius=1).tiles()
+            [('aadd', 'dd', 'ccbb', 'bb'), ('ccbb', 'bb', 'aadd', 'dd')]
+
+        """
+        # Compute the dominoes
+        dominoes = self.not_forbidden_dominoes(i=1, radius=radius, solver=solver, ncpus=ncpus)
+        if verbose:
+            print("dominoes =",dominoes)
+
+        G = defaultdict(set)
+        for (u,v) in dominoes:
+            U = self[u]
+            (e,n,w,s) = self[v]
+            G[u].add(n)
+        if verbose:
+            print("The map Tile -> North[0] is {}".format(dict(G)))
+
+        tiles = []
+        for i,(e,n,w,s) in enumerate(self):
+            for a in G[i]:
+                tile = (function(e,a),a,function(w,n),s)
+                if tile not in tiles:
+                    tiles.append(tile)
+        return WangTileSet(tiles)
+
+    def shift_top_old(self, radius=0, solver=None, ncpus=None,
+            function=str.__add__, verbose=False):
+        r"""
+        INPUT:
+
+        - ``radius`` - integer or 2-tuple (default: ``0``), if 2-tuple is
+          given, then it is interpreted as ``(xradius, yradius)``
+        - ``solver`` -- string
+        - ``ncpus`` -- integer (default:``None``)
+        - ``function`` -- function (default:``str.__add__``), monoid
+          operation
+        - ``verbose`` -- boolean (default:``False``)
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [('aa','bb','cc','bb'), ('cc','dd','aa','dd')]
+            sage: T = WangTileSet(tiles)
+            sage: T.shift_top_old().tiles()
+            [('aa', 'bd', 'cc', 'bb'), ('cc', 'db', 'aa', 'dd')]
+            sage: T.shift_top_old().shift_top_old().tiles()
+            [('aa', 'dd', 'cc', 'bb'), ('cc', 'bb', 'aa', 'dd')]
+
+        ::
+
+            sage: tiles = [('aa','bb','cc','bb'), ('aa','dd','cc','bb'), ('cc','dd','aa','dd')]
+            sage: T = WangTileSet(tiles)
+            sage: T.shift_top_old().tiles()
             [('aa', 'bd', 'cc', 'bb'),
              ('aa', 'dd', 'cc', 'bb'),
              ('cc', 'db', 'aa', 'dd'),
              ('cc', 'dd', 'aa', 'dd')]
-            sage: T.shift_top(radius=1).tiles()
+            sage: T.shift_top_old(radius=1).tiles()
             [('aa', 'bd', 'cc', 'bb'), ('cc', 'db', 'aa', 'dd')]
 
         """
