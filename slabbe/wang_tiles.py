@@ -1844,7 +1844,10 @@ class WangTileSet(object):
             sage: T.is_equivalent(U)
             True
             sage: T.is_equivalent(U,certificate=True)
-            (True, {1: 'a', 2: 'b', 3: 'c'}, {6: 'x', 7: 'y', 8: 'z'})
+            (True,
+             {1: 'a', 2: 'b', 3: 'c'},
+             {6: 'x', 7: 'y', 8: 'z'},
+             Substitution 2d: {0: [[0]], 1: [[1]], 2: [[2]], 3: [[3]], 4: [[4]], 5: [[5]], 6: [[6]]})
 
         Not equivalent example::
 
@@ -1853,7 +1856,7 @@ class WangTileSet(object):
             sage: T.is_equivalent(U)
             False
             sage: T.is_equivalent(U,certificate=True)
-            (False, None, None)
+            (False, None, None, None)
 
         When graphs admits non trivial automorphisms::
 
@@ -1862,18 +1865,18 @@ class WangTileSet(object):
             sage: V = WangTileSet([(7,9,6,8), (6,8,7,9)])
             sage: W = WangTileSet([(7,8,6,9), (6,9,7,8)])
             sage: T.is_equivalent(T, certificate=True)
-            (True, {0: 0, 1: 1}, {2: 2, 3: 3})
+            (True, {0: 0, 1: 1}, {2: 2, 3: 3}, Substitution 2d: {0: [[0]], 1: [[1]]})
             sage: T.is_equivalent(U, certificate=True)
-            (True, {0: 6, 1: 7}, {2: 'z', 3: 'c'})
+            (True, {0: 6, 1: 7}, {2: 'z', 3: 'c'}, Substitution 2d: {0: [[0]], 1: [[1]]})
             sage: T.is_equivalent(V, certificate=True)
-            (True, {0: 6, 1: 7}, {2: 8, 3: 9})
+            (True, {0: 6, 1: 7}, {2: 8, 3: 9}, Substitution 2d: {0: [[0]], 1: [[1]]})
             sage: T.is_equivalent(W, certificate=True)
-            (True, {0: 6, 1: 7}, {2: 9, 3: 8})
+            (True, {0: 6, 1: 7}, {2: 9, 3: 8}, Substitution 2d: {0: [[0]], 1: [[1]]})
             sage: T.is_equivalent(W, certificate=True, verbose=True)
             True V_perm= {0: 6, 1: 7}
             True H_perm= {2: 8, 3: 9}
             Found automorphisms p=() and q=(2,3)
-            (True, {0: 6, 1: 7}, {2: 9, 3: 8})
+            (True, {0: 6, 1: 7}, {2: 9, 3: 8}, Substitution 2d: {0: [[0]], 1: [[1]]})
 
         """
         # Compute an isomorphism on the Vertical colors
@@ -1883,7 +1886,7 @@ class WangTileSet(object):
         if verbose:
             print(is_iso, "V_perm=", V_perm)
         if not is_iso:
-            return (False, None, None) if certificate else False
+            return (False, None, None, None) if certificate else False
 
         # Compute an isomorphism on the Horizontal colors
         Gd = self.dual().to_transducer_graph(merge_multiedges=False)
@@ -1892,7 +1895,7 @@ class WangTileSet(object):
         if verbose:
             print(is_iso, "H_perm=", H_perm)
         if not is_iso:
-            return (False, None, None) if certificate else False
+            return (False, None, None, None) if certificate else False
 
         # Compute the automorphisms group on Vertical and Horizontal colors
         # of self
@@ -1911,10 +1914,16 @@ class WangTileSet(object):
                         print ("Found automorphisms p={} and q={}".format(p,q))
                     V_perm_p = {a:V_perm[p(a)] for a in V_perm}
                     H_perm_q = {a:H_perm[q(a)] for a in H_perm}
-                    return True, V_perm_p, H_perm_q
+
+                    other_to_index = {t:i for i,t in enumerate(other)}
+                    d = {i:other_to_index[(V_perm_p[a],H_perm_q[b],V_perm_p[c],H_perm_q[d])] 
+                           for i,(a,b,c,d) in enumerate(self)}
+                    from slabbe.substitution_2d import Substitution2d
+                    tiles_perm = Substitution2d.from_permutation(d)
+                    return True, V_perm_p, H_perm_q, tiles_perm
                 else:
                     return True
-        return (False, None, None) if certificate else False
+        return (False, None, None, None) if certificate else False
 
     def unsynchronized_graph_size2(self, i=1):
         r"""
