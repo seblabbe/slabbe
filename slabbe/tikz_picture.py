@@ -85,62 +85,25 @@ from sage.misc.temporary_file import tmp_filename
 from sage.structure.sage_object import SageObject
 import os
 
-class TikzPicture(SageObject):
-    r"""
-    Creates a TikzPicture embedded in a LaTeX standalone document class.
-
-    INPUT:
-
-    - ``code`` -- string, tikzpicture code starting with ``r'\begin{tikzpicture}'``
-      and ending with ``r'\end{tikzpicture}'``
-    - ``standalone_options`` -- list of strings (default: ``[]``),
-      latex document class standalone configuration options.
-    - ``usepackage`` -- list of strings (default: ``['amsmath']``), latex
-      packages.
-    - ``usetikzlibrary`` -- list of strings (default: ``[]``), tikz libraries
-      to use.
-    - ``macros`` -- list of strings (default: ``[]``), stuff you need for the picture.
-    - ``use_sage_preamble`` -- bool (default: ``False``), whether to include sage
-      latex preamble and sage latex macros, that is, the content of
-      :func:`sage.misc.latex.extra_preamble()`,
-      :func:`sage.misc.latex.extra_macros()` and
-      :func:`sage.misc.latex_macros.sage_latex_macros()`.
-
-    EXAMPLES::
-
-        sage: from slabbe import TikzPicture
-        sage: g = graphs.PetersenGraph()
-        sage: s = latex(g)
-        sage: t = TikzPicture(s, standalone_options=["border=4mm"], usepackage=['tkz-graph'])
-        sage: _ = t.pdf(view=False)   # long time (2s)
-
-    Here are standalone configurations, packages, tikz libraries and macros you
-    may want to set::
-
-        sage: options = ['preview', 'border=4mm', 'beamer', 'float']
-        sage: usepackage = ['nicefrac', 'amsmath', 'pifont', 'tikz-3dplot',
-        ....:    'tkz-graph', 'tkz-berge', 'pgfplots']
-        sage: tikzlib = ['arrows', 'snakes', 'backgrounds', 'patterns',
-        ....:      'matrix', 'shapes', 'fit', 'calc', 'shadows', 'plotmarks',
-        ....:      'positioning', 'pgfplots.groupplots', 'mindmap']
-        sage: macros = [r'\newcommand{\ZZ}{\mathbb{Z}}']
-        sage: s = "\\begin{tikzpicture}\n\\draw (0,0) -- (1,1);\n\\end{tikzpicture}"
-        sage: t = TikzPicture(s, standalone_options=options, usepackage=usepackage, 
-        ....:        usetikzlibrary=tikzlib, macros=macros)
-        sage: _ = t.pdf(view=False)   # long time (2s)
-    """
-    def __init__(self, code, standalone_options=None, usepackage=['amsmath'],
+class StandaloneTex(SageObject):
+    def __init__(self, content, standalone_options=None, usepackage=['amsmath'],
             usetikzlibrary=None, macros=None, use_sage_preamble=False):
         r"""
         See the class documentation for full information.
 
         EXAMPLES::
 
+            sage: from slabbe import StandaloneTex
+            sage: content = "\\section{Intro}\n\nTest\n"
+            sage: t = StandaloneTex(content)
+
+        ::
+
             sage: from slabbe import TikzPicture
             sage: s = "\\begin{tikzpicture}\n\\draw (0,0) -- (1,1);\n\\end{tikzpicture}"
             sage: t = TikzPicture(s)
         """
-        self._code = code
+        self._content = content
         self._standalone_options = [] if standalone_options is None else standalone_options
         self._usepackage = usepackage
         self._usetikzlibrary = [] if usetikzlibrary is None else usetikzlibrary
@@ -153,251 +116,6 @@ class TikzPicture(SageObject):
                     self._macros.append(s)
             from sage.misc.latex_macros import sage_latex_macros
             self._macros.extend(sage_latex_macros())
-
-    @classmethod
-    def from_graph(cls, graph, merge_multiedges=True,
-            merge_label_function=tuple, **kwds):
-        r"""
-        Convert a graph to a tikzpicture using graphviz and dot2tex.
-
-        .. NOTE::
-
-            Prerequisite: dot2tex optional Sage package and graphviz must be
-            installed.
-
-        INPUT:
-
-        - ``graph`` -- graph
-        - ``merge_multiedges`` -- bool (default: ``True``), if the graph
-          has multiple edges, whether to merge the multiedges into one
-          single edge
-        - ``merge_label_function`` -- function (default:``tuple``), a
-          function to apply to each list of labels to be merged. It is
-          ignored if ``merge_multiedges`` is not ``True`` or if the graph
-          has no multiple edges.
-
-        Other inputs are used for latex drawing with dot2tex and graphviz:
-
-        - ``prog`` -- string (default: ``'dot'``) the program used for the
-          layout corresponding to one of the software of the graphviz
-          suite: 'dot', 'neato', 'twopi', 'circo' or 'fdp'.
-        - ``edge_labels`` -- bool (default: ``True``)
-        - ``color_by_label`` -- bool (default: ``False``)
-        - ``rankdir`` -- string (default: ``'down'``)
-        - ``subgraph_clusters`` -- (default: []) a list of lists of
-          vertices, if supported by the layout engine, nodes belonging to
-          the same cluster subgraph are drawn together, with the entire
-          drawing of the cluster contained within a bounding rectangle.
-
-        EXAMPLES::
-
-            sage: from slabbe import TikzPicture
-            sage: g = graphs.PetersenGraph()
-            sage: tikz = TikzPicture.from_graph(g) # optional dot2tex # long time (3s)
-            sage: _ = tikz.pdf()      # not tested
-
-        Using ``prog``::
-
-            sage: tikz = TikzPicture.from_graph(g, prog='neato', color_by_label=True) # optional dot2tex # long time (3s)
-            sage: _ = tikz.pdf()      # not tested
-
-        Using ``rankdir``::
-
-            sage: tikz = TikzPicture.from_graph(g, rankdir='right') # optional dot2tex # long time (3s)
-            sage: _ = tikz.pdf()      # not tested
-
-        Using ``merge_multiedges``::
-
-            sage: alpha = var('alpha')
-            sage: m = matrix(2,range(4)); m.set_immutable()
-            sage: G = DiGraph([(0,1,alpha), (0,1,'a'), (0,2,9), (0,2,m)], multiedges=True)
-            sage: tikz = TikzPicture.from_graph(G, merge_multiedges=True) # optional dot2tex
-            sage: _ = tikz.pdf()      # not tested
-
-        Using ``merge_multiedges`` with ``merge_label_function``::
-
-            sage: fn = lambda L: LatexExpr(','.join(map(str, L)))
-            sage: G = DiGraph([(0,1,'a'), (0,1,'b'), (0,2,'c'), (0,2,'d')], multiedges=True)
-            sage: tikz = TikzPicture.from_graph(G, merge_multiedges=True,
-            ....:               merge_label_function=fn) # optional dot2tex
-            sage: _ = tikz.pdf()      # not tested
-
-        Using subgraphs clusters (broken when using labels, see
-        :trac:`22070`)::
-
-            sage: S = FiniteSetMaps(5)
-            sage: I = S((0,1,2,3,4))
-            sage: a = S((0,1,3,0,0))
-            sage: b = S((0,2,4,1,0))
-            sage: roots = [I]
-            sage: succ = lambda v:[v*a,v*b,a*v,b*v]
-            sage: R = RecursivelyEnumeratedSet(roots, succ)
-            sage: G = R.to_digraph()
-            sage: G
-            Looped multi-digraph on 27 vertices
-            sage: C = G.strongly_connected_components()
-            sage: tikz = TikzPicture.from_graph(G, merge_multiedges=False,
-            ....:                               subgraph_clusters=C)
-            sage: _ = tikz.pdf()      # not tested
-
-        """
-        if merge_multiedges and graph.has_multiple_edges():
-            from slabbe.graph import merge_multiedges
-            graph = merge_multiedges(graph,
-                    label_function=merge_label_function)
-
-        default = dict(format='dot2tex', edge_labels=True,
-                       color_by_label=False, prog='dot', rankdir='down')
-        default.update(kwds)
-
-        graph.latex_options().set_options(**default)
-        tikz = graph._latex_()
-        return TikzPicture(tikz, standalone_options=["border=4mm"])
-
-    @classmethod
-    def from_graph_with_pos(cls, graph, scale=1, merge_multiedges=True,
-            merge_label_function=tuple):
-        r"""
-        Convert a graph with positions defined for vertices to a tikzpicture.
-
-        INPUT:
-
-        - ``graph`` -- graph (with predefined positions)
-        - ``scale`` -- number (default:``1``), tikzpicture scale
-        - ``merge_multiedges`` -- bool (default: ``True``), if the graph
-          has multiple edges, whether to merge the multiedges into one
-          single edge
-        - ``merge_label_function`` -- function (default:``tuple``), a
-          function to apply to each list of labels to be merged. It is
-          ignored if ``merge_multiedges`` is not ``True`` or if the graph
-          has no multiple edges.
-
-        EXAMPLES::
-
-            sage: from slabbe import TikzPicture
-            sage: g = graphs.PetersenGraph()
-            sage: tikz = TikzPicture.from_graph_with_pos(g)
-
-        ::
-
-            sage: edges = [(0,0,'a'),(0,1,'b'),(0,1,'c')]
-            sage: kwds = dict(format='list_of_edges', loops=True, multiedges=True)
-            sage: G = DiGraph(edges, **kwds)
-            sage: G.set_pos({0:(0,0), 1:(1,0)})
-            sage: f = lambda label:','.join(label)
-            sage: TikzPicture.from_graph_with_pos(G, merge_label_function=f)
-            \documentclass[tikz]{standalone}
-            \standaloneconfig{border=4mm}
-            \usepackage{amsmath}
-            \begin{document}
-            \begin{tikzpicture}
-            [auto,scale=1]
-            % vertices
-            \node (node_0) at (0, 0) {0};
-            \node (node_1) at (1, 0) {1};
-            % edges
-            \draw[->] (node_0) -- node {b,c} (node_1);
-            % loops
-            \draw (node_0) edge [loop above] node {a} ();
-            \end{tikzpicture}
-            \end{document}
-
-        TESTS::
-
-            sage: edges = [(0,0,'a'),(0,1,'b'),(0,1,'c')]
-            sage: kwds = dict(format='list_of_edges', loops=True, multiedges=True)
-            sage: G = DiGraph(edges, **kwds)
-            sage: TikzPicture.from_graph_with_pos(G)
-            Traceback (most recent call last):
-            ...
-            ValueError: vertex positions need to be set first
-        """
-        pos = graph.get_pos()
-        if pos is None:
-            raise ValueError('vertex positions need to be set first')
-
-        if merge_multiedges and graph.has_multiple_edges():
-            from slabbe.graph import merge_multiedges
-            graph = merge_multiedges(graph,
-                    label_function=merge_label_function)
-
-        keys_for_vertices = graph._keys_for_vertices()
-
-        lines = []
-        lines.append(r'\begin{tikzpicture}')
-        lines.append(r'[auto,scale={}]'.format(scale))
-
-        # vertices
-        lines.append(r'% vertices')
-        for u in graph.vertices():
-            line = r'\node ({}) at {} {{{}}};'.format(keys_for_vertices(u),
-                                                      pos[u], u)
-            lines.append(line)
-
-        # edges
-        lines.append(r'% edges')
-        arrow = '->' if graph.is_directed() else ''
-        for (u,v,label) in graph.edges():
-            if u == v:
-                # loops are done below
-                continue
-            if label:
-                line = r'\draw[{}] ({}) -- node {{{}}} ({});'.format(arrow,
-                                                    keys_for_vertices(u),
-                                                    label,
-                                                    keys_for_vertices(v))
-            else:
-                line = r'\draw[{}] ({}) -- ({});'.format(arrow,
-                                                    keys_for_vertices(u),
-                                                    keys_for_vertices(v))
-            lines.append(line)
-
-        # loops
-        lines.append(r'% loops')
-        for (u,v,label) in graph.loop_edges():
-            line = r'\draw ({}) edge [loop above] node {{{}}} ();'.format(
-                                              keys_for_vertices(u), label)
-            lines.append(line)
-
-        lines.append(r'\end{tikzpicture}')
-        tikz = '\n'.join(lines)
-        return TikzPicture(tikz, standalone_options=["border=4mm"])
-
-    @classmethod
-    def from_poset(cls, poset, **kwds):
-        r"""
-        Convert a poset to a tikzpicture using graphviz and dot2tex.
-
-        .. NOTE::
-
-            Prerequisite: dot2tex optional Sage package and graphviz must be
-            installed.
-
-        INPUT:
-
-        - ``poset`` -- poset
-        - ``prog`` -- string (default: ``'dot'``) the program used for the
-          layout corresponding to one of the software of the graphviz
-          suite: 'dot', 'neato', 'twopi', 'circo' or 'fdp'.
-        - ``edge_labels`` -- bool (default: ``True``)
-        - ``color_by_label`` -- bool (default: ``False``)
-        - ``rankdir`` -- string (default: ``'down'``)
-
-        EXAMPLES::
-
-            sage: from slabbe import TikzPicture
-            sage: P = posets.PentagonPoset()
-            sage: tikz = TikzPicture.from_poset(P) # optional dot2tex # long time (3s)
-            sage: tikz = TikzPicture.from_poset(P, prog='neato', color_by_label=True) # optional dot2tex # long time (3s)
-
-        ::
-
-            sage: P = posets.SymmetricGroupWeakOrderPoset(4)
-            sage: tikz = TikzPicture.from_poset(P) # optional dot2tex # long time (4s)
-            sage: tikz = TikzPicture.from_poset(P, prog='neato') # optional dot2tex # long time (4s)
-        """
-        graph = poset.hasse_diagram()
-        return cls.from_graph(graph, **kwds)
 
     def _latex_file_header_lines(self):
         r"""
@@ -454,14 +172,14 @@ class TikzPicture(SageObject):
         """
         lines = self._latex_file_header_lines()
         lines.append(r"\begin{document}")
-        L = self._code.splitlines()
+        L = self._content.splitlines()
         if len(L) <= 10:
             lines.extend(L)
         else:
             lines.extend(L[:5])
             lines.append('...')
             lines.append('... {} lines not printed ({} characters in total) ...'.format(len(L)-10, 
-                                                           len(self._code)))
+                                                           len(self._content)))
             lines.append('...')
             lines.extend(L[-5:])
         lines.append(r"\end{document}")
@@ -535,11 +253,11 @@ class TikzPicture(SageObject):
         """
         lines = self._latex_file_header_lines()
         lines.append(r"\begin{document}")
-        lines.append(self._code)
+        lines.append(self._content)
         lines.append(r"\end{document}")
         return '\n'.join(lines)
 
-    def tikz_picture_code(self):
+    def content(self):
         r"""
         EXAMPLES::
 
@@ -551,7 +269,7 @@ class TikzPicture(SageObject):
             \draw (0,0) -- (1,1);
             \end{tikzpicture}
         """
-        return self._code
+        return self._content
 
     def pdf(self, filename=None, view=True):
         """
@@ -828,4 +546,308 @@ class TikzPicture(SageObject):
             f.write(output)
 
         return filename
+
+
+class TikzPicture(StandaloneTex):
+    r"""
+    Creates a TikzPicture embedded in a LaTeX standalone document class.
+
+    INPUT:
+
+    - ``code`` -- string, tikzpicture code starting with ``r'\begin{tikzpicture}'``
+      and ending with ``r'\end{tikzpicture}'``
+    - ``standalone_options`` -- list of strings (default: ``[]``),
+      latex document class standalone configuration options.
+    - ``usepackage`` -- list of strings (default: ``['amsmath']``), latex
+      packages.
+    - ``usetikzlibrary`` -- list of strings (default: ``[]``), tikz libraries
+      to use.
+    - ``macros`` -- list of strings (default: ``[]``), stuff you need for the picture.
+    - ``use_sage_preamble`` -- bool (default: ``False``), whether to include sage
+      latex preamble and sage latex macros, that is, the content of
+      :func:`sage.misc.latex.extra_preamble()`,
+      :func:`sage.misc.latex.extra_macros()` and
+      :func:`sage.misc.latex_macros.sage_latex_macros()`.
+
+    EXAMPLES::
+
+        sage: from slabbe import TikzPicture
+        sage: g = graphs.PetersenGraph()
+        sage: s = latex(g)
+        sage: t = TikzPicture(s, standalone_options=["border=4mm"], usepackage=['tkz-graph'])
+        sage: _ = t.pdf(view=False)   # long time (2s)
+
+    Here are standalone configurations, packages, tikz libraries and macros you
+    may want to set::
+
+        sage: options = ['preview', 'border=4mm', 'beamer', 'float']
+        sage: usepackage = ['nicefrac', 'amsmath', 'pifont', 'tikz-3dplot',
+        ....:    'tkz-graph', 'tkz-berge', 'pgfplots']
+        sage: tikzlib = ['arrows', 'snakes', 'backgrounds', 'patterns',
+        ....:      'matrix', 'shapes', 'fit', 'calc', 'shadows', 'plotmarks',
+        ....:      'positioning', 'pgfplots.groupplots', 'mindmap']
+        sage: macros = [r'\newcommand{\ZZ}{\mathbb{Z}}']
+        sage: s = "\\begin{tikzpicture}\n\\draw (0,0) -- (1,1);\n\\end{tikzpicture}"
+        sage: t = TikzPicture(s, standalone_options=options, usepackage=usepackage, 
+        ....:        usetikzlibrary=tikzlib, macros=macros)
+        sage: _ = t.pdf(view=False)   # long time (2s)
+    """
+    @classmethod
+    def from_graph(cls, graph, merge_multiedges=True,
+            merge_label_function=tuple, **kwds):
+        r"""
+        Convert a graph to a tikzpicture using graphviz and dot2tex.
+
+        .. NOTE::
+
+            Prerequisite: dot2tex optional Sage package and graphviz must be
+            installed.
+
+        INPUT:
+
+        - ``graph`` -- graph
+        - ``merge_multiedges`` -- bool (default: ``True``), if the graph
+          has multiple edges, whether to merge the multiedges into one
+          single edge
+        - ``merge_label_function`` -- function (default:``tuple``), a
+          function to apply to each list of labels to be merged. It is
+          ignored if ``merge_multiedges`` is not ``True`` or if the graph
+          has no multiple edges.
+
+        Other inputs are used for latex drawing with dot2tex and graphviz:
+
+        - ``prog`` -- string (default: ``'dot'``) the program used for the
+          layout corresponding to one of the software of the graphviz
+          suite: 'dot', 'neato', 'twopi', 'circo' or 'fdp'.
+        - ``edge_labels`` -- bool (default: ``True``)
+        - ``color_by_label`` -- bool (default: ``False``)
+        - ``rankdir`` -- string (default: ``'down'``)
+        - ``subgraph_clusters`` -- (default: []) a list of lists of
+          vertices, if supported by the layout engine, nodes belonging to
+          the same cluster subgraph are drawn together, with the entire
+          drawing of the cluster contained within a bounding rectangle.
+
+        EXAMPLES::
+
+            sage: from slabbe import TikzPicture
+            sage: g = graphs.PetersenGraph()
+            sage: tikz = TikzPicture.from_graph(g) # optional dot2tex # long time (3s)
+            sage: _ = tikz.pdf()      # not tested
+
+        Using ``prog``::
+
+            sage: tikz = TikzPicture.from_graph(g, prog='neato', color_by_label=True) # optional dot2tex # long time (3s)
+            sage: _ = tikz.pdf()      # not tested
+
+        Using ``rankdir``::
+
+            sage: tikz = TikzPicture.from_graph(g, rankdir='right') # optional dot2tex # long time (3s)
+            sage: _ = tikz.pdf()      # not tested
+
+        Using ``merge_multiedges``::
+
+            sage: alpha = var('alpha')
+            sage: m = matrix(2,range(4)); m.set_immutable()
+            sage: G = DiGraph([(0,1,alpha), (0,1,'a'), (0,2,9), (0,2,m)], multiedges=True)
+            sage: tikz = TikzPicture.from_graph(G, merge_multiedges=True) # optional dot2tex
+            sage: _ = tikz.pdf()      # not tested
+
+        Using ``merge_multiedges`` with ``merge_label_function``::
+
+            sage: fn = lambda L: LatexExpr(','.join(map(str, L)))
+            sage: G = DiGraph([(0,1,'a'), (0,1,'b'), (0,2,'c'), (0,2,'d')], multiedges=True)
+            sage: tikz = TikzPicture.from_graph(G, merge_multiedges=True,
+            ....:               merge_label_function=fn) # optional dot2tex
+            sage: _ = tikz.pdf()      # not tested
+
+        Using subgraphs clusters (broken when using labels, see
+        :trac:`22070`)::
+
+            sage: S = FiniteSetMaps(5)
+            sage: I = S((0,1,2,3,4))
+            sage: a = S((0,1,3,0,0))
+            sage: b = S((0,2,4,1,0))
+            sage: roots = [I]
+            sage: succ = lambda v:[v*a,v*b,a*v,b*v]
+            sage: R = RecursivelyEnumeratedSet(roots, succ)
+            sage: G = R.to_digraph()
+            sage: G
+            Looped multi-digraph on 27 vertices
+            sage: C = G.strongly_connected_components()
+            sage: tikz = TikzPicture.from_graph(G, merge_multiedges=False,
+            ....:                               subgraph_clusters=C)
+            sage: _ = tikz.pdf()      # not tested
+
+        """
+        if merge_multiedges and graph.has_multiple_edges():
+            from slabbe.graph import merge_multiedges
+            graph = merge_multiedges(graph,
+                    label_function=merge_label_function)
+
+        default = dict(format='dot2tex', edge_labels=True,
+                       color_by_label=False, prog='dot', rankdir='down')
+        default.update(kwds)
+
+        graph.latex_options().set_options(**default)
+        tikz = graph._latex_()
+        return TikzPicture(tikz, standalone_options=["border=4mm"])
+
+    @classmethod
+    def from_graph_with_pos(cls, graph, scale=1, merge_multiedges=True,
+            merge_label_function=tuple):
+        r"""
+        Convert a graph with positions defined for vertices to a tikzpicture.
+
+        INPUT:
+
+        - ``graph`` -- graph (with predefined positions)
+        - ``scale`` -- number (default:``1``), tikzpicture scale
+        - ``merge_multiedges`` -- bool (default: ``True``), if the graph
+          has multiple edges, whether to merge the multiedges into one
+          single edge
+        - ``merge_label_function`` -- function (default:``tuple``), a
+          function to apply to each list of labels to be merged. It is
+          ignored if ``merge_multiedges`` is not ``True`` or if the graph
+          has no multiple edges.
+
+        EXAMPLES::
+
+            sage: from slabbe import TikzPicture
+            sage: g = graphs.PetersenGraph()
+            sage: tikz = TikzPicture.from_graph_with_pos(g)
+
+        ::
+
+            sage: edges = [(0,0,'a'),(0,1,'b'),(0,1,'c')]
+            sage: kwds = dict(format='list_of_edges', loops=True, multiedges=True)
+            sage: G = DiGraph(edges, **kwds)
+            sage: G.set_pos({0:(0,0), 1:(1,0)})
+            sage: f = lambda label:','.join(label)
+            sage: TikzPicture.from_graph_with_pos(G, merge_label_function=f)
+            \documentclass[tikz]{standalone}
+            \standaloneconfig{border=4mm}
+            \usepackage{amsmath}
+            \begin{document}
+            \begin{tikzpicture}
+            [auto,scale=1]
+            % vertices
+            \node (node_0) at (0, 0) {0};
+            \node (node_1) at (1, 0) {1};
+            % edges
+            \draw[->] (node_0) -- node {b,c} (node_1);
+            % loops
+            \draw (node_0) edge [loop above] node {a} ();
+            \end{tikzpicture}
+            \end{document}
+
+        TESTS::
+
+            sage: edges = [(0,0,'a'),(0,1,'b'),(0,1,'c')]
+            sage: kwds = dict(format='list_of_edges', loops=True, multiedges=True)
+            sage: G = DiGraph(edges, **kwds)
+            sage: TikzPicture.from_graph_with_pos(G)
+            Traceback (most recent call last):
+            ...
+            ValueError: vertex positions need to be set first
+        """
+        pos = graph.get_pos()
+        if pos is None:
+            raise ValueError('vertex positions need to be set first')
+
+        if merge_multiedges and graph.has_multiple_edges():
+            from slabbe.graph import merge_multiedges
+            graph = merge_multiedges(graph,
+                    label_function=merge_label_function)
+
+        keys_for_vertices = graph._keys_for_vertices()
+
+        lines = []
+        lines.append(r'\begin{tikzpicture}')
+        lines.append(r'[auto,scale={}]'.format(scale))
+
+        # vertices
+        lines.append(r'% vertices')
+        for u in graph.vertices():
+            line = r'\node ({}) at {} {{{}}};'.format(keys_for_vertices(u),
+                                                      pos[u], u)
+            lines.append(line)
+
+        # edges
+        lines.append(r'% edges')
+        arrow = '->' if graph.is_directed() else ''
+        for (u,v,label) in graph.edges():
+            if u == v:
+                # loops are done below
+                continue
+            if label:
+                line = r'\draw[{}] ({}) -- node {{{}}} ({});'.format(arrow,
+                                                    keys_for_vertices(u),
+                                                    label,
+                                                    keys_for_vertices(v))
+            else:
+                line = r'\draw[{}] ({}) -- ({});'.format(arrow,
+                                                    keys_for_vertices(u),
+                                                    keys_for_vertices(v))
+            lines.append(line)
+
+        # loops
+        lines.append(r'% loops')
+        for (u,v,label) in graph.loop_edges():
+            line = r'\draw ({}) edge [loop above] node {{{}}} ();'.format(
+                                              keys_for_vertices(u), label)
+            lines.append(line)
+
+        lines.append(r'\end{tikzpicture}')
+        tikz = '\n'.join(lines)
+        return TikzPicture(tikz, standalone_options=["border=4mm"])
+
+    @classmethod
+    def from_poset(cls, poset, **kwds):
+        r"""
+        Convert a poset to a tikzpicture using graphviz and dot2tex.
+
+        .. NOTE::
+
+            Prerequisite: dot2tex optional Sage package and graphviz must be
+            installed.
+
+        INPUT:
+
+        - ``poset`` -- poset
+        - ``prog`` -- string (default: ``'dot'``) the program used for the
+          layout corresponding to one of the software of the graphviz
+          suite: 'dot', 'neato', 'twopi', 'circo' or 'fdp'.
+        - ``edge_labels`` -- bool (default: ``True``)
+        - ``color_by_label`` -- bool (default: ``False``)
+        - ``rankdir`` -- string (default: ``'down'``)
+
+        EXAMPLES::
+
+            sage: from slabbe import TikzPicture
+            sage: P = posets.PentagonPoset()
+            sage: tikz = TikzPicture.from_poset(P) # optional dot2tex # long time (3s)
+            sage: tikz = TikzPicture.from_poset(P, prog='neato', color_by_label=True) # optional dot2tex # long time (3s)
+
+        ::
+
+            sage: P = posets.SymmetricGroupWeakOrderPoset(4)
+            sage: tikz = TikzPicture.from_poset(P) # optional dot2tex # long time (4s)
+            sage: tikz = TikzPicture.from_poset(P, prog='neato') # optional dot2tex # long time (4s)
+        """
+        graph = poset.hasse_diagram()
+        return cls.from_graph(graph, **kwds)
+
+    def tikz_picture_code(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import TikzPicture
+            sage: s = "\\begin{tikzpicture}\n\\draw (0,0) -- (1,1);\n\\end{tikzpicture}"
+            sage: t = TikzPicture(s)
+            sage: print(t.tikz_picture_code())
+            \begin{tikzpicture}
+            \draw (0,0) -- (1,1);
+            \end{tikzpicture}
+        """
+        return self.content()
 

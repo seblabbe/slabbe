@@ -22,7 +22,7 @@ from .joyal_bijection import Endofunctions, Endofunction, DoubleRootedTree
 from .bond_percolation import (BondPercolationSamples, 
                              BondPercolationSample, 
                              PercolationProbability)
-from .tikz_picture import TikzPicture
+from .tikz_picture import TikzPicture, StandaloneTex
 
 from .matrices import M3to2, M2to3, M4to2, M4to3
 
