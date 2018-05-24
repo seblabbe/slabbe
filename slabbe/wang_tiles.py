@@ -1702,26 +1702,39 @@ class WangTileSet(object):
           operation
         - ``verbose`` -- boolean (default:``False``)
 
+        OUTPUT:
+
+        - (WangTileSet, Substitution2d)
+
         EXAMPLES::
 
             sage: from slabbe import WangTileSet
             sage: tiles = [('aa','bb','cc','bb'), ('cc','dd','aa','dd')]
             sage: T = WangTileSet(tiles)
-            sage: T.shift_top().tiles()
+            sage: U,s = T.shift_top()
+            sage: s
+            Substitution 2d: {0: [[0]], 1: [[1]]}
+            sage: U.tiles()
             [('aadd', 'dd', 'ccbb', 'bb'), ('ccbb', 'bb', 'aadd', 'dd')]
-            sage: T.shift_top().shift_top().tiles()
+            sage: T.shift_top()[0].shift_top()[0].tiles()
             [('aaddbb', 'bb', 'ccbbdd', 'bb'), ('ccbbdd', 'dd', 'aaddbb', 'dd')]
 
         ::
 
             sage: tiles = [('aa','bb','cc','bb'), ('aa','dd','cc','bb'), ('cc','dd','aa','dd')]
             sage: T = WangTileSet(tiles)
-            sage: T.shift_top().tiles()
+            sage: U,s = T.shift_top()
+            sage: s
+            Substitution 2d: {0: [[0]], 1: [[1]], 2: [[2]], 3: [[2]]}
+            sage: U.tiles()
             [('aadd', 'dd', 'ccbb', 'bb'),
              ('aadd', 'dd', 'ccdd', 'bb'),
              ('ccdd', 'dd', 'aadd', 'dd'),
              ('ccbb', 'bb', 'aadd', 'dd')]
-            sage: T.shift_top(radius=1).tiles()
+            sage: U,s = T.shift_top(radius=1)
+            sage: s
+            Substitution 2d: {0: [[0]], 1: [[2]]}
+            sage: U.tiles()
             [('aadd', 'dd', 'ccbb', 'bb'), ('ccbb', 'bb', 'aadd', 'dd')]
 
         """
@@ -1739,12 +1752,15 @@ class WangTileSet(object):
             print("The map Tile -> North[0] is {}".format(dict(G)))
 
         tiles = []
+        sub = {}
         for i,(e,n,w,s) in enumerate(self):
             for a in G[i]:
                 tile = (function(e,a),a,function(w,n),s)
                 if tile not in tiles:
+                    sub[len(tiles)] = i
                     tiles.append(tile)
-        return WangTileSet(tiles)
+        from slabbe.substitution_2d import Substitution2d
+        return WangTileSet(tiles), Substitution2d.from_permutation(sub)
 
     def shift_top_old(self, radius=0, solver=None, ncpus=None,
             function=str.__add__, verbose=False):
