@@ -194,7 +194,7 @@ def tile_to_tikz(tile, position, color=None, id=None, sizex=1, sizey=1,
 
     if id is not None:
         c = (x+.5*sx,y+.5*sy)
-        lines.append(r'\node[fill=white] at {} {{{}}};'.format(c, id))
+        lines.append(r'\node at {} {{{}}};'.format(c, id))
 
     if draw_H is None:
         draw_H = {tile[1]:r'\draw {{}} -- ++ ({},0);'.format(sx),
@@ -219,6 +219,19 @@ def tile_to_tikz(tile, position, color=None, id=None, sizex=1, sizey=1,
     return lines
     #return TikzPicture('\n'.join(lines))
 
+def tile_sort_key(tile):
+    r"""
+    A canonical way to sort tiles (by length, and then lexicographically).
+
+    EXAMPLES::
+
+        sage: from slabbe.wang_tiles import tile_sort_key
+        sage: L = [('aa', 'bb', 'cc', 'dd'), ('aaa', 'zz', 'd', 'a'), ('aa', 'aa', 'aa', 'aa')]
+        sage: sorted(L, key=tile_sort_key)
+        [('aa', 'aa', 'aa', 'aa'), ('aa', 'bb', 'cc', 'dd'), ('aaa', 'zz', 'd', 'a')]
+
+    """
+    return (tuple(len(a) for a in tile), tile)
 
 def fusion(tile0, tile1, direction, function=str.__add__, initial=''):
     r"""
@@ -1662,22 +1675,19 @@ class WangTileSet(object):
         #if not self.is_forbidden_product(L, K, i=i, radius=radius, solver=solver):
         #    raise ValueError("PROBLEM!! L odot^i K should be forbidden")
 
-        # Result initialization
-        tiles = self.tiles()
-        d = {}
-        new_tiles = []
-        it = itertools.count()
-
         # We keep tiles in K
+        tiles_and_structure = []
         for k in K:
-            d[next(it)] = [k]
-            new_tiles.append(tiles[k])
+            tiles_and_structure.append((self[k], [k]))
 
         # We add fusion of dominoes starting/ending with a tile in M
         for (a,b) in dominoes_R:
-            t = fusion(tiles[a],tiles[b],i,function=function,initial=initial)
-            d[next(it)] = [a,b]
-            new_tiles.append(t)
+            t = fusion(self[a],self[b],i,function=function,initial=initial)
+            tiles_and_structure.append((t, [a,b]))
+
+        tiles_and_structure.sort(key=lambda v:tile_sort_key(v[0]))
+        new_tiles, images = zip(*tiles_and_structure)
+        d = {i:image for i,image in enumerate(images)}
 
         from slabbe.substitution_2d import Substitution2d
         if i == 1:
