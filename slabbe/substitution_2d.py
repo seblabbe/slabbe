@@ -505,10 +505,10 @@ class Substitution2d(object):
         raise NotImplementedError('method desubstitute moved to wang tile')
 
     @rename_keyword(fontsize='font')
-    def wang_tikz(self, domain_tiles, codomain_tiles, color=None, size=1,
-            scale=1, font=r'\normalsize', rotate=None, label_shift=.2,
-            transformation_matrix=None, ncolumns=4, tabular='tabular',
-            align='l', direction='right'):
+    def wang_tikz(self, domain_tiles, codomain_tiles, domain_color=None,
+            codomain_color=None, size=1, scale=1, font=r'\normalsize',
+            rotate=None, label_shift=.2, transformation_matrix=None,
+            ncolumns=4, tabular='tabular', align='l', direction='right'):
         r"""
         Return the tikz code showing what the substitution A->B* does on
         Wang tiles.
@@ -517,7 +517,8 @@ class Substitution2d(object):
 
         - ``domain_tiles`` -- tiles of the domain
         - ``codomain_tiles`` -- tiles of the codomain
-        - ``color`` -- dict (default: ``None``) from tile values -> tikz colors
+        - ``domain_color`` -- dict (default: ``None``) from tile values -> tikz colors
+        - ``codomain_color`` -- dict (default: ``None``) from tile values -> tikz colors
         - ``size`` -- number (default: ``1``), size of the tile
         - ``scale`` -- number (default: ``1``), scale of tikzpicture
         - ``font`` -- string (default: ``r'\normalsize'``
@@ -602,7 +603,7 @@ class Substitution2d(object):
 
             desubstituted_tile = domain_tiles[a] 
             new_lines = tile_to_tikz(desubstituted_tile, (0,0),
-                    color=color, id=a, sizex=size, sizey=size,
+                    color=domain_color, id=a, sizex=size, sizey=size,
                     rotate=rotate, label_shift=label_shift,
                     top_right_edges=True)
             lines.extend(new_lines)
@@ -613,10 +614,10 @@ class Substitution2d(object):
                 lines.append(r'\node[rotate=-90] at (.5,-.5) {$\mapsto$};')
 
             image_a = self._d[a]
-            tiling = WangTiling(image_a, codomain_tiles, color)
-            tikz = tiling.tikz(color=color, font=font, rotate=rotate,
-                    label_shift=label_shift, scale=scale, size=size,
-                    transformation_matrix=transformation_matrix)
+            tiling = WangTiling(image_a, codomain_tiles, codomain_color)
+            tikz = tiling.tikz(color=codomain_color, font=font,
+                    rotate=rotate, label_shift=label_shift, scale=scale,
+                    size=size, transformation_matrix=transformation_matrix)
 
             if direction == 'right':
                 xshift = 2.0 + .5 * len(image_a)
