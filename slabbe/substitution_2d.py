@@ -724,6 +724,47 @@ class Substitution2d(object):
                 S.update(set_of_factors(self(table), shape))
             return [ [[a, b], [c, d]] for (a,b,c,d) in S]
 
+    def lines_alphabet(self, direction='horizontal'):
+        r"""
+        Return the possible alphabets on lines, i.e., the possible alphabet
+        of letters that we see on a given line.
+
+        EXAMPLES::
+
+            sage: from slabbe import Substitution2d
+            sage: A = [[0,1],[0,1]]
+            sage: B = [[1,0],[1,1]]
+            sage: d = {0:A, 1:B}
+            sage: s = Substitution2d(d)
+            sage: sorted(s.lines_alphabet())
+            [(0,), (0, 1), (1,)]
+            sage: sorted(s.lines_alphabet(direction='vertical'))
+            [(0, 1), (1,)]
+
+        """
+        if direction == 'horizontal':
+            def children(node):
+                T = self.call_on_row(node)
+                return [tuple(set(row)) for row in zip(*T)]
+        elif direction == 'vertical':
+            def children(node):
+                T = self.call_on_column(node)
+                return [tuple(set(column)) for column in T]
+        else:
+            raise ValueError("direction (={}) must be 'vertical' or"
+                    " 'horizontal'".format(direction))
+
+        from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
+        seeds = [(a,) for a in self.domain_alphabet()]
+        R = RecursivelyEnumeratedSet(seeds, children)
+        G = R.to_digraph(multiedges=False)
+        result = []
+        for s in G.strongly_connected_components_subgraphs():
+            if s.num_edges() > 0:
+                for v in s.vertices():
+                    result.append(v)
+        return result
+
     _matrix_ = incidence_matrix
 
 def set_of_factors(table, shape, avoid_border=0):
