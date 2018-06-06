@@ -639,6 +639,90 @@ class Substitution2d(object):
         from sage.misc.latex import LatexExpr
         return LatexExpr('\n'.join(lines))
 
+
+    def wang_tiles_codomain_tikz(self, codomain_tiles, color=None,
+            size=1, scale=1, font=r'\normalsize', rotate=None,
+            label_shift=.2, transformation_matrix=None,
+            ncolumns=4, tabular='tabular', align='l', direction='right'):
+        r"""
+        Return the tikz code of the image of the letters as a table of
+        tikz tilings.
+
+        INPUT:
+
+        - ``domain_tiles`` -- tiles of the domain
+        - ``codomain_tiles`` -- tiles of the codomain
+        - ``domain_color`` -- dict (default: ``None``) from tile values -> tikz colors
+        - ``codomain_color`` -- dict (default: ``None``) from tile values -> tikz colors
+        - ``size`` -- number (default: ``1``), size of the tile
+        - ``scale`` -- number (default: ``1``), scale of tikzpicture
+        - ``font`` -- string (default: ``r'\normalsize'``
+        - ``rotate`` -- list or ``None`` (default:``None``) list of four angles
+          in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
+          label of Wang tiles. If ``None``, it performs a 90 degres rotation
+          for left and right labels taking more than one character.
+        - ``label_shift`` -- number (default: ``.2``) translation distance
+          of the label from the edge
+        - ``transformation_matrix`` -- matrix (default: ``None``), a matrix
+          to apply to the coordinate before drawing, it can be in
+          ``SL(2,ZZ)`` or not.
+        - ``ncolumns`` -- integer (default: ``4``)
+
+        OUTPUT:
+
+            tikzpicture
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet, Substitution2d
+            sage: A = [[0,1,2],[1,0,0]]
+            sage: B = [[0,1,2]]
+            sage: d = {4:A, 5:B}
+            sage: s = Substitution2d(d)
+            sage: codomain_tiles = [(0,3,1,4), (1,4,0,3), (5,6,7,8)]
+            sage: W = WangTileSet(codomain_tiles)
+            sage: t = s.wang_tiles_codomain_tikz(W)
+            sage: _ = t.pdf(view=False)
+
+        """
+        from slabbe.wang_tiles import tile_to_tikz, WangTileSet, WangTiling
+        for a in self.codomain_alphabet():
+            try:
+                codomain_tiles[a]
+            except IndexError:
+                raise ValueError("codomain_alphabet={}, but tiles are"
+                        " {}".format(self.codomain_alphabet(),
+                        codomain_tiles))
+
+        lines = []
+        lines.append(r'\begin{tikzpicture}')
+        lines.append(r'[scale={}]'.format(scale))
+        lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
+        lines.append(r'\matrix{')
+        for i,a in enumerate(self._d):
+
+            image_a = self._d[a]
+            tiling = WangTiling(image_a, codomain_tiles, color)
+            tikz = tiling.tikz(color=color, font=font,
+                    rotate=rotate, label_shift=label_shift, scale=scale,
+                    size=size, transformation_matrix=transformation_matrix)
+
+            lines.append(r'\node{{{}}};'.format(tikz.tikz_picture_code()))
+
+            if (i+1) == len(self._d):
+                lines.append(r'\\')
+            elif (i+1) % ncolumns == 0:
+                lines.append(r'\\')
+            else:
+                lines.append(r'&')
+
+        lines.append(r'};')  # end of \matrix{
+        lines.append(r'\end{tikzpicture}')
+
+        from slabbe import TikzPicture
+        return TikzPicture('\n'.join(lines))
+
+
     def list_2x2_factors(self, F=None):
         r"""
         Return the list of 2x2 factors in the associated substitutive
