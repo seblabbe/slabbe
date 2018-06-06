@@ -594,9 +594,14 @@ class Substitution2d(object):
                     " 'down'".format(direction))
 
         lines = []
-        lines.append(r'\begin{{{}}}{{{}}}'.format(tabular, align*ncolumns))
+        lines.append(r'\begin{tikzpicture}')
+        lines.append(r'[scale={}]'.format(scale))
+        lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
+        lines.append(r'\matrix{')
+
         for i,a in enumerate(self._d):
 
+            lines.append(r'\node{')
             lines.append(r'\begin{tikzpicture}')
             lines.append(r'[scale={}]'.format(scale))
             lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
@@ -629,16 +634,20 @@ class Substitution2d(object):
                                              tikz.tikz_picture_code()))
 
             lines.append(r'\end{tikzpicture}')
-            if (i+1) == len(self._d):
-                lines.append(r'.')
-            elif (i+1) % ncolumns == 0:
-                lines.append(r',\\')
-            else:
-                lines.append(r',&')
-        lines.append(r'\end{{{}}}'.format(tabular))
-        from sage.misc.latex import LatexExpr
-        return LatexExpr('\n'.join(lines))
+            lines.append(r'};')
 
+            if (i+1) == len(self._d):
+                lines.append(r'\\')
+            elif (i+1) % ncolumns == 0:
+                lines.append(r'\\')
+            else:
+                lines.append(r'&')
+
+        lines.append(r'};')  # end of \matrix{
+        lines.append(r'\end{tikzpicture}')
+
+        from slabbe import TikzPicture
+        return TikzPicture('\n'.join(lines))
 
     def wang_tiles_codomain_tikz(self, codomain_tiles, color=None,
             size=1, scale=1, font=r'\normalsize', rotate=None,
