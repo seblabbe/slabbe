@@ -651,7 +651,7 @@ class Substitution2d(object):
 
     def wang_tiles_codomain_tikz(self, codomain_tiles, color=None,
             size=1, scale=1, font=r'\normalsize', rotate=None,
-            label_shift=.2, transformation_matrix=None,
+            id=True, label=True, label_shift=.2, transformation_matrix=None,
             ncolumns=4, tabular='tabular', align='l', direction='right'):
         r"""
         Return the tikz code of the image of the letters as a table of
@@ -670,6 +670,8 @@ class Substitution2d(object):
           in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
           label of Wang tiles. If ``None``, it performs a 90 degres rotation
           for left and right labels taking more than one character.
+        - ``id`` -- boolean (default: ``True``), presence of the tile id
+        - ``label`` -- boolean (default: ``True``) 
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
         - ``transformation_matrix`` -- matrix (default: ``None``), a matrix
@@ -712,7 +714,7 @@ class Substitution2d(object):
 
             image_a = self._d[a]
             tiling = WangTiling(image_a, codomain_tiles, color)
-            tikz = tiling.tikz(color=color, font=font,
+            tikz = tiling.tikz(color=color, font=font, id=id, label=label,
                     rotate=rotate, label_shift=label_shift, scale=scale,
                     size=size, transformation_matrix=transformation_matrix)
 

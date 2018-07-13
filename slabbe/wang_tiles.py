@@ -648,7 +648,7 @@ class WangTileSet(object):
 
     @rename_keyword(fontsize='font')
     def tikz(self, ncolumns=10, color=None, size=1, space=.1, scale=1,
-             font=r'\normalsize', rotate=None, label=True, label_shift=.2,
+             font=r'\normalsize', rotate=None, label=True, id=True, label_shift=.2,
              draw_H=None, draw_V=None):
         r"""
         INPUT:
@@ -663,7 +663,8 @@ class WangTileSet(object):
           in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
           label of Wang tiles. If ``None``, it performs a 90 degres rotation
           for left and right labels taking more than one character.
-        - ``label`` -- boolean (default: ``True``) 
+        - ``label`` -- boolean (default: ``True``), presence of the colors
+        - ``id`` -- boolean (default: ``True``), presence of the tile id
         - ``label_shift`` -- number (default: ``.2``) translation distance of the
           label from the edge
         - ``top_right_edges`` -- bool (default: ``True``) 
@@ -696,10 +697,11 @@ class WangTileSet(object):
             x = i % ncolumns
             y = - (i // ncolumns)
             position = (x * (size + space), y * (size + space))
-            new_lines = tile_to_tikz(tile, position, color=color, id=i,
-                    sizex=size, sizey=size, rotate=rotate, label=label,
-                    label_shift=label_shift, top_right_edges=True,
-                    draw_H=draw_H, draw_V=draw_V)
+            this_id = i if id else None
+            new_lines = tile_to_tikz(tile, position, color=color,
+                    id=this_id, sizex=size, sizey=size, rotate=rotate,
+                    label=label, label_shift=label_shift,
+                    top_right_edges=True, draw_H=draw_H, draw_V=draw_V)
             lines.extend(new_lines)
         lines.append(r'\end{tikzpicture}')
         return TikzPicture('\n'.join(lines))
@@ -3620,7 +3622,7 @@ class WangTiling(object):
 
     @rename_keyword(fontsize='font')
     def tikz(self, color=None, font=r'\normalsize', rotate=None,
-            label=True, label_shift=.2, scale=1, size=1,
+            id=True, label=True, label_shift=.2, scale=1, size=1,
             transformation_matrix=None, draw_H=None, draw_V=None):
         r"""
         Return a tikzpicture showing one solution.
@@ -3633,7 +3635,8 @@ class WangTiling(object):
           in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
           label of Wang tiles. If ``None``, it performs a 90 degres rotation
           for left and right labels taking more than one character.
-        - ``label`` -- boolean (default: ``True``) 
+        - ``id`` -- boolean (default: ``True``), presence of the tile id
+        - ``label`` -- boolean (default: ``True``), presence of the color labels
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
         - ``scale`` -- number (default: ``1``), tikzpicture scale
@@ -3758,10 +3761,11 @@ class WangTiling(object):
                 if i is None:
                     # this is a blank tile
                     continue
+                this_id = i if id else None
                 position = transformation_matrix*vector((j,k))
                 tile = self._tiles[i]
                 more_lines = tile_to_tikz(tile, position, color=color,
-                        id=i, sizex=size, sizey=size, rotate=rotate,
+                        id=this_id, sizex=size, sizey=size, rotate=rotate,
                         label=label, label_shift=label_shift,
                         top_right_edges=True, draw_H=draw_H, draw_V=draw_V)
                 lines.extend(more_lines)
