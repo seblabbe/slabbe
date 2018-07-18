@@ -508,7 +508,7 @@ class Substitution2d(object):
     def wang_tikz(self, domain_tiles, codomain_tiles, domain_color=None,
             codomain_color=None, size=1, scale=1, font=r'\normalsize',
             rotate=None, label_shift=.2, transformation_matrix=None,
-            ncolumns=4, tabular='tabular', align='l', direction='right'):
+            ncolumns=4, direction='right'):
         r"""
         Return the tikz code showing what the substitution A->B* does on
         Wang tiles.
@@ -532,9 +532,6 @@ class Substitution2d(object):
           to apply to the coordinate before drawing, it can be in
           ``SL(2,ZZ)`` or not.
         - ``ncolumns`` -- integer (default: ``4``)
-        - ``tabular`` -- string (default: ``'tabular'``) or ``'longtable'``
-        - ``align`` -- character (default:``'l'``), latex alignment symbol
-          ``'l'``, ``'r'`` or ``'c'``.
         - ``direction`` -- string (default: ``'right'``) or ``'down'``
 
         OUTPUT:
@@ -652,7 +649,7 @@ class Substitution2d(object):
     def wang_tiles_codomain_tikz(self, codomain_tiles, color=None,
             size=1, scale=1, font=r'\normalsize', rotate=None,
             id=True, label=True, label_shift=.2, transformation_matrix=None,
-            ncolumns=4, tabular='tabular', align='l', direction='right'):
+            ncolumns=4, direction='right'):
         r"""
         Return the tikz code of the image of the letters as a table of
         tikz tilings.
