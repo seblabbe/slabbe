@@ -73,8 +73,8 @@ from sage.graphs.graph import Graph
 from sage.misc.decorators import rename_keyword
 
 def tile_to_tikz(tile, position, color=None, id=None, sizex=1, sizey=1,
-        rotate=None, label=True, label_shift=.2, top_right_edges=True,
-        draw_H=None, draw_V=None):
+        rotate=None, label=True, label_shift=.2, bottom_left_edges=True,
+        top_right_edges=True, draw_H=None, draw_V=None):
     r"""
 
     INPUT:
@@ -92,6 +92,7 @@ def tile_to_tikz(tile, position, color=None, id=None, sizex=1, sizey=1,
     - ``label`` -- boolean (default: ``True``) 
     - ``label_shift`` -- number (default: ``.2``) translation distance of the
       label from the edge
+    - ``bottom_left_edges`` -- bool (default: ``True``) 
     - ``top_right_edges`` -- bool (default: ``True``) 
     - ``draw_H`` -- dict (default: ``None``) from tile values -> tikz
       draw commands. If ``None`` the values of the dict get replaced by
@@ -203,8 +204,10 @@ def tile_to_tikz(tile, position, color=None, id=None, sizex=1, sizey=1,
         draw_V = {tile[0]:r'\draw {{}} -- ++ (0,{});'.format(sy),
                   tile[2]:r'\draw {{}} -- ++ (0,{});'.format(sy)}
 
-    lines.append(draw_V[tile[2]].format((x,y)))
-    lines.append(draw_H[tile[3]].format((x,y)))
+    if bottom_left_edges:
+        lines.append(draw_V[tile[2]].format((x,y)))
+        lines.append(draw_H[tile[3]].format((x,y)))
+
     if top_right_edges:
         lines.append(draw_V[tile[0]].format((x+sx,y)))
         lines.append(draw_H[tile[1]].format((x,y+sy)))
@@ -649,6 +652,7 @@ class WangTileSet(object):
     @rename_keyword(fontsize='font')
     def tikz(self, ncolumns=10, color=None, size=1, space=.1, scale=1,
              font=r'\normalsize', rotate=None, label=True, id=True, label_shift=.2,
+             bottom_left_edges=True, top_right_edges=True,
              draw_H=None, draw_V=None):
         r"""
         INPUT:
@@ -667,6 +671,7 @@ class WangTileSet(object):
         - ``id`` -- boolean (default: ``True``), presence of the tile id
         - ``label_shift`` -- number (default: ``.2``) translation distance of the
           label from the edge
+        - ``bottom_left_edges`` -- bool (default: ``True``) 
         - ``top_right_edges`` -- bool (default: ``True``) 
         - ``draw_H`` -- dict (default: ``None``) from tile values -> tikz
           draw commands. If ``None`` the values of the dict get replaced by
@@ -701,7 +706,9 @@ class WangTileSet(object):
             new_lines = tile_to_tikz(tile, position, color=color,
                     id=this_id, sizex=size, sizey=size, rotate=rotate,
                     label=label, label_shift=label_shift,
-                    top_right_edges=True, draw_H=draw_H, draw_V=draw_V)
+                    bottom_left_edges=bottom_left_edges,
+                    top_right_edges=top_right_edges, draw_H=draw_H,
+                    draw_V=draw_V)
             lines.extend(new_lines)
         lines.append(r'\end{tikzpicture}')
         return TikzPicture('\n'.join(lines))
@@ -3623,6 +3630,7 @@ class WangTiling(object):
     @rename_keyword(fontsize='font')
     def tikz(self, color=None, font=r'\normalsize', rotate=None,
             id=True, label=True, label_shift=.2, scale=1, size=1,
+            bottom_left_edges=True, top_right_edges=True,
             transformation_matrix=None, draw_H=None, draw_V=None):
         r"""
         Return a tikzpicture showing one solution.
@@ -3636,6 +3644,8 @@ class WangTiling(object):
           label of Wang tiles. If ``None``, it performs a 90 degres rotation
           for left and right labels taking more than one character.
         - ``id`` -- boolean (default: ``True``), presence of the tile id
+        - ``bottom_left_edges`` -- bool (default: ``True``) 
+        - ``top_right_edges`` -- bool (default: ``True``) 
         - ``label`` -- boolean (default: ``True``), presence of the color labels
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
@@ -3767,7 +3777,9 @@ class WangTiling(object):
                 more_lines = tile_to_tikz(tile, position, color=color,
                         id=this_id, sizex=size, sizey=size, rotate=rotate,
                         label=label, label_shift=label_shift,
-                        top_right_edges=True, draw_H=draw_H, draw_V=draw_V)
+                        bottom_left_edges=bottom_left_edges,
+                        top_right_edges=top_right_edges, draw_H=draw_H,
+                        draw_V=draw_V)
                 lines.extend(more_lines)
         lines.append(r'\end{tikzpicture}')
         from slabbe import TikzPicture
