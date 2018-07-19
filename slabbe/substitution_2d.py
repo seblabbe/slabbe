@@ -508,6 +508,7 @@ class Substitution2d(object):
     def wang_tikz(self, domain_tiles, codomain_tiles, domain_color=None,
             codomain_color=None, size=1, scale=1, font=r'\normalsize',
             rotate=None, label_shift=.2, transformation_matrix=None,
+            bottom_left_edges=True, top_right_edges=True, 
             ncolumns=4, direction='right'):
         r"""
         Return the tikz code showing what the substitution A->B* does on
@@ -532,6 +533,8 @@ class Substitution2d(object):
           to apply to the coordinate before drawing, it can be in
           ``SL(2,ZZ)`` or not.
         - ``ncolumns`` -- integer (default: ``4``)
+        - ``bottom_left_edges`` -- bool (default: ``True``) 
+        - ``top_right_edges`` -- bool (default: ``True``) 
         - ``direction`` -- string (default: ``'right'``) or ``'down'``
 
         OUTPUT:
@@ -607,7 +610,8 @@ class Substitution2d(object):
             new_lines = tile_to_tikz(desubstituted_tile, (0,0),
                     color=domain_color, id=a, sizex=size, sizey=size,
                     rotate=rotate, label_shift=label_shift,
-                    top_right_edges=True)
+                    bottom_left_edges=bottom_left_edges,
+                    top_right_edges=top_right_edges)
             lines.extend(new_lines)
 
             if direction == 'right':
@@ -619,6 +623,8 @@ class Substitution2d(object):
             tiling = WangTiling(image_a, codomain_tiles, codomain_color)
             tikz = tiling.tikz(color=codomain_color, font=font,
                     rotate=rotate, label_shift=label_shift, scale=scale,
+                    bottom_left_edges=bottom_left_edges,
+                    top_right_edges=top_right_edges, 
                     size=size, transformation_matrix=transformation_matrix)
 
             if direction == 'right':
@@ -649,6 +655,7 @@ class Substitution2d(object):
     def wang_tiles_codomain_tikz(self, codomain_tiles, color=None,
             size=1, scale=1, font=r'\normalsize', rotate=None,
             id=True, label=True, label_shift=.2, transformation_matrix=None,
+            bottom_left_edges=True, top_right_edges=True, 
             ncolumns=4, direction='right'):
         r"""
         Return the tikz code of the image of the letters as a table of
@@ -674,6 +681,8 @@ class Substitution2d(object):
         - ``transformation_matrix`` -- matrix (default: ``None``), a matrix
           to apply to the coordinate before drawing, it can be in
           ``SL(2,ZZ)`` or not.
+        - ``bottom_left_edges`` -- bool (default: ``True``) 
+        - ``top_right_edges`` -- bool (default: ``True``) 
         - ``ncolumns`` -- integer (default: ``4``)
 
         OUTPUT:
@@ -713,6 +722,8 @@ class Substitution2d(object):
             tiling = WangTiling(image_a, codomain_tiles, color)
             tikz = tiling.tikz(color=color, font=font, id=id, label=label,
                     rotate=rotate, label_shift=label_shift, scale=scale,
+                    bottom_left_edges=bottom_left_edges,
+                    top_right_edges=top_right_edges, 
                     size=size, transformation_matrix=transformation_matrix)
 
             lines.append(r'\node{{{}}};'.format(tikz.tikz_picture_code()))
