@@ -447,6 +447,8 @@ class _MCFAlgorithm_methods(object):
         X = [[i for i in range(ndivs+1)] for j in range(ndivs+1)]
         Y = [[j for i in range(ndivs+1)] for j in range(ndivs+1)]
         Z = [[D.get((i,j),0)/the_mean for i in range(ndivs+1)] for j in range(ndivs+1)]
+        import numpy
+        Z = numpy.array(Z)
         
         from mpl_toolkits.mplot3d import axes3d
         import matplotlib.pyplot as plt

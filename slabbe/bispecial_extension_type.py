@@ -2006,6 +2006,8 @@ class ExtensionType1to1(ExtensionType):
         E = [((-1,a), (+1,b)) for (a,b) in self]
         G = DiGraph([V,E], format='vertices_and_edges')
         from sage.graphs.bipartite_graph import BipartiteGraph
+        left = list(left)
+        right = list(right)
         return BipartiteGraph(G, partition=(left,right))
 
     def extension_graph(self, loops=False):

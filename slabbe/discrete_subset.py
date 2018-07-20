@@ -1473,7 +1473,7 @@ class DiscreteSubset(SageObject):
 
             sage: from slabbe import DiscretePlane
             sage: p = DiscretePlane([2,3,5], 10)
-            sage: p.tikz(points=False, edges=False)
+            sage: print(p.tikz(points=False, edges=False))
             \documentclass[tikz]{standalone}
             \usepackage{amsmath}
             \begin{document}
