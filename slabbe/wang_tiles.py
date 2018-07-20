@@ -71,6 +71,8 @@ from sage.rings.integer_ring import ZZ
 from sage.graphs.graph import Graph
 
 from sage.misc.decorators import rename_keyword
+from sage.misc.superseded import deprecated_function_alias
+
 
 def tile_to_tikz(tile, position, color=None, id=None, sizex=1, sizey=1,
         rotate=None, label=True, label_shift=.2, bottom_left_edges=True,
@@ -1194,7 +1196,7 @@ class WangTileSet(object):
                 L.append(t)
         return WangTileSet(L)
 
-    def not_forbidden_tilings(self, width, height, radius=1, solver=None,
+    def tiling_with_surrounding(self, width, height, radius=1, solver=None,
             verbose=False):
         r"""
         Return the set of valid tiling of a rectangle of given width and
@@ -1214,7 +1216,7 @@ class WangTileSet(object):
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
             sage: tiles = [map(str, tile) for tile in tiles]
             sage: T = WangTileSet(tiles)
-            sage: S = T.not_forbidden_tilings(2,2)
+            sage: S = T.tiling_with_surrounding(2,2)
             sage: S
             [A wang tiling of a 2 x 2 rectangle,
              A wang tiling of a 2 x 2 rectangle,
@@ -1224,7 +1226,7 @@ class WangTileSet(object):
 
         ::
 
-            sage: S = T.not_forbidden_tilings(3,3)
+            sage: S = T.tiling_with_surrounding(3,3)
             sage: S
             [A wang tiling of a 3 x 3 rectangle,
              A wang tiling of a 3 x 3 rectangle,
@@ -1238,7 +1240,7 @@ class WangTileSet(object):
 
             sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB', 'EBEB']
             sage: T = WangTileSet(tiles)
-            sage: solutions = T.not_forbidden_tilings(1,2)
+            sage: solutions = T.tiling_with_surrounding(1,2)
             sage: [t.table() for t in solutions]
             [[[3, 3]], [[3, 4]], [[4, 3]], [[4, 4]]]
 
@@ -1246,9 +1248,9 @@ class WangTileSet(object):
 
             sage: tiles = [('02', '4', '02', '4'), ('32', '4', '02', '4')]
             sage: T = WangTileSet(tiles)
-            sage: [t.table() for t in T.not_forbidden_tilings(1,2)]
+            sage: [t.table() for t in T.tiling_with_surrounding(1,2)]
             [[[0, 0]]]
-            sage: [t.table() for t in T.not_forbidden_tilings(2,1)]
+            sage: [t.table() for t in T.tiling_with_surrounding(2,1)]
             [[[0], [0]]]
 
         """
@@ -1285,8 +1287,9 @@ class WangTileSet(object):
             L.extend(W.solutions_iterator())
         return L
 
+    not_forbidden_tilings = deprecated_function_alias(123456,tiling_with_surrounding)
     @cached_method
-    def not_forbidden_dominoes(self, i=2, radius=1, solver=None,
+    def dominoes_with_surrounding(self, i=2, radius=1, solver=None,
             ncpus=None, verbose=False):
         r"""
 
@@ -1306,22 +1309,22 @@ class WangTileSet(object):
             sage: from slabbe import WangTileSet
             sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB', 'EBEB']
             sage: T = WangTileSet(tiles)
-            sage: sorted(T.not_forbidden_dominoes(i=1))
+            sage: sorted(T.dominoes_with_surrounding(i=1))
             [(3, 3), (4, 4)]
-            sage: sorted(T.not_forbidden_dominoes(i=2))
+            sage: sorted(T.dominoes_with_surrounding(i=2))
             [(3, 3), (3, 4), (4, 3), (4, 4)]
-            sage: sorted(T.not_forbidden_dominoes(i=2, radius=2))
+            sage: sorted(T.dominoes_with_surrounding(i=2, radius=2))
             [(3, 3), (3, 4), (4, 3), (4, 4)]
-            sage: sorted(T.not_forbidden_dominoes(i=2, radius=(1,2)))
+            sage: sorted(T.dominoes_with_surrounding(i=2, radius=(1,2)))
             [(3, 3), (3, 4), (4, 3), (4, 4)]
 
         TESTS::
 
             sage: tiles = [('02', '4', '02', '4'), ('32', '4', '02', '4')]
             sage: T = WangTileSet(tiles)
-            sage: sorted(T.not_forbidden_dominoes(1))
+            sage: sorted(T.dominoes_with_surrounding(1))
             [(0, 0)]
-            sage: sorted(T.not_forbidden_dominoes(2))
+            sage: sorted(T.dominoes_with_surrounding(2))
             [(0, 0)]
 
         """
@@ -1354,6 +1357,7 @@ class WangTileSet(object):
                 L.add((i,j))
         return L
 
+    not_forbidden_dominoes = deprecated_function_alias(123456,dominoes_with_surrounding)
     def partition_of_tiles(self, i=2):
         r"""
         Return a partition of tiles that can go on the same horizontal or
@@ -1537,7 +1541,7 @@ class WangTileSet(object):
             raise ValueError("slope(={}) should be 0, -1, 1 when i=2".format(slope))
 
         edges = []
-        dominoes = self.not_forbidden_dominoes(i=i, radius=radius,
+        dominoes = self.dominoes_with_surrounding(i=i, radius=radius,
                                         solver=solver, ncpus=ncpus)
         if verbose:
             print('dominoes=', dominoes)
@@ -1646,7 +1650,7 @@ class WangTileSet(object):
             print("markers M =",M)
 
         # Compute the dominoes
-        dominoes = self.not_forbidden_dominoes(i=i, radius=radius, solver=solver, ncpus=ncpus)
+        dominoes = self.dominoes_with_surrounding(i=i, radius=radius, solver=solver, ncpus=ncpus)
         if verbose:
             print("dominoes =",dominoes)
 
@@ -1758,7 +1762,7 @@ class WangTileSet(object):
 
         """
         # Compute the dominoes
-        dominoes = self.not_forbidden_dominoes(i=1, radius=radius, solver=solver, ncpus=ncpus)
+        dominoes = self.dominoes_with_surrounding(i=1, radius=radius, solver=solver, ncpus=ncpus)
         if verbose:
             print("dominoes =",dominoes)
 
@@ -1818,7 +1822,7 @@ class WangTileSet(object):
 
         """
         # Compute the dominoes
-        dominoes = self.not_forbidden_dominoes(i=1, radius=radius, solver=solver, ncpus=ncpus)
+        dominoes = self.dominoes_with_surrounding(i=1, radius=radius, solver=solver, ncpus=ncpus)
         if verbose:
             print("dominoes =",dominoes)
 
@@ -1979,7 +1983,7 @@ class WangTileSet(object):
 
         # Prepare the seeds
         seeds = []
-        for (a,b) in self.not_forbidden_dominoes(i=2):
+        for (a,b) in self.dominoes_with_surrounding(i=2):
             (a0,a1,a2,a3) = self._tiles[a]
             (b0,b1,b2,b3) = self._tiles[b]
             assert a1 == b3
@@ -2150,7 +2154,7 @@ class WangTileSet(object):
             print("Computing the seeds of size {} ...".format(size))
         if size == 2:
             seeds = []
-            for (a,b) in self.not_forbidden_dominoes(i=2):
+            for (a,b) in self.dominoes_with_surrounding(i=2):
                 (a0,a1,a2,a3) = self._tiles[a]
                 (b0,b1,b2,b3) = self._tiles[b]
                 assert a1 == b3
