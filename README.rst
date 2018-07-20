@@ -24,6 +24,12 @@ __ http://www.slabbe.org/Sage/
 __ http://github.com/seblabbe/slabbe
 __ http://pypi.python.org/pypi/slabbe
 
+Version 0.4.2 (July 2?, 2018)
+--------------------------------
+
+Few fixes for the publication of the version 2 of "A self-similar aperiodic set
+of 19 Wang tiles".
+
 Version 0.4.1 (February 9, 2018)
 --------------------------------
 
