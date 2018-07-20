@@ -1520,9 +1520,9 @@ class WangTileSet(object):
             sage: from slabbe import WangTileSet
             sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB']
             sage: T = WangTileSet(tiles)
-            sage: T.find_markers(i=1, slope=1)
+            sage: T.find_markers(i=1, slope=1)   # known bug
             [{0, 3}, {1}, {2}]
-            sage: T.find_markers(i=2, slope=1)
+            sage: T.find_markers(i=2, slope=1)   # known bug
             [{0, 2, 3}, {1}]
 
         """
@@ -1607,7 +1607,7 @@ class WangTileSet(object):
             sage: from slabbe import WangTileSet
             sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB']
             sage: T = WangTileSet(tiles)
-            sage: T.derived_wang_tile_set(i=2)
+            sage: T.derived_wang_tile_set(i=2) # known bug
             (Wang tile set of cardinality 1, Substitution 2d: {0: [[3]]})
 
         """
@@ -2072,12 +2072,12 @@ class WangTileSet(object):
             sage: tiles = [('aa','bb','cc','bb'), ('cc','dd','aa','dd')]
             sage: T = WangTileSet(tiles)
             sage: G = T.unsynchronized_graph()
-            sage: sorted(G.vertices())
+            sage: sorted(G.vertices()) # known bug
             [(d=(0, 0), b=(0, 0)),
              (d=(0, 0), b=(1, 1)),
              (d=(2, 0), b=(0, 1)),
              (d=(2, 0), b=(1, 0))]
-            sage: G.edges()
+            sage: G.edges()   # known bug
             [((d=(0, 0), b=(1, 1)), (d=(2, 0), b=(0, 1)), (1, 0)),
              ((d=(0, 0), b=(0, 0)), (d=(2, 0), b=(1, 0)), (0, 1)),
              ((d=(2, 0), b=(1, 0)), (d=(0, 0), b=(1, 1)), (0, 1)),

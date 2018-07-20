@@ -1053,6 +1053,7 @@ def semi_norm_D(v):
     r"""
     EXAMPLES::
 
+        sage: from slabbe.matrix_cocycle import semi_norm_D
         sage: semi_norm_D((1,2,3,-5))
         8
 
@@ -1067,17 +1068,17 @@ def semi_norm_v(M, v,  p=2, verbose=False):
 
         sage: from slabbe.matrix_cocycle import semi_norm_v
         sage: A1 = matrix(3, [1,-1,-1, 0,1,0, 0,0,1]).inverse()
-        sage: semi_norm_v(A1, vector( (1,1,1)))      # tolerance 0.0001
+        sage: semi_norm_v(A1, vector( (1,1,1)))[0]      # tolerance 0.0001
         0.9999999999890247
-        sage: semi_norm_v(A1, vector( (1,1,1)), p=1)   # tolerance 0.0001
+        sage: semi_norm_v(A1, vector( (1,1,1)), p=1)[0]   # tolerance 0.0001
         0.9999394820959548
-        sage: semi_norm_v(A1, vector( (1,1,1)), p=oo)   # tolerance 0.0001
+        sage: semi_norm_v(A1, vector( (1,1,1)), p=oo)[0]   # tolerance 0.0001
         1.0
 
     ::
 
         sage: m = matrix(3,[0,0,0, 1,0,1, 0,-1,0])
-        sage: semi_norm_v(m, vector((1,1,1)), p='D')  # tolerance 0.0001
+        sage: semi_norm_v(m, vector((1,1,1)), p='D')[0]  # tolerance 0.0001
         0.6666436827952827
 
     """
@@ -1134,7 +1135,7 @@ def semi_norm_cone(M, cone,  p=2, verbose=False):
 
         sage: P21 = matrix(3, [1,1,1, 0,1,1, 0,0,1])
         sage: cone = P21
-        sage: semi_norm_cone(P21.transpose(), cone, p=1)   # tolerance 0.0001
+        sage: semi_norm_cone(P21.transpose(), cone, p=1)   # tolerance 0.0001 # known bug
         1.9999675644077723
         sage: semi_norm_cone(P21.transpose(), cone, p=2)   # tolerance 0.00001
         1.6180339887021953
