@@ -3483,7 +3483,7 @@ class WangTiling(object):
             G += points(PTSa, color=color, size=pointsize)
             # add a label on one of them
             px,py = PTSa[randrange(len(PTSa))]
-            G += text(str(a), (px,py), color=color)
+            G += text(str(a), (px,py), color='black')
 
         # color of points in legend
         for d,a in enumerate(alphabet):

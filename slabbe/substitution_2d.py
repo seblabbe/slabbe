@@ -552,21 +552,21 @@ class Substitution2d(object):
             sage: W = WangTileSet(codomain_tiles)
             sage: fn = lambda colors:''.join(map(str, colors))
             sage: domain_tiles = W.desubstitute(s, fn)
-            sage: output = s.wang_tikz(domain_tiles, codomain_tiles, rotate=(90,0,90,0))
-            sage: view(output)    # not tested
+            sage: tikz = s.wang_tikz(domain_tiles, codomain_tiles, rotate=(90,0,90,0))
+            sage: tikz.pdf(view=False)      # long time
 
         Applying a transformation matrix::
 
             sage: M = matrix(2, [1,1,0,1])
-            sage: output = s.wang_tikz(domain_tiles, codomain_tiles, 
+            sage: tikz = s.wang_tikz(domain_tiles, codomain_tiles, 
             ....:                    transformation_matrix=M)
-            sage: view(output)    # not tested
+            sage: tikz.pdf(view=False)      # long time
 
         Down direction::
 
-            sage: output = s.wang_tikz(domain_tiles, codomain_tiles,
+            sage: tikz = s.wang_tikz(domain_tiles, codomain_tiles,
             ....:                      direction='down')
-            sage: view(output)    # not tested
+            sage: tikz.pdf(view=False)      # long time
         """
         from slabbe.wang_tiles import tile_to_tikz, WangTileSet, WangTiling
         if isinstance(codomain_tiles, WangTileSet):
@@ -612,29 +612,47 @@ class Substitution2d(object):
                     rotate=rotate, label_shift=label_shift,
                     bottom_left_edges=bottom_left_edges,
                     top_right_edges=top_right_edges)
-            lines.extend(new_lines)
+            new_lines.insert(0, r'\begin{tikzpicture}')
+            new_lines.append(r'\end{tikzpicture}')
+            new_lines = '\n'.join(new_lines)
+            lines.append(r'\node (A) at (0,0) {{{}}};'.format(new_lines))
 
-            if direction == 'right':
-                lines.append(r'\node at (1.5,.5) {$\mapsto$};')
-            elif direction == 'down':
-                lines.append(r'\node[rotate=-90] at (.5,-.5) {$\mapsto$};')
+            #if direction == 'right':
+            #    lines.append(r'\node at (1.5,.5) {$\mapsto$};')
+            #elif direction == 'down':
+            #    lines.append(r'\node[rotate=-90] at (.5,-.5) {$\mapsto$};')
 
             image_a = self._d[a]
             tiling = WangTiling(image_a, codomain_tiles, codomain_color)
-            tikz = tiling.tikz(color=codomain_color, font=font,
+            tiling_tikz = tiling.tikz(color=codomain_color, font=font,
                     rotate=rotate, label_shift=label_shift, scale=scale,
                     bottom_left_edges=bottom_left_edges,
                     top_right_edges=top_right_edges, 
                     size=size, transformation_matrix=transformation_matrix)
 
+            if transformation_matrix is None:
+                size_image_x = len(image_a)
+                size_image_y = len(image_a[0])
+            else:
+                from sage.modules.free_module_element import vector
+                corners = [(0,0), (len(image_a), 0), 
+                        (0, len(image_a[0])),
+                        (len(image_a), len(image_a[0]))]
+                M_corners = [transformation_matrix * vector(c) for c in corners]
+                M_corners_x, M_corners_y = zip(*M_corners)
+                size_image_x = max(M_corners_x) - min(M_corners_x)
+                size_image_y = max(M_corners_y) - min(M_corners_y)
+
             if direction == 'right':
-                xshift = 2.0 + .5 * len(image_a)
-                yshift = .5
+                xshift = 1.0 + .5 * size_image_x
+                yshift = 0
             elif direction == 'down':
-                xshift = .5
-                yshift = -1.0 - .5 * len(image_a[0])
-            lines.append(r'\node at ({},{}) {{{}}};'.format(xshift, yshift,
-                                             tikz.tikz_picture_code()))
+                xshift = 0
+                yshift = -1.0 - .5 * size_image_y
+            lines.append(r'\node (B) at ({},{}) {{{}}};'.format(xshift, yshift,
+                                             tiling_tikz.tikz_picture_code()))
+
+            lines.append(r'\draw[-to,very thick] (A) edge (B);')
 
             lines.append(r'\end{tikzpicture}')
             lines.append(r'};')
@@ -650,7 +668,7 @@ class Substitution2d(object):
         lines.append(r'\end{tikzpicture}')
 
         from slabbe import TikzPicture
-        return TikzPicture('\n'.join(lines))
+        return TikzPicture('\n'.join(lines), usetikzlibrary=['positioning'])
 
     def wang_tiles_codomain_tikz(self, codomain_tiles, color=None,
             size=1, scale=1, font=r'\normalsize', rotate=None,
@@ -849,11 +867,11 @@ class Substitution2d(object):
         if direction == 'horizontal':
             def children(node):
                 T = self.call_on_row(node)
-                return [tuple(set(row)) for row in zip(*T)]
+                return [tuple(sorted(set(row))) for row in zip(*T)]
         elif direction == 'vertical':
             def children(node):
                 T = self.call_on_column(node)
-                return [tuple(set(column)) for column in T]
+                return [tuple(sorted(set(column))) for column in T]
         else:
             raise ValueError("direction (={}) must be 'vertical' or"
                     " 'horizontal'".format(direction))
@@ -868,6 +886,22 @@ class Substitution2d(object):
                 for v in s.vertices():
                     result.append(v)
         return result
+
+    def prolongable_origins(self):
+        seeds = self.list_2x2_factors(F=None)
+        seeds = [matrix.column(c[::-1] for c in columns) for columns in seeds]
+        for m in seeds: m.set_immutable()
+        def children(m):
+            b,d,a,c = m.list()
+            A = self([[a]])[-1][-1] # bottom left
+            B = self([[b]])[-1][0] # top left
+            C = self([[c]])[0][-1] # bottom right
+            D = self([[d]])[0][0] # top right
+            M = matrix.column(((B,A),(D,C)))
+            M.set_immutable()
+            return [M]
+        R = RecursivelyEnumeratedSet(seeds, children)
+        return R.to_digraph(multiedges=False)
 
     _matrix_ = incidence_matrix
 
