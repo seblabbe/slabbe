@@ -737,7 +737,7 @@ class WangTileSet(object):
     @rename_keyword(fontsize='font')
     def create_macro_file(self, filename='macro.tex', command_name='Tile',
             color=None, size=1, scale=1, font=r'\normalsize',
-            rotate=None, label_shift=.2):
+            rotate=None, label_shift=.2, id=True):
         r"""
         INPUT:
 
@@ -753,6 +753,7 @@ class WangTileSet(object):
           for left and right labels taking more than one character.
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
+        - ``id`` -- boolean (default: ``True``), presence of the tile id
 
         EXAMPLES::
 
@@ -777,8 +778,9 @@ class WangTileSet(object):
             lines.append(r'\begin{tikzpicture}')
             lines.append('[scale={}]'.format(scale))
             lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
+            this_id = i if id else None
             new_lines = tile_to_tikz(tile, position=(0,0), color=color,
-                    id=i, sizex=size, sizey=size, rotate=rotate,
+                    id=this_id, sizex=size, sizey=size, rotate=rotate,
                     label_shift=label_shift, top_right_edges=True)
             lines.extend(new_lines)
             lines.append(r'\end{tikzpicture}')

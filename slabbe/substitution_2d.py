@@ -120,6 +120,7 @@ class Substitution2d(object):
 
         """
         from sage.matrix.constructor import matrix
+        from sage.modules.free_module_element import vector
         from sage.misc.latex import latex
         from sage.misc.latex import LatexExpr
         from sage.calculus.var import var
@@ -128,6 +129,9 @@ class Substitution2d(object):
         lines.append(r'\begin{{array}}{{{}}}'.format(align*ncolumns))
         for i,(key,table) in enumerate(self._d.items()):
             M = matrix.column([col[::-1] for col in table])
+            if M.nrows() == 1:
+                # do not latex array for horizontal vectors
+                M = vector(M)
             if variableA:
                 key = var('{}_{}'.format(variableA, key))
             if variableB:
@@ -509,7 +513,7 @@ class Substitution2d(object):
             codomain_color=None, size=1, scale=1, font=r'\normalsize',
             rotate=None, label_shift=.2, transformation_matrix=None,
             bottom_left_edges=True, top_right_edges=True, 
-            ncolumns=4, direction='right'):
+            ncolumns=4, direction='right', extra_space=1):
         r"""
         Return the tikz code showing what the substitution A->B* does on
         Wang tiles.
@@ -536,6 +540,8 @@ class Substitution2d(object):
         - ``bottom_left_edges`` -- bool (default: ``True``) 
         - ``top_right_edges`` -- bool (default: ``True``) 
         - ``direction`` -- string (default: ``'right'``) or ``'down'``
+        - ``extra_space`` -- number (default: ``1``), space between the
+          tile and its image
 
         OUTPUT:
 
@@ -617,11 +623,6 @@ class Substitution2d(object):
             new_lines = '\n'.join(new_lines)
             lines.append(r'\node (A) at (0,0) {{{}}};'.format(new_lines))
 
-            #if direction == 'right':
-            #    lines.append(r'\node at (1.5,.5) {$\mapsto$};')
-            #elif direction == 'down':
-            #    lines.append(r'\node[rotate=-90] at (.5,-.5) {$\mapsto$};')
-
             image_a = self._d[a]
             tiling = WangTiling(image_a, codomain_tiles, codomain_color)
             tiling_tikz = tiling.tikz(color=codomain_color, font=font,
@@ -644,11 +645,11 @@ class Substitution2d(object):
                 size_image_y = max(M_corners_y) - min(M_corners_y)
 
             if direction == 'right':
-                xshift = 1.0 + .5 * size_image_x
+                xshift = extra_space + .5 * size_image_x
                 yshift = 0
             elif direction == 'down':
                 xshift = 0
-                yshift = -1.0 - .5 * size_image_y
+                yshift = -extra_space - .5 * size_image_y
             lines.append(r'\node (B) at ({},{}) {{{}}};'.format(xshift, yshift,
                                              tiling_tikz.tikz_picture_code()))
 
@@ -888,6 +889,8 @@ class Substitution2d(object):
         return result
 
     def prolongable_origins(self):
+        from sage.matrix.constructor import matrix
+        from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
         seeds = self.list_2x2_factors(F=None)
         seeds = [matrix.column(c[::-1] for c in columns) for columns in seeds]
         for m in seeds: m.set_immutable()
