@@ -3287,8 +3287,58 @@ class WangTiling(object):
         return self._table
 
     def transpose(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTiling
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+            sage: tiling = WangTiling(table, tiles)
+            sage: M = matrix(2, (1,1,0,1))
+            sage: tiling_T = tiling.transpose()
+            sage: tiling_T.table()
+            [[0, 1, 0], [1, 0, 1], [0, 1, 0], [1, 0, 1]]
+
+        """
         table = [[column[j] for column in self._table]
                             for j in range(self.height())]
+        return WangTiling(table, self._tiles, self._color)
+
+    def apply_matrix_transformation(self, M):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTiling
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+            sage: tiling = WangTiling(table, tiles)
+            sage: M = matrix(2, (1,1,0,1))
+            sage: tiling_M = tiling.apply_matrix_transformation(M)
+            sage: tiling_M.table()
+            [[0, None, None, None],
+             [1, 1, None, None],
+             [0, 0, 0, None],
+             [None, 1, 1, 1],
+             [None, None, 0, 0],
+             [None, None, None, 1]]
+
+        """
+        from sage.modules.free_module_element import vector
+        D = defaultdict(lambda:None)
+        for i,column in enumerate(self._table):
+            for j,value in enumerate(column):
+                new_pos = tuple(M*vector((i, j)))
+                D[new_pos] = value
+        D_keys = D.keys()
+        X,Y = zip(*D_keys)
+        min_X = min(X)
+        max_X = max(X)
+        min_Y = min(Y)
+        max_Y = max(Y)
+        table = []
+        for x in range(min_X, max_X+1):
+            column = [D[(x,y)] for y in range(min_Y, max_Y+1)]
+            table.append(column)
         return WangTiling(table, self._tiles, self._color)
 
     def horizontal_words_list(self, side=3):
