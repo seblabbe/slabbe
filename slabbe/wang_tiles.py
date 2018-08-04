@@ -3730,6 +3730,37 @@ class WangTiling(object):
         s = sum(C.values())
         return {k:QQ((v,s)) for k,v in C.items()}
 
+    def tile_positions(self, M):
+        r"""
+        Return the list of positions where tile of M appear.
+
+        INPUT:
+
+        - ``M`` -- subset of tile indices
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTiling
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+            sage: tiling = WangTiling(table, tiles)
+            sage: tiling.tile_positions([0])
+            [(0, 0), (0, 2), (1, 1), (1, 3), (2, 0), (2, 2)]
+
+        TESTS::
+
+            sage: tiling.tile_positions([])
+            []
+
+        """
+        set_M = set(M)
+        L = []
+        for i in range(self.width()):
+            for j in range(self.height()):
+                if self._table[i][j] in set_M:
+                    L.append((i,j))
+        return L
+
     @rename_keyword(fontsize='font')
     def tikz(self, color=None, font=r'\normalsize', rotate=None,
             id=True, label=True, label_shift=.2, scale=1, size=1,
