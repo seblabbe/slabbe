@@ -1198,7 +1198,7 @@ class WangTileSet(object):
                 L.append(t)
         return WangTileSet(L)
 
-    def tiling_with_surrounding(self, width, height, radius=1, solver=None,
+    def tilings_with_surrounding(self, width, height, radius=1, solver=None,
             verbose=False):
         r"""
         Return the set of valid tiling of a rectangle of given width and
@@ -1218,7 +1218,7 @@ class WangTileSet(object):
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
             sage: tiles = [map(str, tile) for tile in tiles]
             sage: T = WangTileSet(tiles)
-            sage: S = T.tiling_with_surrounding(2,2)
+            sage: S = T.tilings_with_surrounding(2,2)
             sage: S
             [A wang tiling of a 2 x 2 rectangle,
              A wang tiling of a 2 x 2 rectangle,
@@ -1228,7 +1228,7 @@ class WangTileSet(object):
 
         ::
 
-            sage: S = T.tiling_with_surrounding(3,3)
+            sage: S = T.tilings_with_surrounding(3,3)
             sage: S
             [A wang tiling of a 3 x 3 rectangle,
              A wang tiling of a 3 x 3 rectangle,
@@ -1242,7 +1242,7 @@ class WangTileSet(object):
 
             sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB', 'EBEB']
             sage: T = WangTileSet(tiles)
-            sage: solutions = T.tiling_with_surrounding(1,2)
+            sage: solutions = T.tilings_with_surrounding(1,2)
             sage: [t.table() for t in solutions]
             [[[3, 3]], [[3, 4]], [[4, 3]], [[4, 4]]]
 
@@ -1250,9 +1250,9 @@ class WangTileSet(object):
 
             sage: tiles = [('02', '4', '02', '4'), ('32', '4', '02', '4')]
             sage: T = WangTileSet(tiles)
-            sage: [t.table() for t in T.tiling_with_surrounding(1,2)]
+            sage: [t.table() for t in T.tilings_with_surrounding(1,2)]
             [[[0, 0]]]
-            sage: [t.table() for t in T.tiling_with_surrounding(2,1)]
+            sage: [t.table() for t in T.tilings_with_surrounding(2,1)]
             [[[0], [0]]]
 
         """
@@ -1289,7 +1289,8 @@ class WangTileSet(object):
             L.extend(W.solutions_iterator())
         return L
 
-    not_forbidden_tilings = deprecated_function_alias(123456,tiling_with_surrounding)
+    not_forbidden_tilings = deprecated_function_alias(123456,tilings_with_surrounding)
+    tiling_with_surrounding = deprecated_function_alias(123456,tilings_with_surrounding)
     @cached_method
     def dominoes_with_surrounding(self, i=2, radius=1, solver=None,
             ncpus=None, verbose=False):
@@ -1360,46 +1361,6 @@ class WangTileSet(object):
         return L
 
     not_forbidden_dominoes = deprecated_function_alias(123456,dominoes_with_surrounding)
-    def partition_of_tiles(self, i=2):
-        r"""
-        Return a partition of tiles that can go on the same horizontal or
-        vertical line.
-
-        The result means that tiles in the same subset can be adjacent on
-        an edge `e_i`.
-
-        OLD METHOD
-
-        INPUT:
-
-        - ``i`` -- integer (default:``2``), 1 or 2. 
-
-        OUTPUT:
-
-            list of sets
-        
-        EXAMPLES::
-
-            sage: from slabbe import WangTileSet
-            sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB']
-            sage: T = WangTileSet(tiles)
-            sage: T.partition_of_tiles(i=1)
-            [{0, 3}, {1}, {2}]
-            sage: T.partition_of_tiles(i=2)
-            [{0, 2, 3}, {1}]
-
-        """
-        edges = []
-        for k,tile in enumerate(self):
-            right, top, left, bottom = tile
-            if i == 1:
-                edges.append((bottom,top,k))
-            elif i == 2:
-                edges.append((right,left,k))
-        G = Graph(edges, format='list_of_edges', loops=True, multiedges=True)
-        subgraphs = G.connected_components_subgraphs()
-        return sorted(set(k for (u,v,k) in subgraph.edges()) for subgraph in subgraphs)
-
     def is_forbidden_product(self, A, B, i=2, radius=1, solver=None, ncpus=None):
         r"""
         Return whether A \odot^i B is forbidden using a given radius around
@@ -1449,56 +1410,7 @@ class WangTileSet(object):
                 return False
         return True
 
-    def recognizable_markers(self, i=2, radius=1, solver=None, ncpus=None,
-            verbose=False):
-        r"""
-        OLD METHOD
-
-        INPUT:
-
-        - ``i`` -- integer, 1 or 2
-        - ``radius`` -- integer (default:``1``)
-        - ``solver`` -- string (default:``None``)
-        - ``ncpus`` -- integer (default:``None``)
-        - ``verbose`` -- boolean (default:``False``)
-        
-        EXAMPLES::
-
-            sage: from slabbe import WangTileSet
-            sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB']
-            sage: T = WangTileSet(tiles)
-            sage: T.recognizable_markers(i=1)
-            [{1}, {2}, {1, 2}]
-            sage: T.recognizable_markers(i=2)
-            [{1}]
-
-        """
-        from sage.combinat.subset import Subsets
-
-        parts = self.partition_of_tiles(i)
-        if verbose:
-            print("parts=",parts)
-        parts_indices = set(range(len(parts)))
-
-        result = []
-
-        for indices in Subsets(parts_indices):
-            if len(indices) == 0:
-                continue
-            M = set().union(*[parts[j] for j in indices])
-            if verbose:
-                print("Trying M =",M)
-
-            # Check that M \odot^i M is forbidden
-            if self.is_forbidden_product(M, M, i=i, radius=radius,
-                    solver=solver, ncpus=ncpus):
-                if verbose:
-                    print("M odot^i M is forbidden, so we keep this set")
-                result.append(M)
-
-        return result
-
-    def find_markers(self, i=2, slope=None, radius=1, solver=None,
+    def find_markers_with_slope(self, i=2, slope=None, radius=1, solver=None,
             ncpus=None, verbose=False):
         r"""
         Return a list of lists of marker tiles.
@@ -1522,9 +1434,9 @@ class WangTileSet(object):
             sage: from slabbe import WangTileSet
             sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB']
             sage: T = WangTileSet(tiles)
-            sage: T.find_markers(i=1, slope=1)   # known bug
+            sage: T.find_markers_with_slope(i=1, slope=1)   # known bug
             [{0, 3}, {1}, {2}]
-            sage: T.find_markers(i=2, slope=1)   # known bug
+            sage: T.find_markers_with_slope(i=2, slope=1)   # known bug
             [{0, 2, 3}, {1}]
 
         """
@@ -1581,18 +1493,82 @@ class WangTileSet(object):
                           'radius {}'.format(candidate, I, radius))
         return ans
 
-    def derived_wang_tile_set(self, M=None, slope=None, i=2, side='right',
-            radius=1, solver=None, ncpus=None, function=str.__add__,
-            initial='', verbose=False):
+    def find_markers(self, i=2, radius=1, solver=None, ncpus=None,
+            verbose=False):
         r"""
-        Return the derived Wang tile set obtained from removing tiles from
-        ``M``.
+        Return a list of lists of marker tiles.
+
+        INPUT:
+
+        - ``i`` -- integer (default:``2``), 1 or 2. 
+        - ``radius`` - integer or 2-tuple (default: ``1``), if 2-tuple is
+          given, then it is interpreted as ``(xradius, yradius)``
+        - ``solver`` -- string (default:``None``)
+        - ``ncpus`` -- integer (default:``None``)
+        - ``verbose`` -- boolean (default:``False``)
+
+        OUTPUT:
+
+            list of lists
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(2,4,2,1), (2,2,2,0), (1,1,3,1), (1,2,3,2), (3,1,3,3),
+            ....: (0,1,3,1), (0,0,0,1), (3,1,0,2), (0,2,1,2), (1,2,1,4), (3,3,1,2)]
+            sage: tiles = [map(str,t) for t in tiles]
+            sage: T = WangTileSet(tiles)
+            sage: T.find_markers(i=1)
+            []
+            sage: T.find_markers(i=2)
+            [[0, 1]]
+
+        ::
+
+            sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB']
+            sage: T = WangTileSet(tiles)
+            sage: T.find_markers(i=1)
+            [[0], [1], [2]]
+            sage: T.find_markers(i=2)
+            [[0], [1], [2]]
+
+        """
+        from sage.sets.disjoint_set import DisjointSet
+
+        if not i in [1, 2]:
+            raise ValueError("i(={}) should be 1 or 2".format(i))
+
+        dominoes_i = self.dominoes_with_surrounding(i=i, radius=radius,
+                                        solver=solver, ncpus=ncpus)
+        dominoes_j = self.dominoes_with_surrounding(i=3-i, radius=radius,
+                                        solver=solver, ncpus=ncpus)
+
+        union_find = DisjointSet(len(self))
+        for A,B in dominoes_j:
+            union_find.union(A,B)
+
+        ans = []
+        for subset in union_find:
+            I = dominoes_i.intersection(itertools.product(subset, repeat=2))
+            if len(I) == 0:
+                ans.append(subset)
+            else:
+                if verbose:
+                    print('rejecting {} since {} allows surrounding of '
+                          'radius {}'.format(subset, I, radius))
+        return ans
+
+    def find_substitution(self, M=None, i=2, side='right', radius=1,
+            solver=None, ncpus=None, function=str.__add__, initial='',
+            verbose=False):
+        r"""
+        Return the derived Wang tile set obtained from desubstitution using
+        a given set of marker tiles.
 
         INPUT:
 
         - ``M`` -- markers, set of tile indices or ``None``, if ``None``,
           it is guessed.
-        - ``slope`` -- integer or ``Infinity`` or ``None``
         - ``i`` -- integer 1 or 2
         - ``side`` -- ``'right'`` or ``'left'``
         - ``radius`` - integer or 2-tuple (default: ``1``), if 2-tuple is
@@ -1607,42 +1583,31 @@ class WangTileSet(object):
         EXAMPLES::
 
             sage: from slabbe import WangTileSet
-            sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB']
+            sage: tiles = [(2,4,2,1), (2,2,2,0), (1,1,3,1), (1,2,3,2), (3,1,3,3),
+            ....: (0,1,3,1), (0,0,0,1), (3,1,0,2), (0,2,1,2), (1,2,1,4), (3,3,1,2)]
+            sage: tiles = [map(str,t) for t in tiles]
             sage: T = WangTileSet(tiles)
-            sage: T.derived_wang_tile_set(i=2) # known bug
-            (Wang tile set of cardinality 1, Substitution 2d: {0: [[3]]})
+            sage: T.find_substitution(i=2)
+            (Wang tile set of cardinality 12,
+             Substitution 2d: {0: [[5]], 1: [[8]], 2: [[2]], 3: [[9]], 
+                4: [[3]], 5: [[7]], 6: [[4]], 7: [[10]], 8: [[6, 1]], 
+                9: [[5, 0]], 10: [[7, 0]], 11: [[4, 0]]}, 
+             {0, 1})
 
         """
         # find markers
         if M is None:
-            if slope is None:
-                # try many slopes
-                from sage.rings.infinity import Infinity
-                if i == 1:
-                    slopes = [Infinity, 1, -1]
-                elif i == 2:
-                    slopes = [0, 1, -1]
-                for slope in slopes:
-                    markers = self.find_markers(i=i, slope=slope, radius=radius,
-                            solver=solver, ncpus=ncpus, verbose=False)
-                    if markers:
-                        break
-                else:
-                    raise ValueError("no set of markers found "
-                            "with slope in {}".format(slopes))
-            else:
-                markers = self.find_markers(i=i, slope=slope, radius=radius,
-                            solver=solver, ncpus=ncpus, verbose=False)
+            markers = self.find_markers(i=i, radius=radius,
+                        solver=solver, ncpus=ncpus, verbose=False)
             if len(markers) == 0:
-                raise ValueError("no set of markers found "
-                        "with slope={}".format(slope))
+                raise ValueError("no set of markers in direction e_{} found "
+                        "with radius={}".format(i, radius))
             elif len(markers) > 1:
                 raise ValueError("more than one set of markers found {}"
-                " of slope {}: you need to choose one of "
-                "them and provide it as input".format(markers, slope))
+                " : you need to choose one of "
+                "them and provide it as input".format(markers))
             else:
                 M = markers[0]
-                print("Using markers = {} found with slope {}".format(M, slope))
 
         # Make sure M is of type set
         if not isinstance(M, set):
@@ -1657,38 +1622,24 @@ class WangTileSet(object):
             print("dominoes =",dominoes)
 
         # Print a warning when there are some valid M x M dominoes
-        RR = [(a,b) for (a,b) in dominoes if a in M and b in M]
-        if RR:
+        MM = [(a,b) for (a,b) in dominoes if a in M and b in M]
+        if MM:
             print("Warning: it is expected as hypothesis that M odot^i M is "
                   "forbidden but the following dominoes admit a radius "
-                  "{} neighborhood: {}".format(radius, RR))
+                  "{} neighborhood: {}. The algorihm works if M are "
+                  " a set of markers anyway.".format(radius, MM))
 
         # Compute K and dominoes ending in M
-        dominoes_without_R = [(a,b) for (a,b) in dominoes if a not in M and b not in M]
+        dominoes_without_M = [(a,b) for (a,b) in dominoes if a not in M and b not in M]
         if side == 'right':
-            K = [a for (a,b) in dominoes_without_R]
-            dominoes_R = [(a,b) for (a,b) in dominoes if b in M]
+            K = [a for (a,b) in dominoes_without_M]
+            dominoes_M = [(a,b) for (a,b) in dominoes if b in M]
         elif side == 'left':
-            K = [b for (a,b) in dominoes_without_R]
-            dominoes_R = [(a,b) for (a,b) in dominoes if a in M]
+            K = [b for (a,b) in dominoes_without_M]
+            dominoes_M = [(a,b) for (a,b) in dominoes if a in M]
         else:
             raise ValueError("side(={}) must be 'left' or 'right'".format(side))
         K = sorted(set(K))
-
-        # compute L
-        U = set(range(len(self)))
-        L = sorted(U.difference(M).difference(K))
-        if verbose:
-            print("L =",L)
-            print("K =",K)
-
-        ## by definition : L \odot L and L\odot K is forbidden
-        ## Check that L \odot^i L is forbidden
-        #if not self.is_forbidden_product(L, L, i=i, radius=radius, solver=solver):
-        #    raise ValueError("PROBLEM!! L odot^i L should be forbidden")
-        ## Check that L \odot^i K is forbidden
-        #if not self.is_forbidden_product(L, K, i=i, radius=radius, solver=solver):
-        #    raise ValueError("PROBLEM!! L odot^i K should be forbidden")
 
         # We keep tiles in K
         tiles_and_structure = []
@@ -1696,7 +1647,7 @@ class WangTileSet(object):
             tiles_and_structure.append((self[k], [k]))
 
         # We add fusion of dominoes starting/ending with a tile in M
-        for (a,b) in dominoes_R:
+        for (a,b) in dominoes_M:
             t = fusion(self[a],self[b],i,function=function,initial=initial)
             tiles_and_structure.append((t, [a,b]))
 
@@ -1714,9 +1665,13 @@ class WangTileSet(object):
 
         return WangTileSet(new_tiles), s, M
 
-    def shift_top(self, radius=0, solver=None, ncpus=None,
+    def shear(self, radius=0, solver=None, ncpus=None,
             function=str.__add__, verbose=False):
         r"""
+        Shears the Wang Tile set by the ``matrix(2,(1,-1,0,1))``.
+
+        It is currently not implemented for other matrices.
+
         INPUT:
 
         - ``radius`` - integer or 2-tuple (default: ``0``), if 2-tuple is
@@ -1736,19 +1691,19 @@ class WangTileSet(object):
             sage: from slabbe import WangTileSet
             sage: tiles = [('aa','bb','cc','bb'), ('cc','dd','aa','dd')]
             sage: T = WangTileSet(tiles)
-            sage: U,s = T.shift_top()
+            sage: U,s = T.shear()
             sage: s
             Substitution 2d: {0: [[0]], 1: [[1]]}
             sage: U.tiles()
             [('aadd', 'dd', 'ccbb', 'bb'), ('ccbb', 'bb', 'aadd', 'dd')]
-            sage: T.shift_top()[0].shift_top()[0].tiles()
+            sage: T.shear()[0].shear()[0].tiles()
             [('aaddbb', 'bb', 'ccbbdd', 'bb'), ('ccbbdd', 'dd', 'aaddbb', 'dd')]
 
         ::
 
             sage: tiles = [('aa','bb','cc','bb'), ('aa','dd','cc','bb'), ('cc','dd','aa','dd')]
             sage: T = WangTileSet(tiles)
-            sage: U,s = T.shift_top()
+            sage: U,s = T.shear()
             sage: s
             Substitution 2d: {0: [[0]], 1: [[1]], 2: [[2]], 3: [[2]]}
             sage: U.tiles()
@@ -1756,7 +1711,7 @@ class WangTileSet(object):
              ('aadd', 'dd', 'ccdd', 'bb'),
              ('ccdd', 'dd', 'aadd', 'dd'),
              ('ccbb', 'bb', 'aadd', 'dd')]
-            sage: U,s = T.shift_top(radius=1)
+            sage: U,s = T.shear(radius=1)
             sage: s
             Substitution 2d: {0: [[0]], 1: [[2]]}
             sage: U.tiles()
@@ -1786,63 +1741,6 @@ class WangTileSet(object):
                     tiles.append(tile)
         from slabbe.substitution_2d import Substitution2d
         return WangTileSet(tiles), Substitution2d.from_permutation(sub)
-
-    def shift_top_old(self, radius=0, solver=None, ncpus=None,
-            function=str.__add__, verbose=False):
-        r"""
-        INPUT:
-
-        - ``radius`` - integer or 2-tuple (default: ``0``), if 2-tuple is
-          given, then it is interpreted as ``(xradius, yradius)``
-        - ``solver`` -- string
-        - ``ncpus`` -- integer (default:``None``)
-        - ``function`` -- function (default:``str.__add__``), monoid
-          operation
-        - ``verbose`` -- boolean (default:``False``)
-
-        EXAMPLES::
-
-            sage: from slabbe import WangTileSet
-            sage: tiles = [('aa','bb','cc','bb'), ('cc','dd','aa','dd')]
-            sage: T = WangTileSet(tiles)
-            sage: T.shift_top_old().tiles()
-            [('aa', 'bd', 'cc', 'bb'), ('cc', 'db', 'aa', 'dd')]
-            sage: T.shift_top_old().shift_top_old().tiles()
-            [('aa', 'dd', 'cc', 'bb'), ('cc', 'bb', 'aa', 'dd')]
-
-        ::
-
-            sage: tiles = [('aa','bb','cc','bb'), ('aa','dd','cc','bb'), ('cc','dd','aa','dd')]
-            sage: T = WangTileSet(tiles)
-            sage: T.shift_top_old().tiles()
-            [('aa', 'bd', 'cc', 'bb'),
-             ('aa', 'dd', 'cc', 'bb'),
-             ('cc', 'db', 'aa', 'dd'),
-             ('cc', 'dd', 'aa', 'dd')]
-            sage: T.shift_top_old(radius=1).tiles()
-            [('aa', 'bd', 'cc', 'bb'), ('cc', 'db', 'aa', 'dd')]
-
-        """
-        # Compute the dominoes
-        dominoes = self.dominoes_with_surrounding(i=1, radius=radius, solver=solver, ncpus=ncpus)
-        if verbose:
-            print("dominoes =",dominoes)
-
-        G = defaultdict(set)
-        for (u,v) in dominoes:
-            U = self[u]
-            (e,n,w,s) = self[v]
-            G[u].add(n[0])
-        if verbose:
-            print("The map Tile -> North[0] is {}".format(dict(G)))
-
-        tiles = []
-        for i,(e,n,w,s) in enumerate(self):
-            for a in G[i]:
-                tile = (e,function(n[1:],a),w,s)
-                if tile not in tiles:
-                    tiles.append(tile)
-        return WangTileSet(tiles)
 
     def is_equivalent(self, other, certificate=False, verbose=False):
         r"""
