@@ -3341,6 +3341,53 @@ class WangTiling(object):
             table.append(column)
         return WangTiling(table, self._tiles, self._color)
 
+    def slide(self, shift, x0=None, y0=1):
+        r"""
+        INPUT:
+
+        - ``shift`` -- integer
+        - ``x0`` -- integer or None, every tile at (x,y) such that x>=x0
+          will be shifted by (0,shift)
+        - ``y0`` -- integer or None, every tile at (x,y) such that y>=y0
+          will be shifted by (shift,0)
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTiling
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+            sage: tiling = WangTiling(table, tiles)
+            sage: tiling.slide(0).table()
+            [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+            sage: tiling.slide(3).table()
+            [[0, None, None, None],
+             [1, None, None, None],
+             [0, None, None, None],
+             [None, 1, 0, 1],
+             [None, 0, 1, 0],
+             [None, 1, 0, 1]]
+            sage: tiling.slide(2, x0=2).table()
+            [[0, 1, 0, 1, None, None], [1, 0, 1, 0, None, None], [None, None, 0, 1, 0, 1]]
+            sage: tiling.slide(-2, x0=2).table()
+            [[None, None, 0, 1, 0, 1], [None, None, 1, 0, 1, 0], [0, 1, 0, 1, None, None]]
+
+        """
+        if x0 is None:
+            bottom = [col[:y0] for col in self._table]
+            top = [col[y0:] for col in self._table]
+            top_height = self.height()-y0
+            if shift >= 0:
+                top = [[None]*top_height]*shift + top
+                bottom += [[None]*y0]*shift
+            else:
+                top += [[None]*top_height]*(-shift)
+                bottom = [[None]*y0]*(-shift) + bottom
+            table = [b+t for (b,t) in zip(bottom, top)]
+            return WangTiling(table, self._tiles, self._color)
+        else:
+            return self.transpose().slide(shift, x0=None, y0=x0).transpose()
+
+
     def horizontal_words_list(self, side=3):
         r"""
         Return a list of horizontal words of colors appearing on a given
