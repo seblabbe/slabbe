@@ -3687,7 +3687,8 @@ class WangTiling(object):
     def tikz(self, color=None, font=r'\normalsize', rotate=None,
             id=True, label=True, label_shift=.2, scale=1, size=1,
             bottom_left_edges=True, top_right_edges=True,
-            transformation_matrix=None, draw_H=None, draw_V=None, extra=''):
+            transformation_matrix=None, draw_H=None, draw_V=None,
+            extra_before='', extra_after=''):
         r"""
         Return a tikzpicture showing one solution.
 
@@ -3720,14 +3721,10 @@ class WangTiling(object):
           straight lines, more precisely by ``r'\draw {{}} -- ++ (0,1);'``.
           Dict values must be strings ``s`` such that ``s.format((x,y))``
           works.
-        - ``extra`` -- string (default: ``''``) extra lines of tikz code to
-          add at the end
-
-        .. TODO::
-
-            - Fix the top and right lines when using the transformation
-              matrix.
-            - Fix the double drawn edges
+        - ``extra_before`` -- string (default: ``''``) extra lines of tikz
+          code to add at the start
+        - ``extra_after`` -- string (default: ``''``) extra lines of tikz
+          code to add at the end
 
         EXAMPLES::
 
@@ -3814,6 +3811,8 @@ class WangTiling(object):
         lines = []
         lines.append(r'\begin{{tikzpicture}}[scale={}]'.format(scale))
         lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
+        if extra_before:
+            lines.append(extra_before)
         W = self.width()
         H = self.height()
         ## missing lines on the top
@@ -3839,8 +3838,8 @@ class WangTiling(object):
                         top_right_edges=top_right_edges, draw_H=draw_H,
                         draw_V=draw_V)
                 lines.extend(more_lines)
-        if extra:
-            lines.append(extra)
+        if extra_after:
+            lines.append(extra_after)
         lines.append(r'\end{tikzpicture}')
         from slabbe import TikzPicture
         return TikzPicture('\n'.join(lines))
