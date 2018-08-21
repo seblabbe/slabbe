@@ -416,6 +416,31 @@ class Substitution2d(object):
             d[a] = self(image_a)
         return Substitution2d(d)
 
+    def apply_matrix_transformation(self, M):
+        r"""
+        INPUT:
+
+        - ``M`` -- matrix
+
+        EXAMPLES::
+
+            sage: from slabbe import Substitution2d
+            sage: A = [[0,1],[0,1]]
+            sage: B = [[1,0],[1,1]]
+            sage: d = {0:A, 1:B}
+            sage: s = Substitution2d(d)
+            sage: M = matrix(2, (1,1,0,1))
+            sage: s
+            Substitution 2d: {0: [[0, 1], [0, 1]], 1: [[1, 0], [1, 1]]}
+            sage: s.apply_matrix_transformation(M)
+            Substitution 2d: {0: [[0, None], [0, 1], [None, 1]], 1: [[1, None], [1, 0], [None, 1]]}
+
+        """
+        from slabbe.wang_tiles import WangTiling
+        d = {}
+        for a,image_a in self._d.items():
+            d[a] = WangTiling(image_a,tiles=[]).apply_matrix_transformation(M).table()
+        return Substitution2d(d)
 
     def domain_alphabet(self):
         r"""
