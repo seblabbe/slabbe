@@ -154,15 +154,15 @@ The intermediate steps of the reduction of a double square tile::
 Plot a double square tile and plot its reduction::
 
     sage: D = DoubleSquare((34,21,34,21))
-    sage: D.plot()                 # long time (1s)
-    sage: D.plot_reduction()       # long time (1s)
+    sage: _ = D.plot()                 # long time (1s)
+    sage: _ = D.plot_reduction()       # long time (1s)
 
 It is not said clear enough in the articles, but double square reduction
 also works for double square tiles that are 8-connected polyominoes::
 
     sage: D = DoubleSquare((55,34,55,34))
-    sage: D.plot()                 # long time (1s)
-    sage: D.plot_reduction()       # long time (1s)
+    sage: _ = D.plot()                 # long time (1s)
+    sage: _ = D.plot_reduction()       # long time (1s)
 
 """
 #*****************************************************************************
@@ -1409,7 +1409,7 @@ class DoubleSquare(SageObject):
 
             sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(1))
-            sage: D.plot()              # long time (1s)
+            sage: _ = D.plot()              # long time (1s)
         """
         path = self.boundary_word()
         points = list(path.points())
@@ -1437,14 +1437,14 @@ class DoubleSquare(SageObject):
 
             sage: from slabbe import DoubleSquare
             sage: D = DoubleSquare(words.fibonacci_tile(2))
-            sage: D.plot_reduction()          # long time (1s)
+            sage: _ = D.plot_reduction()          # long time (1s)
 
         Using the color options::
 
             sage: p = dict(rgbcolor='red', thickness=1)
             sage: q = dict(rgbcolor='blue', alpha=1)
             sage: options = dict(endarrow=False,startpoint=False,pathoptions=p,filloptions=q)
-            sage: D.plot_reduction(options=options)      # long time (1s)
+            sage: _ = D.plot_reduction(options=options)      # long time (1s)
         """
         ds = self
         L = [ds]
@@ -1833,26 +1833,23 @@ class DoubleSquare(SageObject):
             sage: options = dict(tile=S,N=3,scale=(0.25,0.15),labels=True,newcommand=True)
             sage: s = cfibo2.tikz_commutative_diagram(**options)     # long time (2s)
             sage: s                                                  # long time
+            \documentclass[tikz]{standalone}
+            \usepackage{amsmath}
+            \begin{document}
             \newcommand{\TRIM}{\textsc{trim}}
             \newcommand{\EXTEND}{\textsc{extend}}
             \newcommand{\SWAP}{\textsc{swap}}
             \newcommand{\SHIFT}{\textsc{shift}}
             \newcommand{\REVERSE}{\textsc{reverse}}
-            \begin{tikzpicture}
-            [first/.style={circle,draw=black,fill=black, inner sep=0pt, minimum size=3pt},
-            second/.style={circle,draw=black,fill=white, inner sep=0pt, minimum size=3pt}]
-            \node (q0) at (0, 0) {\begin{tikzpicture}
-            [scale=0.250000000000000]
             ...
-            \end{tikzpicture}};
-            \path[thick, ->] (r0) edge node[midway, rectangle, fill=white, rotate=90] {$\SWAP_1$} (r1);
-            \path[thick, ->] (r1) edge node[midway, rectangle, fill=white, rotate=90] {$\TRIM_1$} (r2);
-            \path[thick, ->] (r2) edge node[midway, rectangle, fill=white, rotate=90] {$\TRIM_3$} (r3);
+            ... 105 lines not printed (12001 characters in total) ...
+            ...
             \path[thick, ->] (q0) edge node[midway, left] {$\varphi$} (r0);
             \path[thick, ->] (q1) edge node[midway, left] {$\varphi$} (r1);
             \path[thick, ->] (q2) edge node[midway, left] {$\varphi$} (r2);
             \path[thick, ->] (q3) edge node[midway, left] {$\varphi$} (r3);
             \end{tikzpicture}
+            \end{document}
 
         """
         s = ''
