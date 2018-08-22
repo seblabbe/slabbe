@@ -793,8 +793,7 @@ class WangTileSet(object):
     @rename_keyword(fontsize='font')
     def substitution_tikz(self, substitution, function=None, color=None,
             size=1, scale=1, font=r'\normalsize', rotate=None,
-            label_shift=.2, transformation_matrix=None, ncolumns=4,
-            tabular='tabular', align='l'):
+            label_shift=.2, ncolumns=4, tabular='tabular', align='l'):
         r"""
         Return the tikz code showing what the substitution A->B* does on
         Wang tiles.
@@ -816,9 +815,6 @@ class WangTileSet(object):
           for left and right labels taking more than one character.
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
-        - ``transformation_matrix`` -- matrix (default: ``None``), a matrix
-          to apply to the coordinate before drawing, it can be in
-          ``SL(2,ZZ)`` or not.
         - ``ncolumns`` -- integer (default: ``4``)
         - ``tabular`` -- string (default: ``'tabular'``) or ``'longtable'``
         - ``align`` -- character (default:``'l'``), latex alignment symbol
@@ -3204,6 +3200,10 @@ class WangTiling(object):
 
     def apply_matrix_transformation(self, M):
         r"""
+        INPUT:
+
+        - ``M`` -- matrix in SL(2,Z)
+
         EXAMPLES::
 
             sage: from slabbe import WangTiling
@@ -3663,8 +3663,7 @@ class WangTiling(object):
     def tikz(self, color=None, font=r'\normalsize', rotate=None,
             id=True, label=True, label_shift=.2, scale=1, size=1,
             bottom_left_edges=True, top_right_edges=True,
-            transformation_matrix=None, draw_H=None, draw_V=None,
-            extra_before='', extra_after=''):
+            draw_H=None, draw_V=None, extra_before='', extra_after=''):
         r"""
         Return a tikzpicture showing one solution.
 
@@ -3684,9 +3683,6 @@ class WangTiling(object):
           of the label from the edge
         - ``scale`` -- number (default: ``1``), tikzpicture scale
         - ``size`` -- number (default: ``1``) size of tiles
-        - ``transformation_matrix`` -- matrix (default: ``None``), a matrix
-          to apply to the coordinate before drawing, it can be in
-          ``SL(2,ZZ)`` or not.
         - ``draw_H`` -- dict (default: ``None``) from tile values -> tikz
           draw commands. If ``None`` the values of the dict get replaced by
           straight lines, more precisely by ``r'\draw {{}} -- ++ (1,0);'``.
@@ -3762,8 +3758,11 @@ class WangTiling(object):
             sage: t = WangTiling(table, tiles, color).tikz(rotate=(0,90,0,0))
             sage: t = WangTiling(table, tiles, color).tikz(label_shift=.05)
             sage: t = WangTiling(table, tiles, color).tikz(scale=4)
+
+        ::
+
             sage: m = matrix(2,[1,1,0,1])
-            sage: t = WangTiling(table, tiles, color).tikz(transformation_matrix=m)
+            sage: t = WangTiling(table, tiles, color).apply_matrix_transformation(m).tikz()
 
         Using puzzle boundary instead of colors::
 
@@ -3778,12 +3777,8 @@ class WangTiling(object):
             sage: draw_V = {0:v, 1:v, 2:v, 3:v}
             sage: tikz = t.tikz(label=False, draw_H=draw_H, draw_V=draw_V)
         """
-        from sage.matrix.constructor import matrix
-        from sage.modules.free_module_element import vector
         if color is None:
             color = self._color
-        if transformation_matrix is None:
-            transformation_matrix = matrix.identity(2)
         lines = []
         lines.append(r'\begin{{tikzpicture}}[scale={}]'.format(scale))
         lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
@@ -3805,7 +3800,7 @@ class WangTiling(object):
                     # this is a blank tile
                     continue
                 this_id = i if id else None
-                position = transformation_matrix*vector((j,k))
+                position = (j,k)
                 tile = self._tiles[i]
                 more_lines = tile_to_tikz(tile, position, color=color,
                         id=this_id, sizex=size, sizey=size, rotate=rotate,

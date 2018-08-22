@@ -476,7 +476,7 @@ class Substitution2d(object):
         r"""
         INPUT:
 
-        - ``M`` -- matrix
+        - ``M`` -- matrix in SL(2,Z)
 
         EXAMPLES::
 
@@ -603,7 +603,7 @@ class Substitution2d(object):
     @rename_keyword(fontsize='font')
     def wang_tikz(self, domain_tiles, codomain_tiles, domain_color=None,
             codomain_color=None, size=1, scale=1, font=r'\normalsize',
-            rotate=None, label_shift=.2, id=True, transformation_matrix=None,
+            rotate=None, label_shift=.2, id=True, 
             bottom_left_edges=True, top_right_edges=True, 
             ncolumns=4, direction='right', extra_space=1):
         r"""
@@ -626,9 +626,6 @@ class Substitution2d(object):
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
         - ``id`` -- boolean (default: ``True``), presence of the tile id
-        - ``transformation_matrix`` -- matrix (default: ``None``), a matrix
-          to apply to the coordinate before drawing, it can be in
-          ``SL(2,ZZ)`` or not.
         - ``ncolumns`` -- integer (default: ``4``)
         - ``bottom_left_edges`` -- bool (default: ``True``) 
         - ``top_right_edges`` -- bool (default: ``True``) 
@@ -652,20 +649,20 @@ class Substitution2d(object):
             sage: fn = lambda colors:''.join(map(str, colors))
             sage: domain_tiles = W.desubstitute(s, fn)
             sage: tikz = s.wang_tikz(domain_tiles, codomain_tiles, rotate=(90,0,90,0))
-            sage: tikz.pdf(view=False)      # long time
+            sage: _ = tikz.pdf(view=False)      # long time
 
         Applying a transformation matrix::
 
             sage: M = matrix(2, [1,1,0,1])
-            sage: tikz = s.wang_tikz(domain_tiles, codomain_tiles, 
-            ....:                    transformation_matrix=M)
-            sage: tikz.pdf(view=False)      # long time
+            sage: sM = s.apply_matrix_transformation(M)
+            sage: tikz = sM.wang_tikz(domain_tiles, codomain_tiles)
+            sage: _ = tikz.pdf(view=False)      # long time
 
         Down direction::
 
             sage: tikz = s.wang_tikz(domain_tiles, codomain_tiles,
             ....:                      direction='down')
-            sage: tikz.pdf(view=False)      # long time
+            sage: _ = tikz.pdf(view=False)      # long time
         """
         from slabbe.wang_tiles import tile_to_tikz, WangTileSet, WangTiling
         if isinstance(codomain_tiles, WangTileSet):
@@ -723,21 +720,10 @@ class Substitution2d(object):
                     rotate=rotate, label_shift=label_shift, scale=scale,
                     bottom_left_edges=bottom_left_edges,
                     top_right_edges=top_right_edges, 
-                    id=id, size=size,
-                    transformation_matrix=transformation_matrix)
+                    id=id, size=size)
 
-            if transformation_matrix is None:
-                size_image_x = len(image_a)
-                size_image_y = len(image_a[0])
-            else:
-                from sage.modules.free_module_element import vector
-                corners = [(0,0), (len(image_a), 0), 
-                        (0, len(image_a[0])),
-                        (len(image_a), len(image_a[0]))]
-                M_corners = [transformation_matrix * vector(c) for c in corners]
-                M_corners_x, M_corners_y = zip(*M_corners)
-                size_image_x = max(M_corners_x) - min(M_corners_x)
-                size_image_y = max(M_corners_y) - min(M_corners_y)
+            size_image_x = len(image_a)
+            size_image_y = len(image_a[0])
 
             if direction == 'right':
                 xshift = extra_space + .5 * size_image_x
@@ -768,7 +754,7 @@ class Substitution2d(object):
 
     def wang_tiles_codomain_tikz(self, codomain_tiles, color=None,
             size=1, scale=1, font=r'\normalsize', rotate=None,
-            id=True, label=True, label_shift=.2, transformation_matrix=None,
+            id=True, label=True, label_shift=.2,
             bottom_left_edges=True, top_right_edges=True, 
             ncolumns=4, direction='right'):
         r"""
@@ -792,9 +778,6 @@ class Substitution2d(object):
         - ``label`` -- boolean (default: ``True``) 
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
-        - ``transformation_matrix`` -- matrix (default: ``None``), a matrix
-          to apply to the coordinate before drawing, it can be in
-          ``SL(2,ZZ)`` or not.
         - ``bottom_left_edges`` -- bool (default: ``True``) 
         - ``top_right_edges`` -- bool (default: ``True``) 
         - ``ncolumns`` -- integer (default: ``4``)
@@ -837,8 +820,7 @@ class Substitution2d(object):
             tikz = tiling.tikz(color=color, font=font, id=id, label=label,
                     rotate=rotate, label_shift=label_shift, scale=scale,
                     bottom_left_edges=bottom_left_edges,
-                    top_right_edges=top_right_edges, 
-                    size=size, transformation_matrix=transformation_matrix)
+                    top_right_edges=top_right_edges, size=size)
 
             lines.append(r'\node{{{}}};'.format(tikz.tikz_picture_code()))
 
