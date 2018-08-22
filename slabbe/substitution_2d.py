@@ -258,11 +258,12 @@ class Substitution2d(object):
                     "different height (={})".format(s))
         return columns
 
-    def call_on_column(self, column):
+    def call_on_column(self, column, heights=None):
         r"""
         INPUT:
 
         - ``column`` -- list
+        - ``heights`` -- None or list (default: ``None``)
 
         EXAMPLES::
 
@@ -279,6 +280,15 @@ class Substitution2d(object):
             sage: s.call_on_column([0,1,1,0,0])
             [[0, 1, 4, 4, 0, 1, 0, 1], [2, 3, 5, 5, 2, 3, 2, 3]]
 
+        It can compute the image of columns with ``None`` as entries::
+
+            sage: s.call_on_column([0,None], heights=[2,3])
+            [[0, 1, None, None, None], [2, 3, None, None, None]]
+            sage: s.call_on_column([0,None], heights=[2,2])
+            [[0, 1, None, None], [2, 3, None, None]]
+            sage: s.call_on_column([None], heights=[3])
+            [[None, None, None]]
+
         TESTS::
 
             sage: s.call_on_column([])
@@ -292,16 +302,38 @@ class Substitution2d(object):
         """
         if not column:
             return []
-        width = len(self._d[column[0]])
-        rep = [[] for _ in range(width)]
+
+        # compute the width of the image
         for a in column:
-            image_a = self._d[a]
-            if not len(image_a) == width:
-                raise ValueError("the image of {} in the column (={}) has"
-                        " width {} but the image of another"
-                        " has width {}".format(a, column, len(image_a), width))
-            for i,col in enumerate(image_a):
-                rep[i].extend(col)
+            if not a is None:
+                width = len(self._d[a])
+                break
+        else:
+            width = 1
+
+        # compute the image
+        rep = [[] for _ in range(width)]
+        for i,a in enumerate(column):
+            if a is None:
+                if heights is None:
+                    raise ValueError("the {}-th element of given column is None,"
+                            " so you must provide the list ``heights`` as"
+                            " input".format(i))
+                height = heights[i]
+                for j in range(width):
+                    rep[j].extend([None]*height)
+            else:
+                image_a = self._d[a]
+                if not len(image_a) == width:
+                    raise ValueError("the image of {} in the column (={}) has"
+                            " width {} but the image of another"
+                            " has width {}".format(a, column, len(image_a), width))
+                if heights and not len(image_a[0]) == heights[i]:
+                    raise ValueError("the image of {} in the column (={}) has"
+                            " height {} but inputs ``heights`` says it should be"
+                            " {}".format(a, column, len(image_a[0]), heights[i]))
+                for j,col in enumerate(image_a):
+                    rep[j].extend(col)
         return rep
 
     def __call__(self, table, order=1):
@@ -314,7 +346,7 @@ class Substitution2d(object):
         -  ``order`` - integer or plus ``Infinity`` (default: 1)
 
         TODO: implement another call on table with matrix like coordinates
-        
+
         EXAMPLES::
 
             sage: from slabbe import Substitution2d
@@ -348,6 +380,15 @@ class Substitution2d(object):
              [2, 1, 2, 1, 1, 2, 0, 1],
              [2, 0, 2, 0, 1, 1, 2, 0]]
 
+        Works if some ``None`` entries are involved::
+
+            sage: s([[None]])
+            [[None]]
+            sage: s([[None],[0]])
+            [[None, None], [0, 1], [2, 0]]
+            sage: s([[None,0],[0,2]])
+            [[None, None, 0, 1], [None, None, 2, 0], [0, 1, 1, 2], [2, 0, 1, 1]]
+
         TESTS::
 
             sage: A = [[0,1],[2,3]]
@@ -363,10 +404,25 @@ class Substitution2d(object):
             ValueError: the image of 2 in the column (=[1, 2]) has width 1
             but the image of another has width 2
         """
+        if not table:
+            return []
+
         if order == 1:
+            # compute the heights of the image of each row
+            # in case their are some None entries involved
+            heights = []
+            for i in range(len(table[0])):
+                for col in table:
+                    if col[i] is not None:
+                        height = len(self._d[col[i]][0])
+                        break
+                else:
+                    height = 1
+                heights.append(height)
+            # compute the image
             columns = []
             for col in table:
-                col_image = self.call_on_column(col)
+                col_image = self.call_on_column(col, heights)
                 columns.extend(col_image)
             return columns
         elif order > 1:
@@ -467,11 +523,22 @@ class Substitution2d(object):
             sage: s = Substitution2d(d)
             sage: s.codomain_alphabet()
             {5, 6, 7, 8, 9}
+
+        Blank ``None`` are ignored::
+
+            sage: A = [[5,6],[7,8]]
+            sage: B = [[6,5],[9,None]]
+            sage: d = {0:A, 1:B}
+            sage: s = Substitution2d(d)
+            sage: s.codomain_alphabet()
+            {5, 6, 7, 8, 9}
         """
         s = set()
         for a,image_a in self._d.items():
             for column in image_a:
                 s.update(column)
+        if None in s:
+            s.remove(None)
         return s
 
     def incidence_matrix(self):
