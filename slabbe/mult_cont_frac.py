@@ -791,8 +791,8 @@ class _MCFAlgorithm_methods(object):
             sage: from slabbe.mult_cont_frac import ARP
             sage: c = {}
             sage: c[1] = c[2] = c[3] = [0,0,0]
-            sage: c[12] = c[13] = c[23] = c[21] = c[31] = c[32] = [255,0,0]
-            sage: b = [1,2,3,12,13,21,23,31,32]
+            sage: c[123] = c[132] = c[231] = c[213] = c[312] = c[321] = [255,0,0]
+            sage: b = [1,2,3,123,132,213,231,312,321]
             sage: P = ARP().natural_extension_part_png(10^7, draw='image_right',  # not tested
             ....:   branch_order=b, color_dict=c, urange=(-.6,.6), vrange=(-.6,.6))  # not tested
 
