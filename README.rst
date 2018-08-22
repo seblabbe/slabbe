@@ -24,6 +24,11 @@ __ http://www.slabbe.org/Sage/
 __ http://github.com/seblabbe/slabbe
 __ http://pypi.python.org/pypi/slabbe
 
+Version 0.4.3 (August 22, 2018)
+--------------------------------
+
+Few fixes for the publication of "Substitutive structure of Jeandel-Rao aperiodic tilings".
+
 Version 0.4.2 (July 20, 2018)
 --------------------------------
 
