@@ -1704,7 +1704,7 @@ cdef class MCFAlgorithm(object):
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Brun
-            sage: Brun().lyapunov_exponents(n_iterations=1000000)  # tol 0.01
+            sage: Brun().lyapunov_exponents(n_iterations=1000000)  # tol 0.02
             (0.3049429393152174, -0.1120652699014143, 1.367495867105725)
 
         ::

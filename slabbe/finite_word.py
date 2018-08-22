@@ -112,7 +112,6 @@ def to_image(self, width=1000):
     """
     #http://stackoverflow.com/questions/434583/what-is-the-fastest-way-to-draw-an-image-from-discrete-pixel-values-in-python
     import numpy as np
-    import scipy.misc as smp
 
     height = self.length() // width
 
@@ -128,7 +127,8 @@ def to_image(self, width=1000):
         y = i // width
         data[y,x] = color_dict[a]
 
-    img = smp.toimage( data )       # Create a PIL image
+    from PIL import Image
+    img = Image.fromarray(data)
     #img.show()                     # View in default viewer
     return img
 

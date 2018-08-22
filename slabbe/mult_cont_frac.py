@@ -834,7 +834,6 @@ class _MCFAlgorithm_methods(object):
 
         #http://stackoverflow.com/questions/434583/what-is-the-fastest-way-to-draw-an-image-from-discrete-pixel-values-in-python
         import numpy as np
-        import scipy.misc as smp
 
         # Create a 1024x1024x3 array of 8 bit unsigned integers
         data = np.zeros( (ndivs,ndivs,3), dtype=np.uint8 )
@@ -862,7 +861,8 @@ class _MCFAlgorithm_methods(object):
         else:
             raise ValueError("Unkown value for draw(={})".format(draw))
 
-        img = smp.toimage( data )       # Create a PIL image
+        from PIL import Image
+        img = Image.fromarray(data)
         #img.show()                      # View in default viewer
         return img
 
