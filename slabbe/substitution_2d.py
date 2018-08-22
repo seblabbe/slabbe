@@ -603,7 +603,7 @@ class Substitution2d(object):
     @rename_keyword(fontsize='font')
     def wang_tikz(self, domain_tiles, codomain_tiles, domain_color=None,
             codomain_color=None, size=1, scale=1, font=r'\normalsize',
-            rotate=None, label_shift=.2, transformation_matrix=None,
+            rotate=None, label_shift=.2, id=True, transformation_matrix=None,
             bottom_left_edges=True, top_right_edges=True, 
             ncolumns=4, direction='right', extra_space=1):
         r"""
@@ -625,6 +625,7 @@ class Substitution2d(object):
           for left and right labels taking more than one character.
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
+        - ``id`` -- boolean (default: ``True``), presence of the tile id
         - ``transformation_matrix`` -- matrix (default: ``None``), a matrix
           to apply to the coordinate before drawing, it can be in
           ``SL(2,ZZ)`` or not.
@@ -705,8 +706,9 @@ class Substitution2d(object):
             lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
 
             desubstituted_tile = domain_tiles[a] 
+            this_id = a if id else None
             new_lines = tile_to_tikz(desubstituted_tile, (0,0),
-                    color=domain_color, id=a, sizex=size, sizey=size,
+                    color=domain_color, id=this_id, sizex=size, sizey=size,
                     rotate=rotate, label_shift=label_shift,
                     bottom_left_edges=bottom_left_edges,
                     top_right_edges=top_right_edges)
@@ -721,7 +723,8 @@ class Substitution2d(object):
                     rotate=rotate, label_shift=label_shift, scale=scale,
                     bottom_left_edges=bottom_left_edges,
                     top_right_edges=top_right_edges, 
-                    size=size, transformation_matrix=transformation_matrix)
+                    id=id, size=size,
+                    transformation_matrix=transformation_matrix)
 
             if transformation_matrix is None:
                 size_image_x = len(image_a)
