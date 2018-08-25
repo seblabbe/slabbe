@@ -603,8 +603,7 @@ class Substitution2d(object):
     @rename_keyword(fontsize='font')
     def wang_tikz(self, domain_tiles, codomain_tiles, domain_color=None,
             codomain_color=None, size=1, scale=1, font=r'\normalsize',
-            rotate=None, label_shift=.2, id=True, 
-            bottom_left_edges=True, top_right_edges=True, 
+            rotate=None, label_shift=.2, id=True, edges=True, 
             ncolumns=4, direction='right', extra_space=1):
         r"""
         Return the tikz code showing what the substitution A->B* does on
@@ -627,8 +626,7 @@ class Substitution2d(object):
           of the label from the edge
         - ``id`` -- boolean (default: ``True``), presence of the tile id
         - ``ncolumns`` -- integer (default: ``4``)
-        - ``bottom_left_edges`` -- bool (default: ``True``) 
-        - ``top_right_edges`` -- bool (default: ``True``) 
+        - ``edges`` -- bool (default: ``True``) 
         - ``direction`` -- string (default: ``'right'``) or ``'down'``
         - ``extra_space`` -- number (default: ``1``), space between the
           tile and its image
@@ -707,8 +705,8 @@ class Substitution2d(object):
             new_lines = tile_to_tikz(desubstituted_tile, (0,0),
                     color=domain_color, id=this_id, sizex=size, sizey=size,
                     rotate=rotate, label_shift=label_shift,
-                    bottom_left_edges=bottom_left_edges,
-                    top_right_edges=top_right_edges)
+                    right_edges=edges, top_edges=edges, left_edges=edges,
+                    bottom_edges=edges)
             new_lines.insert(0, r'\begin{tikzpicture}')
             new_lines.append(r'\end{tikzpicture}')
             new_lines = '\n'.join(new_lines)
@@ -718,9 +716,7 @@ class Substitution2d(object):
             tiling = WangTiling(image_a, codomain_tiles, codomain_color)
             tiling_tikz = tiling.tikz(color=codomain_color, font=font,
                     rotate=rotate, label_shift=label_shift, scale=scale,
-                    bottom_left_edges=bottom_left_edges,
-                    top_right_edges=top_right_edges, 
-                    id=id, size=size)
+                    edges=edges, id=id, size=size)
 
             size_image_x = len(image_a)
             size_image_y = len(image_a[0])
@@ -754,8 +750,7 @@ class Substitution2d(object):
 
     def wang_tiles_codomain_tikz(self, codomain_tiles, color=None,
             size=1, scale=1, font=r'\normalsize', rotate=None,
-            id=True, label=True, label_shift=.2,
-            bottom_left_edges=True, top_right_edges=True, 
+            id=True, label=True, label_shift=.2, edges=True,
             ncolumns=4, direction='right'):
         r"""
         Return the tikz code of the image of the letters as a table of
@@ -778,8 +773,7 @@ class Substitution2d(object):
         - ``label`` -- boolean (default: ``True``) 
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
-        - ``bottom_left_edges`` -- bool (default: ``True``) 
-        - ``top_right_edges`` -- bool (default: ``True``) 
+        - ``edges`` -- bool (default: ``True``) 
         - ``ncolumns`` -- integer (default: ``4``)
 
         OUTPUT:
@@ -819,8 +813,7 @@ class Substitution2d(object):
             tiling = WangTiling(image_a, codomain_tiles, color)
             tikz = tiling.tikz(color=color, font=font, id=id, label=label,
                     rotate=rotate, label_shift=label_shift, scale=scale,
-                    bottom_left_edges=bottom_left_edges,
-                    top_right_edges=top_right_edges, size=size)
+                    edges=edges, size=size)
 
             lines.append(r'\node{{{}}};'.format(tikz.tikz_picture_code()))
 

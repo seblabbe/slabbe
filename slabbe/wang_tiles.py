@@ -75,8 +75,9 @@ from sage.misc.superseded import deprecated_function_alias
 
 
 def tile_to_tikz(tile, position, color=None, id=None, sizex=1, sizey=1,
-        rotate=None, label=True, label_shift=.2, bottom_left_edges=True,
-        top_right_edges=True, draw_H=None, draw_V=None):
+        rotate=None, label=True, label_shift=.2, 
+        right_edges=True, top_edges=True, left_edges=True, bottom_edges=True,
+        draw_H=None, draw_V=None):
     r"""
 
     INPUT:
@@ -94,8 +95,10 @@ def tile_to_tikz(tile, position, color=None, id=None, sizex=1, sizey=1,
     - ``label`` -- boolean (default: ``True``) 
     - ``label_shift`` -- number (default: ``.2``) translation distance of the
       label from the edge
-    - ``bottom_left_edges`` -- bool (default: ``True``) 
-    - ``top_right_edges`` -- bool (default: ``True``) 
+    - ``right_edges`` -- bool (default: ``True``) 
+    - ``top_edges`` -- bool (default: ``True``) 
+    - ``left_edges`` -- bool (default: ``True``) 
+    - ``bottom_edges`` -- bool (default: ``True``) 
     - ``draw_H`` -- dict (default: ``None``) from tile values -> tikz
       draw commands. If ``None`` the values of the dict get replaced by
       straight lines, more precisely by ``r'\draw {{}} -- ++ (1,0);'``.
@@ -121,40 +124,40 @@ def tile_to_tikz(tile, position, color=None, id=None, sizex=1, sizey=1,
          '\\fill[cyan] (10, 101) -- (10.5, 100.5) -- (11, 101);',
          '\\fill[green] (10, 100) -- (10.5, 100.5) -- (10, 101);',
          '\\fill[white] (10, 100) -- (10.5, 100.5) -- (11, 100);',
-         '\\draw (10, 100) -- ++ (0,1);',
-         '\\draw (10, 100) -- ++ (1,0);',
          '\\draw (11, 100) -- ++ (0,1);',
          '\\draw (10, 101) -- ++ (1,0);',
+         '\\draw (10, 100) -- ++ (0,1);',
+         '\\draw (10, 100) -- ++ (1,0);',
          '\\node[rotate=0] at (10.8, 100.5) {1};',
          '\\node[rotate=0] at (10.5, 100.8) {2};',
          '\\node[rotate=0] at (10.2, 100.5) {3};',
          '\\node[rotate=0] at (10.5, 100.2) {4};']
         sage: tile_to_tikz((1,2,3,4), (10,100), color=None)
         ['% tile at position (x,y)=(10, 100)',
-         '\\draw (10, 100) -- ++ (0,1);',
-         '\\draw (10, 100) -- ++ (1,0);',
          '\\draw (11, 100) -- ++ (0,1);',
          '\\draw (10, 101) -- ++ (1,0);',
+         '\\draw (10, 100) -- ++ (0,1);',
+         '\\draw (10, 100) -- ++ (1,0);',
          '\\node[rotate=0] at (10.8, 100.5) {1};',
          '\\node[rotate=0] at (10.5, 100.8) {2};',
          '\\node[rotate=0] at (10.2, 100.5) {3};',
          '\\node[rotate=0] at (10.5, 100.2) {4};']
         sage: tile_to_tikz((1,2,3,4), (10,100), color=None, rotate=(0,90,0,0))
         ['% tile at position (x,y)=(10, 100)',
-         '\\draw (10, 100) -- ++ (0,1);',
-         '\\draw (10, 100) -- ++ (1,0);',
          '\\draw (11, 100) -- ++ (0,1);',
          '\\draw (10, 101) -- ++ (1,0);',
+         '\\draw (10, 100) -- ++ (0,1);',
+         '\\draw (10, 100) -- ++ (1,0);',
          '\\node[rotate=0] at (10.8, 100.5) {1};',
          '\\node[rotate=90] at (10.5, 100.8) {2};',
          '\\node[rotate=0] at (10.2, 100.5) {3};',
          '\\node[rotate=0] at (10.5, 100.2) {4};']
         sage: tile_to_tikz((1,2,3,4), (10,100), color=None, label_shift=.1)
         ['% tile at position (x,y)=(10, 100)',
-         '\\draw (10, 100) -- ++ (0,1);',
-         '\\draw (10, 100) -- ++ (1,0);',
          '\\draw (11, 100) -- ++ (0,1);',
          '\\draw (10, 101) -- ++ (1,0);',
+         '\\draw (10, 100) -- ++ (0,1);',
+         '\\draw (10, 100) -- ++ (1,0);',
          '\\node[rotate=0] at (10.9000000000000, 100.5) {1};',
          '\\node[rotate=0] at (10.5, 100.900000000000) {2};',
          '\\node[rotate=0] at (10.1000000000000, 100.5) {3};',
@@ -164,10 +167,10 @@ def tile_to_tikz(tile, position, color=None, id=None, sizex=1, sizey=1,
 
         sage: tile_to_tikz((10,20,30,40), (10,100), color=None)
         ['% tile at position (x,y)=(10, 100)',
-         '\\draw (10, 100) -- ++ (0,1);',
-         '\\draw (10, 100) -- ++ (1,0);',
          '\\draw (11, 100) -- ++ (0,1);',
          '\\draw (10, 101) -- ++ (1,0);',
+         '\\draw (10, 100) -- ++ (0,1);',
+         '\\draw (10, 100) -- ++ (1,0);',
          '\\node[rotate=90] at (10.8, 100.5) {10};',
          '\\node[rotate=0] at (10.5, 100.8) {20};',
          '\\node[rotate=90] at (10.2, 100.5) {30};',
@@ -206,13 +209,14 @@ def tile_to_tikz(tile, position, color=None, id=None, sizex=1, sizey=1,
         draw_V = {tile[0]:r'\draw {{}} -- ++ (0,{});'.format(sy),
                   tile[2]:r'\draw {{}} -- ++ (0,{});'.format(sy)}
 
-    if bottom_left_edges:
-        lines.append(draw_V[tile[2]].format((x,y)))
-        lines.append(draw_H[tile[3]].format((x,y)))
-
-    if top_right_edges:
+    if right_edges:
         lines.append(draw_V[tile[0]].format((x+sx,y)))
+    if top_edges:
         lines.append(draw_H[tile[1]].format((x,y+sy)))
+    if left_edges:
+        lines.append(draw_V[tile[2]].format((x,y)))
+    if bottom_edges:
+        lines.append(draw_H[tile[3]].format((x,y)))
 
     if label:
         node_str = r'\node[rotate={}] at {} {{{}}};'
@@ -654,7 +658,7 @@ class WangTileSet(object):
     @rename_keyword(fontsize='font')
     def tikz(self, ncolumns=10, color=None, size=1, space=.1, scale=1,
              font=r'\normalsize', rotate=None, label=True, id=True, label_shift=.2,
-             bottom_left_edges=True, top_right_edges=True,
+             right_edges=True, top_edges=True, left_edges=True, bottom_edges=True,
              draw_H=None, draw_V=None):
         r"""
         INPUT:
@@ -673,8 +677,10 @@ class WangTileSet(object):
         - ``id`` -- boolean (default: ``True``), presence of the tile id
         - ``label_shift`` -- number (default: ``.2``) translation distance of the
           label from the edge
-        - ``bottom_left_edges`` -- bool (default: ``True``) 
-        - ``top_right_edges`` -- bool (default: ``True``) 
+        - ``right_edges`` -- bool (default: ``True``) 
+        - ``top_edges`` -- bool (default: ``True``) 
+        - ``left_edges`` -- bool (default: ``True``) 
+        - ``bottom_edges`` -- bool (default: ``True``) 
         - ``draw_H`` -- dict (default: ``None``) from tile values -> tikz
           draw commands. If ``None`` the values of the dict get replaced by
           straight lines, more precisely by ``r'\draw {{}} -- ++ (1,0);'``.
@@ -708,9 +714,9 @@ class WangTileSet(object):
             new_lines = tile_to_tikz(tile, position, color=color,
                     id=this_id, sizex=size, sizey=size, rotate=rotate,
                     label=label, label_shift=label_shift,
-                    bottom_left_edges=bottom_left_edges,
-                    top_right_edges=top_right_edges, draw_H=draw_H,
-                    draw_V=draw_V)
+                    right_edges=right_edges, top_edges=top_edges,
+                    left_edges=left_edges, bottom_edges=bottom_edges,
+                    draw_H=draw_H, draw_V=draw_V)
             lines.extend(new_lines)
         lines.append(r'\end{tikzpicture}')
         return TikzPicture('\n'.join(lines))
@@ -781,7 +787,7 @@ class WangTileSet(object):
             this_id = i if id else None
             new_lines = tile_to_tikz(tile, position=(0,0), color=color,
                     id=this_id, sizex=size, sizey=size, rotate=rotate,
-                    label_shift=label_shift, top_right_edges=True)
+                    label_shift=label_shift)
             lines.extend(new_lines)
             lines.append(r'\end{tikzpicture}')
             lines.append(r'} % end of newcommand')
@@ -2016,7 +2022,7 @@ class WangTileSet(object):
                     new_lines = tile_to_tikz(tile, position, color=None,
                             id=b, sizex=sizex, sizey=1, rotate=None,
                             label=True, label_shift=.2,
-                            top_right_edges=True, draw_H=None, draw_V=None)
+                            draw_H=None, draw_V=None)
                     lines.extend(new_lines)
                 lines.append(r'\end{tikzpicture}')
                 return '\n'.join(lines)
@@ -3662,8 +3668,8 @@ class WangTiling(object):
     @rename_keyword(fontsize='font')
     def tikz(self, color=None, font=r'\normalsize', rotate=None,
             id=True, label=True, label_shift=.2, scale=1, size=1,
-            bottom_left_edges=True, top_right_edges=True,
-            draw_H=None, draw_V=None, extra_before='', extra_after=''):
+            edges=True, draw_H=None, draw_V=None, extra_before='',
+            extra_after=''):
         r"""
         Return a tikzpicture showing one solution.
 
@@ -3676,8 +3682,7 @@ class WangTiling(object):
           label of Wang tiles. If ``None``, it performs a 90 degres rotation
           for left and right labels taking more than one character.
         - ``id`` -- boolean (default: ``True``), presence of the tile id
-        - ``bottom_left_edges`` -- bool (default: ``True``) 
-        - ``top_right_edges`` -- bool (default: ``True``) 
+        - ``edges`` -- bool (default: ``True``) 
         - ``label`` -- boolean (default: ``True``), presence of the color labels
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
@@ -3715,7 +3720,7 @@ class WangTiling(object):
             \node at (0.5, 0.5) {0};
             \draw (0, 0) -- ++ (0,1);
             ...
-            ... 113 lines not printed (3700 characters in total) ...
+            ... 96 lines not printed (3258 characters in total) ...
             ...
             \node[rotate=0] at (2.8, 3.5) {0};
             \node[rotate=0] at (2.5, 3.8) {0};
@@ -3802,12 +3807,14 @@ class WangTiling(object):
                 this_id = i if id else None
                 position = (j,k)
                 tile = self._tiles[i]
+                right_edges = edges and j == W - 1
+                top_edges = edges and k == H - 1
                 more_lines = tile_to_tikz(tile, position, color=color,
                         id=this_id, sizex=size, sizey=size, rotate=rotate,
                         label=label, label_shift=label_shift,
-                        bottom_left_edges=bottom_left_edges,
-                        top_right_edges=top_right_edges, draw_H=draw_H,
-                        draw_V=draw_V)
+                        right_edges=right_edges, top_edges=top_edges,
+                        left_edges=edges, bottom_edges=edges,
+                        draw_H=draw_H, draw_V=draw_V)
                 lines.extend(more_lines)
         if extra_after:
             lines.append(extra_after)
