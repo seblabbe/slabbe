@@ -3685,12 +3685,12 @@ class WangTiling(object):
         - ``size`` -- number (default: ``1``) size of tiles
         - ``draw_H`` -- dict (default: ``None``) from tile values -> tikz
           draw commands. If ``None`` the values of the dict get replaced by
-          straight lines, more precisely by ``r'\draw {{}} -- ++ (1,0);'``.
+          straight lines, more precisely by ``r'\draw {} -- ++ (1,0);'``.
           Dict values must be strings ``s`` such that ``s.format((x,y))``
           works.
         - ``draw_V`` -- dict (default: ``None``) from tile values -> tikz
           draw commands. If ``None`` the values of the dict get replaced by
-          straight lines, more precisely by ``r'\draw {{}} -- ++ (0,1);'``.
+          straight lines, more precisely by ``r'\draw {} -- ++ (0,1);'``.
           Dict values must be strings ``s`` such that ``s.format((x,y))``
           works.
         - ``extra_before`` -- string (default: ``''``) extra lines of tikz
