@@ -2506,7 +2506,7 @@ def figure_11_BGL2012(scale=0.5, boxsize=10, newcommand=True):
     s += "\\end{tikzpicture}\n"
     return LatexExpr(s)
 ###############################
-# Usefull Functions
+# Useful Functions
 ###############################
 def snake(i, ncols=2):
     r"""

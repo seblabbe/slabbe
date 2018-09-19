@@ -88,7 +88,7 @@ def lyapunov_table(algo, n_orbits, n_iterations=1000):
         sage: from slabbe.mult_cont_frac import Brun
         sage: from slabbe.lyapunov import lyapunov_table
         sage: lyapunov_table(Brun(), 10, 1000000) # random
-          10 succesfull orbits    min       mean      max       std
+          10 succesful orbits     min       mean      max       std
         +-----------------------+---------+---------+---------+---------+
           $\theta_1$              0.303     0.305     0.307     0.0013
           $\theta_2$              -0.1131   -0.1124   -0.1115   0.00051
@@ -115,7 +115,7 @@ def lyapunov_table(algo, n_orbits, n_iterations=1000):
         row.append(my_rounded(data.max(),s))
         row.append(my_rounded(data.std(),s))
         rows.append(row)
-    header = ['{} succesfull orbits'.format(len(rep[0])), 'min','mean','max','std']
+    header = ['{} succesful orbits'.format(len(rep[0])), 'min','mean','max','std']
     return table(rows=rows,header_row=header)
 
 def _lyapunov_row(algo, n_orbits, n_iterations=1000):

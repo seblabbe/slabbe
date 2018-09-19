@@ -123,7 +123,7 @@ probability since it depends on the samples::
     sage: T(0.4534)              # random
     0.600
 
-Anyway, it is usefull to draw the plot of the percolation probability::
+Anyway, it is useful to draw the plot of the percolation probability::
 
     sage: T = PercolationProbability(d=2, n=10, stop=100)
     sage: T.return_plot((0,1), adaptive_recursion=4, plot_points=4)     # optional long
