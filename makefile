@@ -16,6 +16,9 @@ test:
 testlong:
 	sage -tp --long --force-lib --show-skipped slabbe/*.py slabbe/*.pyx
 
+testpython3:
+	find slabbe -name '*.py' | xargs -n 1 python3 -m py_compile 
+
 coverage:
 	sage -coverage slabbe/*
 

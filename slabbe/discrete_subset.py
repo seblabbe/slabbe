@@ -868,7 +868,7 @@ class DiscreteSubset(SageObject):
             elif dim == (3,1):
                 return v.right_kernel().basis_matrix()
             else:
-                raise ValueError, "uncorrect dimension (=%s) " % (dim,)
+                raise ValueError("uncorrect dimension (=%s) " % (dim,))
 
     def plot_points(self, color='blue', m=None):
         r"""
