@@ -24,6 +24,11 @@ __ http://www.slabbe.org/Sage/
 __ http://github.com/seblabbe/slabbe
 __ http://pypi.python.org/pypi/slabbe
 
+Version 0.4.4 (September 28, 2018)
+--------------------------------
+
+Make ``import slabbe`` work in Sage with Python 3.
+
 Version 0.4.3 (August 22, 2018)
 --------------------------------
 
