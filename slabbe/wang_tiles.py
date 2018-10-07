@@ -2,9 +2,16 @@
 r"""
 Wang tile solver
 
-This uses MILP solvers like Coin or Gurobi. Coin can be installed with::
+This uses MILP solvers like Coin or Gurobi, Sat solvers like cryptominisat
+and dancing links solver which is already in Sage.
+
+Coin can be installed with::
 
     sage -i cbc sagelib
+
+Cryptominisat can be installed with::
+
+    sage -i cryptominisat sagelib
 
 EXAMPLES::
 
@@ -13,6 +20,13 @@ EXAMPLES::
     sage: W = WangTileSolver(tiles,3,4)
     sage: tiling = W.solve()
     sage: _ = tiling.tikz().pdf(view=False)
+
+Using different kind of solvers::
+
+    sage: tiling = W.solve(solver='GLPK')
+    sage: tiling = W.solve(solver='dancing_links')
+    sage: tiling = W.solve(solver='Gurobi')         # optional Gurobi
+    sage: tiling = W.solve(solver='cryptominisat')  # optional cryptominisat
 
 ::
 
@@ -48,10 +62,6 @@ Rao-Jeandel::
     sage: tiling = W.solve()
     sage: _ = tiling.tikz().pdf(view=False)
 
-.. TODO::
-
- - Reduce the problem to SAT
-                                         
 """
 #*****************************************************************************
 #       Copyright (C) 2017-2018 Sébastien Labbé <slabqc@gmail.com>
