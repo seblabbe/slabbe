@@ -2475,6 +2475,20 @@ class WangTileSolver(object):
             ...
             ValueError: no solution found using dancing links
 
+        Using SatLP solver::
+
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: W = WangTileSolver(tiles,3,4)
+            sage: tiling = W.solve('LP')
+            sage: tiling._table
+            [[1, 0, 1, 0], [0, 1, 0, 1], [1, 0, 1, 0]]
+
+        Using cryptominisat solver::
+
+            sage: tiling = W.solve('cryptominisat')  # optional cryptominisat
+            sage: tiling._table                      # optional cryptominisat
+            [[1, 0, 1, 0], [0, 1, 0, 1], [1, 0, 1, 0]]
+
         REFERENCES:
 
             How do I set solver_parameter to make Gurobi use more than one
@@ -2493,7 +2507,7 @@ class WangTileSolver(object):
                 assert table[j][k] is None, "table[{}][{}](={}) is not None".format(j,k,table[j][k])
                 table[j][k] = i
             return WangTiling(table, self._tiles, color=self._color)
-        else:
+        elif solver in ['Gurobi', 'gurobi', 'GLPK', 'Coin', 'CVXOPT', 'PPL', None]:
             p,x = self.milp(solver=solver)
             if solver_parameters is None:
                 solver_parameters = {}
@@ -2506,6 +2520,21 @@ class WangTileSolver(object):
                     "!= width*height".format(len(support)))
             table = [[None]*self._height for _ in range(self._width)]
             for i,j,k in support:
+                table[j][k] = i
+            return WangTiling(table, self._tiles, color=self._color)
+        else:
+            (var_to_tile_pos,
+             tile_pos_to_var) = self.sat_variable_to_tile_position_bijection()
+            sat_solver = self.sat_solver(solver)
+            solution = sat_solver()
+            if not solution:
+                raise ValueError('no solution found using SAT solver (={})'.format(solver))
+            support = [key for (key,val) in enumerate(solution) if val]
+            assert len(support) == self._width * self._height, ("len(support)={} "
+                    "!= width*height".format(len(support)))
+            table = [[None]*self._height for _ in range(self._width)]
+            for val in support:
+                i,j,k = var_to_tile_pos[val]
                 table[j][k] = i
             return WangTiling(table, self._tiles, color=self._color)
 
@@ -2852,6 +2881,130 @@ class WangTileSolver(object):
         from sage.combinat.matrices.dancing_links import dlx_solver
         rows,row_info = self.rows_and_information()
         return dlx_solver(rows)
+
+    def sat_variable_to_tile_position_bijection(self):
+        r"""
+        Return the dictionary giving the correspondence between variables
+        and tiles indices i at position (j,k)
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSolver
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: W = WangTileSolver(tiles,3,4)
+            sage: d1,d2 = W.sat_variable_to_tile_position_bijection()
+            sage: d1
+            {1: (0, 0, 0),
+             2: (0, 0, 1),
+             3: (0, 0, 2),
+             4: (0, 0, 3),
+             5: (0, 1, 0),
+             6: (0, 1, 1),
+             7: (0, 1, 2),
+             8: (0, 1, 3),
+             9: (0, 2, 0),
+             10: (0, 2, 1),
+             11: (0, 2, 2),
+             12: (0, 2, 3),
+             13: (1, 0, 0),
+             14: (1, 0, 1),
+             15: (1, 0, 2),
+             16: (1, 0, 3),
+             17: (1, 1, 0),
+             18: (1, 1, 1),
+             19: (1, 1, 2),
+             20: (1, 1, 3),
+             21: (1, 2, 0),
+             22: (1, 2, 1),
+             23: (1, 2, 2),
+             24: (1, 2, 3)}
+
+        """
+        W = self._width
+        H = self._height
+        ntiles = len(self._tiles)
+        L = list(itertools.product(range(ntiles), range(W), range(H)))
+        var_to_tile_pos = dict(enumerate(L, start=1))
+        tile_pos_to_var = dict((b,a) for (a,b) in enumerate(L, start=1))
+        return var_to_tile_pos, tile_pos_to_var
+
+    def sat_solver(self, solver=None):
+        r"""
+        Return the SAT solver.
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSolver
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: W = WangTileSolver(tiles,3,4)
+            sage: s = W.sat_solver()
+            sage: s
+            an ILP-based SAT Solver
+            sage: L = s()
+            sage: L
+            [None, False, True, False, True, True, False, True, False,
+             False, True, False, True, True, False, True, False, False,
+             True, False, True, True, False, True, False]
+
+        """
+        tiles = self._tiles
+        indices = range(len(tiles))
+
+        from sage.sat.solvers.satsolver import SAT
+        s = SAT(solver)
+
+        (var_to_tile_pos,
+         tile_pos_to_var) = self.sat_variable_to_tile_position_bijection()
+
+        # at least one tile at each position (j,k)
+        # (exactly one if one could use a xor clause)
+        for j in range(self._width):
+            for k in range(self._height):
+                constraint = [tile_pos_to_var[(i,j,k)] for i in indices]
+                s.add_clause(constraint)
+
+        # no two tiles at the same position (j,k)
+        for j in range(self._width):
+            for k in range(self._height):
+                for i1,i2 in itertools.combinations(indices, 2):
+                    constraint = [-tile_pos_to_var[(i1,j,k)], 
+                                  -tile_pos_to_var[(i2,j,k)]]
+                    s.add_clause(constraint)
+
+        # preassigned tiles at position (j,k)
+        for j,k in self._preassigned_tiles:
+            i = self._preassigned_tiles[(j,k)]
+            constraint = [tile_pos_to_var[(i,j,k)]]
+            s.add_clause(constraint)
+
+        # matching vertical colors
+        for j in range(self._width-1):
+            for k in range(self._height):
+                for i1,i2 in itertools.product(indices, repeat=2):
+                    if tiles[i1][0] != tiles[i2][2]:
+                        constraint = [-tile_pos_to_var[(i1,j,k)], 
+                                      -tile_pos_to_var[(i2,j+1,k)]]
+                        s.add_clause(constraint)
+
+        # matching horizontal colors
+        for j in range(self._width):
+            for k in range(self._height-1):
+                for i1,i2 in itertools.product(indices, repeat=2):
+                    if tiles[i1][1] != tiles[i2][3]:
+                        constraint = [-tile_pos_to_var[(i1,j,k)], 
+                                      -tile_pos_to_var[(i2,j,k+1)]]
+                        s.add_clause(constraint)
+
+        # matching preassigned color constraints
+        legend = {0:'right',1:'top',2:'left',3:'bottom'}
+        for angle, D in enumerate(self._preassigned_color):
+            for j,k in D:
+                for i in indices:
+                    if tiles[i][angle] != D[(j,k)]:
+                        constraint = [-tile_pos_to_var[(i,j,k)]]
+                        s.add_clause(constraint)
+
+        return s
 
     def number_of_solutions(self, ncpus=8):
         r"""
