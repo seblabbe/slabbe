@@ -2599,6 +2599,12 @@ class WangTileSolver(object):
             sage: W = WangTileSolver(tiles,3,4)
             sage: W.has_solution(solver='dancing_links', ncpus=8)
             True
+
+        Using cryptominisat::
+
+            sage: W = WangTileSolver(tiles,3,4)
+            sage: W.has_solution(solver='cryptominisat') # optional cryptominisat
+            True
         """
         if solver == 'dancing_links':
             from sage.combinat.matrices.dancing_links import dlx_solver
@@ -2606,7 +2612,7 @@ class WangTileSolver(object):
             dlx = dlx_solver(rows)
             solution = dlx.one_solution(ncpus=ncpus)
             return solution is not None
-        else:
+        elif solver in ['Gurobi', 'gurobi', 'GLPK', 'Coin', 'CVXOPT', 'PPL', None]:
             p,x = self.milp(solver=solver)
             if solver_parameters is None:
                 solver_parameters = {}
@@ -2618,6 +2624,9 @@ class WangTileSolver(object):
             except MIPSolverException:
                 return False
             return True
+        else:
+            solution = self.sat_solver(solver)()
+            return bool(solution)
 
     def rows_and_information(self, verbose=False):
         r"""
@@ -2957,10 +2966,11 @@ class WangTileSolver(object):
             sage: tiles = [(0,3,1,4), (1,4,0,3)]
             sage: W = WangTileSolver(tiles,3,4)
             sage: s = W.sat_solver()
-            sage: s
+            sage: s           # random
             an ILP-based SAT Solver
+            CryptoMiniSat solver: 24 variables, 58 clauses.
             sage: L = s()
-            sage: L
+            sage: list(L)
             [None, False, True, False, True, True, False, True, False,
              False, True, False, True, True, False, True, False, False,
              True, False, True, True, False, True, False]
