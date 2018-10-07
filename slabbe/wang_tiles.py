@@ -2483,8 +2483,17 @@ class WangTileSolver(object):
             sage: tiling._table
             [[1, 0, 1, 0], [0, 1, 0, 1], [1, 0, 1, 0]]
 
+        Using SatLP solver with preassigned tiles::
+
+            sage: preassigned = {(0,0):0}
+            sage: W = WangTileSolver(tiles,3,4,preassigned_tiles=preassigned)
+            sage: tiling = W.solve(solver='LP')
+            sage: tiling._table
+            [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+
         Using cryptominisat solver::
 
+            sage: W = WangTileSolver(tiles,3,4)
             sage: tiling = W.solve('cryptominisat')  # optional cryptominisat
             sage: tiling._table                      # optional cryptominisat
             [[1, 0, 1, 0], [0, 1, 0, 1], [1, 0, 1, 0]]
