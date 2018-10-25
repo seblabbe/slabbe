@@ -2,6 +2,8 @@ all: install test
 
 install:
 	sage -pip install --upgrade --no-index -v .
+install3:
+	~/GitBox/sage3/sage -pip install --upgrade --no-index -v .
 
 install-internet:
 	sage -pip install --upgrade -v .
