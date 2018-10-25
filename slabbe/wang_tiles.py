@@ -2518,8 +2518,10 @@ class WangTileSolver(object):
             rows,row_info = self.rows_and_information()
             dlx = dlx_solver(rows)
             solution = dlx.one_solution(ncpus=ncpus)
-            if solution is None:
-                raise ValueError('no solution found using dancing links')
+            if solution is None or isinstance(solution, str):
+                raise ValueError('no solution found using dancing links,'
+                                 ' the return value from dancing links'
+                                 ' solver is {}'.format(solution))
             table = [[None]*self._height for _ in range(self._width)]
             for a in solution:
                 j,k,i = row_info[a]
