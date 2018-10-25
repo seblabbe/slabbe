@@ -472,6 +472,25 @@ class Substitution2d(object):
             d[a] = self(image_a)
         return Substitution2d(d)
 
+    def reversal(self):
+        r"""
+        Return the reversal of self.
+
+        EXAMPLES::
+
+            sage: from slabbe import Substitution2d
+            sage: A = [[1,2],[3,4]]
+            sage: B = [[5,6],[7,8]]
+            sage: d = {0:A, 1:B}
+            sage: s = Substitution2d(d)
+            sage: s.reversal()
+            Substitution 2d: {0: [[4, 3], [2, 1]], 1: [[8, 7], [6, 5]]}
+        """
+        d = {}
+        for a,image_a in self._d.items():
+            d[a] = [col[::-1] for col in reversed(image_a)]
+        return Substitution2d(d)
+
     def apply_matrix_transformation(self, M):
         r"""
         INPUT:
