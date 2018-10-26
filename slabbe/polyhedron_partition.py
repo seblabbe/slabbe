@@ -805,12 +805,13 @@ class PolyhedronPartition(object):
                 edges.add(sorted_edge)
         return edges
 
-    def tikz(self, fontsize=r'\normalsize', scale=1):
+    def tikz(self, fontsize=r'\normalsize', scale=1, extra_code=''):
         r"""
         INPUT:
 
         - ``fontsize`` -- string (default: ``r'\normalsize'``
         - ``scale`` -- number (default: ``1``)
+        - ``extra_code`` -- string (default: ``''``)
 
         EXAMPLES::
 
@@ -857,6 +858,7 @@ class PolyhedronPartition(object):
             lines.append(node_str.format(fontsize, 
                                          P.center().n(digits=5),
                                          key))
+        lines.append(extra_code)
         lines.append(r'\end{tikzpicture}')
         return TikzPicture('\n'.join(lines))
 
