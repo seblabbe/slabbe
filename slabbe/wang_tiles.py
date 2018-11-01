@@ -759,7 +759,8 @@ class WangTileSet(object):
     @rename_keyword(fontsize='font')
     def create_macro_file(self, filename='macro.tex', command_name='Tile',
             color=None, size=1, scale=1, font=r'\normalsize',
-            label_color='black', rotate=None, label_shift=.2, id=True, id_color=''):
+            label_color='black', rotate=None, label_shift=.2, id=True,
+            id_color='', draw_H=None, draw_V=None):
         r"""
         INPUT:
 
@@ -778,6 +779,16 @@ class WangTileSet(object):
         - ``label_color`` -- string (default: ``'black'``)
         - ``id`` -- boolean (default: ``True``), presence of the tile id
         - ``id_color`` -- string (default: ``''``) 
+        - ``draw_H`` -- dict (default: ``None``) from tile values -> tikz
+          draw commands. If ``None`` the values of the dict get replaced by
+          straight lines, more precisely by ``r'\draw {{}} -- ++ (1,0);'``.
+          Dict values must be strings ``s`` such that ``s.format((x,y))``
+          works.
+        - ``draw_V`` -- dict (default: ``None``) from tile values -> tikz
+          draw commands. If ``None`` the values of the dict get replaced by
+          straight lines, more precisely by ``r'\draw {{}} -- ++ (0,1);'``.
+          Dict values must be strings ``s`` such that ``s.format((x,y))``
+          works.
 
         EXAMPLES::
 
@@ -806,6 +817,7 @@ class WangTileSet(object):
             new_lines = tile_to_tikz(tile, position=(0,0), color=color,
                     label_color=label_color,
                     id=this_id, id_color=id_color, sizex=size, sizey=size, rotate=rotate,
+                    draw_H=draw_H, draw_V=draw_V,
                     label_shift=label_shift)
             lines.extend(new_lines)
             lines.append(r'\end{tikzpicture}')
