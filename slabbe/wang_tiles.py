@@ -2495,7 +2495,8 @@ class WangTileSolver(object):
             sage: W.solve(solver='dancing_links')
             Traceback (most recent call last):
             ...
-            ValueError: no solution found using dancing links
+            ValueError: no solution found using dancing links, the return
+            value from dancing links solver is None
 
         Using SatLP solver::
 
