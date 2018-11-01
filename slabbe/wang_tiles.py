@@ -759,8 +759,8 @@ class WangTileSet(object):
     @rename_keyword(fontsize='font')
     def create_macro_file(self, filename='macro.tex', command_name='Tile',
             color=None, size=1, scale=1, font=r'\normalsize',
-            label_color='black', rotate=None, label_shift=.2, id=True,
-            id_color='', draw_H=None, draw_V=None):
+            label_color='black', rotate=None, label=True, label_shift=.2,
+            id=True, id_color='', draw_H=None, draw_V=None):
         r"""
         INPUT:
 
@@ -774,6 +774,7 @@ class WangTileSet(object):
           in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
           label of Wang tiles. If ``None``, it performs a 90 degres rotation
           for left and right labels taking more than one character.
+        - ``label`` -- boolean (default: ``True``), presence of the colors
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
         - ``label_color`` -- string (default: ``'black'``)
@@ -815,7 +816,7 @@ class WangTileSet(object):
             lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
             this_id = i if id else None
             new_lines = tile_to_tikz(tile, position=(0,0), color=color,
-                    label_color=label_color,
+                    label=label, label_color=label_color,
                     id=this_id, id_color=id_color, sizex=size, sizey=size, rotate=rotate,
                     draw_H=draw_H, draw_V=draw_V,
                     label_shift=label_shift)
