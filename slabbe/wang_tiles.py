@@ -143,40 +143,40 @@ def tile_to_tikz(tile, position, color=None, id=None, id_color='',
          '\\draw (10, 101) -- ++ (1,0);',
          '\\draw (10, 100) -- ++ (0,1);',
          '\\draw (10, 100) -- ++ (1,0);',
-         '\\node[rotate=0] at (10.8, 100.5) {1};',
-         '\\node[rotate=0] at (10.5, 100.8) {2};',
-         '\\node[rotate=0] at (10.2, 100.5) {3};',
-         '\\node[rotate=0] at (10.5, 100.2) {4};']
+         '\\node[rotate=0,black] at (10.8, 100.5) {1};',
+         '\\node[rotate=0,black] at (10.5, 100.8) {2};',
+         '\\node[rotate=0,black] at (10.2, 100.5) {3};',
+         '\\node[rotate=0,black] at (10.5, 100.2) {4};']
         sage: tile_to_tikz((1,2,3,4), (10,100), color=None)
         ['% tile at position (x,y)=(10, 100)',
          '\\draw (11, 100) -- ++ (0,1);',
          '\\draw (10, 101) -- ++ (1,0);',
          '\\draw (10, 100) -- ++ (0,1);',
          '\\draw (10, 100) -- ++ (1,0);',
-         '\\node[rotate=0] at (10.8, 100.5) {1};',
-         '\\node[rotate=0] at (10.5, 100.8) {2};',
-         '\\node[rotate=0] at (10.2, 100.5) {3};',
-         '\\node[rotate=0] at (10.5, 100.2) {4};']
+         '\\node[rotate=0,black] at (10.8, 100.5) {1};',
+         '\\node[rotate=0,black] at (10.5, 100.8) {2};',
+         '\\node[rotate=0,black] at (10.2, 100.5) {3};',
+         '\\node[rotate=0,black] at (10.5, 100.2) {4};']
         sage: tile_to_tikz((1,2,3,4), (10,100), color=None, rotate=(0,90,0,0))
         ['% tile at position (x,y)=(10, 100)',
          '\\draw (11, 100) -- ++ (0,1);',
          '\\draw (10, 101) -- ++ (1,0);',
          '\\draw (10, 100) -- ++ (0,1);',
          '\\draw (10, 100) -- ++ (1,0);',
-         '\\node[rotate=0] at (10.8, 100.5) {1};',
-         '\\node[rotate=90] at (10.5, 100.8) {2};',
-         '\\node[rotate=0] at (10.2, 100.5) {3};',
-         '\\node[rotate=0] at (10.5, 100.2) {4};']
+         '\\node[rotate=0,black] at (10.8, 100.5) {1};',
+         '\\node[rotate=90,black] at (10.5, 100.8) {2};',
+         '\\node[rotate=0,black] at (10.2, 100.5) {3};',
+         '\\node[rotate=0,black] at (10.5, 100.2) {4};']
         sage: tile_to_tikz((1,2,3,4), (10,100), color=None, label_shift=.1)
         ['% tile at position (x,y)=(10, 100)',
          '\\draw (11, 100) -- ++ (0,1);',
          '\\draw (10, 101) -- ++ (1,0);',
          '\\draw (10, 100) -- ++ (0,1);',
          '\\draw (10, 100) -- ++ (1,0);',
-         '\\node[rotate=0] at (10.9000000000000, 100.5) {1};',
-         '\\node[rotate=0] at (10.5, 100.900000000000) {2};',
-         '\\node[rotate=0] at (10.1000000000000, 100.5) {3};',
-         '\\node[rotate=0] at (10.5, 100.100000000000) {4};']
+         '\\node[rotate=0,black] at (10.9000000000000, 100.5) {1};',
+         '\\node[rotate=0,black] at (10.5, 100.900000000000) {2};',
+         '\\node[rotate=0,black] at (10.1000000000000, 100.5) {3};',
+         '\\node[rotate=0,black] at (10.5, 100.100000000000) {4};']
 
     ::
 
@@ -186,10 +186,10 @@ def tile_to_tikz(tile, position, color=None, id=None, id_color='',
          '\\draw (10, 101) -- ++ (1,0);',
          '\\draw (10, 100) -- ++ (0,1);',
          '\\draw (10, 100) -- ++ (1,0);',
-         '\\node[rotate=90] at (10.8, 100.5) {10};',
-         '\\node[rotate=0] at (10.5, 100.8) {20};',
-         '\\node[rotate=90] at (10.2, 100.5) {30};',
-         '\\node[rotate=0] at (10.5, 100.2) {40};']
+         '\\node[rotate=90,black] at (10.8, 100.5) {10};',
+         '\\node[rotate=0,black] at (10.5, 100.8) {20};',
+         '\\node[rotate=90,black] at (10.2, 100.5) {30};',
+         '\\node[rotate=0,black] at (10.5, 100.2) {40};']
     """
     if rotate is None:
         rotate = []
@@ -3938,15 +3938,15 @@ class WangTiling(object):
             \begin{tikzpicture}[scale=1]
             \tikzstyle{every node}=[font=\normalsize]
             % tile at position (x,y)=(0, 0)
-            \node at (0.5, 0.5) {0};
+            \node[] at (0.5, 0.5) {0};
             \draw (0, 0) -- ++ (0,1);
             ...
-            ... 96 lines not printed (3258 characters in total) ...
+            ... 96 lines not printed (3570 characters in total) ...
             ...
-            \node[rotate=0] at (2.8, 3.5) {0};
-            \node[rotate=0] at (2.5, 3.8) {0};
-            \node[rotate=0] at (2.2, 3.5) {0};
-            \node[rotate=0] at (2.5, 3.2) {0};
+            \node[rotate=0,black] at (2.8, 3.5) {0};
+            \node[rotate=0,black] at (2.5, 3.8) {0};
+            \node[rotate=0,black] at (2.2, 3.5) {0};
+            \node[rotate=0,black] at (2.5, 3.2) {0};
             \end{tikzpicture}
             \end{document}
 
