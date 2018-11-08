@@ -84,10 +84,11 @@ from sage.misc.decorators import rename_keyword
 from sage.misc.superseded import deprecated_function_alias
 
 
-def tile_to_tikz(tile, position, color=None, id=None, id_color='', sizex=1, sizey=1,
-        rotate=None, label=True, label_shift=.2, label_color='black',
-        right_edges=True, top_edges=True, left_edges=True, bottom_edges=True,
-        draw_H=None, draw_V=None):
+def tile_to_tikz(tile, position, color=None, id=None, id_color='',
+        id_format='{}', sizex=1, sizey=1, rotate=None, label=True,
+        label_shift=.2, label_color='black', right_edges=True,
+        top_edges=True, left_edges=True, bottom_edges=True, draw_H=None,
+        draw_V=None):
     r"""
 
     INPUT:
@@ -97,6 +98,8 @@ def tile_to_tikz(tile, position, color=None, id=None, id_color='', sizex=1, size
     - ``color`` -- dict (default: ``None``) from tile values -> tikz colors
     - ``id`` -- id (default: ``None``) of the tile to be printed in the center
     - ``id_color`` -- string (default: ``''``) 
+    - ``id_format`` -- string (default: ``r'{}'``) to be called with
+      ``id_format.format(key)``
     - ``sizex`` -- number (default: ``1``), horizontal size of the tile
     - ``sizey`` -- number (default: ``1``), vertical size of the tile
     - ``rotate`` -- list or ``None`` (default:``None``) list of four angles
@@ -212,6 +215,7 @@ def tile_to_tikz(tile, position, color=None, id=None, id_color='', sizex=1, size
 
     if id is not None:
         c = (x+.5*sx,y+.5*sy)
+        id = id_format.format(id)
         lines.append(r'\node[{}] at {} {{{}}};'.format(id_color, c, id))
 
     if draw_H is None:
@@ -670,9 +674,9 @@ class WangTileSet(object):
     @rename_keyword(fontsize='font')
     def tikz(self, ncolumns=10, color=None, size=1, space=.1, scale=1,
              font=r'\normalsize', rotate=None, label=True, id=True,
-             id_color='', label_shift=.2, label_color='black',
-             right_edges=True, top_edges=True, left_edges=True,
-             bottom_edges=True, draw_H=None, draw_V=None):
+             id_format='{}', id_color='', label_shift=.2,
+             label_color='black', right_edges=True, top_edges=True,
+             left_edges=True, bottom_edges=True, draw_H=None, draw_V=None):
         r"""
         INPUT:
 
@@ -689,6 +693,8 @@ class WangTileSet(object):
         - ``label`` -- boolean (default: ``True``), presence of the colors
         - ``id`` -- boolean (default: ``True``), presence of the tile id
         - ``id_color`` -- string (default: ``''``) 
+        - ``id_format`` -- string (default: ``r'{}'``) to be called with
+          ``id_format.format(key)``
         - ``label_shift`` -- number (default: ``.2``) translation distance of the
           label from the edge
         - ``label_color`` -- string (default: ``'black'``)
@@ -727,9 +733,9 @@ class WangTileSet(object):
             position = (x * (size + space), y * (size + space))
             this_id = i if id else None
             new_lines = tile_to_tikz(tile, position, color=color,
-                    id=this_id, id_color=id_color, sizex=size, sizey=size, rotate=rotate,
-                    label=label, label_shift=label_shift,
-                    label_color=label_color,
+                    id=this_id, id_color=id_color, id_format=id_format,
+                    sizex=size, sizey=size, rotate=rotate, label=label,
+                    label_shift=label_shift, label_color=label_color,
                     right_edges=right_edges, top_edges=top_edges,
                     left_edges=left_edges, bottom_edges=bottom_edges,
                     draw_H=draw_H, draw_V=draw_V)
@@ -760,7 +766,7 @@ class WangTileSet(object):
     def create_macro_file(self, filename='macro.tex', command_name='Tile',
             color=None, size=1, scale=1, font=r'\normalsize',
             label_color='black', rotate=None, label=True, label_shift=.2,
-            id=True, id_color='', draw_H=None, draw_V=None):
+            id=True, id_color='', id_format='{}', draw_H=None, draw_V=None):
         r"""
         INPUT:
 
@@ -780,6 +786,8 @@ class WangTileSet(object):
         - ``label_color`` -- string (default: ``'black'``)
         - ``id`` -- boolean (default: ``True``), presence of the tile id
         - ``id_color`` -- string (default: ``''``) 
+        - ``id_format`` -- string (default: ``r'{}'``) to be called with
+          ``id_format.format(key)``
         - ``draw_H`` -- dict (default: ``None``) from tile values -> tikz
           draw commands. If ``None`` the values of the dict get replaced by
           straight lines, more precisely by ``r'\draw {{}} -- ++ (1,0);'``.
@@ -816,10 +824,10 @@ class WangTileSet(object):
             lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
             this_id = i if id else None
             new_lines = tile_to_tikz(tile, position=(0,0), color=color,
-                    label=label, label_color=label_color,
-                    id=this_id, id_color=id_color, sizex=size, sizey=size, rotate=rotate,
-                    draw_H=draw_H, draw_V=draw_V,
-                    label_shift=label_shift)
+                    label=label, label_color=label_color, id=this_id,
+                    id_color=id_color, id_format=id_format, sizex=size,
+                    sizey=size, rotate=rotate, draw_H=draw_H,
+                    draw_V=draw_V, label_shift=label_shift)
             lines.extend(new_lines)
             lines.append(r'\end{tikzpicture}')
             lines.append(r'} % end of newcommand')
@@ -2052,8 +2060,9 @@ class WangTileSet(object):
                     sizex = len(tile[1])
                     position = (d-sizex, y)
                     new_lines = tile_to_tikz(tile, position, color=None,
-                            id=b, id_color='', sizex=sizex, sizey=1, rotate=None,
-                            label=True, label_shift=.2, label_color='black',
+                            id=b, id_color='', id_format='{}', sizex=sizex,
+                            sizey=1, rotate=None, label=True,
+                            label_shift=.2, label_color='black',
                             draw_H=None, draw_V=None)
                     lines.extend(new_lines)
                 lines.append(r'\end{tikzpicture}')
@@ -3874,9 +3883,10 @@ class WangTiling(object):
 
     @rename_keyword(fontsize='font')
     def tikz(self, color=None, font=r'\normalsize', rotate=None,
-            id=True, id_color='', label=True, label_shift=.2, label_color='black',
-            scale=1, size=1, edges=True, draw_H=None, draw_V=None,
-            extra_before='', extra_after=''):
+            id=True, id_color='', id_format='{}', label=True,
+            label_shift=.2, label_color='black', scale=1, size=1,
+            edges=True, draw_H=None, draw_V=None, extra_before='',
+            extra_after=''):
         r"""
         Return a tikzpicture showing one solution.
 
@@ -3890,6 +3900,8 @@ class WangTiling(object):
           for left and right labels taking more than one character.
         - ``id`` -- boolean (default: ``True``), presence of the tile id
         - ``id_color`` -- string (default: ``''``) 
+        - ``id_format`` -- string (default: ``r'{}'``) to be called with
+          ``id_format.format(key)``
         - ``edges`` -- bool (default: ``True``) 
         - ``label`` -- boolean (default: ``True``), presence of the color labels
         - ``label_shift`` -- number (default: ``.2``) translation distance
@@ -4019,11 +4031,12 @@ class WangTiling(object):
                 right_edges = edges and j == W - 1
                 top_edges = edges and k == H - 1
                 more_lines = tile_to_tikz(tile, position, color=color,
-                        id=this_id, id_color=id_color, sizex=size, sizey=size, rotate=rotate,
-                        label=label, label_shift=label_shift,
-                        label_color=label_color, right_edges=right_edges,
-                        top_edges=top_edges, left_edges=edges,
-                        bottom_edges=edges, draw_H=draw_H, draw_V=draw_V)
+                        id=this_id, id_color=id_color, id_format=id_format,
+                        sizex=size, sizey=size, rotate=rotate, label=label,
+                        label_shift=label_shift, label_color=label_color,
+                        right_edges=right_edges, top_edges=top_edges,
+                        left_edges=edges, bottom_edges=edges,
+                        draw_H=draw_H, draw_V=draw_V)
                 lines.extend(more_lines)
         if extra_after:
             lines.append(extra_after)
