@@ -805,12 +805,16 @@ class PolyhedronPartition(object):
                 edges.add(sorted_edge)
         return edges
 
-    def tikz(self, fontsize=r'\normalsize', scale=1, extra_code=''):
+    def tikz(self, fontsize=r'\normalsize', scale=1, 
+            node_str = r'\node[font={}] at {} {{{}}};',
+            extra_code=''):
         r"""
         INPUT:
 
         - ``fontsize`` -- string (default: ``r'\normalsize'``
         - ``scale`` -- number (default: ``1``)
+        - ``node_str`` -- string (default: ``r'\node[font={}] at {} {{{}}};'``) 
+          to be called with ``node_str.format(fontsize, center, key)``
         - ``extra_code`` -- string (default: ``''``)
 
         EXAMPLES::
@@ -854,7 +858,6 @@ class PolyhedronPartition(object):
         # node key
         for key,P in self:
             lines.append(r'% atom with key {}'.format(key))
-            node_str = r'\node[font={}] at {} {{{}}};'
             lines.append(node_str.format(fontsize, 
                                          P.center().n(digits=5),
                                          key))
