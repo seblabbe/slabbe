@@ -806,15 +806,15 @@ class PolyhedronPartition(object):
         return edges
 
     def tikz(self, fontsize=r'\normalsize', scale=1, 
-            node_str = r'\node[font={}] at {} {{{}}};',
+            label_format = r'{}',
             extra_code=''):
         r"""
         INPUT:
 
         - ``fontsize`` -- string (default: ``r'\normalsize'``
         - ``scale`` -- number (default: ``1``)
-        - ``node_str`` -- string (default: ``r'\node[font={}] at {} {{{}}};'``) 
-          to be called with ``node_str.format(fontsize, center, key)``
+        - ``label_format`` -- string (default: ``r'{}'``) to be called with
+          ``label_format.format(key)``
         - ``extra_code`` -- string (default: ``''``)
 
         EXAMPLES::
@@ -844,6 +844,7 @@ class PolyhedronPartition(object):
 
             sage: _ = P.tikz(fontsize=r'\scriptsize').pdf(view=False)
             sage: _ = P.tikz(scale=2).pdf(view=False)
+            sage: _ = P.tikz(label_format=r'$a_{{{}}}$').pdf(view=False)
         """
         from slabbe import TikzPicture
         lines = []
@@ -856,11 +857,13 @@ class PolyhedronPartition(object):
             line = r'\draw {} -- {};'.format(a,b)
             lines.append(line)
         # node key
+        node_format = r'\node[font={}] at {} {{{}}};'
         for key,P in self:
             lines.append(r'% atom with key {}'.format(key))
-            lines.append(node_str.format(fontsize, 
-                                         P.center().n(digits=5),
-                                         key))
+            label = label_format.format(key)
+            lines.append(node_format.format(fontsize, 
+                                            P.center().n(digits=5),
+                                            label))
         lines.append(extra_code)
         lines.append(r'\end{tikzpicture}')
         return TikzPicture('\n'.join(lines))
