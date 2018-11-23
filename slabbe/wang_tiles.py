@@ -2635,8 +2635,11 @@ class WangTileSolver(object):
             from sage.combinat.matrices.dancing_links import dlx_solver
             rows,row_info = self.rows_and_information()
             dlx = dlx_solver(rows)
-            solution = dlx.one_solution(ncpus=ncpus)
-            return solution is not None
+            if ncpus == 1:
+                return dlx.search() == 1
+            else:
+                solution = dlx.one_solution(ncpus=ncpus)
+                return solution is not None
         elif solver in ['Gurobi', 'gurobi', 'GLPK', 'Coin', 'CVXOPT', 'PPL', None]:
             p,x = self.milp(solver=solver)
             if solver_parameters is None:
