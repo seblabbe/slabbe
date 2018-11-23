@@ -31,11 +31,15 @@ from random import randrange
 from sage.rings.rational_field import QQ
 from sage.functions.other import abs
 
-def discrepancy(self):
+def discrepancy(self, freq=None):
     r"""
     Return the discrepancy of the word.
     
     This is a distance to the euclidean line defined in [T1980]_.
+
+    INPUT:
+
+    - ``freq`` -- frequency vector (default: ``None``)
 
     EXAMPLES::
 
@@ -69,7 +73,9 @@ def discrepancy(self):
        Mathematics 32, no 3 (1980): 323-30. doi:10.1016/0012-365X(80)90269-1.
     """
     length = self.length()
-    freq = {a:QQ((v,length)) for (a,v) in self.evaluation_dict().iteritems()}
+    if freq is None:
+        freq = {a:QQ((v,length)) 
+                for (a,v) in self.evaluation_dict().iteritems()}
     C = Counter()
     M = 0
     for i,a in enumerate(self):
