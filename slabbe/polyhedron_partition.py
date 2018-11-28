@@ -122,7 +122,19 @@ def rotation_mod(i, angle, mod, base_ring):
         (A vertex at (-phi + 2, 0),
          A vertex at (-phi + 2, -phi + 2),
          A vertex at (phi - 1, -phi + 2))
+
+    It works if the angle is larger than the modulo::
+
+        sage: t2 = rotation_mod(0, phi, 1, K)
+        sage: t2(p).vertices()
+        (A vertex at (0, phi - 1),
+         A vertex at (0, 1),
+         A vertex at (2*phi - 3, 1))
+
     """
+    if not 0 <= angle < mod:
+        from sage.functions.other import floor
+        angle -= floor(angle/mod)
     def trans(p):
         if all(v[i] <= mod-angle for v in p.vertices()):
             L = [tuple(vj+angle if j==i else vj 
