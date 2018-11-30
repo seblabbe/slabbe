@@ -912,6 +912,10 @@ class Substitution2d(object):
             []
 
         """
+        if not self.codomain_alphabet() <= self.domain_alphabet():
+            raise ValueError("codomain alphabet (={}) is not a subset of the"
+                    " domain alphabet (={})".format(self.codomain_alphabet(),
+                                              self.domain_alphabet()))
         if F is None:
             from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
             alphabet = self.domain_alphabet()
