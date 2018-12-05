@@ -676,10 +676,10 @@ class PolyhedronPartition(object):
 
         It works when the partition has two atoms coded by the same key::
 
-            sage: P = PolyhedronPartition([(4,p), (1,q), (1,r)])
+            sage: P = PolyhedronPartition([(0,p), (0,q), (3,r)])
             sage: d = P.keys_permutation_lexicographic()
             sage: d
-            {1: 1, 4: 0}
+            {0: 0, 3: 1}
             sage: P.rename_keys(d).alphabet()
             {0, 1}
 
@@ -687,9 +687,10 @@ class PolyhedronPartition(object):
         L = [(key, p.center()) for (key,p) in self]
         L.sort(key=lambda t:t[1])
         d = {}
-        for i,(key,center) in enumerate(L):
+        it = itertools.count()
+        for key,center in L:
             if key not in d:
-                d[key] = i 
+                d[key] = next(it)
         return d
 
     def translation(self, displacement):
