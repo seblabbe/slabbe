@@ -56,6 +56,10 @@ Inducing an irrationnal rotation on a subdomain::
      5: [1, 3, 2],
      6: [1, 3, 3]}
 
+TODO:
+
+    - Code Polyhedron Exchange Transformation (PET)
+
 AUTHORS:
 
 - Sébastien Labbé, November 2017, initial version
@@ -386,6 +390,8 @@ class PolyhedronPartition(object):
 
     def __contains__(self, p):
         r"""
+        Return whether a polyhedron is an atom of the partition.
+
         INPUT:
 
         - ``p`` -- a polyhedron
@@ -644,12 +650,6 @@ class PolyhedronPartition(object):
         Return a permutation relabelling of the keys for self in increasing
         order for the lexicographic order of the centers of the polyhedrons.
 
-        .. NOTE::
-
-            currently, the code works only if the coding of self and other
-            is injective, i.e., no two polyhedron are coded by the same
-            letter.
-
         OUTPUT:
 
             dict, key -> key
@@ -667,18 +667,29 @@ class PolyhedronPartition(object):
             {1: 1, 2: 2, 4: 0}
             sage: P.rename_keys(d)
             Polyhedron partition of 3 atoms with 3 letters
+
+        ::
+
             sage: Q = PolyhedronPartition({0:p, 5:q})
             sage: Q.keys_permutation_lexicographic()
             {0: 0, 5: 1}
-        """
-        if self.alphabet_size() != len(self):
-            raise NotImplementedError('keys_permutation method is'
-                ' implemented only if the coding of self (={}) is'
-                ' injective'.format(self))
 
+        It works when the partition has two atoms coded by the same key::
+
+            sage: P = PolyhedronPartition([(4,p), (1,q), (1,r)])
+            sage: d = P.keys_permutation_lexicographic()
+            sage: d
+            {1: 1, 4: 0}
+            sage: P.rename_keys(d).alphabet()
+            {0, 1}
+
+        """
         L = [(key, p.center()) for (key,p) in self]
         L.sort(key=lambda t:t[1])
-        d = {key:i for i,(key,center) in enumerate(L)}
+        d = {}
+        for i,(key,center) in enumerate(L):
+            if key not in d:
+                d[key] = i 
         return d
 
     def translation(self, displacement):
