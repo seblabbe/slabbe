@@ -540,6 +540,29 @@ class Substitution2d(object):
             d[image_a[0][0]] = a 
         return Substitution2d.from_permutation(d)
 
+    def letter_to_letter_dict(self, pos=(0,0)):
+        r"""
+        Return the inverse of self (when self is a permutation).
+
+        INPUT:
+
+        - ``pos`` -- tuple (default:``(0,0)``), tuple of two integers
+
+        EXAMPLES::
+
+            sage: from slabbe import Substitution2d
+            sage: A = [[0,1],[2,3]]
+            sage: B = [[4,5]]
+            sage: s = Substitution2d({0:A, 1:B})
+            sage: s
+            Substitution 2d: {0: [[0, 1], [2, 3]], 1: [[4, 5]]}
+            sage: s.letter_to_letter_dict(pos=(0,0))
+            {0: 0, 1: 4}
+
+        """
+        x,y = pos
+        return {a:image_a[x][y] for a,image_a in self._d.items()}
+
     def apply_matrix_transformation(self, M):
         r"""
         INPUT:
