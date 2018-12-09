@@ -509,6 +509,37 @@ class Substitution2d(object):
             d[a] = [col[::-1] for col in reversed(image_a)]
         return Substitution2d(d)
 
+    def inverse(self):
+        r"""
+        Return the inverse of self (when self is a permutation).
+
+        EXAMPLES::
+
+            sage: from slabbe import Substitution2d
+            sage: d = {0:7, 1:8}
+            sage: s = Substitution2d.from_permutation(d)
+            sage: s
+            Substitution 2d: {0: [[7]], 1: [[8]]}
+            sage: s.inverse()
+            Substitution 2d: {8: [[1]], 7: [[0]]}
+
+        TESTS::
+
+            sage: s = Substitution2d({8: [[1]], 7: [[0,1]]})
+            sage: s.inverse()
+            Traceback (most recent call last):
+            ...
+            ValueError: self must be a permutation but image of 7 is [[0, 1]]
+
+        """
+        d = {}
+        for a,image_a in self._d.items():
+            if len(image_a) > 1 or len(image_a[0]) > 1:
+                raise ValueError('self must be a permutation but image '
+                                 'of {} is {}'.format(a, image_a))
+            d[image_a[0][0]] = a 
+        return Substitution2d.from_permutation(d)
+
     def apply_matrix_transformation(self, M):
         r"""
         INPUT:
