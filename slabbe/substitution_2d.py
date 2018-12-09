@@ -70,6 +70,24 @@ class Substitution2d(object):
         """
         return "Substitution 2d: {}".format(self._d)
 
+    def __eq__(self, other):
+        r"""
+        INPUT:
+
+        - ``other`` -- substitution 2d
+
+        EXAMPLES::
+
+            sage: from slabbe import Substitution2d
+            sage: A = [[0,1],[2,3]]
+            sage: B = [[4,5]]
+            sage: d = {0:A, 1:B}
+            sage: s = Substitution2d(d)
+            sage: s == Substitution2d(d)
+            True
+        """
+        return self._d == other._d
+
     def _latex_(self, ncolumns=8, align='l', variableA=None,
             variableB=None):
         r"""
@@ -1000,6 +1018,55 @@ class Substitution2d(object):
         return R.to_digraph(multiedges=False)
 
     _matrix_ = incidence_matrix
+    def relabel_domain(self, other):
+        r"""
+        Return a permutation p such that self*p == other, if it exists.
+
+        INPUT:
+
+        - ``other`` -- substitution 2d
+
+        EXAMPLES::
+
+            sage: from slabbe import Substitution2d
+            sage: A = [[0,1],[0,1]]
+            sage: B = [[1,0],[1,1]]
+            sage: s = Substitution2d({0:A, 1:B})
+            sage: t = Substitution2d({7:A, 8:B})
+            sage: s.relabel_domain(t)
+            Substitution 2d: {8: [[1]], 7: [[0]]}
+
+        TESTS::
+
+            sage: s = Substitution2d({0:A, 1:B})
+            sage: s.relabel_domain(s)
+            Substitution 2d: {0: [[0]], 1: [[1]]}
+
+        ::
+
+            sage: s = Substitution2d({0:A, 1:B})
+            sage: t = Substitution2d({7:A, 8:B, 9:[[4]]})
+            sage: t.relabel_domain(s)
+            Traceback (most recent call last):
+            ...
+            ValueError: image of letter 9 is [[4]] and is not in other
+            sage: s.relabel_domain(t)
+            Traceback (most recent call last):
+            ...
+            AssertionError: problem: self * p == other not satisfied
+        """
+        table_to_tuple = lambda table:tuple(tuple(col) for col in table)
+        other_inv = {table_to_tuple(val):key for key,val in other._d.items()}
+        p = {}
+        for key,val in self._d.items():
+            val_ = table_to_tuple(val)
+            if val_ in other_inv:
+                p[other_inv[val_]] = key 
+            else:
+                raise ValueError('image of letter {} is {} and is not in other'.format(key, val))
+        p = Substitution2d.from_permutation(p)
+        assert self * p == other, "problem: self * p == other not satisfied"
+        return p
 
 def set_of_factors(table, shape, avoid_border=0):
     r"""
