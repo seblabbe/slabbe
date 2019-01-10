@@ -79,7 +79,7 @@ from copy import copy
 from sage.misc.cachefunc import cached_method
 from sage.geometry.polyhedron.constructor import Polyhedron
 
-def rotation_mod(i, angle, mod, base_ring):
+def rotation_mod_old(i, angle, mod, base_ring):
     r"""
     Return a rotation function acting on polyhedron.
 
@@ -93,6 +93,45 @@ def rotation_mod(i, angle, mod, base_ring):
     OUTPUT:
 
         a function defined on polyhedron
+
+    EXAMPLES::
+
+    """
+    if not 0 <= angle < mod:
+        from sage.functions.other import floor
+        angle -= floor(angle/mod) * mod
+    def trans(p):
+        if all(v[i] <= mod-angle for v in p.vertices()):
+            L = [tuple(vj+angle if j==i else vj 
+                    for (j,vj) in enumerate(v))
+                    for v in p.vertices()]
+        else:
+            L = [tuple(vj+angle-mod if j==i else vj 
+                    for (j,vj) in enumerate(v))
+                    for v in p.vertices()]
+        return Polyhedron(L, base_ring=base_ring)
+    return trans
+
+def rotation_mod(i, angle, mod, base_ring, dimension=2):
+    r"""
+    Return a rotation function acting on polyhedron.
+
+    INPUT:
+
+    - ``i`` -- integer, coordinate of the rotation
+    - ``angle`` -- number, angle of rotation
+    - ``mod`` -- number, modulo 
+    - ``base_ring`` -- ring, base ring for the vertices of the polyhedron
+
+    OUTPUT:
+
+        a polyhedron exchange transformation
+
+    TODO:
+
+        the best would be to define this in terms of a lattice
+        and a translation, the output in terms of a chosen fundamental
+        domain
 
     EXAMPLES::
 
@@ -119,6 +158,14 @@ def rotation_mod(i, angle, mod, base_ring):
         sage: t0_inv(t0(p)) == p
         True
 
+    or::
+
+        sage: t0_inv = t0.inverse()
+        sage: t0(p) == p
+        False
+        sage: t0_inv(t0(p)) == p
+        True
+
     A rotation modulo 1 on the y coordinate::
 
         sage: t1 = rotation_mod(1, 1/phi^2, 1, K)
@@ -138,17 +185,23 @@ def rotation_mod(i, angle, mod, base_ring):
     """
     if not 0 <= angle < mod:
         from sage.functions.other import floor
-        angle -= floor(angle/mod)
-    def trans(p):
-        if all(v[i] <= mod-angle for v in p.vertices()):
-            L = [tuple(vj+angle if j==i else vj 
-                    for (j,vj) in enumerate(v))
-                    for v in p.vertices()]
-        else:
-            L = [tuple(vj+angle-mod if j==i else vj 
-                    for (j,vj) in enumerate(v))
-                    for v in p.vertices()]
-        return Polyhedron(L, base_ring=base_ring)
+        angle -= floor(angle/mod) * mod
+    I = (0,mod)
+    left = (0,mod-angle)
+    right = (mod-angle,mod)
+    L = [I]*dimension
+    L[i] = left
+    R = [I]*dimension
+    R[i] = right
+    P = Polyhedron(itertools.product(*L))
+    Q = Polyhedron(itertools.product(*R))
+    partition = PolyhedronPartition([P,Q])
+    v0 = copy(partition.ambient_space().zero())
+    v0[i] = angle
+    v1 = copy(partition.ambient_space().zero())
+    v1[i] = angle-mod
+    T = {0:v0,1:v1}
+    trans = PolyhedronExchangeTransformation(partition, T)
     return trans
 
 def find_unused_key(d, sequence):
@@ -277,6 +330,9 @@ class PolyhedronPartition(object):
                 self._items = list(enumerate(atoms))
             elif all(isinstance(t, tuple) for t in atoms):
                 self._items = atoms
+            else:
+                raise TypeError('atoms (={}) must be a list of polyhedron or a'
+                        ' list of tuples'.format(atoms))
         elif isinstance(atoms, dict):
             self._items = atoms.items()
         else:
@@ -996,6 +1052,10 @@ class PolyhedronPartition(object):
 
         - ``trans`` -- a function: polyhedron -> polyhedron
 
+        .. NOTE::
+
+            Maybe this function should just be replaced by trans(self).
+
         EXAMPLES::
 
             sage: from slabbe import PolyhedronPartition, rotation_mod
@@ -1107,7 +1167,7 @@ class PolyhedronPartition(object):
         B = self.refinement(other_half_partition)
         return PolyhedronPartition(A.atoms()+B.atoms())
 
-    def refinement(self, other):
+    def refinement(self, other, key_fn=None):
         r"""
         Return the polyhedron partition obtained by the intersection of the
         atoms of self with the atoms of other.
@@ -1117,10 +1177,16 @@ class PolyhedronPartition(object):
         INPUT:
 
         - ``other`` -- a polyhedron partition
+        - ``key_fn`` -- function to apply on pairs of labels, or None
 
         OUTPUT:
 
             a polyhedron partition
+
+        .. TODO::
+
+            Add a option so that the key could be merged from the previous
+            keys.
 
         EXAMPLES::
 
@@ -1142,10 +1208,14 @@ class PolyhedronPartition(object):
             raise TypeError("other (of type={}) must a polyhedron"
                     " partition".format(type(other)))
         L = []
-        for (p,q) in itertools.product(self.atoms(), other.atoms()):
+        for ((a,p),(b,q)) in itertools.product(self, other):
             p_q = p.intersection(q)
             if p_q.volume() > 0:
-                L.append(p_q)
+                if key_fn is None:
+                    L.append(p_q)
+                else:
+                    new_key = key_fn(a,b)
+                    L.append((new_key, p_q))
         return PolyhedronPartition(L)
         
     def induced_out_partition(self, trans, ieq):
@@ -1198,7 +1268,8 @@ class PolyhedronPartition(object):
             sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
             sage: ieq3 = [-1/2, 1, 0]   # x0 >= 1/2
             sage: P.induced_out_partition(u, ieq3)
-            {2: Polyhedron partition of 3 atoms with 3 letters,
+            {1: Polyhedron partition of 2 atoms with 2 letters,
+             2: Polyhedron partition of 3 atoms with 3 letters,
              3: Polyhedron partition of 4 atoms with 4 letters}
 
         It is an error if the induced region is empty::
@@ -1217,7 +1288,7 @@ class PolyhedronPartition(object):
             sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
             sage: ieq5 = [1/2, 1, 0]   # x0 >= -1/2
             sage: P.induced_out_partition(u, ieq5)
-            {1: Polyhedron partition of 4 atoms with 4 letters}
+            {1: Polyhedron partition of 6 atoms with 6 letters}
 
         An irrational rotation::
 
@@ -1250,7 +1321,7 @@ class PolyhedronPartition(object):
                     "(={})".format(half.inequalities()[0], self))
         level = 1
         ans = {}
-        P = P.apply_transformation(trans)
+        P = trans(P)
         while len(P):
             P_returned = P.refinement(half_part)
             if P_returned:
@@ -1468,7 +1539,11 @@ class PolyhedronPartition(object):
         INPUT:
 
         - ``word`` -- list
-        - ``trans_inv`` -- a function: polyhedron -> polyhedron
+        - ``trans_inv`` -- a polyhedron exchange transformation
+
+        OUTPUT:
+
+            polyhedron partition
 
         EXAMPLES::
 
@@ -1483,9 +1558,18 @@ class PolyhedronPartition(object):
             sage: P.cylinder([2,2], u_inv)
             Polyhedron partition of 1 atoms with 1 letters
             sage: P.cylinder([1,1], u_inv)
-            Polyhedron partition of 1 atoms with 1 letters
+            Polyhedron partition of 2 atoms with 2 letters
             sage: P.cylinder([1], u_inv)
             Polyhedron partition of 1 atoms with 1 letters
+
+        ::
+
+            sage: import itertools
+            sage: L2 = itertools.product(range(3),repeat=2)
+            sage: [P.cylinder([a,b], u_inv).volume() for (a,b) in L2]
+            [1/72, 1/9, 0, 1/9, 19/36, 1/9, 0, 1/9, 1/72]
+            sage: sum(_)
+            1
 
         TESTS::
 
@@ -1494,20 +1578,21 @@ class PolyhedronPartition(object):
             sage: P.cylinder([2,3], u_inv)
             Polyhedron partition of 0 atoms with 0 letters
             sage: P.cylinder([2,1], u_inv)
-            Polyhedron partition of 0 atoms with 0 letters
+            Polyhedron partition of 1 atoms with 1 letters
             sage: P.cylinder([], u_inv)
             Polyhedron partition of 3 atoms with 3 letters
 
         """
+        key_fn = lambda a,b:(a,b)
         if not word:
             return self
         P = self
         for i in range(1, len(word)):
             a = word[-i]
-            P = P.refinement(self[a])
-            P = P.apply_transformation(trans_inv)
+            P = P.refinement(self[a], key_fn=key_fn)
+            P = trans_inv(P)
         a = word[0]
-        return P.refinement(self[a])
+        return P.refinement(self[a], key_fn=key_fn)
 
 class PolyhedronExchangeTransformation(object):
     r"""
@@ -1520,7 +1605,7 @@ class PolyhedronExchangeTransformation(object):
 
     EXAMPLES::
 
-        sage: from slabbe import PolyhedronPartition
+        sage: from slabbe import PolyhedronPartition, PolyhedronExchangeTransformation
         sage: h = 1/3
         sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
         sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
@@ -1545,12 +1630,12 @@ class PolyhedronExchangeTransformation(object):
         else:
             raise TypeError('partition(={}) must be a '
                             'PolyhedronPartition'.format(partition))
-        ambient_space = self._partition.ambient_space()
+        self._ambient_space = self._partition.ambient_space()
 
         if isinstance(translations, list):
-            self._translations = {a:ambient_space(t) for (a,t) in enumerate(translations)}
+            self._translations = {a:self._ambient_space(t) for (a,t) in enumerate(translations)}
         elif isinstance(translations, dict):
-            self._translations = {a:ambient_space(t) for (a,t) in translations.items()}
+            self._translations = {a:self._ambient_space(t) for (a,t) in translations.items()}
         else:
             raise TypeError('translations(={}) must be a '
                             'list or dict'.format(translations))
@@ -1559,7 +1644,7 @@ class PolyhedronExchangeTransformation(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe import PolyhedronPartition
+            sage: from slabbe import PolyhedronPartition, PolyhedronExchangeTransformation
             sage: h = 1/3
             sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
             sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
@@ -1578,7 +1663,7 @@ class PolyhedronExchangeTransformation(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe import PolyhedronPartition
+            sage: from slabbe import PolyhedronPartition, PolyhedronExchangeTransformation
             sage: h = 1/3
             sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
             sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
@@ -1594,7 +1679,7 @@ class PolyhedronExchangeTransformation(object):
         r"""
         EXAMPLES::
 
-            sage: from slabbe import PolyhedronPartition
+            sage: from slabbe import PolyhedronPartition, PolyhedronExchangeTransformation
             sage: h = 1/3
             sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
             sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
@@ -1606,39 +1691,115 @@ class PolyhedronExchangeTransformation(object):
         """
         return self._translations
 
-    def __call__(self, p):
+    def ambient_space(self):
         r"""
-        INPUT:
-
-        - ``p`` -- vector or polyhedron
-
-        OUTPUT:
-
-            polyhedron (or partition of polyhedron?)
-
         EXAMPLES::
 
-            sage: from slabbe import PolyhedronPartition
+            sage: from slabbe import PolyhedronPartition, PolyhedronExchangeTransformation
             sage: h = 1/3
             sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
             sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
             sage: P = PolyhedronPartition({0:p, 1:q})
             sage: T = {0:(1-h,0), 1:(-h,0)}
             sage: F = PolyhedronExchangeTransformation(P, T)
+            sage: F.ambient_space()
+            Vector space of dimension 2 over Rational Field
+        """
+        return self._ambient_space
+
+
+    def __call__(self, p):
+        r"""
+        Apply the transformation.
+
+        INPUT:
+
+        - ``p`` -- vector or polyhedron or partition
+
+        OUTPUT:
+
+            vector or polyhedron or partition of polyhedron
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition, PolyhedronExchangeTransformation
+            sage: h = 1/3
+            sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
+            sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
+            sage: P = PolyhedronPartition({0:p, 1:q})
+            sage: T = {0:(1-h,0), 1:(-h,0)}
+            sage: F = PolyhedronExchangeTransformation(P, T)
+
+        Image of a vector::
+
             sage: F((1/10, 1/10))
-            A 0-dimensional polyhedron in QQ^2 defined as the convex hull of 1 vertex
+            (23/30, 1/10)
+
+        Image of a polyhedron::
+
+            sage: F(p)
+            A 2-dimensional polyhedron in QQ^2 defined as the convex hull of 4 vertices
+
+        Image of a partition into polyhedron::
+
+            sage: F(P)
+            Polyhedron partition of 2 atoms with 2 letters
 
         """
-        if isinstance(p, (tuple, sage.structure.element.Vector)):
-            p = Polyhedron([p])
-        try:
-            a = self._partition.code(p)
-        except:
-            print "p falls in more than one atom, "
-            raise NotImplementedError("we should refine")
+        from sage.structure.element import Vector
+        from sage.geometry.polyhedron.base import Polyhedron_base
+        if isinstance(p, (tuple, Vector)):
+            p = self.ambient_space()(p)
+            a = self._partition.code(Polyhedron([p]))
+            t = self._translations[a]
+            return p + t
 
-        t = self._translations[a]
-        return p + t
+        elif isinstance(p, Polyhedron_base):
+            S = set(i for i,atom in self._partition if p <= atom)
+            if len(S) == 1:
+                a = next(iter(S))
+                t = self._translations[a]
+                return p + t
+            elif len(S) > 1:
+                raise ValueError('image of {} is not well-defined as it'
+                ' belongs to many distinct atoms(={}) of the partition'.format(p,S))
+            else:
+                raise ValueError('image of {} is not defined as it'
+                ' does not belong to any atoms of the partition'.format(p))
+
+        elif isinstance(p, PolyhedronPartition):
+            # BUG: we need the following but it create trouble in doctests...
+            #p = p.refinement(self._partition, key_fn=lambda a,b:a)
+            p = p.refinement(self._partition)
+            d = {}
+            for key,atom in p:
+                a = self._partition.code(atom)
+                t = self._translations[a]
+                d[key] = atom + t
+            return PolyhedronPartition(d)
+
+        else:
+            raise TypeError('call undefined on input p(={})'.format(p))
+
+    def image_partition(self):
+        r"""
+        Return the partition of the image.
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition, PolyhedronExchangeTransformation
+            sage: h = 1/3
+            sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
+            sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
+            sage: P = PolyhedronPartition({0:p, 1:q})
+            sage: T = {0:(1-h,0), 1:(-h,0)}
+            sage: F = PolyhedronExchangeTransformation(P, T)
+            sage: F.image_partition()
+            Polyhedron partition of 2 atoms with 2 letters
+
+        """
+        return PolyhedronPartition({a:p+self._translations[a] 
+                                 for (a,p) in self._partition})
 
     def inverse(self):
         r"""
@@ -1646,7 +1807,7 @@ class PolyhedronExchangeTransformation(object):
 
         EXAMPLES::
 
-            sage: from slabbe import PolyhedronPartition
+            sage: from slabbe import PolyhedronPartition, PolyhedronExchangeTransformation
             sage: h = 1/3
             sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
             sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
@@ -1666,8 +1827,7 @@ class PolyhedronExchangeTransformation(object):
             with translations {0: (-2/3, 0), 1: (1/3, 0)}
 
         """
-        P = PolyhedronPartition({a:p+self._translations[a] 
-                                 for (a,p) in self._partition})
+        P = self.image_partition()
         T = {a:-t for (a,t) in self._translations.items()}
         return PolyhedronExchangeTransformation(P, T)
 
