@@ -339,6 +339,20 @@ class PolyhedronPartition(object):
         """
         return self._base_ring
 
+    def ambient_space(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition
+            sage: h = 1/2
+            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
+            sage: q = Polyhedron([(0,0), (0,h), (h,1), (1,1), (1,h), (h,0)])
+            sage: r = Polyhedron([(h,0), (1,0), (1,h)])
+            sage: P = PolyhedronPartition([p,q,r])
+            sage: P.ambient_space()
+            Vector space of dimension 2 over Rational Field
+        """
+        return next(iter(self))[1].ambient_space()
 
     @cached_method
     def cached_atoms_set(self):
@@ -1494,4 +1508,166 @@ class PolyhedronPartition(object):
             P = P.apply_transformation(trans_inv)
         a = word[0]
         return P.refinement(self[a])
+
+class PolyhedronExchangeTransformation(object):
+    r"""
+    Polyhedron Exchange Transformation (PET).
+
+    INPUT:
+
+    - ``partition`` -- a polyhedron partition
+    - ``translations`` -- list or dict
+
+    EXAMPLES::
+
+        sage: from slabbe import PolyhedronPartition
+        sage: h = 1/3
+        sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
+        sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
+        sage: P = PolyhedronPartition({0:p, 1:q})
+        sage: T = {0:(1-h,0), 1:(-h,0)}
+        sage: PolyhedronExchangeTransformation(P, T)
+        Polyhedron Exchange Transformation of Polyhedron partition of 2
+        atoms with 2 letters
+        with translations {0: (2/3, 0), 1: (-1/3, 0)}
+
+    REFERENCES:
+
+    - Schwartz, Richard Evan. The Octagonal PETs. First Edition edition.
+      Providence, Rhode Island: American Mathematical Society, 2014.
+    """
+    def __init__(self, partition, translations):
+        r"""
+
+        """
+        if isinstance(partition, PolyhedronPartition):
+            self._partition = partition
+        else:
+            raise TypeError('partition(={}) must be a '
+                            'PolyhedronPartition'.format(partition))
+        ambient_space = self._partition.ambient_space()
+
+        if isinstance(translations, list):
+            self._translations = {a:ambient_space(t) for (a,t) in enumerate(translations)}
+        elif isinstance(translations, dict):
+            self._translations = {a:ambient_space(t) for (a,t) in translations.items()}
+        else:
+            raise TypeError('translations(={}) must be a '
+                            'list or dict'.format(translations))
+
+    def __repr__(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition
+            sage: h = 1/3
+            sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
+            sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
+            sage: P = PolyhedronPartition({0:p, 1:q})
+            sage: T = {0:(1-h,0), 1:(-h,0)}
+            sage: F = PolyhedronExchangeTransformation(P, T)
+            sage: F
+            Polyhedron Exchange Transformation of 
+            Polyhedron partition of 2 atoms with 2 letters
+            with translations {0: (2/3, 0), 1: (-1/3, 0)}
+        """
+        return ('Polyhedron Exchange Transformation of\n{}\nwith '
+               'translations {}').format(self._partition, self._translations)
+
+    def partition(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition
+            sage: h = 1/3
+            sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
+            sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
+            sage: P = PolyhedronPartition({0:p, 1:q})
+            sage: T = {0:(1-h,0), 1:(-h,0)}
+            sage: F = PolyhedronExchangeTransformation(P, T)
+            sage: F.partition()
+            Polyhedron partition of 2 atoms with 2 letters
+        """
+        return self._partition
+
+    def translations(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition
+            sage: h = 1/3
+            sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
+            sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
+            sage: P = PolyhedronPartition({0:p, 1:q})
+            sage: T = {0:(1-h,0), 1:(-h,0)}
+            sage: F = PolyhedronExchangeTransformation(P, T)
+            sage: F.translations()
+            {0: (2/3, 0), 1: (-1/3, 0)}
+        """
+        return self._translations
+
+    def __call__(self, p):
+        r"""
+        INPUT:
+
+        - ``p`` -- vector or polyhedron
+
+        OUTPUT:
+
+            polyhedron (or partition of polyhedron?)
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition
+            sage: h = 1/3
+            sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
+            sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
+            sage: P = PolyhedronPartition({0:p, 1:q})
+            sage: T = {0:(1-h,0), 1:(-h,0)}
+            sage: F = PolyhedronExchangeTransformation(P, T)
+            sage: F((1/10, 1/10))
+            A 0-dimensional polyhedron in QQ^2 defined as the convex hull of 1 vertex
+
+        """
+        if isinstance(p, (tuple, sage.structure.element.Vector)):
+            p = Polyhedron([p])
+        try:
+            a = self._partition.code(p)
+        except:
+            print "p falls in more than one atom, "
+            raise NotImplementedError("we should refine")
+
+        t = self._translations[a]
+        return p + t
+
+    def inverse(self):
+        r"""
+        Return the inverse of self.
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition
+            sage: h = 1/3
+            sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
+            sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
+            sage: P = PolyhedronPartition({0:p, 1:q})
+            sage: T = {0:(1-h,0), 1:(-h,0)}
+            sage: F = PolyhedronExchangeTransformation(P, T)
+            sage: F
+            Polyhedron Exchange Transformation of 
+            Polyhedron partition of 2 atoms with 2 letters
+            with translations {0: (2/3, 0), 1: (-1/3, 0)}
+
+        ::
+
+            sage: F.inverse()
+            Polyhedron Exchange Transformation of 
+            Polyhedron partition of 2 atoms with 2 letters
+            with translations {0: (-2/3, 0), 1: (1/3, 0)}
+
+        """
+        P = PolyhedronPartition({a:p+self._translations[a] 
+                                 for (a,p) in self._partition})
+        T = {a:-t for (a,t) in self._translations.items()}
+        return PolyhedronExchangeTransformation(P, T)
 
