@@ -1335,7 +1335,7 @@ class WangTileSet(object):
     tiling_with_surrounding = deprecated_function_alias(123456,tilings_with_surrounding)
     @cached_method
     def dominoes_with_surrounding(self, i=2, radius=1, solver=None,
-            ncpus=None, verbose=False):
+            ncpus=1, verbose=False):
         r"""
 
         INPUT:
@@ -1344,10 +1344,14 @@ class WangTileSet(object):
         - ``radius`` - integer or 2-tuple (default: ``1``), if 2-tuple is
           given, then it is interpreted as ``(xradius, yradius)``
         - ``solver`` - string or None (default: ``None``)
-        - ``ncpus`` -- integer (default: ``None``), maximal number of
+        - ``ncpus`` -- integer (default: ``1``), maximal number of
           subprocesses to use at the same time, used only if ``solver`` is
           ``'dancing_links'``.
         - ``verbose`` - bool
+
+        .. NOTE::
+
+            The ``solver='dancing_links'`` is fast for this question.
         
         EXAMPLES::
 
@@ -1453,7 +1457,7 @@ class WangTileSet(object):
         return True
 
     def find_markers_with_slope(self, i=2, slope=None, radius=1, solver=None,
-            ncpus=None, verbose=False):
+            ncpus=1, verbose=False):
         r"""
         Return a list of lists of marker tiles.
 
@@ -1464,7 +1468,7 @@ class WangTileSet(object):
         - ``radius`` - integer or 2-tuple (default: ``1``), if 2-tuple is
           given, then it is interpreted as ``(xradius, yradius)``
         - ``solver`` -- string (default:``None``)
-        - ``ncpus`` -- integer (default:``None``)
+        - ``ncpus`` -- integer (default:``1``)
         - ``verbose`` -- boolean (default:``False``)
 
         OUTPUT:
@@ -1535,7 +1539,7 @@ class WangTileSet(object):
                           'radius {}'.format(candidate, I, radius))
         return ans
 
-    def find_markers(self, i=2, radius=1, solver=None, ncpus=None,
+    def find_markers(self, i=2, radius=1, solver=None, ncpus=1,
             verbose=False):
         r"""
         Return a list of lists of marker tiles.
@@ -1546,8 +1550,12 @@ class WangTileSet(object):
         - ``radius`` - integer or 2-tuple (default: ``1``), if 2-tuple is
           given, then it is interpreted as ``(xradius, yradius)``
         - ``solver`` -- string (default:``None``)
-        - ``ncpus`` -- integer (default:``None``)
+        - ``ncpus`` -- integer (default:``1``)
         - ``verbose`` -- boolean (default:``False``)
+
+        .. NOTE::
+
+            The ``solver='dancing_links'`` is fast for this question.
 
         OUTPUT:
 
@@ -1601,7 +1609,7 @@ class WangTileSet(object):
         return ans
 
     def find_substitution(self, M=None, i=2, side='right', radius=1,
-            solver=None, ncpus=None, function=str.__add__, initial='',
+            solver=None, ncpus=1, function=str.__add__, initial='',
             verbose=False):
         r"""
         Return the derived Wang tile set obtained from desubstitution using
@@ -1615,12 +1623,16 @@ class WangTileSet(object):
         - ``side`` -- ``'right'`` or ``'left'``
         - ``radius`` - integer or 2-tuple (default: ``1``), if 2-tuple is
           given, then it is interpreted as ``(xradius, yradius)``
-        - ``solver`` -- string
-        - ``ncpus`` -- integer (default:``None``)
+        - ``solver`` -- string (default:``None``)
+        - ``ncpus`` -- integer (default:``1``)
         - ``function`` -- function (default:``str.__add__``), monoid
             operation
         - ``initial`` -- object (default:``''``), monoid neutral
         - ``verbose`` -- boolean
+
+        .. NOTE::
+
+            The ``solver='dancing_links'`` is fast for this question.
 
         EXAMPLES::
 
@@ -1707,7 +1719,7 @@ class WangTileSet(object):
 
         return WangTileSet(new_tiles), s, M
 
-    def shear(self, radius=0, solver=None, ncpus=None,
+    def shear(self, radius=0, solver=None, ncpus=1,
             function=str.__add__, verbose=False):
         r"""
         Shears the Wang Tile set by the ``matrix(2,(1,-1,0,1))``.
@@ -1718,8 +1730,8 @@ class WangTileSet(object):
 
         - ``radius`` - integer or 2-tuple (default: ``0``), if 2-tuple is
           given, then it is interpreted as ``(xradius, yradius)``
-        - ``solver`` -- string
-        - ``ncpus`` -- integer (default:``None``)
+        - ``solver`` -- string (default:``None``)
+        - ``ncpus`` -- integer (default:``1``)
         - ``function`` -- function (default:``str.__add__``), monoid
           operation
         - ``verbose`` -- boolean (default:``False``)
