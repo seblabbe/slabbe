@@ -1,3 +1,5 @@
+#!/usr/bin/env sage-python23
+
 from setuptools import setup, Extension
 from codecs import open # To use a consistent encoding
 from os import path
