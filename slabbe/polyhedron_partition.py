@@ -1309,12 +1309,37 @@ class PolyhedronExchangeTransformation(object):
             sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
             sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
             sage: P = PolyhedronPartition({0:p, 1:q})
-            sage: T = {0:(1-h,0), 1:(-h,0)}
-            sage: F = PolyhedronExchangeTransformation(P, T)
-            sage: F.partition()
+            sage: d = {0:(1-h,0), 1:(-h,0)}
+            sage: T = PolyhedronExchangeTransformation(P, d)
+            sage: T.partition()
             Polyhedron partition of 2 atoms with 2 letters
         """
         return self._partition
+
+    def plot(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition, PolyhedronExchangeTransformation
+            sage: h = 1/3
+            sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
+            sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
+            sage: P = PolyhedronPartition({0:p, 1:q})
+            sage: d = {0:(1-h,0), 1:(-h,0)}
+            sage: T = PolyhedronExchangeTransformation(P, d)
+            sage: T.plot()
+            Graphics object consisting of 16 graphics primitives
+        """
+        from random import random
+        from sage.plot.arrow import arrow
+        from sage.modules.free_module_element import vector
+        G = self.partition().plot()
+        d = self.ambient_space().dimension()
+        for key,p in self.partition():
+            t = self._translations[key]
+            center = p.center() + vector([.1*random() for _ in range(d)])
+            G += arrow(center, center+t)
+        return G
 
     def domain(self):
         r"""
