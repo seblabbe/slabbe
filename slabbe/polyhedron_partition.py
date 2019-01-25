@@ -1318,6 +1318,12 @@ class PolyhedronExchangeTransformation(object):
 
     def plot(self):
         r"""
+
+        .. TODO::
+
+            return two copy side-to-side of the domain and codomain instead
+            of arrows.
+
         EXAMPLES::
 
             sage: from slabbe import PolyhedronPartition, PolyhedronExchangeTransformation
@@ -1333,12 +1339,20 @@ class PolyhedronExchangeTransformation(object):
         from random import random
         from sage.plot.arrow import arrow
         from sage.modules.free_module_element import vector
-        G = self.partition().plot()
         d = self.ambient_space().dimension()
+
+        # computing the range of the domain in each dimension
+        V = self.domain().vertices()
+        MAX = map(max, *V)
+        MIN = map(min, *V)
+        H = [b-a for (a,b) in zip(MIN,MAX)]
+
+        G = self.partition().plot()
         for key,p in self.partition():
             t = self._translations[key]
-            center = p.center() + vector([.1*random() for _ in range(d)])
-            G += arrow(center, center+t)
+            small_noise_vector = vector([H[i]*.1*random() for i in range(d)])
+            center = p.center() + small_noise_vector
+            G += arrow(center, center+t, color='green')
         return G
 
     def domain(self):
