@@ -2451,7 +2451,7 @@ class WangTileSolver(object):
           of available parameters for example for the Gurobi backend, see
           dictionary ``parameters_type`` in the file
           ``sage/numerical/backends/gurobi_backend.pyx``
-        - ``ncpus`` -- integer (default: ``8``), maximal number of
+        - ``ncpus`` -- integer (default: ``1``), maximal number of
           subprocesses to use at the same time, used only if ``solver`` is
           ``'dancing_links'``.
 
@@ -2540,7 +2540,10 @@ class WangTileSolver(object):
             from sage.combinat.matrices.dancing_links import dlx_solver
             rows,row_info = self.rows_and_information()
             dlx = dlx_solver(rows)
-            solution = dlx.one_solution(ncpus=ncpus)
+            if ncpus == 1:
+                solution = dlx.get_solution() if dlx.search() else None
+            else:
+                solution = dlx.one_solution(ncpus=ncpus)
             if solution is None or isinstance(solution, str):
                 raise ValueError('no solution found using dancing links,'
                                  ' the return value from dancing links'
@@ -2566,7 +2569,7 @@ class WangTileSolver(object):
             for i,j,k in support:
                 table[j][k] = i
             return WangTiling(table, self._tiles, color=self._color)
-        else:
+        else: # we assume we use a sat solver
             (var_to_tile_pos,
              tile_pos_to_var) = self.sat_variable_to_tile_position_bijection()
             sat_solver = self.sat_solver(solver)
