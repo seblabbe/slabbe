@@ -52,10 +52,10 @@ Inducing an irrationnal rotation on a subdomain::
     Polyhedron partition of 7 atoms with 7 letters
     sage: sub01
     {0: [0, 2],
-     1: [0, 2, 2],
-     2: [1, 2],
-     3: [1, 2, 2],
-     4: [1, 3],
+     1: [1, 2],
+     2: [1, 3],
+     3: [0, 2, 2],
+     4: [1, 2, 2],
      5: [1, 3, 2],
      6: [1, 3, 3]}
 
@@ -145,6 +145,19 @@ def is_union_convex(t):
     r = Polyhedron(vertices, base_ring=base_ring)
     return r.volume() == sum(p.volume() for p in t)
 
+def word_sort_key(w):
+    r"""
+    A canonical way to sort word (by length, and then lexicographically).
+
+    EXAMPLES::
+
+        sage: from slabbe.polyhedron_partition import word_sort_key
+        sage: L = ['aa', 'aaa', 'bb', 'ccc']
+        sage: sorted(L, key=word_sort_key)
+        ['aa', 'bb', 'aaa', 'ccc']
+
+    """
+    return (len(w), w)
 class PolyhedronPartition(object):
     r"""
     Return a partition into polyhedron.
@@ -1776,7 +1789,7 @@ class PolyhedronExchangeTransformation(object):
             sage: ieq = [1/2, -1, 0]   # x0 <= 1/2
             sage: u.induced_partition(ieq)
             (Polyhedron partition of 3 atoms with 3 letters,
-             {0: [0], 1: [0, 0, 1], 2: [0, 1]})
+             {0: [0], 1: [0, 1], 2: [0, 0, 1]})
 
         Now we construct a another coding partition::
 
@@ -1806,14 +1819,14 @@ class PolyhedronExchangeTransformation(object):
             Polyhedron partition of 9 atoms with 9 letters
             sage: sub
             {0: [0],
-             1: [0, 2, 2],
-             2: [1],
-             3: [1, 2, 2],
-             4: [1, 2, 3],
-             5: [1, 3, 3],
-             6: [2, 2],
-             7: [2, 3],
-             8: [3, 3]}
+             1: [1],
+             2: [2, 2],
+             3: [2, 3],
+             4: [3, 3],
+             5: [0, 2, 2],
+             6: [1, 2, 2],
+             7: [1, 2, 3],
+             8: [1, 3, 3]}
 
         Irrationnal rotations::
 
@@ -1835,10 +1848,10 @@ class PolyhedronExchangeTransformation(object):
             Polyhedron partition of 7 atoms with 7 letters
             sage: sub01
             {0: [0, 2],
-             1: [0, 2, 2],
-             2: [1, 2],
-             3: [1, 2, 2],
-             4: [1, 3],
+             1: [1, 2],
+             2: [1, 3],
+             3: [0, 2, 2],
+             4: [1, 2, 2],
              5: [1, 3, 2],
              6: [1, 3, 3]}
 
@@ -1849,16 +1862,16 @@ class PolyhedronExchangeTransformation(object):
             sage: P2
             Polyhedron partition of 10 atoms with 10 letters
             sage: sub02
-            {0: [0, 2, 0, 2, 2],
-             1: [0, 2, 1, 2, 2],
-             2: [0, 2, 2],
-             3: [1, 2, 1, 2, 2],
-             4: [1, 2, 1, 3, 2],
-             5: [1, 2, 2],
-             6: [1, 3, 1, 3, 2],
-             7: [1, 3, 1, 3, 3],
-             8: [1, 3, 2],
-             9: [1, 3, 3]}
+            {0: [0, 2, 2],
+             1: [1, 2, 2],
+             2: [1, 3, 2],
+             3: [1, 3, 3],
+             4: [0, 2, 0, 2, 2],
+             5: [0, 2, 1, 2, 2],
+             6: [1, 2, 1, 2, 2],
+             7: [1, 2, 1, 3, 2],
+             8: [1, 3, 1, 3, 2],
+             9: [1, 3, 1, 3, 3]}
 
         We check that inductions commute::
 
@@ -1878,7 +1891,7 @@ class PolyhedronExchangeTransformation(object):
             sage: s12 = WordMorphism(sub12)
             sage: s02 = WordMorphism(sub02)
             sage: s02
-            WordMorphism: 0->02022, 1->02122, 2->022, 3->12122, 4->12132, 5->122, 6->13132, 7->13133, 8->132, 9->133
+            WordMorphism: 0->022, 1->122, 2->132, 3->133, 4->02022, 5->02122, 6->12122, 7->12132, 8->13132, 9->13133
             sage: s01*s12 == s02
             True
 
@@ -1914,7 +1927,8 @@ class PolyhedronExchangeTransformation(object):
         # We construct the list of (key, atom) and the substitution
         L = []
         substitution = {}
-        for key,(w,atoms) in enumerate(sorted(d.items())):
+        for key,w in enumerate(sorted(d.keys(), key=word_sort_key)):
+            atoms = d[w]
             for atom in atoms:
                 L.append((key,atom))
                 substitution[key] = list(w)
