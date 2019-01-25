@@ -1128,7 +1128,7 @@ class PolyhedronExchangeTransformation(object):
                             'list or dict'.format(translations))
 
     @classmethod
-    def toral_translation(cls, base, translation):
+    def toral_translation(cls, base, translation, fundamental_domain=None):
         r"""
         Return a polyhedron exchange transformation defined by a translation on
         a d-dimensional torus.
@@ -1137,6 +1137,9 @@ class PolyhedronExchangeTransformation(object):
 
         - ``base`` -- matrix, the columns are the base of a lattice
         - ``translation`` -- vector, translation vector
+        - ``fundamental_domain`` -- polyhedron or ``None`` (default:
+          ``None``), if ``None`` the parallelotope defined by ``base`` is
+          used.
 
         OUTPUT:
 
@@ -1220,6 +1223,28 @@ class PolyhedronExchangeTransformation(object):
              A vertex at (0, 0),
              A vertex at (0, 1))
 
+        The fundamental domain can be given as input. For example, it can
+        be a translated copy of the base parallelotope::
+
+            sage: base = diagonal_matrix((1,1))
+            sage: translation = vector((1/5, 1/3))
+            sage: F = polytopes.parallelotope(base)
+            sage: T = PET.toral_translation(base, translation, F-vector((1/10,1/10)))
+
+        But it does not always work well yet, for example for other shape
+        of fundamental domains::
+
+            sage: m = matrix(2, (1,1,0,1))
+            sage: T = PET.toral_translation(base, translation, m*F)
+            Traceback (most recent call last):
+            ...
+            NotImplementedError: Volume of the partition is 41/45 but the
+            fundamental domain as volume 1. The code does not handle this
+            case properly yet.
+
+        .. TODO::
+
+            Fix the above.
         """
         from sage.geometry.polyhedron.library import polytopes
         from sage.modules.free_module_element import vector
@@ -1231,21 +1256,29 @@ class PolyhedronExchangeTransformation(object):
         translation -= base * v_floor
 
         # The fundamental domain
-        P = polytopes.parallelotope(base.columns())
+        base_parallelotope = polytopes.parallelotope(base.columns())
+        if fundamental_domain is None:
+            fundamental_domain = base_parallelotope
+        FD = fundamental_domain # shorcut
 
-        # Computing self-intersections
+        # Computing the partitions and translations
         atoms = {}
         trans = {}
-        for vertex in P.vertices():
+        for vertex in base_parallelotope.vertices():
             t = vertex.vector() - translation
-            I = P.intersection(P.translation(t))
+            I = FD.intersection(FD.translation(t))
             if I.volume():
                 k = len(atoms)
                 atoms[k] = I
                 trans[k] = -t
-
-        # Construct and return the PET
         partition = PolyhedronPartition(atoms)
+
+        if partition.volume() != FD.volume():
+            raise NotImplementedError('Volume of the partition is {} but'
+                    ' the fundamental domain as volume {}. The code does'
+                    ' not handle this case properly yet.'.format(partition.volume(), 
+                                                             FD.volume()))
+
         return PolyhedronExchangeTransformation(partition, trans)
 
     def __repr__(self):
