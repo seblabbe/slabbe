@@ -244,19 +244,6 @@ def tile_to_tikz(tile, position, color=None, id=None, id_color='',
     return lines
     #return TikzPicture('\n'.join(lines))
 
-def tile_sort_key(tile):
-    r"""
-    A canonical way to sort tiles (by length, and then lexicographically).
-
-    EXAMPLES::
-
-        sage: from slabbe.wang_tiles import tile_sort_key
-        sage: L = [('aa', 'bb', 'cc', 'dd'), ('aaa', 'zz', 'd', 'a'), ('aa', 'aa', 'aa', 'aa')]
-        sage: sorted(L, key=tile_sort_key)
-        [('aa', 'aa', 'aa', 'aa'), ('aa', 'bb', 'cc', 'dd'), ('aaa', 'zz', 'd', 'a')]
-
-    """
-    return (tuple(len(a) for a in tile), tile)
 
 def fusion(tile0, tile1, direction, function=str.__add__, initial=''):
     r"""
@@ -1630,6 +1617,10 @@ class WangTileSet(object):
         - ``initial`` -- object (default:``''``), monoid neutral
         - ``verbose`` -- boolean
 
+        OUTPUT:
+
+            a 3-tuple (Wang tile set, substitution2d, set of markers)
+
         .. NOTE::
 
             The ``solver='dancing_links'`` is fast for this question.
@@ -1643,11 +1634,10 @@ class WangTileSet(object):
             sage: T = WangTileSet(tiles)
             sage: T.find_substitution(i=2)
             (Wang tile set of cardinality 12,
-             Substitution 2d: {0: [[5]], 1: [[8]], 2: [[2]], 3: [[9]], 
-                4: [[3]], 5: [[7]], 6: [[4]], 7: [[10]], 8: [[6, 1]], 
-                9: [[5, 0]], 10: [[7, 0]], 11: [[4, 0]]}, 
+             Substitution 2d: {0: [[2]], 1: [[3]], 2: [[4]], 3:
+                [[5]], 4: [[7]], 5: [[8]], 6: [[9]], 7: [[10]], 8:
+                [[4, 0]], 9: [[5, 0]], 10: [[6, 1]], 11: [[7, 0]]},
              {0, 1})
-
         """
         # find markers
         if M is None:
@@ -1705,7 +1695,8 @@ class WangTileSet(object):
             t = fusion(self[a],self[b],i,function=function,initial=initial)
             tiles_and_structure.append((t, [a,b]))
 
-        tiles_and_structure.sort(key=lambda v:tile_sort_key(v[0]))
+        from slabbe.finite_word import sort_word_by_length_lex_key
+        tiles_and_structure.sort(key=lambda v:sort_word_by_length_lex_key(v[1]))
         new_tiles, images = zip(*tiles_and_structure)
         d = {i:image for i,image in enumerate(images)}
 

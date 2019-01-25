@@ -145,19 +145,6 @@ def is_union_convex(t):
     r = Polyhedron(vertices, base_ring=base_ring)
     return r.volume() == sum(p.volume() for p in t)
 
-def word_sort_key(w):
-    r"""
-    A canonical way to sort word (by length, and then lexicographically).
-
-    EXAMPLES::
-
-        sage: from slabbe.polyhedron_partition import word_sort_key
-        sage: L = ['aa', 'aaa', 'bb', 'ccc']
-        sage: sorted(L, key=word_sort_key)
-        ['aa', 'bb', 'aaa', 'ccc']
-
-    """
-    return (len(w), w)
 class PolyhedronPartition(object):
     r"""
     Return a partition into polyhedron.
@@ -1927,7 +1914,9 @@ class PolyhedronExchangeTransformation(object):
         # We construct the list of (key, atom) and the substitution
         L = []
         substitution = {}
-        for key,w in enumerate(sorted(d.keys(), key=word_sort_key)):
+        from slabbe.finite_word import sort_word_by_length_lex_key
+        sorted_keys = sorted(d.keys(), key=sort_word_by_length_lex_key)
+        for key,w in enumerate(sorted_keys):
             atoms = d[w]
             for atom in atoms:
                 L.append((key,atom))

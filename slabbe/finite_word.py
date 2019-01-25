@@ -343,3 +343,15 @@ def are_overlapping_factors(u, v, d):
     fact_v = v[start_u-d:end_u-d]
     return fact_u == fact_v
 
+def sort_word_by_length_lex_key(w):
+    r"""
+    A key function to sort word (by length, and then lexicographically).
+
+    EXAMPLES::
+
+        sage: from slabbe.finite_word import sort_word_by_length_lex_key
+        sage: L = ['aa', 'aaa', 'bb', 'ccc']
+        sage: sorted(L, key=sort_word_by_length_lex_key)
+        ['aa', 'bb', 'aaa', 'ccc']
+    """
+    return (len(w), w)
