@@ -1743,7 +1743,7 @@ class PolyhedronExchangeTransformation(object):
             in_partition[i] = P
         return in_partition
 
-    def induced_partition(self, ieq, partition=None):
+    def induced_partition(self, ieq, partition=None, substitution_type='dict'):
         r"""
         Returns the partition of the induced transformation on the domain.
 
@@ -1753,11 +1753,14 @@ class PolyhedronExchangeTransformation(object):
           represents the inequality 7x_1+3x_2+4x_3>= 1.
         - ``partition`` -- polyhedron partition (default:``None``), if
           None, it uses the domain partition of the transformation
+        - ``substitution_type`` -- string (default:``'dict'``), if
+          ``'column'`` or ``'row'``, it returns a substitution2d, otherwise
+          it returns a dict.
 
         OUTPUT:
 
             - a polyhedron partition
-            - dict, a substitution
+            - a substitution2d or a dict
 
         EXAMPLES::
 
@@ -1777,6 +1780,13 @@ class PolyhedronExchangeTransformation(object):
             sage: u.induced_partition(ieq)
             (Polyhedron partition of 3 atoms with 3 letters,
              {0: [0], 1: [0, 1], 2: [0, 0, 1]})
+
+        The second output can be turned into a column or a row
+        Substitution2d if desired::
+
+            sage: u.induced_partition(ieq, substitution_type='row')
+            (Polyhedron partition of 3 atoms with 3 letters,
+             Substitution 2d: {0: [[0]], 1: [[0], [1]], 2: [[0], [0], [1]]})
 
         Now we construct a another coding partition::
 
@@ -1913,16 +1923,29 @@ class PolyhedronExchangeTransformation(object):
 
         # We construct the list of (key, atom) and the substitution
         L = []
-        substitution = {}
+        sub = {}
         from slabbe.finite_word import sort_word_by_length_lex_key
         sorted_keys = sorted(d.keys(), key=sort_word_by_length_lex_key)
         for key,w in enumerate(sorted_keys):
             atoms = d[w]
             for atom in atoms:
                 L.append((key,atom))
-                substitution[key] = list(w)
+                sub[key] = list(w)
 
-        return PolyhedronPartition(L), substitution
+        # Build a substitution2d if desired
+        if substitution_type == 'dict':
+            pass
+        elif substitution_type in ['column', 'row']:
+            from slabbe import Substitution2d
+            if substitution_type == 'column':
+                sub = Substitution2d.from_1d_column_substitution(sub)
+            elif substitution_type == 'row':
+                sub = Substitution2d.from_1d_row_substitution(sub)
+        else:
+            raise ValueError('Unknown value for substitution_type'
+                    ' (={})'.format(substitution_type))
+
+        return PolyhedronPartition(L), sub
 
     def cylinder(self, word, partition=None, key_fn=None):
         r"""
