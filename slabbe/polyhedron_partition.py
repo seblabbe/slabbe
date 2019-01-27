@@ -1103,6 +1103,14 @@ class PolyhedronExchangeTransformation(object):
         Polyhedron partition of 2 atoms with 2 letters
         with translations {0: (2/3, 0), 1: (-1/3, 0)}
 
+    .. TODO::
+
+        - Code the __mul__ and __pow__ methods.
+
+        - Induction should return the induced transformation somehow.
+
+        - Add a ploting function with seperated domain/codomain
+
     REFERENCES:
 
     - Schwartz, Richard Evan. The Octagonal PETs. First Edition edition.
@@ -1736,10 +1744,10 @@ class PolyhedronExchangeTransformation(object):
         """
         out_partition = self.induced_out_partition(ieq, partition)
         in_partition = {}
-        trans_inv = self.inverse()
+        self_inv = self.inverse()
         for i,P in out_partition.items():
             for _ in range(i):
-                P = trans_inv(P)
+                P = self_inv(P)
             in_partition[i] = P
         return in_partition
 
