@@ -1252,7 +1252,8 @@ class PolyhedronExchangeTransformation(object):
 
         .. TODO::
 
-            Fix the above.
+            Fix the above when the fundamental domain is far from the
+            lattice base.
         """
         from sage.geometry.polyhedron.library import polytopes
         from sage.modules.free_module_element import vector
@@ -1565,6 +1566,61 @@ class PolyhedronExchangeTransformation(object):
         P = self.image_partition()
         T = {a:-t for (a,t) in self._translations.items()}
         return PolyhedronExchangeTransformation(P, T)
+
+    def __mul__(self, other, key_fn=None):
+        r"""
+        Return the product of polyhedron exchange transformations.
+
+        INPUT:
+
+        - ``other`` -- polyhedron exchange transformation
+        - ``key_fn`` -- function to apply on pairs of labels, or ``None``
+
+        OUTPUT:
+
+        - polyhedron exchange transformation with keys being a tuple of
+          previous keys
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition, PolyhedronExchangeTransformation
+            sage: h = 4/5
+            sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
+            sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
+            sage: P = PolyhedronPartition({0:p, 1:q})
+            sage: T = {0:(1-h,0), 1:(-h,0)}
+            sage: F = PolyhedronExchangeTransformation(P, T)
+            sage: F * F
+            Polyhedron Exchange Transformation of
+            Polyhedron partition of 3 atoms with 3 letters
+            with translations {(0, 1): (-3/5, 0), (1, 0): (-3/5, 0), (0, 0): (2/5, 0)}
+            sage: F * F * F
+            Polyhedron Exchange Transformation of
+            Polyhedron partition of 4 atoms with 4 letters
+            with translations {(1, 0, 0): (-2/5, 0), (0, 1, 0): (-2/5, 0),
+                               (0, 0, 0): (3/5, 0), (0, 0, 1): (-2/5, 0)}
+
+        """
+        key_fn_tuple = lambda a,b:(a,b)
+        R = self.image_partition().refinement(other.partition(),
+                                              key_fn=key_fn_tuple)
+        if key_fn is None:
+            def key_fn(a,b):
+                if not isinstance(a, tuple):
+                    a = (a,)
+                if not isinstance(b, tuple):
+                    b = (b,)
+                return a + b
+
+        atoms_dict = {}
+        trans_dict = {}
+        for (a,b),atom in R:
+            key = key_fn(a,b)
+            atoms_dict[key] = atom - self._translations[a]
+            trans_dict[key] = self._translations[a] + other._translations[b]
+
+        P = PolyhedronPartition(atoms_dict)
+        return PolyhedronExchangeTransformation(P, trans_dict)
 
     def induced_out_partition(self, ieq, partition=None):
         r"""
