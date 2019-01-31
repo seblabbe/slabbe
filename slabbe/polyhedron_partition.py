@@ -1107,6 +1107,8 @@ class PolyhedronExchangeTransformation(object):
 
         - Code the __mul__ and __pow__ methods.
 
+        - Do we want to merge atoms mapped by the same translation?
+
         - Induction should return the induced transformation somehow.
 
         - Add a ploting function with seperated domain/codomain
@@ -1424,13 +1426,14 @@ class PolyhedronExchangeTransformation(object):
         return self._ambient_space
 
 
-    def __call__(self, p):
+    def __call__(self, p, key_fn=None):
         r"""
         Apply the transformation.
 
         INPUT:
 
         - ``p`` -- vector or polyhedron or partition
+        - ``key_fn`` -- function to apply on pairs of labels, or ``None``
 
         OUTPUT:
 
@@ -1479,13 +1482,14 @@ class PolyhedronExchangeTransformation(object):
             sage: uP.volume()
             1
             sage: uuP = u(uP); uuP
-            Polyhedron partition of 6 atoms with 4 letters
+            Polyhedron partition of 6 atoms with 6 letters
             sage: uuP.volume()
             1
 
         """
         from sage.structure.element import Vector
         from sage.geometry.polyhedron.base import Polyhedron_base
+
         if isinstance(p, (tuple, Vector)):
             p = self.ambient_space()(p)
             a = self._partition.code(Polyhedron([p]))
@@ -1506,7 +1510,16 @@ class PolyhedronExchangeTransformation(object):
                 ' overlaps distinct atoms of the partition'.format(p))
 
         elif isinstance(p, PolyhedronPartition):
-            p = p.refinement(self._partition, key_fn=lambda a,b:a)
+            if key_fn is None:
+                # key_fn = lambda a,b:a # the previous default
+                def key_fn(a,b):
+                    if not isinstance(a, tuple):
+                        a = (a,)
+                    if not isinstance(b, tuple):
+                        b = (b,)
+                    return a + b
+
+            p = p.refinement(self._partition, key_fn=key_fn)
             L = []
             for key,atom in p:
                 a = self._partition.code(atom)
@@ -2011,6 +2024,21 @@ class PolyhedronExchangeTransformation(object):
 
         return PolyhedronPartition(L), sub
 
+    def induced_transformation(self, ieq):
+        r"""
+        Return the induced transformation on the domain.
+
+        INPUT:
+
+        - ``ieq`` -- list, an inequality. An entry equal to "[-1,7,3,4]"
+          represents the inequality 7x_1+3x_2+4x_3>= 1.
+
+        OUTPUT:
+
+            a polyhedron exchange transformation
+        """
+        pass
+
     def cylinder(self, word, partition=None, key_fn=None):
         r"""
         Return the region associated to the coding word.
@@ -2109,7 +2137,7 @@ class PolyhedronExchangeTransformation(object):
         reversed_word = reversed(word)
         P = partition[next(reversed_word)]
         for a in reversed_word:
-            P = trans_inv(P)
+            P = trans_inv(P, key_fn=lambda a,b:a)
             P = partition[a].refinement(P, key_fn=key_fn)
         return P
 
@@ -2164,7 +2192,7 @@ class PolyhedronExchangeTransformation(object):
         P = partition
         trans_inv = self.inverse()
         for i in range(size-1):
-            P = trans_inv(P)
+            P = trans_inv(P, key_fn=lambda a,b:a)
             P = partition.refinement(P, key_fn=key_fn)
         return P
 
