@@ -71,7 +71,7 @@ AUTHORS:
 - Sébastien Labbé, initial version in slabbe-0.2.spkg, nov 2015.
 """
 #*****************************************************************************
-#       Copyright (C) 2015-2017 Sébastien Labbé <slabqc@gmail.com>
+#       Copyright (C) 2015-2019 Sébastien Labbé <slabqc@gmail.com>
 #
 #  Distributed under the terms of the GNU General Public License version 2 (GPLv2)
 #
@@ -679,6 +679,12 @@ class TikzPicture(StandaloneTex):
             sage: _ = tikz.pdf()      # not tested
 
         """
+        from sage.misc.latex import have_pdflatex
+        assert have_pdflatex(), "pdflatex does not seem to be installed"
+        from sage.features.graphviz import Graphviz
+        assert Graphviz().is_present(), "graphviz does not seem to be installed"
+        # TODO: test the presence of dot2tex
+
         if merge_multiedges and graph.has_multiple_edges():
             from slabbe.graph import merge_multiedges
             graph = merge_multiedges(graph,
