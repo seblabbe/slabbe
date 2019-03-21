@@ -13,10 +13,10 @@ develop:
 	sage -pip install --upgrade -e .
 
 test: 
-	sage -tp --force-lib --show-skipped slabbe/*.py slabbe/*.pyx
+	sage -tp --force-lib --show-skipped slabbe/*.py slabbe/*.pyx --log=logs/test.log
 
 testlong:
-	sage -tp --long --force-lib --show-skipped slabbe/*.py slabbe/*.pyx
+	sage -tp --long --force-lib --show-skipped slabbe/*.py slabbe/*.pyx --log=logs/testlong.log
 
 testpython3:
 	find slabbe -name '*.py' | xargs -n 1 python3 -m py_compile 
