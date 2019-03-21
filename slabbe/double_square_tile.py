@@ -1599,7 +1599,7 @@ class DoubleSquare(SageObject):
         """
         f = lambda x: numerical_approx(x,digits=3)
         step = numerical_approx(step, digits=4)
-        points = map(lambda x,y:(x*step,y*step), list(self.boundary_word().points()))
+        points = map(lambda (x,y):(x*step,y*step), list(self.boundary_word().points()))
         l = [str(tuple(map(f, pt))) for pt in points]
         s = '\\filldraw[%s, very thick, draw=black, fill=black!20] ' %arrow
         s += ' -- '.join(l) + ';'

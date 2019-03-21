@@ -11,14 +11,14 @@ Drawing the natural extension::
 
     sage: fig = algo.natural_extension_plot(3000, norm_xyz=1, axis_off=True)
     sage: fig
-    <matplotlib.figure.Figure object at ...>
+    <Figure size 1200x200 with 4 Axes>
     sage: fig.savefig('a.png')  # not tested
 
 Drawing the invariant measure::
 
     sage: fig = algo.invariant_measure_wireframe_plot(10^6, 50)
     sage: fig
-    <matplotlib.figure.Figure object at ...>
+    <Figure size 640x480 with 1 Axes>
     sage: fig.savefig('a.png')  # not tested
 
 Word with given frequencies::
@@ -436,9 +436,9 @@ class _MCFAlgorithm_methods(object):
 
             sage: from slabbe.mult_cont_frac import Reverse, Brun
             sage: Reverse().invariant_measure_wireframe_plot(1000000, 80)
-            <matplotlib.figure.Figure object at ...>
+            <Figure size 640x480 with 1 Axes>
             sage: Brun().invariant_measure_wireframe_plot(1000000, 40, norm=1)
-            <matplotlib.figure.Figure object at ...>
+            <Figure size 640x480 with 1 Axes>
 
         """
         D = self._invariant_measure_dict(n_iterations, ndivs, norm=norm)
@@ -484,9 +484,9 @@ class _MCFAlgorithm_methods(object):
 
             sage: from slabbe.mult_cont_frac import Reverse, Brun
             sage: Reverse().invariant_measure_contour_plot(1000000, 80)
-            <matplotlib.figure.Figure object at ...>
+            <Figure size 640x480 with 1 Axes>
             sage: Brun().invariant_measure_contour_plot(1000000, 40, norm=1)
-            <matplotlib.figure.Figure object at ...>
+            <Figure size 640x480 with 1 Axes>
 
         """
         D = self._invariant_measure_dict(n_iterations, ndivs, norm=norm)
@@ -525,13 +525,13 @@ class _MCFAlgorithm_methods(object):
 
             sage: from slabbe.mult_cont_frac import Brun
             sage: Brun().natural_extension_plot(3000, norm_xyz=1, axis_off=True)
-            <matplotlib.figure.Figure object at ...>
+            <Figure size 1200x200 with 4 Axes>
 
         ::
 
             sage: from slabbe.mult_cont_frac import Sorted_ARP
             sage: Sorted_ARP().natural_extension_plot(1000)
-            <matplotlib.figure.Figure object at ...>
+            <Figure size 1200x200 with 4 Axes>
         """
         import matplotlib
         import matplotlib.pyplot as plt
