@@ -1430,6 +1430,53 @@ class PolyhedronExchangeTransformation(object):
         """
         return self._ambient_space
 
+    def merge_atoms_with_same_translation(self):
+        r"""
+        Return a new partition into convex polyhedrons where atoms mapped
+        by the same translation are merged if their union is convex.
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition, PolyhedronExchangeTransformation
+            sage: h = 1/3
+            sage: p = Polyhedron([(0,0),(h,0),(h,h),(0,h)])
+            sage: q = Polyhedron([(0,h),(h,h),(h,1),(0,1)])
+            sage: r = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
+            sage: P = PolyhedronPartition({0:p, 1:q, 2:r})
+            sage: d = {0:(1-h,0), 1:(1-h,0), 2:(-h,0)}
+            sage: T = PolyhedronExchangeTransformation(P, d)
+            sage: T
+            Polyhedron Exchange Transformation of
+            Polyhedron partition of 3 atoms with 3 letters
+            with translations {0: (2/3, 0), 1: (2/3, 0), 2: (-1/3, 0)}
+            sage: T.merge_atoms_with_same_translation()
+            Polyhedron Exchange Transformation of
+            Polyhedron partition of 2 atoms with 2 letters
+            with translations {0: (2/3, 0), 2: (-1/3, 0)}
+
+        """
+        from collections import defaultdict
+
+        # a dictionary translation vector -> list of keys
+        d = defaultdict(list)
+        for (key,t) in self.translations().items():
+            t.set_immutable()
+            d[t].append(key)
+
+        # a dictionary translation vector -> a unique atom key (the minimum)
+        d = {t:min(d[t]) for t in d}
+
+        # a dictionary key -> new key
+        d = {a:d[t] for a,t in self.translations().items()}
+
+        # merged partition
+        P = self.partition().merge_atoms(d)
+
+        # a dictionary of translations with the new keys
+        translation_dict = self.translations()
+        translation_dict = {a:translation_dict[a] for a in d.values()}
+
+        return PolyhedronExchangeTransformation(P, translation_dict)
 
     def __call__(self, p, key_fn=None):
         r"""
