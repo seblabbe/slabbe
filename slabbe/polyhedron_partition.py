@@ -683,6 +683,36 @@ class PolyhedronPartition(object):
         """
         return sum(p.volume() for p in self.atoms())
 
+    def volume_dict(self, normalize=False):
+        r"""
+        INPUT
+
+        - ``normalize`` -- boolean (default:``False``), whether to
+          normalize the sum of the whole volume to 1
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition
+            sage: h = 1/2
+            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
+            sage: q = Polyhedron([(0,0), (0,h), (h,1), (1,1), (1,h), (h,0)])
+            sage: r = Polyhedron([(h,0), (1,0), (1,h)])
+            sage: P = PolyhedronPartition([p,q,r])
+            sage: P.volume_dict()
+            {0: 1/8, 1: 3/4, 2: 1/8}
+            sage: (2*P).volume_dict()
+            {0: 1/2, 1: 3, 2: 1/2}
+        """
+        from collections import Counter
+        d = Counter()
+        for (key,atom) in self._items:
+            d[key] += atom.volume()
+        if normalize:
+            volume = self.volume()
+            return {key:v/volume for (key,v) in d.items()}
+        else:
+            return dict(d)
+
     def plot(self):
         r"""
         EXAMPLES::
