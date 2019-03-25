@@ -1731,17 +1731,20 @@ class PolyhedronExchangeTransformation(object):
             sage: ieq = [h, -1, 0]   # x0 <= h
             sage: d = u.induced_out_partition(ieq, P)
             sage: [(i, d[i], d[i].alphabet()) for i in d]
-            {3: Polyhedron partition of 4 atoms with 4 letters}
+            [(3,
+              Polyhedron partition of 4 atoms with 4 letters,
+              {(0, 2, 2), (1, 2, 2), (1, 2, 3), (1, 3, 3)})]
 
         ::
 
             sage: ieq2 = [1/2, -1, 0]   # x0 <= 1/2
             sage: d = u.induced_out_partition(ieq2, P)
             sage: [(i, d[i], d[i].alphabet()) for i in d]
-            sage: d
-            {1: Polyhedron partition of 2 atoms with 2 letters,
-             2: Polyhedron partition of 3 atoms with 3 letters,
-             3: Polyhedron partition of 4 atoms with 4 letters}
+            [(1, Polyhedron partition of 2 atoms with 2 letters, {(0,), (1,)}),
+             (2, Polyhedron partition of 3 atoms with 3 letters, {(2, 2), (2, 3), (3, 3)}),
+             (3,
+              Polyhedron partition of 4 atoms with 4 letters,
+              {(0, 2, 2), (1, 2, 2), (1, 2, 3), (1, 3, 3)})]
             sage: Q = PolyhedronPartition(d[1].atoms()+d[2].atoms()+d[3].atoms())
             sage: Q.is_pairwise_disjoint()
             True
@@ -1770,8 +1773,11 @@ class PolyhedronExchangeTransformation(object):
 
             sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
             sage: ieq5 = [1/2, 1, 0]   # x0 >= -1/2
-            sage: u.induced_out_partition(ieq5, P)
-            {1: Polyhedron partition of 6 atoms with 6 letters}
+            sage: d = u.induced_out_partition(ieq5, P)
+            sage: [(i, d[i], d[i].alphabet()) for i in d]
+            [(1,
+              Polyhedron partition of 6 atoms with 4 letters, 
+              {(0,), (1,), (2,), (3,)})]
 
         An irrational rotation::
 
@@ -1805,8 +1811,9 @@ class PolyhedronExchangeTransformation(object):
             partition = self.partition()
 
         # initial refinement
-        key_fn = lambda a,b:a
-        P = partition.refinement(half_part, key_fn=key_fn)
+        key_fn_left = lambda a,b:a
+        key_fn_both = lambda a,b:a+(b,)
+        P = partition.refinement(half_part, key_fn=key_fn_left)
         if len(P) == 0:
             raise ValueError("Inequality {} does not intersect P "
                     "(={})".format(half.inequalities()[0], partition))
@@ -1814,13 +1821,13 @@ class PolyhedronExchangeTransformation(object):
         ans = {}
         P = self(P, key_fn=lambda a,b:(a,))
         while len(P):
-            P_returned = P.refinement(half_part, key_fn=key_fn)
+            P_returned = P.refinement(half_part, key_fn=key_fn_left)
             if P_returned:
                 ans[level] = P_returned
             # for what is remaining we do:
-            P = P.refinement(other_half_part, key_fn=key_fn)
-            P = P.refinement(partition, key_fn=key_fn)
-            P = self(P)
+            P = P.refinement(other_half_part, key_fn=key_fn_left)
+            P = P.refinement(partition, key_fn=key_fn_both)
+            P = self(P, key_fn=key_fn_left)
             level += 1
         return ans
 
