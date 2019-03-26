@@ -1081,6 +1081,10 @@ class PolyhedronPartition(object):
 
             a polyhedron partition
 
+        .. TODO::
+
+            Avoid a quadratic enumeration of all pairs.
+
         EXAMPLES::
 
             sage: from slabbe import PolyhedronPartition
