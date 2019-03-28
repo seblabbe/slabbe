@@ -1604,8 +1604,7 @@ class WangTileSet(object):
 
         INPUT:
 
-        - ``M`` -- markers, set of tile indices or ``None``, if ``None``,
-          it is guessed.
+        - ``M`` -- markers, set of tile indices
         - ``i`` -- integer 1 or 2
         - ``side`` -- ``'right'`` or ``'left'``
         - ``radius`` - integer or 2-tuple (default: ``1``), if 2-tuple is
@@ -1632,26 +1631,18 @@ class WangTileSet(object):
             ....: (0,1,3,1), (0,0,0,1), (3,1,0,2), (0,2,1,2), (1,2,1,4), (3,3,1,2)]
             sage: tiles = [map(str,t) for t in tiles]
             sage: T = WangTileSet(tiles)
-            sage: T.find_substitution(i=2)
+            sage: T.find_markers(i=2)
+            [[0, 1]]
+            sage: T.find_substitution(M=[0,1], i=2)
             (Wang tile set of cardinality 12,
              Substitution 2d: {0: [[2]], 1: [[3]], 2: [[4]], 3:
                 [[5]], 4: [[7]], 5: [[8]], 6: [[9]], 7: [[10]], 8:
-                [[4, 0]], 9: [[5, 0]], 10: [[6, 1]], 11: [[7, 0]]},
-             {0, 1})
+                [[4, 0]], 9: [[5, 0]], 10: [[6, 1]], 11: [[7, 0]]})
         """
         # find markers
         if M is None:
-            markers = self.find_markers(i=i, radius=radius,
-                        solver=solver, ncpus=ncpus, verbose=False)
-            if len(markers) == 0:
-                raise ValueError("no set of markers in direction e_{} found "
-                        "with radius={}".format(i, radius))
-            elif len(markers) > 1:
-                raise ValueError("more than one set of markers found {}"
-                " : you need to choose one of "
-                "them and provide it as input".format(markers))
-            else:
-                M = markers[0]
+            raise ValueError("a set of markers must be given as input, "
+                    "markers can be computed with ``find_markers`` method")
 
         # Make sure M is of type set
         if not isinstance(M, set):
@@ -1708,7 +1699,7 @@ class WangTileSet(object):
         else:
             raise ValueError('i(={}) must be 1 or 2'.format(i))
 
-        return WangTileSet(new_tiles), s, M
+        return WangTileSet(new_tiles), s
 
     def shear(self, radius=0, solver=None, ncpus=1,
             function=str.__add__, verbose=False):
