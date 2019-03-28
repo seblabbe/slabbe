@@ -86,7 +86,7 @@ class Substitution2d(object):
             sage: s == Substitution2d(d)
             True
         """
-        return self._d == other._d
+        return isinstance(other, Substitution2d) and self._d == other._d
 
     def _latex_(self, ncolumns=8, align='l', variableA=None,
             variableB=None):
