@@ -1749,6 +1749,11 @@ cdef class MCFAlgorithm(object):
             #if i % step == 0:
             if P.x[0] < critical_value:
 
+                # see
+                # Sylvie Boldo, Stef Graillat, Jean-Michel Muller
+                # On the robustness of the 2Sum and Fast2Sum algorithms
+                # https://hal.inria.fr/ensl-01310023
+
                 # Sum the first lyapunov exponent
                 s = P.norm_x()
                 p = -log(s) - theta1c
