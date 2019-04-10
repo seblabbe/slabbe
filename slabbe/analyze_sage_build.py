@@ -63,13 +63,15 @@ def build_duration_logs(path_to_file, pattern=None):
     ::
 
         sage: from slabbe.analyze_sage_build import build_duration_logs
-        sage: from sage.env import SAGE_LOGS
+        sage: from sage.env import SAGE_ROOT
+        sage: import os
+        sage: SAGE_LOGS_PKGS = os.path.join(SAGE_ROOT,'logs','pkgs')
         sage: import os
         sage: for (file, pattern) in L:                  # random
         ....:     print(file)
-        ....:     if not os.path.exists(SAGE_LOGS+file):
+        ....:     if not os.path.exists(SAGE_LOGS_PKGS+file):
         ....:         continue
-        ....:     build_duration_logs(SAGE_LOGS+file, pattern)
+        ....:     build_duration_logs(SAGE_LOGS_PKGS+file, pattern)
         /../ptestlong.log
         /../dochtml.log
         [datetime.timedelta(0, 471, 700000)]
@@ -124,24 +126,26 @@ def sage_logs_datetime_list(consider='last', verbose=False):
         sage: L_filtered = [(A,B,delta,file) for (A,B,delta,file) in L
         ....:                  if start <= A and B <= stop]
     """
-    from sage.env import SAGE_LOGS
+    from sage.env import SAGE_ROOT
+    SAGE_LOGS = os.path.join(SAGE_ROOT,'logs')
+    SAGE_LOGS_PKGS = os.path.join(SAGE_ROOT,'logs','pkgs')
     K = []
     pattern = 'real\t'
-    for file in os.listdir(SAGE_LOGS):
-        path_to_file = os.path.join(SAGE_LOGS, file)
+    for file in os.listdir(SAGE_LOGS_PKGS):
+        path_to_file = os.path.join(SAGE_LOGS_PKGS, file)
         K.append((path_to_file, pattern))
 
-    path_to_file = os.path.join(SAGE_LOGS, '..', 'dochtml.log')
+    path_to_file = os.path.join(SAGE_LOGS, 'dochtml.log')
     if os.path.exists(path_to_file):
         pattern = 'Elapsed time: '
         K.append((path_to_file, pattern))
 
-    path_to_file = os.path.join(SAGE_LOGS, '..', 'ptestlong.log')
+    path_to_file = os.path.join(SAGE_LOGS, 'ptestlong.log')
     if os.path.exists(path_to_file):
         pattern = 'Total time for all tests: '
         K.append((path_to_file, pattern))
 
-    path_to_file = os.path.join(SAGE_LOGS, '..', 'start.log')
+    path_to_file = os.path.join(SAGE_LOGS, 'start.log')
     if os.path.exists(path_to_file):
         K.append((path_to_file, None))
 
