@@ -7,8 +7,8 @@ combinatorics, combinatorics on words, multidimensional continued fraction
 algorithms, matrix cocycles, languages, substitutions, bispecial factors,
 double square tiles, Oldenburger sequence, Joyal bijection, Dyck word in 3D,
 Markov transformations, Wang tilings, 2d substitutions, polyhedron partitions,
-partial injections, ostrowski numeration, tikzpictures, some graphs and matrix
-methods.
+polyhedron exchange transformations, partial injections, ostrowski numeration,
+tikzpictures, some graphs and matrix methods.
 
 Installation::
 
@@ -23,6 +23,13 @@ Links: slabbe.org__, `slabbe on Github`__, `slabbe on pypi`__
 __ http://www.slabbe.org/Sage/
 __ http://github.com/seblabbe/slabbe
 __ http://pypi.python.org/pypi/slabbe
+
+Version 0.5 (April 10, 2019)
+--------------------------------
+
+Few fixes for the version 2 of "Substitutive structure of Jeandel-Rao aperiodic tilings".
+New additions includes solving Wang tilings problem using SAT solvers and a
+class for Polyhedron exchange transformations.
 
 Version 0.4.4 (September 28, 2018)
 --------------------------------
