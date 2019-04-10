@@ -648,7 +648,7 @@ class TikzPicture(StandaloneTex):
 
             sage: alpha = var('alpha')
             sage: m = matrix(2,range(4)); m.set_immutable()
-            sage: G = DiGraph([(0,1,alpha), (0,1,'a'), (0,2,9), (0,2,m)], multiedges=True)
+            sage: G = DiGraph([(0,1,alpha), (0,1,0), (0,2,9), (0,2,m)], multiedges=True)
             sage: tikz = TikzPicture.from_graph(G, merge_multiedges=True) # optional dot2tex
             sage: _ = tikz.pdf()      # not tested
 

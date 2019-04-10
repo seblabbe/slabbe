@@ -175,34 +175,33 @@ def merge_multiedges(G, label_function=tuple):
 
         sage: from slabbe.graph import merge_multiedges
         sage: G = DiGraph(multiedges=True)
-        sage: alpha = var('alpha')
         sage: G.add_edge(0,1,'one')
-        sage: G.add_edge(0,1,2)
-        sage: G.add_edge(0,1,alpha)
+        sage: G.add_edge(0,1,'two')
+        sage: G.add_edge(0,1,'alpha')
         sage: GG = merge_multiedges(G)
         sage: GG
         Digraph on 2 vertices
         sage: GG.edges()
-        [(0, 1, (alpha, 2, 'one'))]
+        [(0, 1, ('alpha', 'one', 'two'))]
 
     A graph::
 
         sage: G = Graph(multiedges=True)
         sage: G.add_edge(0,1,'one')
-        sage: G.add_edge(0,1,2)
-        sage: G.add_edge(0,1,alpha)
+        sage: G.add_edge(0,1,'two')
+        sage: G.add_edge(0,1,'alpha')
         sage: GG = merge_multiedges(G)
         sage: GG
         Graph on 2 vertices
         sage: GG.edges()
-        [(0, 1, (alpha, 2, 'one'))]
+        [(0, 1, ('alpha', 'one', 'two'))]
 
     Using ``label_function``::
 
         sage: fn = lambda L: LatexExpr(','.join(map(str, L)))
         sage: GG = merge_multiedges(G, label_function=fn)
         sage: GG.edges()
-        [(0, 1, alpha,2,one)]
+        [(0, 1, alpha,one,two)]
 
     """
     d = defaultdict(list)
