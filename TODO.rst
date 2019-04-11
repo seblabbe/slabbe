@@ -3,6 +3,11 @@
 TODO
 ====
 
+Use gitlab
+----------
+
+https://about.gitlab.com/
+
 Transition à Python 3
 ---------------------
 
