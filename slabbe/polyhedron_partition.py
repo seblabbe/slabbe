@@ -637,6 +637,34 @@ class PolyhedronPartition(object):
                 d[key] = next(it)
         return d
 
+    def apply_linear_map(self, M):
+        r"""
+        INPUT:
+
+        - ``M`` -- a matrix
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition
+            sage: h = 1/3
+            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
+            sage: q = Polyhedron([(0,0), (0,h), (h,1), (h,0)])
+            sage: r = Polyhedron([(h,1), (1,1), (1,h), (h,0)])
+            sage: s = Polyhedron([(h,0), (1,0), (1,h)])
+            sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
+
+        Vertical symmetry::
+
+            sage: M = diagonal_matrix((-1,1))
+            sage: P = P.apply_linear_map(M)
+            sage: P = P.translation((1,0))
+            sage: P
+            Polyhedron partition of 4 atoms with 4 letters
+
+        """
+        L = [(key, M*p) for key,p in self]
+        return PolyhedronPartition(L)
+
     def translation(self, displacement):
         """
         Return the translated partition of polyhedron.
