@@ -31,11 +31,11 @@ numerical, parallel, plot, probability, rings, sat, sets, structure, symbolic.
 
 __ http://www.sagemath.org/
 
-Links: slabbe.org__, `slabbe on Github`__, `slabbe on pypi`__
+Links: 
 
-__ http://www.slabbe.org/Sage/
-__ http://github.com/seblabbe/slabbe
-__ http://pypi.python.org/pypi/slabbe
+ - www: http://www.slabbe.org/Sage/
+ - github: http://github.com/seblabbe/slabbe
+ - PyPI: http://pypi.python.org/pypi/slabbe
 
 Future inclusion into Sage
 --------------------------
