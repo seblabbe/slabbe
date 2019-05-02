@@ -15,8 +15,9 @@ code. It contains modules on
   numeration, partial injections,
 
 **Discrete dynamical systems**
-  Markov transformations, Wang tilings, matrix cocycles, multidimensional
-  continued fraction algorithms, polyhedron exchange transformations,
+  diophantine approximation, Markov transformations, Wang tilings, Lyapunov
+  exponents, matrix cocycles, multidimensional continued fraction algorithms,
+  polyhedron exchange transformations, 
 
 **Vizualization**
   tikzpicture
