@@ -26,6 +26,7 @@ setup(name='slabbe',
     version=open("VERSION").read().strip(),
     description="Sebastien Labbe's Research code",
     long_description=long_description,
+    long_description_content_type='text/x-rst',
     classifiers=[
       # How mature is this project? Common values are
       #   3 - Alpha

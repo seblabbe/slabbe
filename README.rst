@@ -25,24 +25,24 @@ __ http://github.com/seblabbe/slabbe
 __ http://pypi.python.org/pypi/slabbe
 
 Version 0.5 (April 10, 2019)
---------------------------------
+----------------------------
 
 Few fixes for the version 2 of "Substitutive structure of Jeandel-Rao aperiodic tilings".
 New additions includes solving Wang tilings problem using SAT solvers and a
 class for Polyhedron exchange transformations.
 
 Version 0.4.4 (September 28, 2018)
---------------------------------
+----------------------------------
 
 Make ``import slabbe`` work in Sage with Python 3.
 
 Version 0.4.3 (August 22, 2018)
---------------------------------
+-------------------------------
 
 Few fixes for the publication of "Substitutive structure of Jeandel-Rao aperiodic tilings".
 
 Version 0.4.2 (July 20, 2018)
---------------------------------
+-----------------------------
 
 Few fixes for the version 2 of "A self-similar aperiodic set of 19 Wang tiles".
 

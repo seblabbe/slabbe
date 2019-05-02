@@ -33,6 +33,9 @@ doc-pdf:
 dist:
 	sage -python setup.py sdist
 
+check: dist
+	VERSION=`cat VERSION`; sage -sh -c "twine check dist/slabbe-$$VERSION.tar.gz"
+
 upload: dist
 	VERSION=`cat VERSION`; sage -sh -c "twine upload dist/slabbe-$$VERSION.tar.gz"
 
