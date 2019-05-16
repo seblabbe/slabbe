@@ -1,7 +1,7 @@
 .. nodoctest
 
-Polyhedron partition and Induction
-==================================
+Polyhedron partition, PETs and induced transformations
+======================================================
 
 .. automodule:: slabbe.polyhedron_partition
    :members:
