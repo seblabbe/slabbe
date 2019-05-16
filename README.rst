@@ -35,31 +35,6 @@ Links:
  - github: http://github.com/seblabbe/slabbe
  - www: http://www.slabbe.org/Sage/
 
-It builds on SageMath
----------------------
-
-It depends heavily on the SageMath library as it uses the following modules:
-combinat, functions, geometry, graphs, matrix, misc, modules, numerical,
-parallel, plot, probability, rings, sat, sets, structure, symbolic.
-
-SageMath__ is free open source math software that supports research and
-teaching in algebra, geometry, number theory, cryptography, and related areas.  
-
-__ http://www.sagemath.org/
-
-Follows the Best practices for scientific computing
----------------------------------------------------
-
-It follows as much as possible the `SageMath general conventions`__ and the
-`Best Practices for Scientific Computing`__. Each module is fully documented
-and doctested. Before each new release, we make sure that all examples are
-working. As the `ReScience Journal`__ says: "*Reproducible science is good.
-Replicated Science is better*".
-
-__ http://doc.sagemath.org/html/en/developer/coding_basics.html
-__ https://doi.org/10.1371/journal.pbio.1001745
-__ http://rescience.github.io/
-
 Prerequisites
 -------------
 
@@ -97,6 +72,31 @@ rights)::
 Usage::
 
     sage: from slabbe import *
+
+It builds on SageMath
+---------------------
+
+It depends heavily on the SageMath library as it uses the following modules:
+combinat, functions, geometry, graphs, matrix, misc, modules, numerical,
+parallel, plot, probability, rings, sat, sets, structure, symbolic.
+
+SageMath__ is free open source math software that supports research and
+teaching in algebra, geometry, number theory, cryptography, and related areas.  
+
+__ http://www.sagemath.org/
+
+Follows the Best practices for scientific computing
+---------------------------------------------------
+
+It follows as much as possible the `SageMath general conventions`__ and the
+`Best Practices for Scientific Computing`__. Each module is fully documented
+and doctested. Before each new release, we make sure that all examples are
+working. As the `ReScience Journal`__ says: "*Reproducible science is good.
+Replicated Science is better*".
+
+__ http://doc.sagemath.org/html/en/developer/coding_basics.html
+__ https://doi.org/10.1371/journal.pbio.1001745
+__ http://rescience.github.io/
 
 Future inclusion into Sage
 --------------------------
