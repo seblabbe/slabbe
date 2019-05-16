@@ -2,8 +2,12 @@
 r"""
 Wang tile solver
 
-This uses MILP solvers like Coin or Gurobi, Sat solvers like cryptominisat
-and dancing links solver which is already in Sage.
+We solve the problem of tiling a rectangle by Wang tiles by reducing it to
+other well-known problems like linear problem, exact cover problem and SAT.
+
+We thus use MILP solvers like Coin or Gurobi, Sat solvers like
+cryptominisat, picosat or glucose and dancing links solver which is already
+in Sage.
 
 Coin can be installed with::
 
@@ -12,6 +16,10 @@ Coin can be installed with::
 Cryptominisat can be installed with::
 
     sage -i cryptominisat sagelib
+
+Glucose can be installed with::
+
+    sage -i glucose
 
 EXAMPLES::
 
