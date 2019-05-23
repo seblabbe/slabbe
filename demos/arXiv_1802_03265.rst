@@ -1,0 +1,201 @@
+
+=============================================
+A self-similar aperiodic set of 19 Wang tiles
+=============================================
+
+This ReStructuredText file gathers the code published in the following article:
+
+    S. Labbé, A self-similar aperiodic set of 19 Wang tiles, Geometriae Dedicata,
+    (2018) `doi:10.1007/s10711-018-0384-8`__, `arXiv:1802.03265`__
+
+__ https://doi.org/10.1007/s10711-018-0384-8
+__ http://arxiv.org/abs/1802.03265
+
+Section 8: Proofs of lemmas based on Sage
+-----------------------------------------
+
+This section gathers proofs of Lemma 13, Lemma 16, Lemma 20 and Lemma 23 made
+using version 8.2 of Sage together with the optional Sage package
+``slabbe-0.4.2`` which can be installed by running the command::
+
+    sage -pip install slabbe
+
+The computations will be faster if the Gurobi linear program solver
+or if the SAT solver glucose is installed and available in Sage::
+
+    sage -i glucose
+
+First we import the necessary libraries from slabbe::
+
+    sage: from slabbe import WangTileSet, TikzPicture
+
+We create the tile set `U`:
+
+.. link
+
+::
+
+    sage: L = ['FOJO', 'FOHL', 'JMFP', 'DMFK', 'HPJP', 'HPHN', 'HKFP', 'HKDP', 'BOIO',
+    ....: 'GLEO', 'GLCL', 'ALIO', 'EPGP', 'EPIP', 'IPGK', 'IPIK', 'IKBM', 'IKAK', 'CNIP']
+    sage: U = WangTileSet(L); U
+    Wang tile set of cardinality 19
+
+This allows to create the transducer graph of `U` shown at Figure 4:
+
+.. link
+
+::
+
+    sage: G = U.to_transducer_graph(); G
+    Looped digraph on 10 vertices
+    sage: _ = TikzPicture.from_graph(G).pdf(view=False)
+
+*Proof of Lemma 13*. We compute the number of dominoes in the direction $e_2$
+allowing a surrounding of radius $1,2,3$ in $\Omega_U$. We obtain 35 dominoes
+in the direction $e_2$  allowing a surrounding of radius $2$ and $3$:
+
+.. link
+
+::
+
+    sage: [len(U.dominoes_with_surrounding(i=2,radius=r,solver='dancing_links')) for r in [1,2,3]]
+    [37, 35, 35]
+    sage: U.dominoes_with_surrounding(i=2,radius=2,solver='dancing_links')
+    {(0, 8), (1, 8), (1, 9), (1, 11), (2, 16), (3, 16), (4, 13), (5, 13), (6, 14),
+     (6, 17), (7, 15), (8, 0), (8, 9), (8, 11), (9, 1), (9, 10), (10, 1), (11, 1),
+     (11, 10), (12, 6), (13, 4), (13, 7), (13, 18), (14, 2), (14, 6), (14, 12), (15, 7),
+     (15, 13), (15, 18), (16, 3), (16, 14), (16, 17), (17, 3), (17, 14), (18, 5)}
+
+Now we create the tile set `V`:
+
+.. link
+
+::
+
+    sage: L = [('A','L','I','O'), ('B','O','I','O'), ('E','P','I','P'), 
+    ....:  ('G','L','E','O'), ('I','K','A','K'), ('I','K','B','M'),
+    ....:  ('I','P','G','K'), ('I','P','I','K'), ('AF','O','IH','O'),
+    ....:  ('BF','O','IJ','O'), ('CH','P','IH','P'), ('EH','K','GF','P'),
+    ....:  ('EH','K','ID','P'), ('EH','P','IJ','P'), ('GF','O','CH','L'),
+    ....:  ('GF','O','EH','O'), ('ID','M','AF','K'), ('ID','M','BF','M'),
+    ....:  ('IH','K','GF','K'), ('IH','K','ID','K'), ('IJ','M','GF','K')]
+    sage: V = WangTileSet(L); V
+    Wang tile set of cardinality 21
+
+*Proof of Lemma 16*. We compute the number of dominoes in the direction $e_1$
+allowing a surrounding of radius $1,2$ in $\Omega_V$. We obtain 30 dominoes in
+the direction $e_1$ allowing a surrounding of radius $1$ and $2$:
+
+.. link
+
+::
+
+    sage: [len(V.dominoes_with_surrounding(i=1,radius=r,solver='dancing_links')) for r in [1,2]]
+    [30, 30]
+    sage: V.dominoes_with_surrounding(i=1,radius=1,solver='dancing_links')
+    {(0, 4), (1, 5), (2, 3), (3, 6), (4, 1), (4, 2), (5, 1), (5, 2), (5, 7), (6, 1),
+     (7, 0), (7, 1), (8, 16), (9, 17), (10, 14), (11, 15), (12, 15), (13, 15),
+     (14, 11), (14, 18), (15, 18), (15, 20), (16, 12), (17, 12), (17, 19), (18, 8),
+     (18, 10), (19, 8), (20, 9), (20, 13)}
+
+
+*Proof of Lemma 20*. We create the matrix ``M`` in Sage.  The characteristic
+polynomial, the eigenvalues and the eigenvectors of ``M`` can be computed
+easily in Sage.  After changing the ring of the matrix to the number field
+containing $\varphi$, we obtain the result stated in the proposition.  First we
+create the substitution $\omega$:
+
+.. link
+
+::
+
+    sage: from slabbe import Substitution2d
+    sage: da = {0: [[11]], 1: [[8]], 2: [[13]], 3: [[9]], 4: [[17]], 5: [[16]], 6: [[14]],
+    ....:       7: [[15]], 8: [[11, 1]], 9: [[8, 0]], 10: [[18, 5]], 11: [[12, 6]],
+    ....:       12: [[13, 7]], 13: [[13, 4]], 14: [[10, 1]], 15: [[9, 1]], 16: [[17, 3]],
+    ....:       17: [[16, 3]], 18: [[14, 6]], 19: [[15, 7]], 20: [[14, 2]]}
+    sage: alpha = Substitution2d(da)
+    sage: db = {0: [[4]], 1: [[5]], 2: [[7], [0]], 3: [[2], [3]], 4: [[4], [1]],
+    ....:  5: [[5], [1]], 6: [[7], [1]], 7: [[6], [1]], 8: [[18]], 9: [[16]],
+    ....:  10: [[17]], 11: [[20]], 12: [[19], [8]], 13: [[18], [8]], 14: [[12], [15]],
+    ....:  15: [[11], [15]], 16: [[10], [14]], 17: [[13], [15]], 18: [[20], [9]]}
+    sage: beta = Substitution2d(db)
+    sage: omega = alpha*beta
+
+
+Then we create its incidence matrix, we check it is primitive, we compute it
+characteristic polynomial, its eigenvalues and left and right eigenvectors:
+
+.. link
+
+::
+
+    sage: M = matrix(omega)
+    sage: from slabbe.matrices import is_primitive
+    sage: is_primitive(M)
+    True
+    sage: M.charpoly().factor()
+    x^3 * (x - 1)^4 * (x + 1)^4 * (x^2 - 3*x + 1) * (x^2 + x - 1)^3
+    sage: z = polygen(QQ, 'z')
+    sage: K.<phi> = NumberField(z**2-z-1, 'phi', embedding=RR(1.6))
+    sage: MK = M.change_ring(K)
+    sage: MK.eigenvalues()
+    [phi + 1, -phi + 2, phi - 1, phi - 1, phi - 1, 0, 0, 0, -phi, -phi, -phi, 
+        1, 1, 1, 1, -1, -1, -1, -1]
+    sage: MK.eigenvectors_right()[0][1][0]
+    (1, 6*phi + 3, phi + 1, 2*phi + 1, phi, phi + 1, 3*phi + 2, 2*phi + 1,
+     3*phi + 2, 4*phi + 2, phi + 1, 2*phi + 1, phi, 3*phi + 2, 4*phi + 3, 2*phi + 1,
+     3*phi + 2, 2*phi + 1, phi + 1)
+    sage: MK.eigenvectors_left()[0][1][0]
+    (1, 1, phi, phi, phi, phi, phi, phi, phi, phi, phi, phi,
+     phi + 1, phi + 1, phi + 1, phi + 1, phi + 1, phi + 1, phi + 1)
+
+*Proof of Lemma 23*.  The following takes 4s if using ``solver='Gurobi'`` and 2
+min if using ``solver='dancing_links'``:
+
+.. link
+
+::
+
+    sage: tilings = U.tilings_with_surrounding(2,2,radius=1,solver='dancing_links')
+    sage: len(tilings)
+    50
+    sage: S = sorted(t.table() for t in tilings)
+    sage: [matrix.column([col[::-1] for col in s]) for s in S]
+    [
+    [ 8 16]  [ 8 16]  [ 8 16]  [ 9 14]  [11 17]  [16  8]  [16 13]  [16 15]
+    [ 0  3], [ 1  2], [ 1  3], [ 1  6], [ 1  6], [ 2  0], [ 2  4], [ 3  7],
+    <BLANKLINE>
+    [13  9]  [13  9]  [14  8]  [14 11]  [14 13]  [17  8]  [17 13]  [15  8]
+    [ 4  1], [ 5  1], [ 6  1], [ 6  1], [ 6  5], [ 6  1], [ 6  5], [ 7  1],
+    <BLANKLINE>
+    [15 11]  [ 0  3]  [ 9 14]  [11 17]  [ 1  2]  [ 1  6]  [10 12]  [ 1  6]
+    [ 7  1], [ 8 16], [ 8 16], [ 8 16], [ 9 14], [ 9 14], [ 9 14], [10 12],
+    <BLANKLINE>
+    [ 1  6]  [ 1  3]  [10 14]  [ 6  1]  [ 4  1]  [ 7  1]  [18 10]  [ 2  0]
+    [10 14], [11 17], [11 17], [12  9], [13  9], [13  9], [13  9], [14  8],
+    <BLANKLINE>
+    [ 2  4]  [ 6  1]  [ 6  5]  [12  9]  [ 7  1]  [13  9]  [18 10]  [ 3  7]
+    [14 13], [14 11], [14 18], [14  8], [15 11], [15  8], [15 11], [16 13],
+    <BLANKLINE>
+    [ 3  7]  [14 11]  [14 18]  [14 13]  [14 18]  [17 13]  [ 3  7]  [14 11]
+    [16 15], [16  8], [16 13], [16 15], [16 15], [16 15], [17 13], [17  8],
+    <BLANKLINE>
+    [14 18]  [ 5  1]
+    [17 13], [18 10]
+    ]
+
+Now we show using Sage that $S\subseteq L_\omega$.
+We compute the set $L_\omega\cap U^{(2,2)}$ using Sage:
+
+.. link
+
+::
+
+    sage: F = omega.list_2x2_factors()
+    sage: len(F)
+    50
+    sage: sorted(F) == S
+    True
+
+
