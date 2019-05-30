@@ -24,7 +24,6 @@ Dynamical systems
    lyapunov
    markov_transformation
    matrices
-   polyhedron_partition
    polyhedron_exchange_transformation
    substitution_2d
    wang_tiles
@@ -67,6 +66,7 @@ Digital Geometry
    billiard
    christoffel_graph
    double_square_tile
+   polyhedron_partition
 
 Vizualization
 -------------
