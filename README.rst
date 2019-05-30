@@ -111,6 +111,10 @@ __ https://trac.sagemath.org/
 Release history
 ---------------
 
+*Version 0.5.1 (May 30, 2019)*
+  Few fixes for the publication of "Induction of `Z^2`-actions on partitions of
+  the 2-torus". Improved html documentation.
+
 *Version 0.5 (April 10, 2019)*
   Few fixes for the version 2 of "Substitutive structure of Jeandel-Rao
   aperiodic tilings". New additions includes solving Wang tilings problem
