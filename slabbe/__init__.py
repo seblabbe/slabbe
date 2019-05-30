@@ -28,8 +28,8 @@ from .matrices import M3to2, M2to3, M4to2, M4to3
 
 from .substitution_2d import Substitution2d
 from .wang_tiles import WangTiling, WangTileSolver, WangTileSet
-from .polyhedron_partition import PolyhedronPartition, PolyhedronExchangeTransformation
-
+from .polyhedron_partition import PolyhedronPartition
+from .polyhedron_exchange_transformation import PolyhedronExchangeTransformation
 
 from .partial_injection import (number_of_partial_injection,
                                 random_partial_injection,

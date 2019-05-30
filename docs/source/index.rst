@@ -25,6 +25,7 @@ Dynamical systems
    markov_transformation
    matrices
    polyhedron_partition
+   polyhedron_exchange_transformation
    substitution_2d
    wang_tiles
 
