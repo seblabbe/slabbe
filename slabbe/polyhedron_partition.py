@@ -223,7 +223,8 @@ class PolyhedronPartition(object):
     @classmethod
     def jeandel_rao_tilings_partition(cls):
         r"""
-        This construct the polygon partition introduced in [Lab2019]_.
+        This construct the polygon partition associated to Jeandel-Rao
+        tilings introduced in [Lab2019]_.
 
         EXAMPLES::
 
@@ -295,6 +296,74 @@ class PolyhedronPartition(object):
             (9, (B[3], B[4], C[4])),
             (10, (B[0], D[3], E[3])),
             ]
+        L = [(key, Polyhedron(vertices, base_ring=K)) for (key,vertices) in L]
+        return PolyhedronPartition(L)
+
+    @classmethod
+    def self_similar_19_tiles_partition(cls):
+        r"""
+        This construct the polygon partition introduced in [Lab2019]_
+        associated to the self-similar 19 Wang tiles [Lab2018]_.
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition
+            sage: PU = PolyhedronPartition.self_similar_19_tiles_partition()
+            sage: PU.is_pairwise_disjoint()
+            True
+            sage: PU.volume()
+            1
+
+        REFERENCES:
+
+        .. [Lab2018] S. Labbé. A self-similar aperiodic set of 19 Wang
+           tiles. Geom. Dedicata, 2018.
+           https://doi.org/10.1007/s10711-018-0384-8.
+        .. [Lab2019] S. Labbé. A Markov partition for Jeandel-Rao aperiodic
+           Wang tilings. March 2019. https://arxiv.org/abs/1903.06137
+        """
+        from sage.rings.polynomial.polynomial_ring import polygen
+        from sage.rings.rational_field import QQ
+        from sage.rings.number_field.number_field import NumberField
+
+        # the golden mean
+        z = polygen(QQ, 'z')
+        K = NumberField(z**2-z-1, 'phi', embedding=QQ(1.6))
+        phi = K.gen()
+
+        # the partition vertices
+        L = [
+         (0, [(phi - 1, -2*phi + 4), (phi - 1, phi - 1), (-2*phi + 4, phi - 1)]),
+         (1,
+          [(phi - 1, -2*phi + 4),
+           (phi - 1, 1),
+           (1, 1),
+           (-2*phi + 4, phi - 1),
+           (1, phi - 1)]),
+         (2, [(0, 1), (-phi + 2, phi - 1), (2*phi - 3, phi - 1)]),
+         (3, [(0, 1), (0, phi - 1), (2*phi - 3, phi - 1)]),
+         (4, [(phi - 1, phi - 1), (-phi + 2, 1), (phi - 1, -2*phi + 4)]),
+         (5, [(phi - 1, 1), (-phi + 2, 1), (phi - 1, -2*phi + 4)]),
+         (6, [(0, 1), (-phi + 2, 1), (-phi + 2, phi - 1)]),
+         (7, [(-phi + 2, 1), (-phi + 2, phi - 1), (phi - 1, phi - 1)]),
+         (8, [(1, 0), (phi - 1, 0), (phi - 1, -phi + 2)]),
+         (9, [(-2*phi + 4, phi - 1), (phi - 1, phi - 1), (1, -phi + 2), (1, 0)]),
+         (10, [(1, -phi + 2), (-2*phi + 4, phi - 1), (1, phi - 1)]),
+         (11, [(1, 0), (phi - 1, -phi + 2), (phi - 1, phi - 1)]),
+         (12, [(-phi + 2, -phi + 2), (-phi + 2, phi - 1), (2*phi - 3, phi - 1)]),
+         (13,
+          [(-phi + 2, phi - 1),
+           (phi - 1, -phi + 2),
+           (-phi + 2, -phi + 2),
+           (phi - 1, 0)]),
+         (14,
+          [(2*phi - 3, phi - 1), (0, phi - 1), (-phi + 2, -phi + 2), (-phi + 2, 0)]),
+         (15, [(phi - 1, 0), (-phi + 2, 0), (-phi + 2, -phi + 2)]),
+         (16, [(0, 0), (-phi + 2, 0), (0, -phi + 2)]),
+         (17, [(0, -phi + 2), (-phi + 2, 0), (0, phi - 1)]),
+         (18, [(phi - 1, -phi + 2), (-phi + 2, phi - 1), (phi - 1, phi - 1)])
+         ]
+
         L = [(key, Polyhedron(vertices, base_ring=K)) for (key,vertices) in L]
         return PolyhedronPartition(L)
 
