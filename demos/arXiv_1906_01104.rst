@@ -1,0 +1,90 @@
+
+=========================================================
+Induction of Z^2-actions and of partitions of the 2-torus
+=========================================================
+
+`arXiv:1906.01104`__, June 2019, 36 p.
+
+__ https://arxiv.org/abs/1906.01104
+
+Appendix: Sage code
+-------------------
+
+Polyhedron exchange transformations and induction of polyhedron partitions are
+implemented in Sage with the optional package slabbe::
+
+    sage: from slabbe import PolyhedronPartition
+    sage: from slabbe import PolyhedronExchangeTransformation as PET
+
+The following allows to define the partition $P_0$ of $\R^2/\Gamma_0$, compute
+the induced partition $P_1$ of $\R^2/\Gamma_1$, the substitution $\beta_0$ and
+to reproduce the proof of Proposition 18.
+
+.. link
+
+::
+
+    sage: z = polygen(QQ, 'z')
+    sage: K = NumberField(z**2-z-1, 'phi', embedding=RR(1.6))
+    sage: phi = K.gen()
+    sage: P0 = PolyhedronPartition.jeandel_rao_tilings_partition()
+    sage: Gamma0 = matrix.column([(phi,0), (1,phi+3)])
+    sage: fundamental_domain = polytopes.parallelotope([(phi,0), (0,phi+3)])
+    sage: R0e2 = PET.toral_translation(Gamma0, vector((0,1)), fundamental_domain)
+    sage: y_le_1 = [1, 0, -1]   # syntax for the inequality y <= 1
+    sage: P1,beta0 = R0e2.induced_partition(y_le_1, P0, substitution_type='column')
+
+The following allows to reproduce the proof of Proposition 22, that is, to
+construct the partitions $P_2$, $P_3$, $P_4$, $P_5$, $P_6$, $P_7$, $P_8$,
+$P_9$, $P_{10}$ and show that $P_8$ and $P_{10}$ are equivalent:
+
+.. link
+
+::
+
+    sage: x_le_1 = [1, -1, 0]   # x <= 1
+    sage: Gamma2 = Gamma1 = matrix.column([(phi,0), (0,1)])
+    sage: P2 = P1
+    sage: R2e1 = PET.toral_translation(Gamma2, vector((1,0)))
+    sage: P3,beta2 = R2e1.induced_partition(x_le_1, P2, substitution_type='row')
+    sage: Gamma3 = matrix.column([(1,0), (0,1)])
+    sage: Gamma4 = matrix.column([(phi^-1,0), (0,1)])
+    sage: R9e1 = R7e1 = R5e1 = R3e1 = PET.toral_translation(Gamma3, vector((phi^-2,0)))
+    sage: R8e2 = R6e2 = R4e2 = PET.toral_translation(Gamma4, vector((0,phi^-2)))
+    sage: x_le_phi_inv = [phi^-1, -1, 0] # x <= phi^-1
+    sage: y_le_phi_inv = [phi^-1, 0, -1] # y <= phi^-1
+    sage: P4,beta3 = R3e1.induced_partition(x_le_phi_inv, P3, substitution_type='row')
+    sage: P5,beta4 = R4e2.induced_partition(y_le_phi_inv, P4, substitution_type='column')
+    sage: P5_scaled = (-phi*P5).translation((1,1))
+    sage: P6,beta5 = R5e1.induced_partition(x_le_phi_inv, P5_scaled, substitution_type='row')
+    sage: P7,beta6 = R6e2.induced_partition(y_le_phi_inv, P6, substitution_type='column')
+    sage: P7_scaled = (-phi*P7).translation((1,1))
+    sage: P8,beta7 = R7e1.induced_partition(x_le_phi_inv, P7_scaled, substitution_type='row')
+    sage: P9,beta8 = R8e2.induced_partition(y_le_phi_inv, P8, substitution_type='column')
+    sage: P9_scaled = (-phi*P9).translation((1,1))
+    sage: P10,beta9 = R9e1.induced_partition(x_le_phi_inv, P9_scaled, substitution_type='row')
+    sage: P8 == P10
+    True
+    sage: eta = Substitution2d.from_permutation(P8.keys_permutation(P10))
+    sage: view(beta8*beta9*eta)    # the self-similarity for P8
+
+We may check that the self-similarity for $\Pcal_8$ satisfies 
+$\rho^{-1}\beta_8\beta_9\eta\rho=\beta_\U$.
+
+.. link
+
+::
+
+    sage: rho = Substitution2d.from_permutation({0:0, 1:1, 2:9, 3:7, 4:8, 5:11, 6:10, 
+    ....: 7:6, 8:2, 9:4, 10:5, 11:3, 12:18, 13:14, 14:16, 15:13, 16:12, 17:17, 18:15})
+    sage: view(rho.inverse()*beta8*beta9*eta*rho)  # == betaU   # not tested
+
+To visualize the partitions and substitutions computed above, do as follows.
+
+.. link
+
+::
+
+    sage: P1.plot()              # not tested
+    sage: view(beta0)  # etc.    # not tested
+
