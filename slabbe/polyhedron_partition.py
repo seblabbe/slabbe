@@ -182,10 +182,14 @@ class PolyhedronPartition(object):
         self._base_ring = base_ring
 
     @classmethod
-    def jeandel_rao_tilings_partition(cls):
+    def jeandel_rao_tilings_partition(cls, backend=None):
         r"""
         This construct the polygon partition associated to Jeandel-Rao
         tilings introduced in [Lab2019]_.
+
+        INPUT:
+
+        - ``backend`` -- string, polyhedron backend
 
         EXAMPLES::
 
@@ -257,7 +261,8 @@ class PolyhedronPartition(object):
             (9, (B[3], B[4], C[4])),
             (10, (B[0], D[3], E[3])),
             ]
-        L = [(key, Polyhedron(vertices, base_ring=K)) for (key,vertices) in L]
+        L = [(key, Polyhedron(vertices, base_ring=K, backend=backend)) 
+             for (key,vertices) in L]
         return PolyhedronPartition(L)
 
     @classmethod
@@ -280,8 +285,6 @@ class PolyhedronPartition(object):
         .. [Lab2018] S. Labbé. A self-similar aperiodic set of 19 Wang
            tiles. Geom. Dedicata, 2018.
            https://doi.org/10.1007/s10711-018-0384-8.
-        .. [Lab2019] S. Labbé. A Markov partition for Jeandel-Rao aperiodic
-           Wang tilings. March 2019. https://arxiv.org/abs/1903.06137
         """
         from sage.rings.polynomial.polynomial_ring import polygen
         from sage.rings.rational_field import QQ
