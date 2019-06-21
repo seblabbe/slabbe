@@ -1243,7 +1243,7 @@ class PolyhedronPartition(object):
         L = []
         for ((a,p),(b,q)) in itertools.product(self, other):
             p_q = p.intersection(q)
-            if p_q.volume() > 0:
+            if p_q.is_full_dimensional():
                 if key_fn is None:
                     L.append(p_q)
                 else:
