@@ -208,12 +208,14 @@ cdef class PairPoint:
     """
     cdef double* x
     cdef double* a
+    cdef double* _tmparray
     cdef int* perm
     cdef int dim
     cdef double _tmp
     def __cinit__(self, int dim, *args, **kwds):
         self.x = <double*>check_allocarray(dim, sizeof(double))
         self.a = <double*>check_allocarray(dim, sizeof(double))
+        self._tmparray = <double*>check_allocarray(dim, sizeof(double))
         self.perm = <int*>check_allocarray(dim, sizeof(int))
         self.dim = dim
 
@@ -235,7 +237,7 @@ cdef class PairPoint:
     def __dealloc__(self):
         sig_free(self.x)
         sig_free(self.a)
-
+        sig_free(self._tmparray)
 
     def to_dict(self):
         r"""
@@ -270,33 +272,28 @@ cdef class PairPoint:
         """
         return repr(self.to_tuple())
 
-    cdef void sort(self):
+
+    cpdef void sort(self):
         r"""
-        # How to sort x and a arrays according to x?
+        Sort array x and sort array a with the same permutation.
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint(4, [.4, .2, .3, .1], [4,3,2,1])
+            sage: P.sort()
+            sage: P
+            ((0.1, 0.2, 0.3, 0.4), (1.0, 3.0, 2.0, 4.0))
+
+        ::
+
+            sage: P = PairPoint(3, [.3,.6,.2], [.2,.6,.3])
+            sage: P.sort()
+            sage: P
+            ((0.2, 0.3, 0.6), (0.3, 0.2, 0.6))
         """
-        if self.dim != 3:
-            raise NotImplementedError("sort is implemented only for dim=3")
-        if self.x[0] > self.x[1]:
-            self._tmp = self.x[0]
-            self.x[0] = self.x[1]
-            self.x[1] = self._tmp
-            self._tmp = self.a[0]
-            self.a[0] = self.a[1]
-            self.a[1] = self._tmp
-        if self.x[1] > self.x[2]:
-            self._tmp = self.x[1]
-            self.x[1] = self.x[2]
-            self.x[2] = self._tmp
-            self._tmp = self.a[1]
-            self.a[1] = self.a[2]
-            self.a[2] = self._tmp
-        if self.x[0] > self.x[1]:
-            self._tmp = self.x[0]
-            self.x[0] = self.x[1]
-            self.x[1] = self._tmp
-            self._tmp = self.a[0]
-            self.a[0] = self.a[1]
-            self.a[1] = self._tmp
+        self.sort_a()
+        self.sort_x()
 
     cpdef void sort_x(self): # nogil:
         r"""
@@ -311,6 +308,33 @@ cdef class PairPoint:
             ((0.1, 0.2, 0.3, 0.4), (4.0, 3.0, 2.0, 1.0))
         """
         qsort(self.x, self.dim, sizeof(double), cmp_double)
+
+    cpdef void sort_a(self):
+        r"""
+        Sort array a according to values in array x.
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac_pyx import PairPoint
+            sage: P = PairPoint(4, [.4, .2, .3, .1], [4,3,2,1])
+            sage: P.sort_a()
+            sage: P
+            ((0.4, 0.2, 0.3, 0.1), (1.0, 3.0, 2.0, 4.0))
+
+        ::
+
+            sage: P = PairPoint(3, [.3,.6,.2], [.2,.6,.3])
+            sage: P.sort_a()
+            sage: P
+            ((0.3, 0.6, 0.2), (0.3, 0.2, 0.6))
+        """
+        cdef int branch = self.permutation() # result written in self.perm
+        # sort a according to self.perm
+        cdef int i
+        for i in range(self.dim):
+            self._tmparray[i] = self.a[self.perm[i]]
+        for i in range(self.dim):
+            self.a[i] = self._tmparray[i] 
 
     cpdef int permutation(self):
         r"""
@@ -571,7 +595,7 @@ cdef class PairPoint:
         EXAMPLES::
 
         """
-        cdef branch = self.permutation() # result written in self.perm
+        cdef int branch = self.permutation() # result written in self.perm
         cdef int i, s,t
         for i in range(self.dim-1, 0, -1):
             t = self.perm[i]
@@ -627,6 +651,8 @@ cdef class PairPoint:
         EXAMPLES::
 
         """
+        if self.dim != 3:
+            raise NotImplementedError("sort is implemented only for dim=3")
         # Apply the algo
         self.x[2] -= self.x[1]
         self.x[1] -= self.x[0]
@@ -640,6 +666,8 @@ cdef class PairPoint:
         EXAMPLES::
 
         """
+        if self.dim != 3:
+            raise NotImplementedError("sort is implemented only for dim=3")
         #Arnoux-Rauzy
         self.x[2] -= self.x[0] + self.x[1]
         self.a[0] += self.a[2]
@@ -652,6 +680,8 @@ cdef class PairPoint:
         EXAMPLES::
 
         """
+        if self.dim != 3:
+            raise NotImplementedError("sort is implemented only for dim=3")
         #Arnoux-Rauzy Multi
         cdef int m
         m = <int>(self.x[2] / (self.x[0] + self.x[1]))
@@ -666,6 +696,8 @@ cdef class PairPoint:
         EXAMPLES::
 
         """
+        if self.dim != 3:
+            raise NotImplementedError("sort is implemented only for dim=3")
         # Apply the algo
         self.x[1] -= self.x[0]
         self.x[2] -= self.x[0]
@@ -2576,6 +2608,8 @@ cdef class Sorted_Brun(MCFAlgorithm):
             ((0.3, 0.3, 0.5), (0.2, 0.6, 0.3))
 
         """
+        if P.dim != 3:
+            raise NotImplementedError("implemented only for dim=3")
         P.x[2] -= P.x[1]
         P.a[1] += P.a[2]
         P.sort()
@@ -2609,6 +2643,8 @@ cdef class Sorted_Selmer(MCFAlgorithm):
             sage: Sorted_Selmer()(P)
             ((0.3, 0.5, 0.6), (0.5, 0.3, 0.3))
         """
+        if P.dim != 3:
+            raise NotImplementedError("implemented only for dim=3")
         P.x[2] -= P.x[0]
         P.a[0] += P.a[2]
         P.sort()
@@ -2625,6 +2661,8 @@ cdef class Sorted_FullySubtractive(MCFAlgorithm):
             sage: Sorted_FullySubtractive()(P)
             ((0.3, 0.3, 0.5), (0.8, 0.3, 0.3))
         """
+        if P.dim != 3:
+            raise NotImplementedError("implemented only for dim=3")
         # Apply the algo
         P.x[1] -= P.x[0]
         P.x[2] -= P.x[0]
@@ -2650,6 +2688,8 @@ cdef class Sorted_ArnouxRauzy(MCFAlgorithm):
             ((-0.19999999999999996, 0.3, 0.7), (0.4, 0.6000000000000001, 0.7))
 
         """
+        if P.dim != 3:
+            raise NotImplementedError("implemented only for dim=3")
         #Arnoux-Rauzy
         P.x[2] -= P.x[0] + P.x[1]
         P.a[0] += P.a[2]
@@ -2663,6 +2703,8 @@ cdef class Sorted_ArnouxRauzyMulti(MCFAlgorithm):
         EXAMPLES::
 
         """
+        if P.dim != 3:
+            raise NotImplementedError("implemented only for dim=3")
         #Arnoux-Rauzy Multi
         cdef int m
         m = <int>(P.x[2] / (P.x[0] + P.x[1]))
@@ -2689,6 +2731,8 @@ cdef class Sorted_ARP(MCFAlgorithm):
             sage: Sorted_ARP()(P)       # tol
             ((0.1, 0.3, 0.4), (0.4, 0.9, 0.7))
         """
+        if P.dim != 3:
+            raise NotImplementedError("implemented only for dim=3")
         # Apply the algo
         if P.x[2] > P.x[0] + P.x[1]:
             return P._Sorted_ArnouxRauzy()
