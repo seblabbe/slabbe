@@ -976,7 +976,7 @@ def _dynamic_MCF_class(base):
 ################
 # MCF Algorithms
 ################
-def Brun():
+def Brun(dim=3):
     r"""
     EXAMPLES::
 
@@ -984,8 +984,8 @@ def Brun():
         sage: Brun()
         Brun 3-dimensional continued fraction algorithm
     """
-    return _dynamic_MCF_class(mult_cont_frac_pyx.Brun)()
-def Reverse():
+    return _dynamic_MCF_class(mult_cont_frac_pyx.Brun)(dim)
+def Reverse(dim=3):
     r"""
     EXAMPLES::
 
@@ -993,8 +993,8 @@ def Reverse():
         sage: Reverse()
         Reverse 3-dimensional continued fraction algorithm
     """
-    return _dynamic_MCF_class(mult_cont_frac_pyx.Reverse)()
-def ARP():
+    return _dynamic_MCF_class(mult_cont_frac_pyx.Reverse)(dim)
+def ARP(dim=3):
     r"""
     EXAMPLES::
 
@@ -1002,8 +1002,8 @@ def ARP():
         sage: ARP()
         Arnoux-Rauzy-Poincar\'e 3-dimensional continued fraction algorithm
     """
-    return _dynamic_MCF_class(mult_cont_frac_pyx.ARP)()
-def ArnouxRauzy():
+    return _dynamic_MCF_class(mult_cont_frac_pyx.ARP)(dim)
+def ArnouxRauzy(dim=3):
     r"""
     EXAMPLES::
 
@@ -1011,8 +1011,8 @@ def ArnouxRauzy():
         sage: ArnouxRauzy()
         ArnouxRauzy 3-dimensional continued fraction algorithm
     """
-    return _dynamic_MCF_class(mult_cont_frac_pyx.ArnouxRauzy)()
-def Poincare():
+    return _dynamic_MCF_class(mult_cont_frac_pyx.ArnouxRauzy)(dim)
+def Poincare(dim=3):
     r"""
     EXAMPLES::
 
@@ -1020,8 +1020,8 @@ def Poincare():
         sage: Poincare()
         Poincar\'e 3-dimensional continued fraction algorithm
     """
-    return _dynamic_MCF_class(mult_cont_frac_pyx.Poincare)()
-def Selmer():
+    return _dynamic_MCF_class(mult_cont_frac_pyx.Poincare)(dim)
+def Selmer(dim=3):
     r"""
     EXAMPLES::
 
@@ -1029,8 +1029,8 @@ def Selmer():
         sage: Selmer()
         Selmer 3-dimensional continued fraction algorithm
     """
-    return _dynamic_MCF_class(mult_cont_frac_pyx.Selmer)()
-def FullySubtractive():
+    return _dynamic_MCF_class(mult_cont_frac_pyx.Selmer)(dim)
+def FullySubtractive(dim=3):
     r"""
     EXAMPLES::
 
@@ -1038,8 +1038,8 @@ def FullySubtractive():
         sage: FullySubtractive()
         Fully Subtractive 3-dimensional continued fraction algorithm
     """
-    return _dynamic_MCF_class(mult_cont_frac_pyx.FullySubtractive)()
-def Cassaigne():
+    return _dynamic_MCF_class(mult_cont_frac_pyx.FullySubtractive)(dim)
+def Cassaigne(dim=3):
     r"""
     EXAMPLES::
 
@@ -1047,7 +1047,7 @@ def Cassaigne():
         sage: Cassaigne()
         Cassaigne 3-dimensional continued fraction algorithm
     """
-    return _dynamic_MCF_class(mult_cont_frac_pyx.Cassaigne)()
+    return _dynamic_MCF_class(mult_cont_frac_pyx.Cassaigne)(dim)
 def Sorted_Brun():
     r"""
     EXAMPLES::

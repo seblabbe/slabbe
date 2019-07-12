@@ -336,7 +336,7 @@ cdef class PairPoint:
         for i in range(self.dim):
             self.a[i] = self._tmparray[i] 
 
-    cpdef int permutation(self):
+    cpdef int permutation(self) except *:
         r"""
         http://stackoverflow.com/questions/17554242/how-to-obtain-the-index-permutation-after-the-sorting
 
@@ -359,7 +359,9 @@ cdef class PairPoint:
         global _KEY
         _KEY = self.x
         qsort(self.perm, self.dim, sizeof(int), cmp_int_KEY)
-        cdef rep = 0
+        if self.dim >= 10:
+            return -1
+        cdef int rep = 0
         for i in range(self.dim):
             rep *= 10
             rep += self.perm[i] + 1
@@ -541,55 +543,6 @@ cdef class PairPoint:
         elif p == 0:
             return self.x[0], self.x[1]
 
-    cdef int subcone(self):
-        r"""
-        .. NOTE::
-
-            Calling this method seems slower than copying the same code inside
-            _Poincare method.
-
-        EXAMPLES::
-
-            sage: from slabbe.mult_cont_frac_pyx import PairPoint
-            sage: P = PairPoint(3, [.3,.6,.8], [.2,.3,.3])
-        """
-        if self.x[0] <= self.x[1] <= self.x[2]:
-            return 123
-        elif self.x[0] <= self.x[2] <= self.x[1]:
-            return 132
-        elif self.x[1] <= self.x[2] <= self.x[0]:
-            return 231
-        elif self.x[1] <= self.x[0] <= self.x[2]:
-            return 213
-        elif self.x[2] <= self.x[0] <= self.x[1]:
-            return 312
-        elif self.x[2] <= self.x[1] <= self.x[0]:
-            return 321
-        else:
-            return -1
-
-    cdef void op_elem(self, int i, int j):
-        r"""
-        Elementary operation: `x_i = x_i - x_j` and `a_j = a_j + a_i`
-
-        INPUT:
-
-        - ``i`` -- integer, betwen 1 and dimension - 1
-        - ``j`` -- integer, betwen 1 and dimension - 1
-
-        .. NOTE::
-
-            Calling this method seems slower than copying the same code inside
-            _Poincare method.
-
-        EXAMPLES::
-
-            sage: from slabbe.mult_cont_frac_pyx import PairPoint
-            sage: P = PairPoint(3, [.3,.6,.8], [.2,.3,.3])
-        """
-        self.x[i] -= self.x[j]
-        self.a[j] += self.a[i]
-
     cdef int _Poincare(self):
         r"""
         EXAMPLES::
@@ -603,6 +556,49 @@ cdef class PairPoint:
             self.x[t] -= self.x[s]
             self.a[s] += self.a[t]
         return branch
+
+    cdef int _Selmer(self):
+        r"""
+        EXAMPLES::
+
+        """
+        cdef int branch = self.permutation() # result written in self.perm
+        cdef int MAX = self.perm[self.dim-1]
+        cdef int MIN = self.perm[0]
+        self.x[MAX] -= self.x[MIN]
+        self.a[MIN] += self.a[MAX]
+        return branch
+
+    cdef int _ArnouxRauzy(self):
+        r"""
+        EXAMPLES::
+
+        """
+        cdef int branch = self.permutation() # result written in self.perm
+        cdef int MAX = self.perm[self.dim-1]
+        cdef int i
+        for i in range(self.dim):
+            if i != MAX:
+                self.x[MAX] -= self.x[i]
+                self.a[i] += self.a[MAX]
+        return MAX + 1
+
+    cdef int _ArnouxRauzyPoincare(self):
+        r"""
+        EXAMPLES::
+
+        """
+        cdef int branch = self.permutation() # result written in self.perm
+        cdef int MAX = self.perm[self.dim-1]
+        cdef int i
+        self._tmp = 0
+        for i in range(self.dim):
+            if i != MAX:
+                self._tmp += self.x[i]
+        if self.x[MAX] > self._tmp:
+            return self._ArnouxRauzy()
+        else:
+            return self._Poincare()
 
     cdef int _Poincare3(self):
         r"""
@@ -627,24 +623,6 @@ cdef class PairPoint:
         self.a[j] += self.a[k]
         self.a[i] += self.a[j]
         return 100*i + 10*j + k + 111
-
-    cdef int _Poincare_slower(self):
-        r"""
-        .. NOTE::
-
-            This method is slower than _Poincare.
-
-        EXAMPLES::
-
-        """
-        cdef int part,i,j,k
-        part = self.subcone()
-        i = (part // 100 % 10) - 1
-        j = (part // 10 % 10) - 1
-        k = (part % 10) - 1
-        self.op_elem(k, j)
-        self.op_elem(j, i)
-        return part
 
     cdef int _Sorted_Poincare(self):
         r"""
@@ -1919,6 +1897,8 @@ cdef class Brun(MCFAlgorithm):
     """
     cdef int call(self, PairPoint P) except *:
         r"""
+        TODO: Veut-avoir cette methode ici ou dans la classe PairPoint?
+
         EXAMPLES::
 
             sage: from slabbe.mult_cont_frac_pyx import Brun
@@ -1927,32 +1907,12 @@ cdef class Brun(MCFAlgorithm):
             sage: Brun()(P)
             ((0.3, 0.6, 0.20000000000000007), (0.2, 0.6, 0.3))
         """
-        if P.x[0] <= P.x[1] <= P.x[2]:
-            P.x[2] -= P.x[1]
-            P.a[1] += P.a[2]
-            return 123
-        elif P.x[0] <= P.x[2] <= P.x[1]:
-            P.x[1] -= P.x[2]
-            P.a[2] += P.a[1]
-            return 132
-        elif P.x[1] <= P.x[2] <= P.x[0]:
-            P.x[0] -= P.x[2]
-            P.a[2] += P.a[0]
-            return 231
-        elif P.x[1] <= P.x[0] <= P.x[2]:
-            P.x[2] -= P.x[0]
-            P.a[0] += P.a[2]
-            return 213
-        elif P.x[2] <= P.x[0] <= P.x[1]:
-            P.x[1] -= P.x[0]
-            P.a[0] += P.a[1]
-            return 312
-        elif P.x[2] <= P.x[1] <= P.x[0]:
-            P.x[0] -= P.x[1]
-            P.a[1] += P.a[0]
-            return 321
-        else:
-            raise ValueError('limit case: reach set of measure zero: {}'.format(P))
+        cdef int branch = P.permutation() # result written in P.perm
+        cdef int MAX1 = P.perm[P.dim-1]
+        cdef int MAX2 = P.perm[P.dim-2]
+        P.x[MAX1] -= P.x[MAX2]
+        P.a[MAX2] += P.a[MAX1]
+        return branch
 
     def substitutions(self):
         r"""
@@ -2017,6 +1977,8 @@ cdef class Reverse(MCFAlgorithm):
             sage: Reverse()(P)
             ((0.55, 0.25, 0.04999999999999993), (0.6, 0.5, 0.5))
         """
+        if P.dim != 3:
+            raise NotImplementedError("implemented only for dim=3")
         cdef PairPoint R = PairPoint(self.dim)
         if P.x[0] + P.x[1] < P.x[2]:
             P.x[2] -= P.x[0] + P.x[1]
@@ -2106,23 +2068,7 @@ cdef class ARP(MCFAlgorithm):
             sage: ARP()(P)
             ((0.3, 0.3, 0.20000000000000007), (0.8, 0.6, 0.3))
         """
-        if P.x[0] + P.x[1] < P.x[2]:
-            P.x[2] -= P.x[0] + P.x[1]
-            P.a[1] += P.a[2]
-            P.a[0] += P.a[2]
-            return 3
-        elif P.x[0] + P.x[2] < P.x[1]:
-            P.x[1] -= P.x[0] + P.x[2]
-            P.a[2] += P.a[1]
-            P.a[0] += P.a[1]
-            return 2
-        elif P.x[1] + P.x[2] < P.x[0]:
-            P.x[0] -= P.x[1] + P.x[2]
-            P.a[1] += P.a[0]
-            P.a[2] += P.a[0]
-            return 1
-        else:
-            return P._Poincare()
+        return P._ArnouxRauzyPoincare()
     def name(self):
         r"""
         EXAMPLES::
@@ -2361,32 +2307,7 @@ cdef class Selmer(MCFAlgorithm):
             sage: Selmer()(P)
             ((0.3, 0.6, 0.5), (0.5, 0.3, 0.3))
         """
-        if P.x[0] <= P.x[1] <= P.x[2]:
-            P.x[2] -= P.x[0]
-            P.a[0] += P.a[2]
-            return 123
-        elif P.x[0] <= P.x[2] <= P.x[1]:
-            P.x[1] -= P.x[0]
-            P.a[0] += P.a[1]
-            return 132
-        elif P.x[1] <= P.x[2] <= P.x[0]:
-            P.x[0] -= P.x[1]
-            P.a[1] += P.a[0]
-            return 231
-        elif P.x[1] <= P.x[0] <= P.x[2]:
-            P.x[2] -= P.x[1]
-            P.a[1] += P.a[2]
-            return 213
-        elif P.x[2] <= P.x[0] <= P.x[1]:
-            P.x[1] -= P.x[2]
-            P.a[2] += P.a[1]
-            return 312
-        elif P.x[2] <= P.x[1] <= P.x[0]:
-            P.x[0] -= P.x[2]
-            P.a[2] += P.a[0]
-            return 321
-        else:
-            raise ValueError('limit case: reach set of measure zero: {}'.format(P))
+        return P._Selmer()
 
     def substitutions(self):
         r"""
@@ -2535,6 +2456,8 @@ cdef class Cassaigne(MCFAlgorithm):
             sage: Cassaigne()(P)
             ((0.6, 0.3, 0.5), (0.3, 0.5, 0.3))
         """
+        if P.dim != 3:
+            raise NotImplementedError("implemented only for dim=3")
         cdef double tmp
         if P.x[0] >= P.x[2] :
             P.x[0] -= P.x[2]
