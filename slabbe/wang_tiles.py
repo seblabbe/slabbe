@@ -3646,7 +3646,8 @@ class WangTiling(object):
             d[(W,j)] = color_sequence
         return d
 
-    def plot_points_on_torus(self, M, pointsize=5, color_dict=None):
+    def plot_points_on_torus(self, M, pointsize=5, color_dict=None,
+            start=None):
         r"""
         Plot points modulo some values in x and y.
 
@@ -3656,6 +3657,7 @@ class WangTiling(object):
         - ``pointsize`` -- positive real number (default:``5``)
         - ``color_dict`` -- dict, tile index -> color or None
           (default:``None``)
+        - ``start`` -- None or vector
 
         EXAMPLES::
 
@@ -3685,10 +3687,14 @@ class WangTiling(object):
 
         # compute the points
         from sage.modules.free_module_element import vector
+        if start is None:
+            start = vector((0,0))
+        else:
+            start = vector(start)
         PTS = {a:[] for a in alphabet}
         for i,column in enumerate(self._table):
             for j,a in enumerate(column):
-                x,y = M*vector((i,j))
+                x,y = M*vector((i,j)) - start
                 PTS[a].append((frac(x),frac(y)))
 
         from sage.plot.graphics import Graphics
