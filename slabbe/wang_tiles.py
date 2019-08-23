@@ -3371,6 +3371,24 @@ class WangTiling(object):
     def __repr__(self):
         return "A wang tiling of a {} x {} rectangle".format(self.width(), self.height())
 
+    def _matrix_(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTiling
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+            sage: tiling = WangTiling(table, tiles)
+            sage: matrix(tiling)
+            [1 0 1]
+            [0 1 0]
+            [1 0 1]
+            [0 1 0]
+
+        """
+        from sage.matrix.constructor import matrix
+        return matrix.column([col[::-1] for col in self._table])
+
     def height(self):
         r"""
         EXAMPLES::
