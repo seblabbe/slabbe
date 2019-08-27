@@ -3450,7 +3450,7 @@ class WangTiling(object):
         r"""
         INPUT:
 
-        - ``M`` -- matrix in SL(2,Z)
+        - ``M`` -- matrix in GL(2,Z)
 
         EXAMPLES::
 
@@ -4060,8 +4060,8 @@ class WangTiling(object):
                 this_id = i if id else None
                 position = (j,k)
                 tile = self._tiles[i]
-                right_edges = edges and j == W - 1
-                top_edges = edges and k == H - 1
+                right_edges = edges and (j == W - 1 or self._table[j+1][k] is None)
+                top_edges = edges and (k == H - 1 or self._table[j][k+1] is None)
                 more_lines = tile_to_tikz(tile, position, color=color,
                         id=this_id, id_color=id_color, id_format=id_format,
                         sizex=size, sizey=size, rotate=rotate, label=label,
