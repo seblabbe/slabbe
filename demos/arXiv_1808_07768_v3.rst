@@ -1,0 +1,311 @@
+=============================================
+Substitutive structure of Jeandel-Rao tilings
+=============================================
+
+`arXiv:1808.07768`__, August 2019 (version 3), 48 p.
+
+__ https://arxiv.org/abs/1808.07768
+
+Running ``sage -t`` on this file takes 70 seconds with sage-8.7 and
+slabbe-0.5.1.
+
+Preparation
+-----------
+
+The optional Sage package ``slabbe`` can be installed by running the command::
+
+    sage -pip install slabbe
+
+Most of the computations use the dancing links solver available in Sage.
+Few computations use Gurobi linear program solver, the SAT solver glucose
+or the SAT solver cryptominisat. The latter two can be installed easily as they
+are optional Sage packages.::
+
+    sage -i glucose
+    sage -i cryptominisat
+
+SageMath code in the article
+----------------------------
+
+First we import the necessary libraries from slabbe::
+
+    sage: from slabbe import WangTileSet
+
+We define the Jeandel-Rao set of Wang tiles $\T_0$
+
+.. link
+
+::
+
+    sage: tiles = [(2,4,2,1), (2,2,2,0), (1,1,3,1), (1,2,3,2), (3,1,3,3), (0,1,3,1), 
+    ....:          (0,0,0,1), (3,1,0,2), (0,2,1,2), (1,2,1,4), (3,3,1,2)]
+    sage: tiles = [map(str,t) for t in tiles]
+    sage: T0 = WangTileSet(tiles)
+
+We use Knuth's dancing links algorithm because it is faster at this task than
+MILP or SAT solvers:
+
+.. link
+
+::
+
+    sage: dlx = 'dancing_links'
+
+We desubstitute $\T_0$:
+
+.. link
+
+::
+
+    sage: T0.find_markers(i=2, radius=1, solver=dlx)
+    [[0, 1]]
+    sage: M0 = [0,1]
+    sage: T1,omega0 = T0.find_substitution(M=M0, i=2, side='left', radius=1, solver=dlx)
+    sage: T1
+    Wang tile set of cardinality 13
+    sage: omega0
+    Substitution 2d: {0: [[2]], 1: [[3]], 2: [[4]], 3: [[5]], 4: [[6]], 5: [[7]], 6: [[8]], 7: [[10]], 8: [[0, 9]], 9: [[1, 3]], 10: [[1, 7]], 11: [[1, 8]], 12: [[1, 10]]}
+
+We desubstitute $\T_1$:
+
+.. link
+
+::
+
+    sage: T1.find_markers(i=2, radius=1, solver=dlx)
+    [[8, 9, 10, 11, 12]]
+    sage: M1 = [8, 9, 10, 11, 12]
+    sage: T2,omega1 = T1.find_substitution(M=M1, i=2, side='left', radius=1, solver=dlx)
+    sage: T2
+    Wang tile set of cardinality 20
+    sage: omega1
+    Substitution 2d: {0: [[0]], 1: [[1]], 2: [[2]], 3: [[3]], 4: [[4]], 5: [[5]], 6: [[6]], 7: [[7]], 8: [[8, 1]], 9: [[8, 5]], 10: [[8, 6]], 11: [[8, 7]], 12: [[9, 1]], 13: [[9, 5]], 14: [[9, 6]], 15: [[10, 0]], 16: [[10, 3]], 17: [[11, 5]], 18: [[11, 7]], 19: [[12, 2]]}
+
+We desubstitute $\T_2$:
+
+.. link
+
+::
+
+    sage: T2.find_markers(i=2, radius=2, solver=dlx)             # takes 4s
+    [[8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]]
+    sage: M2 = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    sage: T3,omega2 = T2.find_substitution(M=M2, i=2, side='left', radius=2, solver=dlx)
+    sage: T3
+    Wang tile set of cardinality 24
+    sage: omega2
+    Substitution 2d: {0: [[2]], 1: [[3]], 2: [[4]], 3: [[5]], 4: [[8, 1]], 5: [[8, 5]], 6: [[8, 6]], 7: [[9, 0]], 8: [[9, 3]], 9: [[10, 5]], 10: [[10, 7]], 11: [[11, 2]], 12: [[12, 5]], 13: [[12, 6]], 14: [[13, 4]], 15: [[14, 5]], 16: [[15, 3]], 17: [[16, 3]], 18: [[16, 4]], 19: [[17, 3]], 20: [[18, 2]], 21: [[19, 0]], 22: [[19, 3]], 23: [[19, 4]]}
+
+We desubstitute $\T_3$:
+
+.. link
+
+::
+
+    sage: T3.find_markers(i=2, radius=3, solver=dlx)              # takes 14s
+    [[0, 1, 2, 3]]
+    sage: M3 = [0, 1, 2, 3]
+    sage: T4p,omega3p = T3.find_substitution(M=M3, i=2, side='right', radius=3, solver=dlx)
+    sage: T4p
+    Wang tile set of cardinality 30
+    sage: omega3p
+    Substitution 2d: {0: [[5]], 1: [[8]], 2: [[11]], 3: [[12]], 4: [[14]], 5: [[15]], 6: [[16]], 7: [[17]], 8: [[18]], 9: [[19]], 10: [[20]], 11: [[22]], 12: [[23]], 13: [[4, 3]], 14: [[5, 2]], 15: [[6, 3]], 16: [[7, 1]], 17: [[7, 2]], 18: [[8, 1]], 19: [[8, 2]], 20: [[9, 1]], 21: [[10, 0]], 22: [[11, 2]], 23: [[12, 2]], 24: [[13, 3]], 25: [[15, 2]], 26: [[16, 2]], 27: [[20, 2]], 28: [[21, 2]], 29: [[22, 2]]}
+
+Below is the code to construct the problem. We construct the solver searching
+for a tiling of the rectangle of size $71\times 9$ tiled with the tiles from
+$\T_4'$ with the tile $(21103, 1, 23310, 0)$ in the center of that rectangle,
+that is, at position $(35,4)$:
+
+.. link
+
+::
+
+    sage: T4p[24]
+    ('21103', '1', '23310', '0')
+    sage: S = T4p.solver(width=71, height=9, preassigned_tiles={(35,4):24})
+
+Using a reduction of that problem to SAT using 19170 variables and 1078659
+clauses, the Glucose SAT solver says there is no solution in less than 4
+seconds:
+
+.. link
+
+::
+
+    sage: S.sat_solver('cryptominisat')            # optional cryptominisat  # takes 3s
+    CryptoMiniSat solver: 19170 variables, 1078659 clauses.
+    sage: S.has_solution(solver='glucose')         # optional glucose # takes 4 s
+    False
+
+Using a reduction of the same problem to a MILP instance,
+using 19170 variables and 1838 constraints,
+the linear program is shown to have no solution using
+\texttt{Gurobi} solver \cite{gurobi} 
+in about 45 seconds on a normal 2018 desktop computer with 8 available
+cpus:
+
+.. link
+
+::
+
+    sage: S.has_solution(solver='Gurobi')         # not tested (takes 45s)
+    False
+    sage: S.milp()
+    (Boolean Program (maximization, 19170 variables, 1838 constraints),
+     MIPVariable of dimension 1)
+
+
+The code to construct the set of Wang tiles $\T_5$ introduced in this section
+is below:
+
+.. link
+
+::
+
+    sage: tiles5 = [(2113, 5, 2130, 1), (2130, 1, 2103, 5), (2133, 1, 2113, 1),
+    ....: (2113, 5, 2330, 0), (2130, 6, 2300, 0), (2103, 5, 2310, 0),
+    ....: (2310, 1, 2033, 6), (2300, 1, 2033, 6), (2300, 0, 2030, 6),
+    ....: (2030, 1, 2103, 0), (2033, 1, 2113, 0), (2330, 1, 2133, 6),
+    ....: (2330, 0, 2130, 6), (21113, 5, 21330, 1), (21130, 6, 21300, 1),
+    ....: (21103, 5, 21310, 1), (21310, 1, 21033, 5), (21310, 0, 21030, 5),
+    ....: (21300, 1, 21033, 5), (21300, 0, 21030, 5), (21030, 1, 21103, 1),
+    ....: (21033, 1, 21113, 1), (21330, 0, 21130, 1), (21330, 0, 21130, 5),
+    ....: (21130, 6, 23300, 0), (21030, 6, 23100, 0), (23100, 0, 20330, 6),
+    ....: (20330, 0, 21130, 0), (23300, 0, 21330, 6)]
+    sage: T5 = WangTileSet([map(str,t) for t in tiles5])
+
+The set $D$ contains 37 horizontal dominoes and 75 vertical dominoes as
+shown in the computation below.
+
+.. link
+
+::
+    
+    sage: D_horizontal = T5.dominoes_with_surrounding(i=1,radius=3,solver='dancing_links') # takes 12s
+    sage: len(D_horizontal)
+    37
+    sage: D_vertical = T5.dominoes_with_surrounding(i=2,radius=3,solver='dancing_links') # takes 12s
+    sage: len(D_vertical)
+    75
+
+Note that among the vertical dominoes in $D$, the only one where the top tile
+is 22 or 23 are $7 \odot^2 22$, $18\odot^2 22$, $0\odot^2 23$, $3 \odot^2 23$
+and $13\odot^2 23$:
+
+.. link
+
+::
+    
+    sage: sorted((u,v) for (u,v) in D_vertical if v in [22,23])
+    [(0, 23), (3, 23), (7, 22), (13, 23), (18, 22)]
+
+In sage, we compute (the following takes 6s with dancing_links, 3min 12s with Glucose, 22s with Gurobi):
+
+.. link
+
+::
+
+    sage: T6,eta = T5.shear(radius=2, solver='dancing_links')    # takes 6s
+    sage: T6
+    Wang tile set of cardinality 29
+    sage: eta
+    Substitution 2d: {0: [[0]], 1: [[1]], 2: [[2]], 3: [[3]], 4: [[4]], 5: [[5]], 6: [[6]], 7: [[7]], 8: [[8]], 9: [[9]], 10: [[10]], 11: [[11]], 12: [[12]], 13: [[13]], 14: [[14]], 15: [[15]], 16: [[16]], 17: [[17]], 18: [[18]], 19: [[19]], 20: [[20]], 21: [[21]], 22: [[22]], 23: [[23]], 24: [[24]], 25: [[25]], 26: [[26]], 27: [[27]], 28: [[28]]}
+
+First, we desubstitute $\T_6$:
+
+.. link
+
+::
+
+    sage: T6.find_markers(i=1, radius=1, solver=dlx)           # takes 5s
+    [[1, 6, 7, 8, 11, 12, 16, 17, 18, 19, 23, 26, 28],
+    [0, 3, 4, 5, 13, 14, 15, 24, 25],
+    [2, 9, 10, 20, 21, 22, 27]]
+    sage: M6 = [1, 6, 7, 8, 11, 12, 16, 17, 18, 19, 23, 26, 28]
+    sage: T7,omega6 = T6.find_substitution(M=M6, i=1, radius=1, side='left', solver=dlx)
+    sage: T7
+    Wang tile set of cardinality 20
+    sage: omega6
+    Substitution 2d: {0: [[2]], 1: [[9]], 2: [[10]], 3: [[20]], 4: [[21]], 5: [[22]], 6: [[27]], 7: [[1], [0]], 8: [[6], [5]], 9: [[7], [4]], 10: [[8], [4]], 11: [[11], [3]], 12: [[12], [3]], 13: [[16], [15]], 14: [[17], [15]], 15: [[18], [14]], 16: [[19], [14]], 17: [[23], [13]], 18: [[26], [25]], 19: [[28], [24]]}
+
+We desubstitute $\T_7$:
+
+.. link
+
+::
+
+    sage: T7.find_markers(i=1, radius=1, solver=dlx)          # takes 2s
+    [[0, 1, 2, 3, 4, 5, 6]]
+    sage: M7 = [0, 1, 2, 3, 4, 5, 6]
+    sage: T8,omega7 = T7.find_substitution(M=M7, i=1, radius=1, side='right', solver=dlx)
+    sage: T8
+    Wang tile set of cardinality 20
+    sage: omega7
+    Substitution 2d: {0: [[8]], 1: [[9]], 2: [[10]], 3: [[15]], 4: [[16]], 5: [[18]], 6: [[19]], 7: [[7], [0]], 8: [[7], [2]], 9: [[8], [1]], 10: [[11], [2]], 11: [[12], [2]], 12: [[13], [3]], 13: [[14], [3]], 14: [[15], [5]], 15: [[15], [6]], 16: [[16], [5]], 17: [[16], [6]], 18: [[17], [4]], 19: [[19], [6]]}
+
+We desubstitute $\T_8$:
+
+.. link
+
+::
+
+    sage: T8.find_markers(i=2, radius=2, solver=dlx)          # takes 4s
+    [[0, 1, 2, 7, 8, 9, 10, 11]]
+    sage: M8 = [0, 1, 2, 7, 8, 9, 10, 11]
+    sage: T9,omega8 = T8.find_substitution(M=M8, i=2, radius=2, side='right', solver=dlx)
+    sage: T9
+    Wang tile set of cardinality 22
+    sage: omega8
+    Substitution 2d: {0: [[3]], 1: [[4]], 2: [[5]], 3: [[6]], 4: [[12]], 5: [[13]], 6: [[14]], 7: [[15]], 8: [[18]], 9: [[4, 0]], 10: [[5, 0]], 11: [[5, 1]], 12: [[5, 2]], 13: [[6, 0]], 14: [[13, 8]], 15: [[14, 10]], 16: [[15, 10]], 17: [[16, 11]], 18: [[17, 9]], 19: [[17, 11]], 20: [[18, 7]], 21: [[19, 9]]}
+
+We desubstitute $\T_9$:
+
+.. link
+
+::
+
+    sage: T9.find_markers(i=1, radius=1, solver=dlx)          # takes 2s
+    [[4, 6, 7, 15, 16, 18, 21],
+    [0, 1, 2, 3, 9, 10, 11, 12, 13],
+    [5, 8, 14, 17, 19, 20]]
+    sage: M9 = [0, 1, 2, 3, 9, 10, 11, 12, 13]
+    sage: T10,omega9 = T9.find_substitution(M=M9, i=1, radius=1, side='right', solver=dlx)
+    sage: T10
+    Wang tile set of cardinality 18
+    sage: omega9
+    Substitution 2d: {0: [[8]], 1: [[14]], 2: [[17]], 3: [[20]], 4: [[4], [1]], 5: [[5], [1]], 6: [[6], [3]], 7: [[7], [2]], 8: [[8], [0]], 9: [[14], [9]], 10: [[15], [13]], 11: [[16], [10]], 12: [[16], [11]], 13: [[17], [13]], 14: [[18], [12]], 15: [[19], [10]], 16: [[19], [11]], 17: [[21], [12]]}
+
+We desubstitute $\T_{10}$:
+
+.. link
+
+::
+
+    sage: T10.find_markers(i=2, radius=2, solver=dlx)         # takes 3s
+    [[0, 4, 5, 6, 7, 8]]
+    sage: M10 = [0, 4, 5, 6, 7, 8]
+    sage: T11,omega10 = T10.find_substitution(M=M10, i=2, radius=2, side='right', solver=dlx)
+    sage: T11
+    Wang tile set of cardinality 21
+    sage: omega10
+    Substitution 2d: {0: [[1]], 1: [[2]], 2: [[3]], 3: [[12]], 4: [[13]], 5: [[14]], 6: [[15]], 7: [[16]], 8: [[17]], 9: [[1, 0]], 10: [[2, 0]], 11: [[3, 0]], 12: [[9, 8]], 13: [[10, 4]], 14: [[11, 4]], 15: [[12, 6]], 16: [[13, 5]], 17: [[13, 8]], 18: [[14, 7]], 19: [[15, 5]], 20: [[17, 7]]}
+
+We desubstitute $\T_{11}$:
+
+.. link
+
+::
+
+    sage: T11.find_markers(i=1, radius=1, solver=dlx)         # takes 2s
+    [[0, 1, 2, 9, 10, 11],
+    [4, 6, 7, 12, 16, 17, 19],
+    [3, 5, 8, 13, 14, 15, 18, 20]]
+    sage: M11 = [0, 1, 2, 9, 10, 11]
+    sage: T12,omega11 = T11.find_substitution(M=M11, i=1, radius=1, side='right', solver=dlx)
+    sage: T12
+    Wang tile set of cardinality 19
+    sage: omega11
+    Substitution 2d: {0: [[5]], 1: [[8]], 2: [[14]], 3: [[15]], 4: [[18]], 5: [[20]], 6: [[3], [1]], 7: [[4], [2]], 8: [[5], [1]], 9: [[6], [0]], 10: [[7], [1]], 11: [[8], [1]], 12: [[12], [11]], 13: [[13], [11]], 14: [[14], [9]], 15: [[15], [10]], 16: [[16], [11]], 17: [[17], [11]], 18: [[19], [9]]}
+
+
+
