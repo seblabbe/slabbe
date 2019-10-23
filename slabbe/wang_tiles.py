@@ -1484,6 +1484,56 @@ class WangTileSet(object):
         return L
 
     not_forbidden_dominoes = deprecated_function_alias(123456,dominoes_with_surrounding)
+    def is_pattern_surrounded(self, pattern, radius=1, solver=None, ncpus=None):
+        r"""
+        Return whether the rectangular pattern allows a surrounding of
+        given radius.
+
+        INPUT:
+
+        - ``pattern`` -- list of lists of tile indices
+        - ``radius`` - integer or 2-tuple (default: ``1``), if 2-tuple is
+          given, then it is interpreted as ``(xradius, yradius)``
+        - ``solver`` -- string (default:``None``)
+        - ``ncpus`` -- integer (default:``None``)
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+            sage: T = WangTileSet(tiles)
+            sage: T.is_pattern_surrounded([[0,0]], solver='dancing_links')
+            True
+            sage: T.is_pattern_surrounded([[0,1]], solver='dancing_links')
+            False
+            sage: T.is_pattern_surrounded([[0],[1]], solver='dancing_links')
+            False
+            sage: T.is_pattern_surrounded([[0],[0]], solver='dancing_links')
+            True
+
+        """
+        if isinstance(radius, tuple):
+            xradius,yradius = radius
+        else:
+            xradius = yradius = radius
+
+        width = len(pattern) + 2 * xradius
+        height = len(pattern[0]) + 2 * yradius
+
+        if isinstance(pattern, list):
+            preassigned_tiles = {(xradius+a,yradius+b):tile 
+                                for (b,col) in enumerate(pattern)
+                                for (a,tile) in enumerate(col)}
+        elif isinstance(pattern, dict):
+            raise NotImplementedError('when pattern is a dict')
+        else:
+            raise TypeError('pattern(={}) must be a list or a dict'.format(pattern))
+
+        S = self.solver(width=width, height=height,
+                             preassigned_tiles=preassigned_tiles)
+
+        return S.has_solution(solver=solver, ncpus=ncpus)
+
     def is_forbidden_product(self, A, B, i=2, radius=1, solver=None, ncpus=None):
         r"""
         Return whether A \odot^i B is forbidden using a given radius around
