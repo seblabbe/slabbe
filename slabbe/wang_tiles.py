@@ -1522,8 +1522,8 @@ class WangTileSet(object):
 
         if isinstance(pattern, list):
             preassigned_tiles = {(xradius+a,yradius+b):tile 
-                                for (b,col) in enumerate(pattern)
-                                for (a,tile) in enumerate(col)}
+                                for (a,col) in enumerate(pattern)
+                                for (b,tile) in enumerate(col)}
         elif isinstance(pattern, dict):
             raise NotImplementedError('when pattern is a dict')
         else:
