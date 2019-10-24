@@ -252,3 +252,74 @@ def clean_sources_and_sinks(G):
                 done = False
                 H.delete_vertex(v)
     return H
+
+def get_funnel(G):
+    r"""
+    Return an edge (u,v) such that u and v are distinct, G.out_degree(u) is
+    1 and G.in_degree(v) is 1. Return ``None`` if no such funnel is found.
+
+    INPUT:
+
+    - ``G`` -- digraph
+
+    EXAMPLES::
+
+        sage: from slabbe.graph import get_funnel
+        sage: G = DiGraph([(str(a),str(a+1)) for a in range(5)], format='list_of_edges')
+        sage: get_funnel(G)
+        ('0', '1')
+    """
+    for (u,v,_) in G.edges(): 
+        if (u != v and G.in_degree(v) == 1 and G.out_degree(u) == 1):
+            return (u,v)
+    else:
+        return None
+
+def reduce_funnel_edges(G, merge_function):
+    r"""
+    EXAMPLES::
+
+        sage: from slabbe.graph import reduce_funnel_edges
+        sage: G = DiGraph([(str(a),str(a+1)) for a in range(5)], format='list_of_edges')
+        sage: merge_function = lambda a,b:a+b
+        sage: GG = reduce_funnel_edges(G, merge_function)
+        sage: GG.vertices()
+        ['012345']
+
+    ::
+
+        sage: G = DiGraph([(str(a),str((a+1)%5)) for a in range(5)], format='list_of_edges')
+        sage: merge_function = lambda a,b:a+b
+        sage: GG = reduce_funnel_edges(G, merge_function)
+        sage: GG.vertices()
+        ['01234']
+
+    The following result does not seem right::
+
+	sage: w = words.FibonacciWord()[:100]
+	sage: G = w.rauzy_graph(11)
+        sage: merge_function = lambda a,b:a+b[-1:]
+	sage: GG = reduce_funnel_edges(G, merge_function)
+	sage: GG.vertices()
+	[word: 01001010010, word: 100101001001, word: 100101001011]
+
+    """
+    from copy import copy
+    GG = copy(G)
+    GG.allow_loops(True)
+    #GG.allow_multiple_edges(True)
+
+    funnel = get_funnel(GG)
+    while funnel:
+        (u,v) = funnel
+        u_v = merge_function(u, v)
+        GG.add_vertex(u_v)
+        for s in GG.neighbors_out(v):
+            GG.add_edge(u_v, s)
+        for s in GG.neighbors_in(u):
+            GG.add_edge(s, u_v)
+	GG.delete_vertex(u)
+	GG.delete_vertex(v)
+        funnel = get_funnel(GG)
+    return GG
+
