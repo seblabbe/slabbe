@@ -271,7 +271,7 @@ class StandaloneTex(SageObject):
         """
         return self._content
 
-    def pdf(self, filename=None, view=True):
+    def pdf(self, filename=None, view=True, program='pdflatex'):
         """
         Compiles the latex code with pdflatex and create a pdf file.
 
@@ -283,6 +283,8 @@ class StandaloneTex(SageObject):
         - ``view`` -- bool (default:``True``), whether to open the file in a
           pdf viewer. This option is ignored and automatically set to
           ``False`` if ``filename`` is not ``None``.
+
+        - ``program`` -- string (default:``'pdflatex'``) or ``'lualatex'``
 
         OUTPUT:
 
@@ -307,9 +309,13 @@ class StandaloneTex(SageObject):
 
             The code was adapted and taken from the module :mod:`sage.misc.latex.py`.
         """
-        if not have_pdflatex():
+        if program == 'pdflatex' and not have_pdflatex():
             raise RuntimeError("PDFLaTeX does not seem to be installed. " 
                     "Download it from ctan.org and try again.")
+        elif program == 'lualatex' and not have_program(program):
+            raise RuntimeError("lualatex does not seem to be installed.")
+        elif program not in ['pdflatex','lualatex']:
+            raise ValueError("program(={}) should be pdflatex or lualatex".format(program))
 
         # set up filenames
         _filename_tex = tmp_filename('tikz_','.tex')
@@ -321,8 +327,8 @@ class StandaloneTex(SageObject):
         # subprocess stuff
         from subprocess import check_call, CalledProcessError, PIPE
 
-        # running pdflatex
-        cmd = ['pdflatex', '-interaction=nonstopmode', _filename_tex]
+        # running pdflatex or lualatex
+        cmd = [program, '-interaction=nonstopmode', _filename_tex]
         cmd = ' '.join(cmd)
         try:
             check_call(cmd, shell=True, stdout=PIPE, stderr=PIPE, cwd=base)
@@ -333,8 +339,9 @@ class StandaloneTex(SageObject):
                     print(f.read())
             else:
                 print("Error: log file was not found")
-            raise OSError("Error when running pdflatex (see log printed above).")
-        _filename_pdf = os.path.join(base, _filename+'.pdf')
+            raise OSError("Error when running {} (see log printed above).".format(program))
+        else:
+            _filename_pdf = os.path.join(base, _filename+'.pdf')
 
         # move the pdf into the good location
         if filename:
