@@ -49,12 +49,24 @@ __ https://www.labri.fr/perso/lsimon/glucose/
 __ https://www.msoos.org/cryptominisat5/
 __ https://www.math.ucdavis.edu/~latte/
 
-as well as the external packages Graphviz__ and Gurobi__. See this `thematic
-tutorial`__ to use Gurobi in SageMath.
+as well as the external packages ImageMagick__, Graphviz__ and Gurobi__. See
+this `thematic tutorial`__ to use Gurobi in SageMath.
 
+On Debian or Ubuntu, one may do::
+
+    sudo apt install graphviz imagemagick
+
+On OSX, one may do after installing Homebrew__::
+
+    sudo brew install graphviz imagemagick
+
+Note that graphviz must be installed *before* dot2tex.
+
+__ https://imagemagick.org/
 __ https://graphviz.org/
 __ http://www.gurobi.com/
 __ http://doc.sagemath.org/html/en/thematic_tutorials/linear_programming.html#using-cplex-or-gurobi-through-sage
+__ https://brew.sh/
 
 Installation
 ------------
@@ -68,6 +80,10 @@ To install the module in your user space (which does not require administrator
 rights)::
 
     sage -pip install slabbe --user
+
+To install the most recent development version::
+
+    sage -pip install --upgrade git+https://github.com/seblabbe/slabbe
 
 Usage::
 
