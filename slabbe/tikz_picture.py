@@ -271,7 +271,7 @@ class StandaloneTex(SageObject):
         """
         return self._content
 
-    def pdf(self, filename=None, view=True, program='pdflatex'):
+    def pdf(self, filename=None, view=True, program=None):
         """
         Compiles the latex code with pdflatex and create a pdf file.
 
@@ -284,7 +284,9 @@ class StandaloneTex(SageObject):
           pdf viewer. This option is ignored and automatically set to
           ``False`` if ``filename`` is not ``None``.
 
-        - ``program`` -- string (default:``'pdflatex'``) or ``'lualatex'``
+        - ``program`` -- string (default:``None``) ``'pdflatex'`` or
+          ``'lualatex'``. If ``None``, it uses ``'lualatex'`` if it is
+          available, otherwise ``'pdflatex'``.
 
         OUTPUT:
 
@@ -309,6 +311,14 @@ class StandaloneTex(SageObject):
 
             The code was adapted and taken from the module :mod:`sage.misc.latex.py`.
         """
+        # Set default program
+        if program is None:
+           if have_program('lualatex'):
+               program = 'lualatex'
+           else:
+               program = 'pdflatex'
+
+        # Check availability of programs
         if program == 'pdflatex' and not have_pdflatex():
             raise RuntimeError("PDFLaTeX does not seem to be installed. " 
                     "Download it from ctan.org and try again.")
