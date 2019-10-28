@@ -1599,9 +1599,9 @@ class DoubleSquare(SageObject):
         """
         f = lambda x: numerical_approx(x,digits=3)
         step = numerical_approx(step, digits=4)
-        points = map(lambda (x,y):(x*step,y*step), list(self.boundary_word().points()))
+        points = [(x * step, y * step) for x, y in list(self.boundary_word().points())]
         l = [str(tuple(map(f, pt))) for pt in points]
-        s = '\\filldraw[%s, very thick, draw=black, fill=black!20] ' %arrow
+        s = '\\filldraw[%s, very thick, draw=black, fill=black!20] ' % arrow
         s += ' -- '.join(l) + ';'
         [a1, b1, a2, b2, a3, b3, a4, b4] = self.factorization_points()
         s += '\n  \\node[first] at %s {};'% (points[a1],)
