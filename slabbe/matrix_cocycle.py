@@ -621,7 +621,7 @@ class MatrixCocycle(object):
             )
         """
         it = self.n_cylinders_iterator(n)
-        key = lambda (w,m):distorsion(m, p=p)
+        key = lambda w_m:distorsion(w_m[1], p=p)
         return max(it, key=key)
 
     def plot_n_cylinders(self, n, labels=True):

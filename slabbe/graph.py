@@ -296,12 +296,12 @@ def reduce_funnel_edges(G, merge_function):
 
     The following result does not seem right::
 
-	sage: w = words.FibonacciWord()[:100]
-	sage: G = w.rauzy_graph(11)
+        sage: w = words.FibonacciWord()[:100]
+        sage: G = w.rauzy_graph(11)
         sage: merge_function = lambda a,b:a+b[-1:]
-	sage: GG = reduce_funnel_edges(G, merge_function)
-	sage: GG.vertices()
-	[word: 01001010010, word: 100101001001, word: 100101001011]
+        sage: GG = reduce_funnel_edges(G, merge_function)
+        sage: GG.vertices()
+        [word: 01001010010, word: 100101001001, word: 100101001011]
 
     """
     from copy import copy
@@ -318,8 +318,8 @@ def reduce_funnel_edges(G, merge_function):
             GG.add_edge(u_v, s)
         for s in GG.neighbors_in(u):
             GG.add_edge(s, u_v)
-	GG.delete_vertex(u)
-	GG.delete_vertex(v)
+        GG.delete_vertex(u)
+        GG.delete_vertex(v)
         funnel = get_funnel(GG)
     return GG
 
