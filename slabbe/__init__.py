@@ -37,6 +37,8 @@ from .partial_injection import (number_of_partial_injection,
 
 from .write_to_file import write_str_to_file
 
+from .jeandel_rao import random_jeandel_rao_tiling_rectangle
+
 # BUG (sometimes, cython code does not work properly)
 try:
     from .kolakoski_word import KolakoskiWord
