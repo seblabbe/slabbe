@@ -21,7 +21,7 @@ A subset from an iterable::
 
 A discrete 2d disk::
 
-    sage: D = DiscreteSubset(dimension=2, predicate=lambda (x,y) : x^2 + y^2 < 4)
+    sage: D = DiscreteSubset(dimension=2, predicate=lambda x,y: x^2 + y^2 < 4)
     sage: D.list()
     [(0, 0), (0, 1), (0, -1), (1, 0), (-1, 0), (-1, 1), (1, -1), (1, 1), (-1, -1)]
     sage: D
@@ -29,7 +29,7 @@ A discrete 2d disk::
 
 A discrete 3d ball::
 
-    sage: predicate = lambda (x,y,z) : x^2 + y^2 + z^2 <= 4
+    sage: predicate = lambda x,y,z : x^2 + y^2 + z^2 <= 4
     sage: D = DiscreteSubset(dimension=3, predicate=predicate)
     sage: D
     Subset of ZZ^3
@@ -43,7 +43,7 @@ A discrete 3d ball::
 
 A discrete 4d hyperplane::
 
-    sage: predicate = lambda (x,y,z,w) : 0 <= 2*x + 3*y + 4*z + 5*w < 14
+    sage: predicate = lambda x,y,z,w : 0 <= 2*x + 3*y + 4*z + 5*w < 14
     sage: D = DiscreteSubset(dimension=4, predicate=predicate)
     sage: D
     Subset of ZZ^4
@@ -210,7 +210,7 @@ class DiscreteSubset(SageObject):
 
     Providing a root may be necessary if zero (the origin) is not inside::
 
-        sage: predicate = lambda (x,y) : 4 < x^2 + y^2 < 25
+        sage: predicate = lambda x,y : 4 < x^2 + y^2 < 25
         sage: D = DiscreteSubset(dimension=2, predicate=predicate, roots=[(3,0)])
 
     TESTS:
@@ -253,7 +253,7 @@ class DiscreteSubset(SageObject):
         if roots is None:
             self._roots = None
         else:
-            self._roots = map(self._space, roots)
+            self._roots = [self._space(root) for root in roots]
             for p in self._roots: p.set_immutable()
 
     @cached_method
@@ -272,14 +272,14 @@ class DiscreteSubset(SageObject):
 
         ::
 
-            sage: predicate = lambda (x,y) : 4 < x^2 + y^2 < 25
+            sage: predicate = lambda x,y : 4 < x^2 + y^2 < 25
             sage: D = DiscreteSubset(dimension=2, predicate=predicate, roots=[(3,0)])
             sage: D.roots()
             [(3, 0)]
 
         TESTS::
 
-            sage: predicate = lambda (x,y) : 4 < x^2 + y^2 < 25
+            sage: predicate = lambda x,y : 4 < x^2 + y^2 < 25
             sage: D = DiscreteSubset(dimension=2, predicate=predicate, roots=[(2,0)])
             sage: D.roots()
             Traceback (most recent call last):
@@ -467,7 +467,7 @@ class DiscreteSubset(SageObject):
 
         ::
 
-            sage: predicate = lambda (x,y) : 4 < x^2 + y^2 < 25
+            sage: predicate = lambda x,y : 4 < x^2 + y^2 < 25
             sage: D = DiscreteSubset(dimension=2, predicate=predicate, roots=[(3,0)])
             sage: D.an_element()
             (3, 0)
@@ -1828,7 +1828,7 @@ class DiscreteBox(DiscreteSubset):
     TESTS::
 
         sage: d = DiscreteBox([-5,5], [-5,5], [-4,4])
-        sage: d.edges_iterator().next()
+        sage: next(d.edges_iterator())
         ((0, 0, 0), (1, 0, 0))
 
     """
@@ -1847,8 +1847,7 @@ class DiscreteBox(DiscreteSubset):
         """
         self._intervals = args
         def predicate(p):
-            return all(xmin <= x <= xmax for (x,(xmin,xmax)) in
-                    itertools.izip(p,self._intervals))
+            return all(xmin <= x <= xmax for (x,(xmin,xmax)) in zip(p,self._intervals))
         dim = len(self._intervals)
         root = tuple(round((xmax+xmin)/2) for (xmin,xmax) in self._intervals)
         DiscreteSubset.__init__(self, dimension=dim,

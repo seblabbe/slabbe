@@ -867,7 +867,7 @@ cdef class MCFAlgorithm(object):
         cdef PairPoint P,R
         cdef int branch
 
-        A = dict((k,s.incidence_matrix()) for k,s in self.substitutions().iteritems())
+        A = dict((k,s.incidence_matrix()) for k,s in self.substitutions().items())
 
         # Loop
         for i in range(n_iterations):
@@ -1521,7 +1521,7 @@ cdef class MCFAlgorithm(object):
         ::
 
             sage: D = Brun()._invariant_measure_dict(100000, 5)
-            sage: sorted(D.iteritems())
+            sage: sorted(D.items())
             [((0, 0), ...),
              ((0, 1), ...),
              ((0, 2), ...),
@@ -1617,7 +1617,7 @@ cdef class MCFAlgorithm(object):
 
             sage: from slabbe.mult_cont_frac_pyx import Brun
             sage: t = Brun()._natural_extension_dict(3000, norm_xyz=1, norm_uvw=1)
-            sage: map(len, t)
+            sage: [len(a) for a in t]
             [6, 6, 6, 6]
 
         """

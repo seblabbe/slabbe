@@ -301,6 +301,7 @@ def fusion(tile0, tile1, direction, function=str.__add__, initial=''):
     elif direction == 2:
         assert B == Z, "B must be equal to Z"
         t = ((A,W), (X,), (C,Y), (D,))
+    from functools import reduce
     return tuple(reduce(function, a, initial) for a in t)
 
 class WangTileSet(object):
@@ -598,7 +599,7 @@ class WangTileSet(object):
             vertical[right][i] -= 1
             horizontal[top][i] += 1
             horizontal[bottom][i] -= 1
-        rows = vertical.values()
+        rows = list(vertical.values())
         rows.extend(horizontal.values())
         rows.append(M([1 for _ in range(len(self)+1)]))
         return matrix(rows)
@@ -652,7 +653,7 @@ class WangTileSet(object):
             vertical[right][i+1] -= 1
             horizontal[top][i+1] += 1
             horizontal[bottom][i+1] -= 1
-        eqns = vertical.values()
+        eqns = list(vertical.values())
         eqns.extend(horizontal.values())
         v = M([1 for _ in range(len(self)+1)])
         v[0] = -1
@@ -1116,6 +1117,7 @@ class WangTileSet(object):
             from slabbe.graph import clean_sources_and_sinks
             G = clean_sources_and_sinks(G)
 
+        from functools import reduce
         tiles = []
         for (u,v,(word_in, word_out)) in G.edges():
             left = reduce(function, (a.label() for a in u), initial)
@@ -2437,7 +2439,7 @@ class WangTileSolver(object):
             AssertionError
 
         """
-        self._tiles = tiles
+        self._tiles = list(tiles)
         self._width = width
         self._height = height
         if preassigned_color is None:
@@ -2498,9 +2500,9 @@ class WangTileSolver(object):
             1.0
             sage: soln = p.get_values(x)
             sage: support = [key for key in soln if soln[key]]
-            sage: support
-            [(0, 1, 1), (0, 1, 3), (0, 2, 1), (0, 2, 0), (0, 2, 3), (0, 2, 2), 
-             (0, 1, 2), (0, 0, 3), (0, 0, 2), (0, 0, 1), (0, 0, 0), (0, 1, 0)]
+            sage: sorted(support)
+            [(0, 0, 0), (0, 0, 1), (0, 0, 2), (0, 0, 3), (0, 1, 0), (0, 1, 1), 
+             (0, 1, 2), (0, 1, 3), (0, 2, 0), (0, 2, 1), (0, 2, 2), (0, 2, 3)]
 
         Other solver can be used::
 

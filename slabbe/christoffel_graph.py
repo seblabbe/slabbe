@@ -73,14 +73,14 @@ class ChristoffelGraph(DiscreteSubset):
 
         sage: C = ChristoffelGraph((2,5))
         sage: it = C.edges_iterator()
-        sage: it.next()
+        sage: next(it)
         ((0, 0), (1, 0))
 
     ::
 
         sage: C = ChristoffelGraph((2,5,8))
         sage: it = C.edges_iterator()
-        sage: it.next()
+        sage: next(it)
         ((0, 0, 0), (1, 0, 0))
 
     ::

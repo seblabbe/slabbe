@@ -181,7 +181,7 @@ class MatrixCocycle(object):
         """
         from sage.rings.integer_ring import ZZ
         D = {}
-        for k,v in self.gens().iteritems():
+        for k,v in self.gens().items():
             M = v.inverse()
             try:
                 M_ZZ = M.change_ring(ZZ)
@@ -201,7 +201,8 @@ class MatrixCocycle(object):
 
     @cached_method
     def identity_matrix(self):
-        return self._gens.values()[0].parent().one()
+        values = list(self._gens.values())
+        return values[0].parent().one()
 
     def word_to_matrix(self, w):
         r"""
@@ -1092,7 +1093,7 @@ def semi_norm_v(M, v,  p=2, verbose=False):
             return - (M*vz).norm(p) / vz.norm(p)
     cons = [lambda z: v * vector(z),
             lambda z: - v * vector(z)]
-    x0 = range(len(v))
+    x0 = list(range(len(v)))
     x0[0] = v[1]
     x0[1] = -v[0]
     rep = minimize_constrained(func, cons, x0)

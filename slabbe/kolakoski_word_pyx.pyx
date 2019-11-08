@@ -179,7 +179,7 @@ cdef class WordDatatype_Kolakoski(object):
             sage: parent = Words([1,2])
             sage: K = WordDatatype_Kolakoski(parent)
             sage: it = iter(K)
-            sage: [it.next() for _ in range(20)]
+            sage: [next(it) for _ in range(20)]
             [1, 2, 2, 1, 1, 2, 1, 2, 2, 1, 2, 2, 1, 1, 2, 1, 1, 2, 2, 1]
         """
         yield 1

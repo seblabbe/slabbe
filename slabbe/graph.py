@@ -59,7 +59,7 @@ def projection_graph(G, proj_fn, filename=None, verbose=False):
     G_proj = DiGraph(edges, format='list_of_edges', loops=True, multiedges=True)
     if verbose:
         d = dict(Counter(proj_fn(s) for s in G.vertices()))
-        rows = [(value, key) for key,value in d.iteritems()]
+        rows = [(value, key) for key,value in d.items()]
         rows.sort(reverse=True,key=lambda row:row[1])
         header_row = ['Number of vertices', 'Projected vertices']
         from sage.misc.table import table

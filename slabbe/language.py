@@ -122,7 +122,7 @@ class Language(object):
 
             sage: from slabbe.language import Language
             sage: F = Language(alphabet=['a', 'b'])
-            sage: map(F.complexity, range(5))
+            sage: [F.complexity(n) for n in range(5)]
             [1, 2, 4, 8, 16]
         """
         return sum(1 for _ in self.words_of_length_iterator(length))
@@ -284,7 +284,7 @@ class RegularLanguage(Language):
             [[], [], [], [], [word: abba], []]
         """
         it = super(RegularLanguage, self).words_of_length_iterator(length)
-        return itertools.ifilter(self._automaton, it)
+        return [a for a in it if self._automaton(a)]
 
 #####################
 # Language generators
@@ -299,7 +299,7 @@ class LanguageGenerator(object):
             sage: L
             Regular language over [1, 2, 3, 123, 132, 213, 231, 312, 321]
             defined by: Automaton with 7 states
-            sage: map(L.complexity, range(4))
+            sage: [L.complexity(n) for n in range(4)]
             [1, 9, 57, 345]
         """
         alphabet = [1, 2, 3, 123, 132, 213, 231, 312, 321]
@@ -357,7 +357,7 @@ class LanguageGenerator(object):
             sage: L
             Regular language over [123, 132, 213, 231, 312, 321]
             defined by: Automaton with 6 states
-            sage: map(L.complexity, range(4))
+            sage: [L.complexity(n) for n in range(4)]
             [1, 6, 18, 54]
             sage: list(L.words_of_length_iterator(2))
             [word: 123,123,
@@ -423,7 +423,7 @@ class LanguageGenerator(object):
             sage: L
             Regular language over [123, 132, 213, 231, 312, 321]
             defined by: Automaton with 6 states
-            sage: map(L.complexity, range(4))
+            sage: [L.complexity(n) for n in range(4)]
             [1, 6, 12, 24]
             sage: list(L.words_of_length_iterator(2))
             [word: 123,132,
@@ -483,7 +483,7 @@ class LanguageGenerator(object):
             sage: L
             Regular language over [11, 22, 122, 211, 121, 212]
             defined by: Automaton with 1 state
-            sage: map(L.complexity, range(4))
+            sage: [L.complexity(n) for n in range(4)]
             [1, 6, 36, 216]
         """
         alphabet = [11, 22, 122, 211, 121, 212]

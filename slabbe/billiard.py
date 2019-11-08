@@ -238,9 +238,9 @@ class BilliardCube(Intersection):
         possible_steps = map(vector, ((1,0,0), (0,1,0), (0,0,1)))
         i = iter(self)
         j = iter(self)
-        j.next()
+        next(j)
         while True:
-            step = j.next() - i.next()
+            step = next(j) - next(i)
             step.set_immutable()
             assert step in possible_steps, ("step(=%s) is not a " % step +
                       "canonical basis vector.")

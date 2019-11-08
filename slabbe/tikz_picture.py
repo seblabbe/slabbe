@@ -197,7 +197,7 @@ class StandaloneTex(SageObject):
             sage: from sage.repl.rich_output import get_display_manager
             sage: dm = get_display_manager()
             sage: g = graphs.PetersenGraph()
-            sage: t = TikzPicture.from_graph(g)
+            sage: t = TikzPicture.from_graph(g)            # optional dot2tex
             sage: g._rich_repr_(dm)      # random result is Text in doctest
             OutputImagePng container
 
@@ -674,7 +674,7 @@ class TikzPicture(StandaloneTex):
             sage: fn = lambda L: LatexExpr(','.join(map(str, L)))
             sage: G = DiGraph([(0,1,'a'), (0,1,'b'), (0,2,'c'), (0,2,'d')], multiedges=True)
             sage: tikz = TikzPicture.from_graph(G, merge_multiedges=True,
-            ....:               merge_label_function=fn) # optional dot2tex
+            ....:               merge_label_function=fn)            # optional dot2tex
             sage: _ = tikz.pdf()      # not tested
 
         Using subgraphs clusters (broken when using labels, see

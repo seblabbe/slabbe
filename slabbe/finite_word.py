@@ -75,7 +75,7 @@ def discrepancy(self, freq=None):
     length = self.length()
     if freq is None:
         freq = {a:QQ((v,length)) 
-                for (a,v) in self.evaluation_dict().iteritems()}
+                for (a,v) in self.evaluation_dict().items()}
     C = Counter()
     M = 0
     for i,a in enumerate(self):

@@ -276,7 +276,7 @@ def _best_simultaneous_convergents_upto(v, Q, start=1, verbose=False):
         if verbose:
             print(q,[a.n() for a in frac_q_v])
         if all(a <= Qinv or un_moins_Qinv <= a for a in frac_q_v):
-            p = map(round, q_v)
+            p = [round(a) for a in q_v]
             p.append(q)
             error = max((a if a < .5 else 1-a) for a in frac_q_v)
             return tuple(p), ~error.n()
@@ -330,7 +330,7 @@ def best_simultaneous_convergents_upto(v, Q, start=1, verbose=False):
     @parallel
     def F(shift):
         return good_simultaneous_convergents_upto(v, Q, start+shift, step=step)
-    shifts = range(step)
+    shifts = list(range(step))
     goods = []
     for (arg, kwds), output in F(shifts):
         if output == 'NO DATA':

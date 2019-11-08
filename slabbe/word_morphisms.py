@@ -91,14 +91,14 @@ def iter_conjugate_classP(words, n):
     for sizes in IntegerListsLex(n=n, length=length, min_part=1):
         L = [iter_palindromes(words, size) for size in sizes]
         for pals in itertools.product(*L):
-            d = dict(itertools.izip(alphabet, pals))
+            d = dict(zip(alphabet, pals))
             yield WordMorphism(d, codomain=words)
     # images are one common letter + palindrome
     for sizes in IntegerListsLex(n=n-length, length=length, min_part=0):
         L = [iter_palindromes(words, size) for size in sizes]
         for pals in itertools.product(*L):
             for b in alphabet:
-                d = {a:words([b])*p for a,p in itertools.izip(alphabet, pals)}
+                d = {a:words([b])*p for a,p in zip(alphabet, pals)}
                 if all(w.is_palindrome() for w in d.values()):
                     # already yielded above
                     continue
@@ -177,7 +177,7 @@ def is_left_marked(m):
     """
     images = m.images()
     N = len(images)
-    L = map(len, images)
+    L = [len(image) for image in images]
     for i in range(2*max(L)):
         s = len(set(image[i % L[a]] for (a,image) in enumerate(images)))
         if s == N:
@@ -269,7 +269,7 @@ def desubstitute_prefix_code(self, u):
     result = []
     while i < len_u:
         ui = u[i:]
-        keys = [(k,v) for k,v in morph.iteritems() if v.is_prefix(ui)]
+        keys = [(k,v) for k,v in morph.items() if v.is_prefix(ui)]
         if len(keys) > 1:
             s = ", ".join(["m({})={}".format(k,v) for (k,v) in keys])
             msg = ("non unique desubstitution, "
@@ -323,7 +323,7 @@ def desubstitute(self, u):
             return []
         else:
             ui = u[i:]
-            return [(L+[k],i+len(v)) for k,v in morph.iteritems() if v.is_prefix(ui)]
+            return [(L+[k],i+len(v)) for k,v in morph.items() if v.is_prefix(ui)]
     roots = [([],0)]
     post_process = lambda node:node if node[1]==len_u else None
     from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
@@ -393,9 +393,9 @@ def return_substitution(self, u, coding=False, length=1000):
     s, D = derived_sequence(x, u, coding=True)
     _ = s[length] # make sure that D is complete (exact value 
                   # is known by J. Leroy and F. Durand)
-    code_to_return_word = WordMorphism({v:k for k,v in D.iteritems()})
+    code_to_return_word = WordMorphism({v:k for k,v in D.items()})
     rep = {}
-    for key,value in D.iteritems():
+    for key,value in D.items():
         self_key = self(key)
         L = desubstitute(code_to_return_word, self_key)
         if len(L) == 0:
@@ -442,14 +442,14 @@ def compute_xsi(self, u):
     assert theta_u*sigma_u == self*theta_u, "identity is not verified"
     print("sigma_u=", sigma_u)
     print("theta_u=", theta_u)
-    d = {k:[(k,i) for i in range(len(v))] for k,v in theta_u._morph.iteritems()}
+    d = {k:[(k,i) for i in range(len(v))] for k,v in theta_u._morph.items()}
     psi = WordMorphism(d)
     print("psi=", psi)
     print("psi*sigma_u=", psi*sigma_u)
     print(psi.codomain())
     print(psi.incidence_matrix())
     print("We want zeta such that:")
-    for k,v in psi._morph.iteritems():
+    for k,v in psi._morph.items():
         print("zeta({}) = {}".format(v, psi(sigma_u(k))))
 
 

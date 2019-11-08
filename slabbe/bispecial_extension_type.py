@@ -667,9 +667,9 @@ class ExtensionType(object):
             ....:          2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((3, 1), (2,))]
             sage: E = ExtensionTypeLong(L, (1,2,3))
             sage: left, right = E.left_right_projection()
-            sage: sorted(left.iteritems())
+            sage: sorted(left.items())
             [(word: 12, 3), (word: 21, 1), (word: 22, 1), (word: 23, 1), (word: 31, 1)]
-            sage: sorted(right.iteritems())
+            sage: sorted(right.items())
             [(word: 1, 3), (word: 2, 3), (word: 3, 1)]
         """
         left_projection = Counter()
@@ -1822,7 +1822,7 @@ class ExtensionType1to1(ExtensionType):
                     chignons = left[len(left)-i+1:], right[:j]
                     extensions[chignons].append( (left[-i], right[j]) )
 
-                for chignons, extension in extensions.iteritems():
+                for chignons, extension in extensions.items():
                     if len(chignons[0]) + len(chignons[1]) > growth_limit:
                         continue
                     factor = chignons[0] * m(self._factor) * chignons[1]
@@ -1926,10 +1926,10 @@ class ExtensionType1to1(ExtensionType):
         elif not self.is_neutral():
             return False
         left_projection, right_projection = self.left_right_projection()  
-        left_most = [a for (a,v) in left_projection.iteritems() if v > 1]
+        left_most = [a for (a,v) in left_projection.items() if v > 1]
         if len(left_most) != 1: 
             return False
-        right_most = [b for (b,v) in right_projection.iteritems() if v > 1]
+        right_most = [b for (b,v) in right_projection.items() if v > 1]
         if len(right_most) != 1: 
             return False
         #print(left_most,right_most)
@@ -2619,9 +2619,9 @@ class ExtensionTypeLong(ExtensionType):
         #print(letters_after)
         word_before = defaultdict(Word)
         word_after = defaultdict(Word)
-        for key,value in letters_before.iteritems():
+        for key,value in letters_before.items():
             word_before[key] = longest_common_suffix(map(m, value))
-        for key,value in letters_after.iteritems():
+        for key,value in letters_after.items():
             word_after[key] = longest_common_prefix(map(m, value))
         word_before = dict(word_before)
         word_after = dict(word_after)
@@ -2658,7 +2658,7 @@ class ExtensionTypeLong(ExtensionType):
 
         Fimage = set(w for f in F for w in m(f).factor_iterator(l+r))
         L = []
-        for chignons, extension in extensions.iteritems():
+        for chignons, extension in extensions.items():
             if len(chignons[0]) + len(chignons[1]) > growth_limit:
                 continue
             empty = self.is_empty() and map(len, chignons) == [0,0]

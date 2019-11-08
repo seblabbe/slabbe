@@ -339,7 +339,7 @@ class _MCFAlgorithm_methods(object):
             return vector(A)
         D = {}
         gens = self.matrix_cocycle().gens()
-        for key,M in gens.iteritems():
+        for key,M in gens.items():
             Minv = M.inverse()
             v = sum(e(list(c).index(1)+1) for c in Minv.columns() if -1 in c)
             D[key] = v
@@ -492,7 +492,7 @@ class _MCFAlgorithm_methods(object):
         D = self._invariant_measure_dict(n_iterations, ndivs, norm=norm)
         the_mean = n_iterations / float(len(D))
         S = sorted(D.values())
-        V = [S[k]/the_mean for k in range(0, len(D), len(D)/10)]
+        V = [S[k]/the_mean for k in range(0, len(D), len(D)//10)]
 
         X = [[i for i in range(ndivs+1)] for j in range(ndivs+1)]
         Y = [[j for i in range(ndivs+1)] for j in range(ndivs+1)]
@@ -541,7 +541,7 @@ class _MCFAlgorithm_methods(object):
         c = dict(zip(domain_left.keys(), ['b','r','g','c','m','y','k']))
 
         def create_sub_plot(axx, D, title, norm):
-            for key, value in D.iteritems():
+            for key, value in D.items():
                 value = D[key]
                 X,Y = zip(*value)
                 A = axx.plot(X, Y, 'o', markersize=2, color=c[key], label=key)
@@ -640,7 +640,7 @@ class _MCFAlgorithm_methods(object):
             lines.append("(axis cs:%s, %s)" % (0, r))
             lines.append(r" node[above] {$\mathbf{e}_3$} -- cycle;")
             lines.append(r"\node at (axis cs:%s, %s) {%s};" % (-.5,.8,label))
-            for key,value in data.iteritems():
+            for key,value in data.items():
                 lines.append(r"\addplot+[")
                 lines.append(r"legend image post style={mark size=%s}," % legend_marksize)
                 lines.append(r"only marks,mark=*,")
@@ -721,7 +721,7 @@ class _MCFAlgorithm_methods(object):
               " node[right] {$\\mathbf{e}_2$} -- \n"
               "(axis cs:%s, %s)" % (0, r)             +
               " node[above] {$\\mathbf{e}_3$} -- cycle;\n")
-        for key,value in data.iteritems():
+        for key,value in data.items():
             if limit_nb_points and len(value) > limit_nb_points:
                 if verbose:
                     print("Taking only {} points instead of {} for key {}".format(

@@ -101,7 +101,7 @@ class MarkovTransformation(object):
         """
         states = self._partition.keys()
         autom = Automaton(initial_states=states, final_states=states)
-        for key,values in self._transitions.iteritems():
+        for key,values in self._transitions.items():
             for v in values:
                 autom.add_transition(key, v, v)
         return autom
@@ -132,7 +132,7 @@ class MarkovTransformation(object):
             [0 1 0]
             [0 0 1]
         """
-        return self._linear_maps.values()[0].parent().one()
+        return list(self._linear_maps.values())[0].parent().one()
 
     def word_to_matrix(self, w):
         r"""

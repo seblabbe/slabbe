@@ -269,10 +269,9 @@ class BondPercolationSample(SageObject):
             (2, 2)
 
         """
-        R = xrange(self._dimension)
         a = sgn(d)
         d = abs(d)
-        return tuple(pt[k]+a if k==d-1 else pt[k] for k in R)
+        return tuple(pt[k]+a if k==d-1 else pt[k] for k in range(self._dimension))
 
     def children(self, pt):
         r"""
@@ -318,7 +317,7 @@ class BondPercolationSample(SageObject):
             sage: list(S.children((0,0,0)))        # random
             [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)]
         """
-        for d in xrange(1, self._dimension+1):
+        for d in range(1, self._dimension+1):
             if (pt, d) in self:
                 yield self.neighbor(pt, d)
             opposite_pt = self.neighbor(pt, -d)
@@ -432,9 +431,9 @@ class BondPercolationSample(SageObject):
             ((0, 0), (1, 0))
             ((0, 0), (0, 1))
         """
-        R = xrange(-m, m)
+        R = range(-m, m)
         L = [R]*self._dimension
-        positive_directions = xrange(1, self._dimension+1)
+        positive_directions = range(1, self._dimension+1)
         for pt in itertools.product(*L):
             for d in positive_directions:
                 if (pt,d) in self:
