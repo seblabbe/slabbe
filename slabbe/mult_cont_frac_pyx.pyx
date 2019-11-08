@@ -1607,7 +1607,7 @@ cdef class MCFAlgorithm(object):
 
             sage: from slabbe.mult_cont_frac_pyx import ARP
             sage: t = ARP()._natural_extension_dict(10000)
-            sage: map(type, t)
+            sage: [type(d) for d in t]
             [<type 'collections.defaultdict'>,
              <type 'collections.defaultdict'>,
              <type 'collections.defaultdict'>,

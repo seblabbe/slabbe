@@ -341,7 +341,7 @@ class DoubleSquare(SageObject):
             elif all(isinstance(a, (int, Integer)) for a in data):
                 self._w, rot180, steps = double_square_from_four_integers(*data)
             else:
-                self._w = map(Word, data)
+                self._w = [Word(a) for a in data]
         elif data in Words():
             self._w, rot180, steps = double_square_from_boundary_word(data)
         else:
@@ -2171,7 +2171,7 @@ def double_square_from_four_integers(l0, l1, l2, l3):
     # Initial words where every letter is assumed to different
     # The involution exchanges the sign
     somme = l0 + l1 + l2 + l3
-    W = Words(range(1, somme+1) + range(-1, -(somme+1), -1))
+    W = Words(list(range(1, somme+1)) + list(range(-1, -(somme+1), -1)))
     w0 = W(range(1, l0+1))
     w1 = W(range(l0+1,l0+l1+1))
     w2 = W(range(l0+l1+1,l0+l1+l2+1))

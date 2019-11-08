@@ -228,7 +228,7 @@ class Substitution2d(object):
 
             sage: u = Substitution2d.from_permutation({5:0, 6:1, 7:2, 8:3, 9:4})
             sage: u
-            Substitution 2d: {8: [[3]], 9: [[4]], 5: [[0]], 6: [[1]], 7: [[2]]}
+            Substitution 2d: {5: [[0]], 6: [[1]], 7: [[2]], 8: [[3]], 9: [[4]]}
             sage: u * t
             Substitution 2d: {0: [[0, 1], [2, 3]], 1: [[1, 0], [4, 3]]}
         """
@@ -478,8 +478,8 @@ class Substitution2d(object):
             sage: s * t
             Traceback (most recent call last):
             ...
-            ValueError: codomain alphabet of other (=set([4, 5])) must be
-            included in domain alphabet of self (=set([0, 1]))
+            ValueError: codomain alphabet of other (={4, 5}) must be
+            included in domain alphabet of self (={0, 1})
         """
         if not self.domain_alphabet() >= other.codomain_alphabet():
             raise ValueError("codomain alphabet of other (={}) must be included"
@@ -521,7 +521,7 @@ class Substitution2d(object):
             sage: s
             Substitution 2d: {0: [[7]], 1: [[8]]}
             sage: s.inverse()
-            Substitution 2d: {8: [[1]], 7: [[0]]}
+            Substitution 2d: {7: [[0]], 8: [[1]]}
 
         TESTS::
 
@@ -961,25 +961,25 @@ class Substitution2d(object):
 
         Restricting to the images of some factors::
 
-            sage: s.list_2x2_factors([A])
+            sage: sorted(s.list_2x2_factors([A]))
             [[[1, 0], [1, 1]], [[1, 1], [1, 0]], [[1, 1], [1, 1]], [[0, 1], [0, 1]]]
-            sage: s.list_2x2_factors([B])
-            [[[1, 0], [1, 1]],
-             [[0, 1], [1, 0]],
-             [[1, 1], [1, 0]],
+            sage: sorted(s.list_2x2_factors([B]))
+            [[[0, 0], [1, 0]],
              [[0, 1], [0, 1]],
-             [[0, 1], [1, 1]],
-             [[1, 0], [0, 1]],
-             [[0, 0], [1, 0]]]
-            sage: s.list_2x2_factors([A,B])
-            [[[1, 0], [1, 1]],
-             [[1, 1], [1, 0]],
-             [[0, 1], [1, 1]],
-             [[1, 1], [1, 1]],
-             [[0, 0], [1, 0]],
-             [[1, 0], [0, 1]],
              [[0, 1], [1, 0]],
-             [[0, 1], [0, 1]]]
+             [[0, 1], [1, 1]],
+             [[1, 0], [0, 1]],
+             [[1, 0], [1, 1]],
+             [[1, 1], [1, 0]]]
+            sage: sorted(s.list_2x2_factors([A,B]))
+            [[[0, 0], [1, 0]],
+             [[0, 1], [0, 1]],
+             [[0, 1], [1, 0]],
+             [[0, 1], [1, 1]],
+             [[1, 0], [0, 1]],
+             [[1, 0], [1, 1]],
+             [[1, 1], [1, 0]],
+             [[1, 1], [1, 1]]]
             sage: s.list_2x2_factors([])
             []
 
@@ -1088,7 +1088,7 @@ class Substitution2d(object):
             sage: s = Substitution2d({0:A, 1:B})
             sage: t = Substitution2d({7:A, 8:B})
             sage: s.relabel_domain(t)
-            Substitution 2d: {8: [[1]], 7: [[0]]}
+            Substitution 2d: {7: [[0]], 8: [[1]]}
 
         TESTS::
 

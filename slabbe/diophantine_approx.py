@@ -272,7 +272,7 @@ def _best_simultaneous_convergents_upto(v, Q, start=1, verbose=False):
     un_moins_Qinv = 1 - Qinv
     for q in range(start, Q**d):
         q_v = q*v
-        frac_q_v = map(frac, q_v)
+        frac_q_v = [frac(a) for a in q_v]
         if verbose:
             print(q,[a.n() for a in frac_q_v])
         if all(a <= Qinv or un_moins_Qinv <= a for a in frac_q_v):

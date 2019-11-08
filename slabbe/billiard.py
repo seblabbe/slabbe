@@ -268,7 +268,7 @@ class BilliardCube(Intersection):
             word: 3213213231232133213213231232132313231232...
 
         """
-        steps = map(vector, ((1,0,0), (0,1,0), (0,0,1)))
+        steps = [vector(v) for v in ((1,0,0), (0,1,0), (0,0,1))]
         for step in steps: step.set_immutable()
         coding = dict(zip(steps, alphabet)) 
         it = (coding[step] for step in self.step_iterator())

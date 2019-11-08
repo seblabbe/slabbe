@@ -648,12 +648,12 @@ class PolyhedronExchangeTransformation(object):
             sage: F * F
             Polyhedron Exchange Transformation of
             Polyhedron partition of 3 atoms with 3 letters
-            with translations {(0, 1): (-3/5, 0), (1, 0): (-3/5, 0), (0, 0): (2/5, 0)}
+            with translations {(0, 0): (2/5, 0), (0, 1): (-3/5, 0), (1, 0): (-3/5, 0)}
             sage: F * F * F
             Polyhedron Exchange Transformation of
             Polyhedron partition of 4 atoms with 4 letters
-            with translations {(1, 0, 0): (-2/5, 0), (0, 1, 0): (-2/5, 0),
-                               (0, 0, 0): (3/5, 0), (0, 0, 1): (-2/5, 0)}
+            with translations {(0, 0, 0): (3/5, 0), (0, 0, 1): (-2/5, 0), 
+                               (0, 1, 0): (-2/5, 0), (1, 0, 0): (-2/5, 0)}
 
         """
         key_fn_tuple = lambda a,b:(a,b)

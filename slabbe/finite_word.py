@@ -110,7 +110,8 @@ def to_image(self, width=1000):
 
     ::
 
-        sage: s = map(int, str(pi.n(digits=40001))[2:])
+        sage: s = str(pi.n(digits=40001))[2:]
+        sage: s = [int(a) for a in s]
         sage: len(s)
         40000
         sage: img = to_image(W(s), 200)
@@ -165,11 +166,11 @@ def word_to_polyomino(self):
 
         sage: from slabbe.finite_word import word_to_polyomino
         sage: w = [0,0,0,1,1,1,2,2,2,3,3,3]
-        sage: word_to_polyomino(w)
-        [(0, 0), (0, 1), (1, 0), (2, 0), (1, 1), (0, 2), (1, 2), (2, 1), (2, 2)]
+        sage: sorted(word_to_polyomino(w))
+        [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1), (2, 2)]
         sage: w = [1,1,1,0,0,0,3,3,3,2,2,2]
-        sage: word_to_polyomino(w)
-        [(0, 0), (0, 1), (1, 0), (2, 0), (1, 1), (0, 2), (1, 2), (2, 1), (2, 2)]
+        sage: sorted(word_to_polyomino(w))
+        [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1), (2, 2)]
     """
     from sage.combinat.words.words import FiniteWords
     alphabet = [0,1,2,3]
@@ -198,9 +199,9 @@ def word_to_polyomino(self):
     from sage.modules.free_module import FreeModule
     from sage.rings.integer_ring import ZZ
     F = FreeModule(ZZ, 2)
-    directions = map(F, [(1,0), (0,1), (-1,0), (0,-1)])
-    outside = map(F, [(0,-1), (0,0), (-1,0), (-1,-1)])
-    inside = map(F, [(0,0), (-1,0), (-1,-1), (0,-1)])
+    directions = list(map(F, [(1,0), (0,1), (-1,0), (0,-1)]))
+    outside = list(map(F, [(0,-1), (0,0), (-1,0), (-1,-1)]))
+    inside = list(map(F, [(0,0), (-1,0), (-1,-1), (0,-1)]))
     # obtained from below after a translation by (-1/2,-1/2)
     #outside = map(F, [(u/2,-u/2), (u/2,u/2), (-u/2,u/2), (-u/2,-u/2)])
     #inside = map(F, [(u/2,u/2), (-u/2,u/2), (-u/2,-u/2), (u/2,-u/2)])

@@ -8,7 +8,7 @@ The 1-cylinders of ARP transformation given as matrices::
 
     sage: from slabbe.matrix_cocycle import cocycles
     sage: ARP = cocycles.ARP()
-    sage: zip(*ARP.n_cylinders_iterator(1))
+    sage: list(zip(*ARP.n_cylinders_iterator(1)))
     [(word: 1,
       word: 2,
       word: 3,
@@ -155,9 +155,9 @@ class MatrixCocycle(object):
 
             sage: from slabbe.matrix_cocycle import cocycles
             sage: coc = cocycles.Brun()
-            sage: coc.gens_inverses().keys()
-            [321, 132, 231, 213, 312, 123]
-            sage: coc.gens_inverses().values()
+            sage: sorted(coc.gens_inverses().keys())
+            [123, 132, 213, 231, 312, 321]
+            sage: sorted(coc.gens_inverses().values())
             [
             [ 1 -1  0]  [ 1  0  0]  [ 1  0 -1]  [ 1  0  0]  [ 1  0  0]  [ 1  0  0]
             [ 0  1  0]  [ 0  1 -1]  [ 0  1  0]  [ 0  1  0]  [-1  1  0]  [ 0  1  0]
@@ -167,7 +167,7 @@ class MatrixCocycle(object):
         If possible, the ring is the Integer ring::
 
             sage: coc = cocycles.Reverse()
-            sage: coc.gens_inverses().values()
+            sage: sorted(coc.gens_inverses().values())
             [
             [ 1 -1 -1]  [ 1  0  0]  [ 1  0  0]  [-1/2  1/2  1/2]
             [ 0  1  0]  [-1  1 -1]  [ 0  1  0]  [ 1/2 -1/2  1/2]
@@ -529,27 +529,27 @@ class MatrixCocycle(object):
             sage: from slabbe.matrix_cocycle import cocycles
             sage: ARP = cocycles.ARP()
             sage: ARP.n_cylinders_edges(1)
-            {frozenset({(1, 1, 0), (1, 1, 1)}),
-             frozenset({(0, 1, 0), (1, 1, 0)}),
+            {frozenset({(0, 0, 1), (1, 0, 1)}),
+             frozenset({(1, 0, 1), (1, 1, 0)}),
              frozenset({(1, 1, 1), (2, 1, 1)}),
-             frozenset({(0, 0, 1), (1, 0, 1)}),
-             frozenset({(0, 1, 0), (0, 1, 1)}),
-             frozenset({(0, 1, 1), (1, 0, 1)}),
-             frozenset({(1, 0, 0), (1, 1, 0)}),
-             frozenset({(1, 1, 0), (2, 1, 1)}),
-             frozenset({(1, 0, 1), (1, 1, 2)}),
-             frozenset({(1, 1, 0), (1, 2, 1)}),
-             frozenset({(1, 0, 1), (2, 1, 1)}),
+             frozenset({(1, 1, 0), (1, 1, 1)}),
              frozenset({(0, 0, 1), (0, 1, 1)}),
              frozenset({(1, 0, 1), (1, 1, 1)}),
-             frozenset({(0, 1, 1), (1, 2, 1)}),
-             frozenset({(0, 1, 1), (1, 1, 2)}),
+             frozenset({(0, 1, 0), (1, 1, 0)}),
              frozenset({(1, 0, 0), (1, 0, 1)}),
              frozenset({(1, 1, 1), (1, 2, 1)}),
-             frozenset({(1, 0, 1), (1, 1, 0)}),
+             frozenset({(1, 1, 0), (1, 2, 1)}),
+             frozenset({(1, 1, 1), (1, 1, 2)}),
+             frozenset({(1, 0, 1), (1, 1, 2)}),
              frozenset({(0, 1, 1), (1, 1, 1)}),
+             frozenset({(1, 1, 0), (2, 1, 1)}),
+             frozenset({(0, 1, 0), (0, 1, 1)}),
+             frozenset({(0, 1, 1), (1, 1, 2)}),
              frozenset({(0, 1, 1), (1, 1, 0)}),
-             frozenset({(1, 1, 1), (1, 1, 2)})}
+             frozenset({(1, 0, 0), (1, 1, 0)}),
+             frozenset({(0, 1, 1), (1, 2, 1)}),
+             frozenset({(1, 0, 1), (2, 1, 1)}),
+             frozenset({(0, 1, 1), (1, 0, 1)})}
         """
         from sage.rings.finite_rings.integer_mod_ring import Integers
         edges = set()
@@ -738,8 +738,8 @@ class MatrixCocycle(object):
             \begin{document}
             \begin{tikzpicture}
             [scale=4]
-            \draw (0.0000, -0.5000) -- (0.0000, 0.0000);
-            \draw (0.0000, -0.5000) -- (0.8660, -0.5000);
+            \draw (0.0000, 1.0000) -- (-0.4330, 0.2500);
+            \draw (0.0000, -0.5000) -- (-0.4330, 0.2500);
             \draw (0.0000, 0.0000) -- (-0.2165, -0.1250);
             ...
             ... 23 lines not printed (1317 characters in total) ...

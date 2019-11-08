@@ -326,7 +326,7 @@ class ChristoffelGraph(DiscreteSubset):
         clip_ambiant_dim = [p+1.05*h for p in para for h in hex]
         clip_proj_dim = [projmat_tube * c for c in clip_ambiant_dim]
 
-        Z = zip(*clip_proj_dim)
+        Z = list(zip(*clip_proj_dim))
         minZ = vector(RR, map(min, Z)) - vector(RR, (2,)*len(Z))
         maxZ = vector(RR, map(max, Z)) + vector(RR, (2,)*len(Z))
         tube = DiscreteTube(*zip(minZ,maxZ), projmat=projmat_tube)

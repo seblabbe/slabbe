@@ -63,12 +63,13 @@ def lyapunov_sample(algo, n_orbits, n_iterations=1000, verbose=False):
             return algo.lyapunov_exponents(start=S[i], n_iterations=n_iterations) 
         except Exception as err:
             return "{}: {}".format(err.__class__.__name__, err)
-    L = [v for _,v in compute_exponents(range(n_orbits))]
+    inputs = list(range(n_orbits))
+    L = [v for _,v in compute_exponents(inputs)]
     L_filtered = [v for v in L if isinstance(v, tuple)]
     if verbose:
         L_error_msg = [v for v in L if not isinstance(v, tuple)]
         print(L_error_msg)
-    return zip(*L_filtered)
+    return list(zip(*L_filtered))
 
 def lyapunov_table(algo, n_orbits, n_iterations=1000):
     r"""

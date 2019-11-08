@@ -673,8 +673,8 @@ class TikzPicture(StandaloneTex):
 
             sage: fn = lambda L: LatexExpr(','.join(map(str, L)))
             sage: G = DiGraph([(0,1,'a'), (0,1,'b'), (0,2,'c'), (0,2,'d')], multiedges=True)
-            sage: tikz = TikzPicture.from_graph(G, merge_multiedges=True,
-            ....:               merge_label_function=fn)            # optional dot2tex
+            sage: tikz = TikzPicture.from_graph(G, merge_multiedges=True,   # optional dot2tex
+            ....:               merge_label_function=fn)            
             sage: _ = tikz.pdf()      # not tested
 
         Using subgraphs clusters (broken when using labels, see
@@ -691,7 +691,7 @@ class TikzPicture(StandaloneTex):
             sage: G
             Looped multi-digraph on 27 vertices
             sage: C = G.strongly_connected_components()
-            sage: tikz = TikzPicture.from_graph(G, merge_multiedges=False,
+            sage: tikz = TikzPicture.from_graph(G, merge_multiedges=False,   # optional dot2tex
             ....:                               subgraph_clusters=C)
             sage: _ = tikz.pdf()      # not tested
 
