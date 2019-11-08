@@ -2579,7 +2579,7 @@ class WangTileSolver(object):
 
         - ``solver`` -- string or None (default: ``None``), 
           ``'dancing_links'`` or the name of a MILP solver in Sage like
-          ``'GLPK'``, ``'Coin'`` or ``'Gurobi'``.
+          ``'GLPK'``, ``'Coin'``, ``'cplex'`` or ``'Gurobi'``.
         - ``solver_parameters`` -- dict (default: ``{}``), parameters given
           to the MILP solver using method ``solver_parameter``. For a list
           of available parameters for example for the Gurobi backend, see
@@ -2688,7 +2688,7 @@ class WangTileSolver(object):
                 assert table[j][k] is None, "table[{}][{}](={}) is not None".format(j,k,table[j][k])
                 table[j][k] = i
             return WangTiling(table, self._tiles, color=self._color)
-        elif solver in ['Gurobi', 'gurobi', 'GLPK', 'Coin', 'CVXOPT', 'PPL', None]:
+        elif solver in ['Gurobi', 'gurobi', 'GLPK', 'cplex', 'Coin', 'CVXOPT', 'PPL', None]:
             p,x = self.milp(solver=solver)
             if solver_parameters is None:
                 solver_parameters = {}
