@@ -15,11 +15,14 @@ develop:
 test: 
 	sage -tp --force-lib --show-skipped slabbe/*.py slabbe/*.pyx --log=logs/test.log
 	sage -t demos/*.rst
+testpython3: 
+	~/GitBox/sage3/sage -tp --force-lib --show-skipped slabbe/*.py slabbe/*.pyx --log=logs/test.log
+	~/GitBox/sage3/sage -t demos/*.rst
 
 testlong:
 	sage -tp --long --force-lib --show-skipped slabbe/*.py slabbe/*.pyx --log=logs/testlong.log
 
-testpython3:
+pretestpython3:
 	find slabbe -name '*.py' | xargs -n 1 python3 -m py_compile 
 
 coverage:
