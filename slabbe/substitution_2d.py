@@ -262,7 +262,7 @@ class Substitution2d(object):
             sage: s.call_on_row([1,2])
             Traceback (most recent call last):
             ...
-            ValueError: the image of the row contains columns of different height (=set([2, 3]))
+            ValueError: the image of the row contains columns of different height (={2, 3})
         """
         if not row:
             return []
@@ -962,7 +962,7 @@ class Substitution2d(object):
         Restricting to the images of some factors::
 
             sage: sorted(s.list_2x2_factors([A]))
-            [[[1, 0], [1, 1]], [[1, 1], [1, 0]], [[1, 1], [1, 1]], [[0, 1], [0, 1]]]
+            [[[0, 1], [0, 1]], [[1, 0], [1, 1]], [[1, 1], [1, 0]], [[1, 1], [1, 1]]]
             sage: sorted(s.list_2x2_factors([B]))
             [[[0, 0], [1, 0]],
              [[0, 1], [0, 1]],

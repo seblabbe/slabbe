@@ -235,7 +235,7 @@ class BilliardCube(Intersection):
             AssertionError: step(=(-1, 0, 1)) is not a canonical basis
             vector.
         """
-        possible_steps = map(vector, ((1,0,0), (0,1,0), (0,0,1)))
+        possible_steps = [vector(a) for a in ((1,0,0), (0,1,0), (0,0,1))]
         i = iter(self)
         j = iter(self)
         next(j)

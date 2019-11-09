@@ -159,9 +159,9 @@ class MatrixCocycle(object):
             [123, 132, 213, 231, 312, 321]
             sage: sorted(coc.gens_inverses().values())
             [
-            [ 1 -1  0]  [ 1  0  0]  [ 1  0 -1]  [ 1  0  0]  [ 1  0  0]  [ 1  0  0]
-            [ 0  1  0]  [ 0  1 -1]  [ 0  1  0]  [ 0  1  0]  [-1  1  0]  [ 0  1  0]
-            [ 0  0  1], [ 0  0  1], [ 0  0  1], [-1  0  1], [ 0  0  1], [ 0 -1  1]
+            [ 1 -1  0]  [ 1  0 -1]  [ 1  0  0]  [ 1  0  0]  [ 1  0  0]  [ 1  0  0]
+            [ 0  1  0]  [ 0  1  0]  [-1  1  0]  [ 0  1 -1]  [ 0  1  0]  [ 0  1  0]
+            [ 0  0  1], [ 0  0  1], [ 0  0  1], [ 0  0  1], [-1  0  1], [ 0 -1  1]
             ]
 
         If possible, the ring is the Integer ring::
@@ -169,15 +169,15 @@ class MatrixCocycle(object):
             sage: coc = cocycles.Reverse()
             sage: sorted(coc.gens_inverses().values())
             [
-            [ 1 -1 -1]  [ 1  0  0]  [ 1  0  0]  [-1/2  1/2  1/2]
-            [ 0  1  0]  [-1  1 -1]  [ 0  1  0]  [ 1/2 -1/2  1/2]
-            [ 0  0  1], [ 0  0  1], [-1 -1  1], [ 1/2  1/2 -1/2]
+            [-1/2  1/2  1/2]  [ 1 -1 -1]  [ 1  0  0]  [ 1  0  0]
+            [ 1/2 -1/2  1/2]  [ 0  1  0]  [-1  1 -1]  [ 0  1  0]
+            [ 1/2  1/2 -1/2], [ 0  0  1], [ 0  0  1], [-1 -1  1]
             ]
             sage: [m.parent() for m in _]
-            [Full MatrixSpace of 3 by 3 dense matrices over Integer Ring,
+            [Full MatrixSpace of 3 by 3 dense matrices over Rational Field,
              Full MatrixSpace of 3 by 3 dense matrices over Integer Ring,
              Full MatrixSpace of 3 by 3 dense matrices over Integer Ring,
-             Full MatrixSpace of 3 by 3 dense matrices over Rational Field]
+             Full MatrixSpace of 3 by 3 dense matrices over Integer Ring]
         """
         from sage.rings.integer_ring import ZZ
         D = {}

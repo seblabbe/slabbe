@@ -178,7 +178,7 @@ class MarkovTransformation(object):
 
             sage: from slabbe.markov_transformation import markov_transformations
             sage: T = markov_transformations.Selmer()
-            sage: A,B = zip(*list(T.n_matrices_iterator(1)))
+            sage: A,B = list(zip(*list(T.n_matrices_iterator(1))))
             sage: A
             (word: 321, word: 132, word: -123, word: 231, word: -312, word:
             -213, word: 213, word: 312, word: -231, word: 123, word: -132,

@@ -36,7 +36,7 @@ Random Stallings graph on ``[0, 1, ..., 19]`` over 2 letters::
 Visualisation of the graph::
 
     sage: from slabbe import TikzPicture
-    sage: tikz = TikzPicture.from_graph(G)
+    sage: tikz = TikzPicture.from_graph(G)      # optional dot2tex
     sage: path_to_file = tikz.pdf()    # not tested
 
 REFERENCES:
@@ -214,8 +214,8 @@ def random_cyclically_reduced_stallings_graph(n, r=2, verbose=False, merge=False
 
         sage: G,_,_ = random_cyclically_reduced_stallings_graph(20, 2)
         sage: from slabbe import TikzPicture
-        sage: tikz = TikzPicture.from_graph(G)
-        sage: _ = tikz.pdf(view=False)
+        sage: tikz = TikzPicture.from_graph(G)    # optional dot2tex
+        sage: _ = tikz.pdf(view=False)            # optional dot2tex
 
     AUTHORS:
 

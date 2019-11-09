@@ -264,8 +264,8 @@ class _MCFAlgorithm_methods(object):
             {[1, 1, 3]: 6/5,
              [1, 2, 2]: 4/5,
              [1, 3, 1]: 4/5,
-             [2, 1, 2]: 4/5,
-             [2, 2, 1]: 4/5,
+             [2, 1, 2]: 3/5,
+             [2, 2, 1]: 3/5,
              [3, 1, 1]: 4/5}
         """
         from .finite_word import discrepancy
