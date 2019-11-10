@@ -336,7 +336,7 @@ class WangTileSet(object):
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
             sage: T = WangTileSet(tiles)
         """
-        self._tiles = tiles
+        self._tiles = list(tiles)
 
     def __iter__(self):
         r"""
@@ -1255,7 +1255,7 @@ class WangTileSet(object):
 
             sage: from slabbe import WangTileSet
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
-            sage: tiles = [map(str, tile) for tile in tiles]
+            sage: tiles = [[str(a) for a in tile] for tile in tiles]
             sage: T = WangTileSet(tiles)
             sage: S = T.tilings_with_surrounding(2,2)
             sage: S
@@ -1430,7 +1430,7 @@ class WangTileSet(object):
 
             sage: from slabbe import WangTileSet
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
-            sage: tiles = [map(str, tile) for tile in tiles]
+            sage: tiles = [[str(a) for a in tile] for tile in tiles]
             sage: T = WangTileSet(tiles)
             sage: S = T.tilings_with_surrounding_new_method(2,2)
             sage: S
@@ -1695,7 +1695,7 @@ class WangTileSet(object):
             sage: from slabbe import WangTileSet
             sage: tiles = [(2,4,2,1), (2,2,2,0), (1,1,3,1), (1,2,3,2), (3,1,3,3),
             ....: (0,1,3,1), (0,0,0,1), (3,1,0,2), (0,2,1,2), (1,2,1,4), (3,3,1,2)]
-            sage: tiles = [map(str,t) for t in tiles]
+            sage: tiles = [[str(a) for a in t] for t in tiles]
             sage: T = WangTileSet(tiles)
             sage: T.find_markers(i=1)
             []
@@ -1771,7 +1771,7 @@ class WangTileSet(object):
             sage: from slabbe import WangTileSet
             sage: tiles = [(2,4,2,1), (2,2,2,0), (1,1,3,1), (1,2,3,2), (3,1,3,3),
             ....: (0,1,3,1), (0,0,0,1), (3,1,0,2), (0,2,1,2), (1,2,1,4), (3,3,1,2)]
-            sage: tiles = [map(str,t) for t in tiles]
+            sage: tiles = [[str(a) for a in t] for t in tiles]
             sage: T = WangTileSet(tiles)
             sage: T.find_markers(i=2)
             [[0, 1]]
@@ -1884,11 +1884,11 @@ class WangTileSet(object):
             sage: U,s = T.shear()
             sage: s
             Substitution 2d: {0: [[0]], 1: [[1]], 2: [[2]], 3: [[2]]}
-            sage: U.tiles()
+            sage: sorted(U.tiles())
             [('aadd', 'dd', 'ccbb', 'bb'),
              ('aadd', 'dd', 'ccdd', 'bb'),
-             ('ccdd', 'dd', 'aadd', 'dd'),
-             ('ccbb', 'bb', 'aadd', 'dd')]
+             ('ccbb', 'bb', 'aadd', 'dd'),
+             ('ccdd', 'dd', 'aadd', 'dd')]
             sage: U,s = T.shear(radius=1)
             sage: s
             Substitution 2d: {0: [[0]], 1: [[2]]}
@@ -2649,8 +2649,8 @@ class WangTileSolver(object):
             sage: tiles = [(0,3,1,4), (1,4,0,3)]
             sage: W = WangTileSolver(tiles,3,4)
             sage: tiling = W.solve('LP')
-            sage: tiling._table
-            [[1, 0, 1, 0], [0, 1, 0, 1], [1, 0, 1, 0]]
+            sage: tiling
+            A wang tiling of a 3 x 4 rectangle
 
         Using SatLP solver with preassigned tiles::
 
@@ -3138,9 +3138,7 @@ class WangTileSolver(object):
             CryptoMiniSat solver: 24 variables, 58 clauses.
             sage: L = s()
             sage: list(L)
-            [None, False, True, False, True, True, False, True, False,
-             False, True, False, True, True, False, True, False, False,
-             True, False, True, True, False, True, False]
+            [None, ...]
 
         """
         tiles = self._tiles
@@ -3978,8 +3976,9 @@ class WangTiling(object):
             sage: tiling = WangTiling(table, tiles)
             sage: tiling.pattern_occurrences([(0,0)])
             Counter({(0,): 6, (1,): 6})
-            sage: tiling.pattern_occurrences([(0,0), (1,0), (0,1)])
-            Counter({(1, 0, 0): 3, (0, 1, 1): 3})
+            sage: c = tiling.pattern_occurrences([(0,0), (1,0), (0,1)])
+            sage: sorted(c.items())
+            [((0, 1, 1), 3), ((1, 0, 0), 3)] 
 
         When avoiding the border::
 
