@@ -885,9 +885,11 @@ class DoubleSquare(SageObject):
             (d0, d1, d2, d3)         = (26, 16, 26, 16)
             (n0, n1, n2, n3)         = (0, 0, 0, 1)
         """
-        (w0,w1,w2,w3,w4,w5,w6,w7) = [self.w(j) for j in range(i % 8, 8) + range(0, i % 8)]
+        R = tuple(range(i % 8, 8)) + tuple(range(0, i % 8))
+        (w0,w1,w2,w3,w4,w5,w6,w7) = [self.w(j) for j in R]
         w = (w0*w1*self.hat(w3),w1,w2,w3,w4*w5*self.hat(w7),w5,w6,w7)
-        w = tuple(w[j] for j in range(-i % 8, 8) + range(0, -i % 8))
+        R = tuple(range(-i % 8, 8)) + tuple(range(0, -i % 8))
+        w = tuple(w[j] for j in R)
         return DoubleSquare(w, self.rot180, self._steps)
 
     def trim(self, i):
@@ -929,9 +931,11 @@ class DoubleSquare(SageObject):
         """
         d = self.d(i)
         if len(self.w(i)) >= d:
-            (w0,w1,w2,w3,w4,w5,w6,w7) = [self.w(j) for j in range(i % 8, 8) + range(0, i % 8)]
+            R = tuple(range(i % 8, 8)) + tuple(range(0, i % 8))
+            (w0,w1,w2,w3,w4,w5,w6,w7) = [self.w(j) for j in R]
             w = (w0[d:],w1,w2,w3,w4[d:],w5,w6,w7)
-            w = tuple(w[j] for j in range(-i % 8, 8) + range(0, -i % 8))
+            R = tuple(range(-i % 8, 8)) + tuple(range(0, -i % 8))
+            w = tuple(w[j] for j in R) 
             return DoubleSquare(w, self.rot180, self._steps)
         else:
             raise ValueError('trim cannot be applied on index %s of the'
@@ -972,8 +976,9 @@ class DoubleSquare(SageObject):
             (d0, d1, d2, d3)         = (10, 4, 10, 4)
             (n0, n1, n2, n3)         = (0, 1, 0, 1)
         """
-        (w0,w1,w2,w3,w4,w5,w6,w7) = [self.w(j) for j in range(i % 8, 8) + range(0, i % 8)]
-        indexes = range(i % 8 + 1, 8, 2) + range((1 + i) % 2, i % 8, 2)
+        R = tuple(range(i % 8, 8)) + tuple(range(0, i % 8))
+        (w0,w1,w2,w3,w4,w5,w6,w7) = [self.w(j) for j in R]
+        indexes = tuple(range(i % 8 + 1, 8, 2)) + tuple(range((1 + i) % 2, i % 8, 2))
         (n1,n3,n5,n7) = [self.n(j) for j in indexes]
         (u1,u3,u5,u7) = [self.u(j) for j in indexes]
         (v1,v3,v5,v7) = [self.v(j) for j in indexes]
@@ -982,7 +987,8 @@ class DoubleSquare(SageObject):
         #assert len(u3) > 0, "one must have |u_%s| > 0 for swap_%s" % (i+3, i)
         w = (self.hat(w4),(v1*u1)**n1*v1,self.hat(w6),(v3*u3)**n3*v3,
              self.hat(w0),(v5*u5)**n5*v5,self.hat(w2),(v7*u7)**n7*v7)
-        w = tuple(w[j] for j in range(-i % 8, 8) + range(0, -i % 8))
+        R = tuple(range(-i % 8, 8)) + tuple(range(0, -i % 8))
+        w = tuple(w[j] for j in R)
         return DoubleSquare(w, self.rot180, self._steps)
 
     def apply(self, L):
@@ -1273,7 +1279,7 @@ class DoubleSquare(SageObject):
             sage: D.factorization_points()
             [0, 2, 3, 5, 6, 8, 9, 11]
         """
-        lengths_of_w = map(len, self._w)
+        lengths_of_w = [len(w) for w in self._w]
         return [sum(lengths_of_w[:i]) for i in range(8)]
 
     def translation_vectors(self):
@@ -1339,7 +1345,7 @@ class DoubleSquare(SageObject):
             23
         """
         points = list(self.boundary_word().points())
-        return max(map(lambda p:p[0], points)) - min(map(lambda p:p[0], points))
+        return max(p[0] for p in points) - min(p[0] for p in points)
 
     def height(self):
         r"""
@@ -1360,7 +1366,7 @@ class DoubleSquare(SageObject):
             23
         """
         points = list(self.boundary_word().points())
-        return max(map(lambda p:p[1], points)) - min(map(lambda p:p[1], points))
+        return max(p[1] for p in points) - min(p[1] for p in points)
 
     def plot(self, pathoptions=dict(rgbcolor='black',thickness=3),
          fill=True, filloptions=dict(rgbcolor='black',alpha=0.2),
@@ -1414,7 +1420,7 @@ class DoubleSquare(SageObject):
         """
         path = self.boundary_word()
         points = list(path.points())
-        points = [map(RR, x) for x in points]
+        points = [[RR(a) for a in x] for x in points]
         G = path.plot(pathoptions, fill, filloptions, startpoint, startoptions, endarrow, arrowoptions, gridlines, gridoptions)
         i = 0
         for p in self.factorization_points():
@@ -1452,7 +1458,7 @@ class DoubleSquare(SageObject):
         while not ds.is_singular():
             ds, op = ds.reduce()
             L.append(ds)
-        nrows = (len(L)-1) / ncols + 1
+        nrows = (len(L)-1) // ncols + 1
         graphic_tiles = []
         for tile in L:
             graphic_tiles.append(tile.plot(**options))
@@ -1556,8 +1562,8 @@ class DoubleSquare(SageObject):
         #for i in range(4):
         #    s += '$w_{%s} = %s$\\\\\n'%(i, remove_coma(self.w(i).string_rep()))
         s += '$(w_0,w_1,w_2,w_3) = (%s,%s,%s,%s)$ \\\\\n'%tuple(len(self.w(i)) for i in range(4))
-        s += '$u_0 = %s$\quad $u_1 = %s$\\\\$u_2 = %s$\quad $u_3 = %s$\\\\\n'%tuple(u[i] for i in range(4))
-        s += '$v_0 = %s$\quad $v_1 = %s$\\\\$v_2 = %s$\quad $v_3 = %s$\\\\\n'%tuple(v[i] for i in range(4))
+        s += '$u_0 = %s$\quad $u_1 = %s$\\\\$u_2 = %s$\\quad $u_3 = %s$\\\\\n'%tuple(u[i] for i in range(4))
+        s += '$v_0 = %s$\quad $v_1 = %s$\\\\$v_2 = %s$\\quad $v_3 = %s$\\\\\n'%tuple(v[i] for i in range(4))
         s += '$(n_0,n_1,n_2,n_3) = (%s,%s,%s,%s)$ \\\\\n'%tuple(self.n(i) for i in range(4))
         s += 'Turning number = %s\\\\\n'%self.turning_number()
         s += 'Self-avoiding = %s\\\\\n'%self.boundary_word().is_simple()
@@ -1689,7 +1695,7 @@ class DoubleSquare(SageObject):
             s += "\\\\\n"
             W = self.latex_8_tuple()
             s += '$(%s,%s,%s,%s,$ \\\\\n' % W[:4]
-            s += '$\phantom{((}%s,%s,%s,%s)$ \\\\\n' % W[4:]
+            s += '$\\phantom{((}%s,%s,%s,%s)$ \\\\\n' % W[4:]
             s += '\\end{tabular}\n'
         return LatexExpr(s)
 
@@ -2024,7 +2030,7 @@ def find_square_factorisation(ds, factorisation=None, alternate=True):
     hat = lambda x:rot180(x).reversal()
 
     L = ds.length()
-    half = L/2
+    half = L // 2
     twice = ds * ds
 
     if factorisation and alternate:
@@ -2071,13 +2077,13 @@ def double_square_from_boundary_word(ds):
         sage: from slabbe.double_square_tile import double_square_from_boundary_word
         sage: fibo = words.fibonacci_tile
         sage: W, rot180, steps = double_square_from_boundary_word(fibo(1))
-        sage: map(len, W)
+        sage: [len(w) for w in W]
         [2, 1, 2, 1, 2, 1, 2, 1]
         sage: W, rot180, steps = double_square_from_boundary_word(fibo(2))
-        sage: map(len, W)
+        sage: [len(w) for w in W]
         [8, 5, 8, 5, 8, 5, 8, 5]
         sage: W, rot180, steps = double_square_from_boundary_word(fibo(3))  # long time (6s)
-        sage: map(len, W)                                                   # long time
+        sage: [len(w) for w in W]
         [34, 21, 34, 21, 34, 21, 34, 21]
         sage: rot180                                                        # long time
         WordMorphism: 0->2, 1->3, 2->0, 3->1
@@ -2243,13 +2249,13 @@ def double_hexagon_from_boundary_word(ds):
         sage: from slabbe.double_square_tile import double_square_from_boundary_word
         sage: fibo = words.fibonacci_tile
         sage: W, rot180, steps = double_square_from_boundary_word(fibo(1))
-        sage: map(len, W)
+        sage: [len(w) for w in W]
         [2, 1, 2, 1, 2, 1, 2, 1]
         sage: W, rot180, steps = double_square_from_boundary_word(fibo(2))
-        sage: map(len, W)
+        sage: [len(w) for w in W]
         [8, 5, 8, 5, 8, 5, 8, 5]
         sage: W, rot180, steps = double_square_from_boundary_word(fibo(3))  # long time (6s)
-        sage: map(len, W)                                                   # long time
+        sage: [len(w) for w in W]
         [34, 21, 34, 21, 34, 21, 34, 21]
         sage: rot180                                                        # long time
         WordMorphism: 0->2, 1->3, 2->0, 3->1
@@ -2344,7 +2350,7 @@ def double_hexagon_from_integers(l0, l1, l2, l3, l4, l5):
     # Initial words where every letter is assumed to different
     # The involution exchanges the sign
     somme = l0 + l1 + l2 + l3 + l4 + l5
-    W = Words(range(1, somme+1) + range(-1, -(somme+1), -1))
+    W = Words(tuple(range(1, somme+1)) + tuple(range(-1, -(somme+1), -1)))
     w0 = W(range(1, l0+1))
     w1 = W(range(l0+1,l0+l1+1))
     w2 = W(range(l0+l1+1,l0+l1+l2+1))

@@ -25,7 +25,7 @@ AUTHOR :
 from __future__ import absolute_import, print_function
 
 import csv
-from six.itertools import izip_longest
+from six.moves import zip_longest
 from sage.functions.other import sqrt
 from sage.symbolic.constants import e
 
@@ -261,9 +261,9 @@ class RankingScale(object):
             names = ('Position',) + self._scale_names
             scales = (range(M),) + self._scales
             rows.append(names)
-            Z = izip_longest(*scales, fillvalue=0)
+            Z = zip_longest(*scales, fillvalue=0)
             csv_writer.writerow(names)
-            Z = izip_longest(*scales, fillvalue=0)
+            Z = zip_longest(*scales, fillvalue=0)
             next(Z) # enlever la premiere ligne de zeros
             csv_writer.writerows(Z)
             print("Creation of file %s" % filename)
@@ -304,7 +304,7 @@ class RankingScale(object):
         names = ('Position',) + self._scale_names
         scales = (range(M),) + self._scales
         rows.append(names)
-        Z = izip_longest(*scales, fillvalue=0)
+        Z = zip_longest(*scales, fillvalue=0)
         next(Z) # enlever la premiere ligne de zeros
         rows.extend(Z)
         return table(rows)

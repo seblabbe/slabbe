@@ -99,7 +99,7 @@ class MarkovTransformation(object):
             sage: T.automaton()
             Automaton with 12 states
         """
-        states = self._partition.keys()
+        states = list(self._partition.keys())
         autom = Automaton(initial_states=states, final_states=states)
         for key,values in self._transitions.items():
             for v in values:
@@ -117,7 +117,7 @@ class MarkovTransformation(object):
             312, -231, 123, -132, -321]
             defined by: Automaton with 12 states
         """
-        alphabet = self._partition.keys()
+        alphabet = list(self._partition.keys())
         return RegularLanguage(alphabet, self.automaton())
 
     @cached_method
@@ -160,10 +160,10 @@ class MarkovTransformation(object):
 
             sage: from slabbe.markov_transformation import markov_transformations
             sage: T = markov_transformations.Selmer()
-            sage: list( T.n_words_iterator(1))
-            [word: 321, word: 132, word: -123, word: 231, word: -312, word:
-            -213, word: 213, word: 312, word: -231, word: 123, word: -132,
-            word: -321]
+            sage: sorted( T.n_words_iterator(1))
+            [word: 213, word: 123, word: 132, word: 312, word: 321, word:
+            231, word: -213, word: -123, word: -132, word: -312, word:
+            -321, word: -231]
 
         TESTS::
 
@@ -179,20 +179,20 @@ class MarkovTransformation(object):
             sage: from slabbe.markov_transformation import markov_transformations
             sage: T = markov_transformations.Selmer()
             sage: A,B = list(zip(*list(T.n_matrices_iterator(1))))
-            sage: A
-            (word: 321, word: 132, word: -123, word: 231, word: -312, word:
-            -213, word: 213, word: 312, word: -231, word: 123, word: -132,
-            word: -321)
-            sage: B
-            (
-            [1 0 1]  [1 0 0]  [1 0 0]  [1 1 0]  [1 0 0]  [1 0 0]  [1 0 0]  [1 0 0]
-            [0 1 0]  [1 1 0]  [0 1 0]  [0 1 0]  [0 1 1]  [0 1 0]  [0 1 0]  [0 1 1]
-            [0 0 1], [0 0 1], [1 0 1], [0 0 1], [0 0 1], [0 1 1], [0 1 1], [0 0 1],
+            sage: sorted(A)
+            [word: 213, word: 123, word: 132, word: 312, word: 321, word:
+            231, word: -213, word: -123, word: -132, word: -312, word:
+            -321, word: -231]
+            sage: sorted(B)
+            [
+            [1 0 0]  [1 0 0]  [1 0 0]  [1 0 0]  [1 0 0]  [1 0 0]  [1 0 0]  [1 0 0]
+            [0 1 0]  [0 1 0]  [0 1 0]  [0 1 0]  [0 1 1]  [0 1 1]  [1 1 0]  [1 1 0]
+            [0 1 1], [0 1 1], [1 0 1], [1 0 1], [0 0 1], [0 0 1], [0 0 1], [0 0 1],
             <BLANKLINE>
-            [1 1 0]  [1 0 0]  [1 0 0]  [1 0 1]
-            [0 1 0]  [0 1 0]  [1 1 0]  [0 1 0]
-            [0 0 1], [1 0 1], [0 0 1], [0 0 1]
-            )
+            [1 0 1]  [1 0 1]  [1 1 0]  [1 1 0]
+            [0 1 0]  [0 1 0]  [0 1 0]  [0 1 0]
+            [0 0 1], [0 0 1], [0 0 1], [0 0 1]
+            ]
 
         TESTS::
 
@@ -213,28 +213,29 @@ class MarkovTransformation(object):
             sage: from slabbe.markov_transformation import markov_transformations
             sage: T = markov_transformations.Selmer()
             sage: A,B = zip(*list(T.n_cylinders_iterator(1)))
-            sage: A[:5]
-            (word: 321, word: 321, word: 132, word: 132, word: -123)
-            sage: B
-            (
-            [1 3 1]  [2 3 1]  [0 1 0]  [1 1 0]  [1 1 0]  [1 1 1]  [1 3 1]  [2 3 1]
-            [0 1 1]  [1 1 1]  [1 3 1]  [2 3 1]  [1 2 1]  [1 2 1]  [0 1 0]  [1 1 0]
-            [0 1 0], [1 1 0], [0 1 1], [1 1 1], [2 2 1], [2 2 1], [0 1 1], [1 1 1],
+            sage: sorted(A[:5])
+            [word: 213, word: 213, word: 123, word: 123, word: 132]
+            sage: sorted(B)
+            [
+            [0 1 0]  [0 1 0]  [0 1 1]  [0 1 1]  [1 1 0]  [1 1 0]  [1 1 0]  [1 1 0]
+            [0 1 1]  [1 3 1]  [0 1 0]  [1 3 1]  [1 1 1]  [1 2 1]  [2 2 1]  [2 3 1]
+            [1 3 1], [0 1 1], [1 3 1], [0 1 0], [2 3 1], [2 2 1], [1 2 1], [1 1 1],
             <BLANKLINE>
-            [1 2 1]  [1 2 1]  [1 2 1]  [1 2 1]  [0 1 1]  [1 1 1]  [0 1 1]  [1 1 1]
-            [2 2 1]  [2 2 1]  [1 1 0]  [1 1 1]  [0 1 0]  [1 1 0]  [1 3 1]  [2 3 1]
-            [1 1 0], [1 1 1], [2 2 1], [2 2 1], [1 3 1], [2 3 1], [0 1 0], [1 1 0],
+            [1 1 1]  [1 1 1]  [1 1 1]  [1 1 1]  [1 2 1]  [1 2 1]  [1 2 1]  [1 2 1]
+            [1 1 0]  [1 2 1]  [2 2 1]  [2 3 1]  [1 1 0]  [1 1 1]  [2 2 1]  [2 2 1]
+            [2 3 1], [2 2 1], [1 2 1], [1 1 0], [2 2 1], [2 2 1], [1 1 0], [1 1 1],
             <BLANKLINE>
-            [2 2 1]  [2 2 1]  [0 1 0]  [1 1 0]  [1 1 0]  [1 1 1]  [2 2 1]  [2 2 1]
-            [1 1 0]  [1 1 1]  [0 1 1]  [1 1 1]  [2 2 1]  [2 2 1]  [1 2 1]  [1 2 1]
-            [1 2 1], [1 2 1], [1 3 1], [2 3 1], [1 2 1], [1 2 1], [1 1 0], [1 1 1]
-            )
+            [1 3 1]  [1 3 1]  [2 2 1]  [2 2 1]  [2 2 1]  [2 2 1]  [2 3 1]  [2 3 1]
+            [0 1 0]  [0 1 1]  [1 1 0]  [1 1 1]  [1 2 1]  [1 2 1]  [1 1 0]  [1 1 1]
+            [0 1 1], [0 1 0], [1 2 1], [1 2 1], [1 1 0], [1 1 1], [1 1 1], [1 1 0]
+            ]
+
         """
         for w,m in self.n_matrices_iterator(n):
             if w:
                 parts = self._transitions[w[-1]]
             else:
-                parts = self._partition.keys()
+                parts = list(self._partition.keys())
             for part in parts:
                 part_matrix = self._partition[part]
                 yield w, m*part_matrix
@@ -300,16 +301,9 @@ class MarkovTransformation(object):
             \begin{document}
             \begin{tikzpicture}
             [scale=4]
-            \draw (-0.8660, -0.5000) -- (-0.3464, -0.2000);
-            \draw (0.0000, 0.0000) -- (-0.2165, -0.1250);
-            \draw (0.0000, -0.2000) -- (0.0000, 0.0000);
             ...
             ... 56 lines not printed (2702 characters in total) ...
             ...
-            \node at (0.2742, 0.0750) {$-132$};
-            \node at (0.1299, -0.0083) {$-132$};
-            \node at (-0.0722, -0.2750) {$-321$};
-            \node at (-0.0722, -0.1083) {$-321$};
             \end{tikzpicture}
             \end{document}
 

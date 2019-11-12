@@ -21,7 +21,7 @@ A subset from an iterable::
 
 A discrete 2d disk::
 
-    sage: D = DiscreteSubset(dimension=2, predicate=lambda x,y: x^2 + y^2 < 4)
+    sage: D = DiscreteSubset(dimension=2, predicate=lambda p: p[0]^2 + p[1]^2 < 4)
     sage: D.list()
     [(0, 0), (0, 1), (0, -1), (1, 0), (-1, 0), (-1, 1), (1, -1), (1, 1), (-1, -1)]
     sage: D
@@ -29,7 +29,7 @@ A discrete 2d disk::
 
 A discrete 3d ball::
 
-    sage: predicate = lambda x,y,z : x^2 + y^2 + z^2 <= 4
+    sage: predicate = lambda p: p[0]^2 + p[1]^2 + p[2]^2 <= 4
     sage: D = DiscreteSubset(dimension=3, predicate=predicate)
     sage: D
     Subset of ZZ^3
@@ -43,7 +43,7 @@ A discrete 3d ball::
 
 A discrete 4d hyperplane::
 
-    sage: predicate = lambda x,y,z,w : 0 <= 2*x + 3*y + 4*z + 5*w < 14
+    sage: predicate = lambda p: 0 <= 2*p[0] + 3*p[1] + 4*p[2] + 5*p[3] < 14
     sage: D = DiscreteSubset(dimension=4, predicate=predicate)
     sage: D
     Subset of ZZ^4
@@ -149,7 +149,7 @@ def convex_boundary(L):
     from sage.geometry.polyhedron.constructor import Polyhedron
     P = Polyhedron(L)
     from sage.geometry.polyhedron.plot import cyclic_sort_vertices_2d
-    return map(tuple, cyclic_sort_vertices_2d(P.vertices()))
+    return [tuple(v) for v in cyclic_sort_vertices_2d(P.vertices())]
     #if P.ambient_dim() != 2:
     #    raise ValueError("polyhedron ambient dim (=%s) must be <=2" % P.ambient_dim())
     #good = P.plot()._objects[-1]
@@ -210,7 +210,7 @@ class DiscreteSubset(SageObject):
 
     Providing a root may be necessary if zero (the origin) is not inside::
 
-        sage: predicate = lambda x,y : 4 < x^2 + y^2 < 25
+        sage: predicate = lambda p : 4 < p[0]^2 + p[1]^2 < 25
         sage: D = DiscreteSubset(dimension=2, predicate=predicate, roots=[(3,0)])
 
     TESTS:
@@ -272,14 +272,14 @@ class DiscreteSubset(SageObject):
 
         ::
 
-            sage: predicate = lambda x,y : 4 < x^2 + y^2 < 25
+            sage: predicate = lambda p : 4 < p[0]^2 + p[1]^2 < 25
             sage: D = DiscreteSubset(dimension=2, predicate=predicate, roots=[(3,0)])
             sage: D.roots()
             [(3, 0)]
 
         TESTS::
 
-            sage: predicate = lambda x,y : 4 < x^2 + y^2 < 25
+            sage: predicate = lambda p : 4 < p[0]^2 + p[1]^2 < 25
             sage: D = DiscreteSubset(dimension=2, predicate=predicate, roots=[(2,0)])
             sage: D.roots()
             Traceback (most recent call last):
@@ -467,7 +467,7 @@ class DiscreteSubset(SageObject):
 
         ::
 
-            sage: predicate = lambda x,y : 4 < x^2 + y^2 < 25
+            sage: predicate = lambda p : 4 < p[0]^2 + p[1]^2 < 25
             sage: D = DiscreteSubset(dimension=2, predicate=predicate, roots=[(3,0)])
             sage: D.an_element()
             (3, 0)
@@ -1290,13 +1290,13 @@ class DiscreteSubset(SageObject):
             sage: d = DiscreteTube([-1,1],[-1,1])
             sage: I = p & d
             sage: I.tikz_points()
-            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (0, 0, 0) {};
-            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (1, 0, 0) {};
-            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (0, 1, 0) {};
-            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (0, 0, 1) {};
-            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (0, 1, 1) {};
-            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (1, 1, 0) {};
-            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (1, 0, 1) {};
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (...) {};
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (...) {};
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (...) {};
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (...) {};
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (...) {};
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (...) {};
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (...) {};
 
 
         Using a filter on the points::
@@ -1324,7 +1324,7 @@ class DiscreteSubset(SageObject):
         """
         it = iter(self)
         if filter:
-            it = itertools.ifilter(filter, it)
+            it = (a for a in it if filter(a))
         s = ''
         if projmat:
             for pt in it:
@@ -1416,10 +1416,6 @@ class DiscreteSubset(SageObject):
             ...
             ... 311 lines not printed (20339 characters in total) ...
             ...
-            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (1, -4, 3) {};
-            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (4, 4, -1) {};
-            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (5, 3, -1) {};
-            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (6, 2, -1) {};
             \end{tikzpicture}
             \end{document}
         """

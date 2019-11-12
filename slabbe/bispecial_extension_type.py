@@ -657,8 +657,11 @@ class ExtensionType(object):
             sage: from slabbe import ExtensionType1to1
             sage: L = [(1,2), (2,2), (3,1), (3,2), (3,3)]
             sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
-            sage: E.left_right_projection()
-            (Counter({3: 3, 1: 1, 2: 1}), Counter({2: 3, 1: 1, 3: 1}))
+            sage: left, right = E.left_right_projection()
+            sage: dict(left)
+            {1: 1, 2: 1, 3: 3}
+            sage: dict(right)
+            {1: 1, 2: 3, 3: 1}
 
         ::
 
@@ -1311,13 +1314,14 @@ class ExtensionType(object):
         ::
 
             sage: from slabbe.tikz_picture import TikzPicture
-            sage: tikz = TikzPicture.from_poset(P)
-            sage: _ = tikz.pdf(view=False)
+            sage: tikz = TikzPicture.from_poset(P)         # optional dot2tex
+            sage: _ = tikz.pdf(view=False)                 # optional dot2tex
         """
         from sage.combinat.posets.posets import Poset
         is_suffix = lambda w,u: Word(w).is_suffix(Word(u))
         WS = [self.weakstrong_sublanguage(language, initial, substitutions_dict, depth) 
                                   for depth in range(depth)]
+        from functools import reduce
         F = reduce(lambda x,y: x.union(y), WS)
         P = Poset((F,is_suffix))
         return P
@@ -1592,7 +1596,7 @@ class ExtensionType1to1(ExtensionType):
         lines = []
         lines.append(r"\begin{array}{r|rrr}")
         chignons = "%sw%s" % self._chignons if self._chignons != ('','') else 'v'
-        lines.append(" & ".join([chignons] + map(str, self._alphabet)) + r'\\')
+        lines.append(" & ".join([chignons] + [str(a) for a in self._alphabet]) + r'\\')
         lines.append(r"\hline")
         for a in self._alphabet:
             line = [str(a)]
@@ -2154,7 +2158,7 @@ class ExtensionTypeLong(ExtensionType):
             True
 
         """
-        return map(len, self._chignons) == [0,0]
+        return all(len(c)==0 for c in self._chignons)
 
     def factors_length_k(self, k=None):
         r"""
@@ -2600,7 +2604,7 @@ class ExtensionTypeLong(ExtensionType):
             sage: data = [((1, 1), (2,)), ((2, 1), (3,)), ((2, 1), (2,)),
             ....:         ((1, 2), (1,)), ((2, 1), (1,)), ((1, 3), (2,))]
             sage: F = [(1,1,1), (1,2,1), (1,1,3), (3,1,2), (2,1,1), (1,1,2), (1,3,1)]
-            sage: F = map(Word, F)
+            sage: F = [Word(f) for f in F]
             sage: E4_1 = ExtensionTypeLong(data, (1,2,3), factor=Word([1]),
             ....:                          factors_length_k=F, empty=False)
             sage: X,Y = E4_1.apply(b21)
@@ -2620,9 +2624,9 @@ class ExtensionTypeLong(ExtensionType):
         word_before = defaultdict(Word)
         word_after = defaultdict(Word)
         for key,value in letters_before.items():
-            word_before[key] = longest_common_suffix(map(m, value))
+            word_before[key] = longest_common_suffix([m(v) for v in value])
         for key,value in letters_after.items():
-            word_after[key] = longest_common_prefix(map(m, value))
+            word_after[key] = longest_common_prefix([m(v) for v in value])
         word_before = dict(word_before)
         word_after = dict(word_after)
         #print(word_before)
@@ -2661,7 +2665,7 @@ class ExtensionTypeLong(ExtensionType):
         for chignons, extension in extensions.items():
             if len(chignons[0]) + len(chignons[1]) > growth_limit:
                 continue
-            empty = self.is_empty() and map(len, chignons) == [0,0]
+            empty = self.is_empty() and all(len(c)==0 for c in self._chignons)
             factor = chignons[0] * m(self._factor) * chignons[1]
             e = ExtensionTypeLong(extension, alphabet=self._alphabet,
                     factor=factor, chignons=chignons, factors_length_k=Fimage,
@@ -3050,7 +3054,7 @@ def rec_enum_set_under_language_joined_from_pairs(pairs, language,
         sage: LBrun = languages.Brun()
         sage: data = [((1,1),(2,)),((2,1),(3,)),((2,1),(2,)),
         ....:         ((1,2),(1,)),((2,1),(1,)),((1,3),(2,))]
-        sage: factors = map(Word,[(1,1,1),(1,2,1),(1,1,3),(3,1,2),(2,1,1),(1,1,2),(1,3,1)])
+        sage: factors = [Word(w) for w in [(1,1,1),(1,2,1),(1,1,3),(3,1,2),(2,1,1),(1,1,2),(1,3,1)]]
         sage: E4_1 = ExtensionTypeLong(data, (1,2,3), factor=Word([1]), factors_length_k=factors)
         sage: pairs = [(E4_1, 321)]
         sage: f = lambda S:any(len(ext.left_word_extensions())>2 for ext in S)
