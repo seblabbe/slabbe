@@ -260,6 +260,26 @@ class ExtensionType(object):
         """
         #return hash((self._pairs, self._factor))
         return hash(self._pairs)
+    def __eq__(self, other):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import ExtensionType1to1
+            sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
+            sage: E = ExtensionType1to1(L, [1,2,3])
+            sage: ar = WordMorphism({1:[1,3],2:[2,3],3:[3]})
+            sage: E.apply(ar) == E
+            False
+            sage: F = ExtensionType1to1(L, [1,2,3])
+            sage: E == F
+            True
+        """
+        if not isinstance(other, type(self)):
+            return False
+        else:
+            #return self._factor == other._factor and self._pairs == other._pairs
+            return self._pairs == other._pairs
+
     def __iter__(self):
         r"""
         EXAMPLES::
@@ -1611,26 +1631,6 @@ class ExtensionType1to1(ExtensionType):
         lines.append(r"\end{array}")
         return '\n'.join(lines)
 
-    def __eq__(self, other):
-        r"""
-        EXAMPLES::
-
-            sage: from slabbe import ExtensionType1to1
-            sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
-            sage: E = ExtensionType1to1(L, [1,2,3])
-            sage: ar = WordMorphism({1:[1,3],2:[2,3],3:[3]})
-            sage: E.apply(ar) == E
-            False
-            sage: F = ExtensionType1to1(L, [1,2,3])
-            sage: E == F
-            True
-        """
-        if not isinstance(other, ExtensionType1to1):
-            return False
-        else:
-            #return self._factor == other._factor and self._pairs == other._pairs
-            return self._pairs == other._pairs
-
     def chignons_multiplicity_tuple(self):
         r"""
         EXAMPLES::
@@ -2340,26 +2340,6 @@ class ExtensionTypeLong(ExtensionType):
         t = table(rows=lines, header_row=R, header_column=[Ew]+L)
         t.options(header_column=False,header_row=False,align='center')
         return t
-
-    def __eq__(self, other):
-        r"""
-        EXAMPLES::
-
-            sage: from slabbe import ExtensionType1to1
-            sage: L = [(1,3), (2,3), (3,1), (3,2), (3,3)]
-            sage: E = ExtensionType1to1(L, [1,2,3])
-            sage: ar = WordMorphism({1:[1,3],2:[2,3],3:[3]})
-            sage: E.apply(ar) == E
-            False
-            sage: F = ExtensionType1to1(L, [1,2,3])
-            sage: E == F
-            True
-        """
-        if not isinstance(other, ExtensionTypeLong):
-            return False
-        else:
-            #return self._factor == other._factor and self._pairs == other._pairs
-            return self._pairs == other._pairs
 
     def chignons_multiplicity_tuple(self):
         r"""

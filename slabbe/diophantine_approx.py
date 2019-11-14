@@ -528,25 +528,16 @@ def mult_cont_frac_vs_dirichlet_dict(v, dirichlet, algos):
         sage: it = best_simultaneous_convergents(v)
         sage: dirichlet = [next(it) for _ in range(3)]
         sage: mult_cont_frac_vs_dirichlet_dict([e,pi], dirichlet, [Brun(), ARP()])
-        {Arnoux-Rauzy-Poincar\'e 3-dimensional continued fraction algorithm:
-         defaultdict(<type 'list'>, {(19, 22, 7): [6, 7, 8, 9, 10, 11],
-         (3, 3, 1): [3], (1843, 2130, 678): [16, 17]}),
-         Brun 3-dimensional continued fraction algorithm:
-         defaultdict(<type 'list'>, {(19, 22, 7): [9, 10, 11, 12, 13,
-         14, 15, 16], (3, 3, 1): [4, 5], (1843, 2130, 678): [22, 23,
-         24, 25, 26, 27]})}
+        {Arnoux-Rauzy-Poincar\'e 3-dimensional continued fraction algorithm: defaultdict(<class 'list'>, {(3, 3, 1): [3], (19, 22, 7): [6, 7, 8, 9, 10, 11], (1843, 2130, 678): [16, 17]}),
+         Brun 3-dimensional continued fraction algorithm: defaultdict(<class 'list'>, {(3, 3, 1): [4, 5], (19, 22, 7): [9, 10, 11, 12, 13, 14, 15, 16], (1843, 2130, 678): [22, 23, 24, 25, 26, 27]})}
 
      Or from precomputed Dirichlet approximations::
 
         sage: dirichlet = [(3, 3, 1), (19, 22, 7), (1843, 2130, 678), (51892, 59973, 19090)]
         sage: mult_cont_frac_vs_dirichlet_dict([e,pi], dirichlet, [Brun(), ARP()])
-        {Arnoux-Rauzy-Poincar\'e 3-dimensional continued fraction algorithm:
-         defaultdict(<type 'list'>, {(19, 22, 7): [6, 7, 8, 9, 10, 11],
-         (3, 3, 1): [3], (1843, 2130, 678): [16, 17]}),
-         Brun 3-dimensional continued fraction algorithm:
-         defaultdict(<type 'list'>, {(19, 22, 7): [9, 10, 11, 12, 13,
-         14, 15, 16], (3, 3, 1): [4, 5], (1843, 2130, 678): [22, 23,
-         24, 25, 26, 27]})}
+        {Arnoux-Rauzy-Poincar\'e 3-dimensional continued fraction algorithm: defaultdict(<class 'list'>, {(3, 3, 1): [3], (19, 22, 7): [6, 7, 8, 9, 10, 11], (1843, 2130, 678): [16, 17]}),
+         Brun 3-dimensional continued fraction algorithm: defaultdict(<class 'list'>, {(3, 3, 1): [4, 5], (19, 22, 7): [9, 10, 11, 12, 13, 14, 15, 16], (1843, 2130, 678): [22, 23, 24, 25, 26, 27]})}
+
     """
     dirichlet_set = set(tuple(u) for u in dirichlet)
     MAX = max(u[-1] for u in dirichlet)

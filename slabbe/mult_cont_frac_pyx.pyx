@@ -964,6 +964,18 @@ cdef class MCFAlgorithm(object):
         """
         return "{} {}-dimensional continued fraction algorithm".format(self.name(), self.dim)
 
+    def __hash__(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac_pyx import Reverse, Brun
+            sage: hash(Reverse())    # random
+            -232089942010536275
+            sage: hash(Brun())       # random
+            -3664667051634349645
+        """
+        return hash((self.class_name(), self.dim))
+
     def __call__(self, PairPoint P):
         r"""
         Wrapper for the cdef call method.
