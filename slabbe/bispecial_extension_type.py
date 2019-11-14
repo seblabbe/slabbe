@@ -2917,27 +2917,28 @@ def remove_extension_types_subsets(extensions):
         sage: E1 = ExtensionTypeLong(data, (1,2,3))
         sage: R = E1.rec_enum_set_under_sadic([132]*2+[123]*6, S)
         sage: A = [E for E,w,h in R.graded_component(8)]
-        sage: sorted(a.factor() for a in A)
+        sage: A.sort(key=lambda a:(a.factor(), len(a.left_word_extensions())))
+        sage: [a.factor() for a in A]
         [word: 22322322322322322322,
          word: 2322322322322322322,
          word: 2322322322322322322]
-        sage: A[1].is_subset(A[0])
+        sage: A[1].is_subset(A[2])
         True
         sage: from slabbe.bispecial_extension_type import remove_extension_types_subsets
         sage: B = remove_extension_types_subsets(A)
         sage: B
-        [  E(w)   1   2   3
+        [  E(w)   1   3
+            32        X
+            23    X
+         m(w)=-1, weak,   
+           E(w)   1   2   3
             21    X   X   X
             22            X
             32    X
-         m(w)=1, strong, 
-           E(w)   1   3
-            32        X
-            23    X
-         m(w)=-1, weak]
+         m(w)=1, strong]
         sage: [b.factor() for b in B]
-        [word: 2322322322322322322, 
-         word: 22322322322322322322]
+        [word: 22322322322322322322,
+         word: 2322322322322322322]
     """
     d = defaultdict(list)
     for E in extensions:
