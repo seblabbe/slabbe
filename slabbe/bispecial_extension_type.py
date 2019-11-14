@@ -255,7 +255,7 @@ class ExtensionType(object):
             sage: E = ExtensionType1to1(L, alphabet=(1,2,3))
             sage: hash(E)
             -73163835              # 32-bit
-            -3118706505388155963   # 64-bit
+            5904352424964049776    # 64-bit
 
         """
         #return hash((self._pairs, self._factor))
@@ -839,23 +839,24 @@ class ExtensionType(object):
             sage: [len(R.graded_component(i)) for i in range(9)]
             [1, 3, 4, 5, 6, 7, 8, 9, 16]
             sage: B = R.graded_component(8)
-            sage: [(Z.factor(),Z.multiplicity()) for Z,_,_ in B]
-            [(word: 2322322322322322322, 1),
+            sage: sorted((Z.factor(),Z.multiplicity()) for Z,_,_ in B)
+            [(word: , 0),
+             (word: 2, 0),
              (word: 22, 0),
              (word: 22322, 0),
-             (word: 2322, 0),
-             (word: 2, 0),
-             (word: 22322322322322322322, -1),
-             (word: 2322322322322, 0),
-             (word: 2322322, 0),
-             (word: , 0),
-             (word: 22322322322, 0),
-             (word: 22322322322322322, 0),
              (word: 22322322, 0),
-             (word: 2322322322322322322, 0),
+             (word: 22322322322, 0),
              (word: 22322322322322, 0),
+             (word: 22322322322322322, 0),
+             (word: 22322322322322322322, -1),
+             (word: 2322, 0),
+             (word: 2322322, 0),
+             (word: 2322322322, 0),
+             (word: 2322322322322, 0),
              (word: 2322322322322322, 0),
-             (word: 2322322322, 0)]
+             (word: 2322322322322322322, 0),
+             (word: 2322322322322322322, 1)]
+
         """
         def child(V):
             Y,w,history = V
@@ -1128,7 +1129,7 @@ class ExtensionType(object):
         if raw:
             return G
         else:
-            edges = set((u,v,history[0]) for ((u,_,_),(v,_,history),_) in G.edges())
+            edges = set((u,v,history[0]) for ((u,_,_),(v,_,history),_) in G.edges(sort=False))
             return DiGraph(edges, format='list_of_edges', loops=True, multiedges=True)
 
     def graph_under_sadic_joined(self, substitutions, 
@@ -1173,7 +1174,7 @@ class ExtensionType(object):
         if raw:
             return G
         else:
-            edges = set((u,v,history[0]) for ((u,_),(v,history),_) in G.edges())
+            edges = set((u,v,history[0]) for ((u,_),(v,history),_) in G.edges(sort=False))
             return DiGraph(edges, format='list_of_edges', loops=True, multiedges=True)
 
     def graph_under_language(self, language, initial, substitutions_dict,
@@ -1212,7 +1213,7 @@ class ExtensionType(object):
                 substitutions_dict, keep_empty, label='previous',
                 growth_limit=growth_limit)
         G = recursively_enumerated_set_to_digraph(R, max_depth=max_depth)
-        edges = set((u,v,label) for ((u,_),(v,(label,)),_) in G.edges())
+        edges = set((u,v,label) for ((u,_),(v,(label,)),_) in G.edges(sort=False))
         return DiGraph(edges, format='list_of_edges', loops=True, multiedges=True)
 
     def graph_under_language_joined(self, language, initial, substitutions_dict,
@@ -1256,7 +1257,7 @@ class ExtensionType(object):
                 substitutions_dict, keep_empty, label='previous',
                 growth_limit=growth_limit)
         G = recursively_enumerated_set_to_digraph(R, max_depth=max_depth)
-        edges = set((u,v,label) for ((u,_),(v,(label,)),_) in G.edges())
+        edges = set((u,v,label) for ((u,_),(v,(label,)),_) in G.edges(sort=False))
         return DiGraph(edges, format='list_of_edges', loops=True, multiedges=True)
 
     def weakstrong_sublanguage(self, language, initial, substitutions_dict, depth, keep_empty=False):
@@ -1372,24 +1373,24 @@ class ExtensionType(object):
             ....:     2), (1,)), ((1, 2), (2,)), ((1, 2), (3,)), ((2, 3), (1,))]
             sage: E1 = ExtensionTypeLong(data, (1,2,3))
             sage: L = E1.distinct_bispecial_factors_under_sadic([132]*2+[123]*6, S)
-            sage: [Z.factor() for Z in L]
-            [word: 2322322322322,
-             word: ,
+            sage: sorted(Z.factor() for Z in L)
+            [word: ,
              word: 2,
              word: 22,
-             word: 2322322322322322,
-             word: 22322322322322322,
-             word: 2322,
              word: 22322,
-             word: 2322322322322322322,
-             word: 22322322322322322322,
-             word: 2322322,
              word: 22322322,
-             word: 2322322322,
              word: 22322322322,
-             word: 22322322322322]
-            sage: [Z.multiplicity() for Z in L]
-            [0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0]
+             word: 22322322322322,
+             word: 22322322322322322,
+             word: 22322322322322322322,
+             word: 2322,
+             word: 2322322,
+             word: 2322322322,
+             word: 2322322322322,
+             word: 2322322322322322,
+             word: 2322322322322322322]
+            sage: sorted(Z.multiplicity() for Z in L)
+            [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
         """
         R = self.rec_enum_set_under_sadic(substitutions, substitutions_dict, keep_empty)
         B = R.graded_component(len(substitutions))
@@ -2407,14 +2408,17 @@ class ExtensionTypeLong(ExtensionType):
             sage: F = sorted(E51.factors_length_k(3))
             sage: F
             [word: 111, word: 112, word: 113, word: 121, word: 131, word: 211, word: 312]
-            sage: E.letters_before_and_after(F)
-            ({word: 11: {word: 1, word: 2},
-              word: 12: {word: 1, word: 3},
-              word: 13: {word: 1},
-              word: 21: {word: 1}},
-             {word: 1: {word: 11, word: 12, word: 13, word: 21, word: 31},
-              word: 2: {word: 11},
-              word: 3: {word: 12}})
+            sage: before,after = E.letters_before_and_after(F)
+            sage: before
+            {word: 11: {word: 1, word: 2},
+             word: 12: {word: 1, word: 3},
+             word: 13: {word: 1},
+             word: 21: {word: 1}}
+            sage: after
+            {word: 1: {word: 11, word: 12, word: 13, word: 21, word: 31},
+             word: 2: {word: 11},
+             word: 3: {word: 12}}
+
         """
         possible_before = defaultdict(set)
         for left in self.left_word_extensions():
@@ -2913,10 +2917,10 @@ def remove_extension_types_subsets(extensions):
         sage: E1 = ExtensionTypeLong(data, (1,2,3))
         sage: R = E1.rec_enum_set_under_sadic([132]*2+[123]*6, S)
         sage: A = [E for E,w,h in R.graded_component(8)]
-        sage: [a.factor() for a in A]
-        [word: 2322322322322322322,
+        sage: sorted(a.factor() for a in A)
+        [word: 22322322322322322322,
          word: 2322322322322322322,
-         word: 22322322322322322322]
+         word: 2322322322322322322]
         sage: A[1].is_subset(A[0])
         True
         sage: from slabbe.bispecial_extension_type import remove_extension_types_subsets

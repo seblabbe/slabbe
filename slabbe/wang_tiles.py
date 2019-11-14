@@ -578,13 +578,13 @@ class WangTileSet(object):
             sage: T = WangTileSet(tiles)
             sage: M = T.system_of_density_equations()
             sage: M
-            [ 0  1  1 -1  0  0  0  0]
-            [ 0 -1  0  1  0 -1  0  0]
-            [ 0  0 -1  0  0  1  0  0]
-            [ 1  1 -1  0  0 -1  1  0]
-            [ 0 -1  1  0 -1  1 -1  0]
-            [-1  0  0  0  1  0  0  0]
             [ 1  1  1  1  1  1  1  1]
+            [ 1  1 -1  0  0 -1  1  0]
+            [ 0  1  1 -1  0  0  0  0]
+            [ 0  0 -1  0  0  1  0  0]
+            [ 0 -1  1  0 -1  1 -1  0]
+            [ 0 -1  0  1  0 -1  0  0]
+            [-1  0  0  0  1  0  0  0]
             sage: M.rank()
             5
         """
@@ -602,6 +602,7 @@ class WangTileSet(object):
         rows = list(vertical.values())
         rows.extend(horizontal.values())
         rows.append(M([1 for _ in range(len(self)+1)]))
+        rows.sort(reverse=True)
         return matrix(rows)
 
     def polyhedron_of_densities(self):

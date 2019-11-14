@@ -74,7 +74,7 @@ class Language(object):
             sage: Language(alphabet=['a', 'b'])
             Language of finite words over alphabet ['a', 'b']
         """
-        self._alphabet = alphabet
+        self._alphabet = sorted(alphabet)
 
     def __repr__(self):
         r"""
@@ -481,7 +481,7 @@ class LanguageGenerator(object):
             sage: from slabbe.language import languages
             sage: L = languages.Cassaigne()
             sage: L
-            Regular language over [11, 22, 122, 211, 121, 212]
+            Regular language over [11, 22, 121, 122, 211, 212]
             defined by: Automaton with 1 state
             sage: [L.complexity(n) for n in range(4)]
             [1, 6, 36, 216]

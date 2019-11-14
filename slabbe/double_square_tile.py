@@ -1087,27 +1087,15 @@ class DoubleSquare(SageObject):
             Traceback (most recent call last):
             ...
             ValueError: not reducible, because self is nondegenerate and
-            d_0 == d_1 == 3. Also, the turning number (=0) must be +1 or -1
-            for the reduction to apply.
+            d_0 == d_1 == 3
 
         TESTS::
 
             sage: D = DoubleSquare((5,4,3,4))
-            sage: D
-            Double Square Tile
-              w0 = 90128   w4 = 40123
-              w1 = 7659    w5 = 7654
-              w2 = 012     w6 = 012
-              w3 = 3765    w7 = 8765
-            (|w0|, |w1|, |w2|, |w3|) = (5, 4, 3, 4)
-            (d0, d1, d2, d3)         = (8, 8, 8, 8)
-            (n0, n1, n2, n3)         = (0, 0, 0, 0)
             sage: D.reduce()
             Traceback (most recent call last):
             ...
-            ValueError: not reducible, because self is nondegenerate and
-            d_0 == d_1 == 8. Also, the turning number (=-1) must be +1 or
-            -1 for the reduction to apply.
+            ValueError: not reducible, because self is nondegenerate and d_0 == d_1 == 8
         """
         # We verify if we have a singular DS
         if self.is_singular():
@@ -1137,10 +1125,8 @@ class DoubleSquare(SageObject):
         if not self.is_degenerate() and self.d(0) == self.d(1):
             if len(self.alphabet()) == 4:
                 assert self.turning_number() not in [-1,1], "Lemma 16 of [BGL2012]"
-            raise ValueError('not reducible, because self is nondegenerate and ' +
-                    'd_0 == d_1 == %s. ' % self.d(0)+
-                    "Also, the turning number (=%s) must be " % self.turning_number()+
-                    "+1 or -1 for the reduction to apply.")
+            raise ValueError('not reducible, because self is nondegenerate and '
+                   'd_0 == d_1 == {}'.format(self.d(0)))
 
         # We should not get here
         raise ValueError("This double square seems to be not reducible,"
@@ -1260,8 +1246,7 @@ class DoubleSquare(SageObject):
             Traceback (most recent call last):
             ...
             ValueError: not reducible, because self is nondegenerate and
-            d_0 == d_1 == 3. Also, the turning number (=0) must be +1 or -1
-            for the reduction to apply.
+            d_0 == d_1 == 3
         """
         ds = self
         while not ds.is_singular():
@@ -1547,7 +1532,7 @@ class DoubleSquare(SageObject):
             \hline
             \end{tabular}
         """
-        remove_coma = lambda s:s.translate(None, ',')
+        remove_coma = lambda s:s.replace(',', '')
         if_empty = lambda s:'\\varepsilon' if len(s) == 0 else s
         u = [if_empty(remove_coma(self.u(i).string_rep())) for i in range(4)]
         v = [if_empty(remove_coma(self.v(i).string_rep())) for i in range(4)]
@@ -2083,7 +2068,7 @@ def double_square_from_boundary_word(ds):
         sage: [len(w) for w in W]
         [8, 5, 8, 5, 8, 5, 8, 5]
         sage: W, rot180, steps = double_square_from_boundary_word(fibo(3))  # long time (6s)
-        sage: [len(w) for w in W]
+        sage: [len(w) for w in W]                                           # long time
         [34, 21, 34, 21, 34, 21, 34, 21]
         sage: rot180                                                        # long time
         WordMorphism: 0->2, 1->3, 2->0, 3->1
@@ -2255,7 +2240,7 @@ def double_hexagon_from_boundary_word(ds):
         sage: [len(w) for w in W]
         [8, 5, 8, 5, 8, 5, 8, 5]
         sage: W, rot180, steps = double_square_from_boundary_word(fibo(3))  # long time (6s)
-        sage: [len(w) for w in W]
+        sage: [len(w) for w in W]                                           # long time
         [34, 21, 34, 21, 34, 21, 34, 21]
         sage: rot180                                                        # long time
         WordMorphism: 0->2, 1->3, 2->0, 3->1
@@ -2319,7 +2304,7 @@ def double_hexagon_from_integers(l0, l1, l2, l3, l4, l5):
 
         sage: from slabbe.double_square_tile import double_hexagon_from_integers
         sage: w,rot180,steps = double_hexagon_from_integers(1,3,1,6,1,6)
-        sage: w
+        sage: w                      # alphabet is random
         (Path: 2,
          Path: 222,
          Path: 2,

@@ -81,14 +81,12 @@ class MarkovTransformation(object):
             sage: from slabbe.markov_transformation import markov_transformations
             sage: T = markov_transformations.Selmer()
             sage: T
-            Markov Transformation with transitions
-            {321: [321, -321], 132: [132, -132], -123: [-132, -312], 231:
-            [231, -231], -312: [-321, -231], -213: [-231, -321], 213: [213,
-            -213], 312: [312, -312], -231: [-213, -123], 123: [123, -123],
-            -132: [-123, -213], -321: [-312, -132]}
+            Markov Transformation on 12 atoms with alphabet 
+            [-321, -312, -231, -213, -132, -123, 123, 132, 213, 231, 312, 321]
         """
-        return ("Markov Transformation with "
-               "transitions\n{}".format(self._transitions))
+        return ("Markov Transformation on {} atoms "
+               "with alphabet \n{}".format(len(self._partition),
+                                sorted(self._partition.keys())))
 
     def automaton(self):
         r"""
@@ -113,8 +111,8 @@ class MarkovTransformation(object):
             sage: from slabbe.markov_transformation import markov_transformations
             sage: T = markov_transformations.Selmer()
             sage: T.language()
-            Regular language over [321, 132, -123, 231, -312, -213, 213,
-            312, -231, 123, -132, -321]
+            Regular language over [-321, -312, -231, -213, -132, -123, 
+            123, 132, 213, 231, 312, 321]
             defined by: Automaton with 12 states
         """
         alphabet = list(self._partition.keys())
@@ -160,10 +158,19 @@ class MarkovTransformation(object):
 
             sage: from slabbe.markov_transformation import markov_transformations
             sage: T = markov_transformations.Selmer()
-            sage: sorted( T.n_words_iterator(1))
-            [word: 213, word: 123, word: 132, word: 312, word: 321, word:
-            231, word: -213, word: -123, word: -132, word: -312, word:
-            -321, word: -231]
+            sage: sorted(T.n_words_iterator(1))
+            [word: -321,
+             word: -312,
+             word: -231,
+             word: -213,
+             word: -132,
+             word: -123,
+             word: 123,
+             word: 132,
+             word: 213,
+             word: 231,
+             word: 312,
+             word: 321]
 
         TESTS::
 
@@ -180,9 +187,18 @@ class MarkovTransformation(object):
             sage: T = markov_transformations.Selmer()
             sage: A,B = list(zip(*list(T.n_matrices_iterator(1))))
             sage: sorted(A)
-            [word: 213, word: 123, word: 132, word: 312, word: 321, word:
-            231, word: -213, word: -123, word: -132, word: -312, word:
-            -321, word: -231]
+            [word: -321,
+             word: -312,
+             word: -231,
+             word: -213,
+             word: -132,
+             word: -123,
+             word: 123,
+             word: 132,
+             word: 213,
+             word: 231,
+             word: 312,
+             word: 321]
             sage: sorted(B)
             [
             [1 0 0]  [1 0 0]  [1 0 0]  [1 0 0]  [1 0 0]  [1 0 0]  [1 0 0]  [1 0 0]
@@ -213,8 +229,11 @@ class MarkovTransformation(object):
             sage: from slabbe.markov_transformation import markov_transformations
             sage: T = markov_transformations.Selmer()
             sage: A,B = zip(*list(T.n_cylinders_iterator(1)))
-            sage: sorted(A[:5])
-            [word: 213, word: 213, word: 123, word: 123, word: 132]
+            sage: sorted(A)
+            [word: -321, word: -321, word: -312, word: -312, word: -231, word: -231,
+             word: -213, word: -213, word: -132, word: -132, word: -123, word: -123,
+             word: 123, word: 123, word: 132, word: 132, word: 213, word: 213,
+             word: 231, word: 231, word: 312, word: 312, word: 321, word: 321]
             sage: sorted(B)
             [
             [0 1 0]  [0 1 0]  [0 1 1]  [0 1 1]  [1 1 0]  [1 1 0]  [1 1 0]  [1 1 0]
@@ -363,11 +382,8 @@ class MarkovTransformationGenerators(object):
             sage: from slabbe.markov_transformation import markov_transformations
             sage: T = markov_transformations.Selmer()
             sage: T
-            Markov Transformation with transitions
-            {321: [321, -321], 132: [132, -132], -123: [-132, -312], 231:
-            [231, -231], -312: [-321, -231], -213: [-231, -321], 213: [213,
-            -213], 312: [312, -312], -231: [-213, -123], 123: [123, -123],
-            -132: [-123, -213], -321: [-312, -132]}
+            Markov Transformation on 12 atoms with alphabet 
+            [-321, -312, -231, -213, -132, -123, 123, 132, 213, 231, 312, 321]
         """
         L = {}
         L[123] = L[-123] = matrix(3, [1,0,0, 0,1,0, 1,0,1])
