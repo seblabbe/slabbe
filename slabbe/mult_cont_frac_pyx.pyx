@@ -618,6 +618,9 @@ cdef class PairPoint:
             i = 1; j = 2; k = 0;
         elif self.x[2] <= self.x[1] <= self.x[0]:
             i = 2; j = 1; k = 0;
+        else:
+            raise ValueError('limit case: reach set of measure zero: {}'.format(self))
+
         self.x[k] -= self.x[j]
         self.x[j] -= self.x[i]
         self.a[j] += self.a[k]
@@ -764,7 +767,7 @@ cdef class MCFAlgorithm(object):
             sage: mcf.ARP().branches()
             {1, 2, 3, 123, 132, 213, 231, 312, 321}
         """
-        cdef unsigned int i         # loop counter
+        cdef int i         # loop counter
         cdef PairPoint P
         cdef int branch
         S = set()
@@ -797,7 +800,7 @@ cdef class MCFAlgorithm(object):
             sage: Brun()._test_definition(10000)
         """
         cdef double s,t             # temporary variables
-        cdef unsigned int i         # loop counter
+        cdef int i         # loop counter
         cdef PairPoint P,R
         cdef int branch
 
@@ -863,7 +866,7 @@ cdef class MCFAlgorithm(object):
             sage: t = Brun()._test_coherence()
         """
         from sage.modules.free_module_element import vector
-        cdef unsigned int i         # loop counter
+        cdef int i         # loop counter
         cdef PairPoint P,R
         cdef int branch
 
@@ -1493,7 +1496,7 @@ cdef class MCFAlgorithm(object):
             branch = self.call(P)
         return (P.x[0], P.x[1], P.x[2])
 
-    def _invariant_measure_dict(self, int n_iterations, int ndivs, v=None,
+    def _invariant_measure_dict(self, unsigned int n_iterations, int ndivs, v=None,
             int norm=1, verbose=False):
         r"""
         INPUT:
@@ -1553,7 +1556,8 @@ cdef class MCFAlgorithm(object):
         DEF NDIVS = 100
         assert ndivs <= NDIVS, "ndivs(=%s) must be less or equal to %s" % (ndivs, NDIVS)
         cdef double s
-        cdef int i,j
+        cdef unsigned int i
+        cdef int j,k
         cdef int X,Y
         cdef int branch
 
@@ -1561,9 +1565,9 @@ cdef class MCFAlgorithm(object):
         # change this to something else
         # see https://groups.google.com/forum/?fromgroups=#!topic/sage-devel/NCBmj2KjwEM
         cpdef int C[NDIVS][NDIVS]
-        for j from 0 <= j <= ndivs:
-            for i from 0 <= i <= ndivs:
-                C[i][j] = 0
+        for k from 0 <= k <= ndivs:
+            for j from 0 <= j <= ndivs:
+                C[j][j] = 0
 
         cdef PairPoint P = PairPoint(self.dim)
         P.sort()
@@ -1587,14 +1591,14 @@ cdef class MCFAlgorithm(object):
 
         # Translate the counter into a python dict
         D = {}
-        for j from 0 <= j <= ndivs:
-            for i from 0 <= i <= ndivs:
-                c = C[i][j]
+        for k from 0 <= k <= ndivs:
+            for j from 0 <= j <= ndivs:
+                c = C[j][k]
                 if c > 0:
-                    D[(i,j)] = c
+                    D[(j,k)] = c
         return D
 
-    def _natural_extension_dict(self, int n_iterations, int norm_xyz=0,
+    def _natural_extension_dict(self, unsigned int n_iterations, int norm_xyz=0,
             int norm_uvw=1, verbose=False):
         r"""
         INPUT:
@@ -1698,7 +1702,7 @@ cdef class MCFAlgorithm(object):
 
         return domain_left, image_left, domain_right, image_right
 
-    def lyapunov_exponents(self, start=None, int n_iterations=1000, verbose=False):
+    def lyapunov_exponents(self, start=None, unsigned int n_iterations=1000, verbose=False):
         r"""
         Return the lyapunov exponents (theta1, theta2, 1-theta2/theta1)
 
@@ -1738,15 +1742,16 @@ cdef class MCFAlgorithm(object):
         cdef double theta1=0, theta2=0    # values of Lyapunov exponents
         cdef double theta1c=0, theta2c=0  # compensation (for Kahan summation algorithm)
         cdef double p,s,t           # temporary variables
-        cdef unsigned int i         # loop counter
+        cdef unsigned int i         # unsigned loop counter
+        cdef int j                  # loop counter
         cdef double critical_value=0.0001
         cdef int branch
         cdef PairPoint P
 
         # initial values
         P = PairPoint(self.dim, start)
-        for i in range(self.dim):
-            P.a[i] - .5
+        for j in range(self.dim):
+            P.a[j] - .5
         P.sort()
         P.normalize_x(P.norm_x(p=1))
         P.gramm_schmidt()
@@ -1797,7 +1802,7 @@ cdef class MCFAlgorithm(object):
 
         return theta1/n_iterations, theta2/n_iterations, 1-theta2/theta1
 
-    def nsmall_entries_list(self, double ratio, start=None, int n_iterations=1000, int p=1):
+    def nsmall_entries_list(self, double ratio, start=None, unsigned int n_iterations=1000, int p=1):
         r"""
         INPUT:
 
@@ -1822,12 +1827,13 @@ cdef class MCFAlgorithm(object):
             [(0, 1), (1, 1), (0, 7), (1, 1), (0, 3), (1, 2), (2, 1), (3, 984)]
 
         """
-        cdef unsigned int i         # loop counter
+        cdef unsigned int i         # unsigned loop counter
+        cdef int j                  # loop counter
         cdef int branch
         cdef PairPoint P
 
         # initial values
-        P = PairPoint(self.dim, start, [0 for i in range(self.dim)])
+        P = PairPoint(self.dim, start, [0 for j in range(self.dim)])
         P.normalize_x(P.norm_x(p=p))
 
         L = []
@@ -1874,12 +1880,13 @@ cdef class MCFAlgorithm(object):
              (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)))
 
         """
-        cdef unsigned int i=0         # loop counter
+        cdef unsigned int i=0         # unsigned loop counter
+        cdef int j=0                  # loop counter
         cdef int branch
         cdef PairPoint P
 
         # initial values
-        P = PairPoint(self.dim, start, [0 for i in range(self.dim)])
+        P = PairPoint(self.dim, start, [0 for j in range(self.dim)])
         P.normalize_x(P.norm_x(p=p))
 
         while True:
