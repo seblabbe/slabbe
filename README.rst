@@ -127,6 +127,9 @@ __ https://trac.sagemath.org/
 Release history
 ---------------
 
+*Version 0.6 (November 22, 2019)*
+  Make the package work with Python 3. Most of the tests pass with Python 3 now.
+
 *Version 0.5.1 (May 30, 2019)*
   Few fixes for the publication of "Induction of `Z^2`-actions on partitions of
   the 2-torus". Improved html documentation.
