@@ -2,8 +2,6 @@ all: install test
 
 install:
 	sage -pip install --upgrade --no-index -v .
-install3:
-	~/GitBox/sage3/sage -pip install --upgrade --no-index -v .
 
 install-internet:
 	sage -pip install --upgrade -v .
@@ -13,11 +11,8 @@ develop:
 	sage -pip install --upgrade -e .
 
 test: 
-	sage -tp --force-lib --show-skipped slabbe/*.py slabbe/*.pyx --log=logs/test-py2.log
-	sage -t demos/*.rst --log=logs/test-demo-py2.log
-testpython3: 
-	~/GitBox/sage3/sage -tp --force-lib --show-skipped slabbe/*.py slabbe/*.pyx --log=logs/test-py3.log
-	~/GitBox/sage3/sage -tp demos/*.rst --log=logs/test-demo-py3.log
+	sage -tp --force-lib --show-skipped slabbe/*.py slabbe/*.pyx --log=logs/test.log
+	sage -t demos/*.rst --show-skipped --log=logs/test-demo.log
 
 testlong:
 	sage -tp --long --force-lib --show-skipped slabbe/*.py slabbe/*.pyx --log=logs/testlong.log
