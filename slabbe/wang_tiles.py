@@ -1923,6 +1923,8 @@ class WangTileSet(object):
 
     def is_equivalent(self, other, certificate=False, verbose=False):
         r"""
+        Return whether self and other are equivalent.
+
         INPUT:
 
         - ``other`` -- wang tile set
@@ -2027,6 +2029,47 @@ class WangTileSet(object):
                     return True
         return (False, None, None, None) if certificate else False
 
+    def is_equivalent_up_to_isometry(self, other, certificate=False):
+        r"""
+        Return whether self and other are equivalent up to isometry.
+
+        INPUT:
+
+        - ``other`` -- wang tile set
+        - ``certificate`` -- boolean (default:``False``)
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(1,6,1,8), (2,6,1,7), (3,7,1,6), (1,6,2,6),
+            ....:          (2,8,2,7), (2,7,3,6), (3,6,3,7)]
+            sage: T = WangTileSet(tiles)
+            sage: d = {1:'a', 2:'b', 3:'c', 6:'x', 7:'y', 8:'z'}
+            sage: L = [tuple(d[a] for a in t) for t in tiles]
+            sage: p = DihedralGroup(4)[6]
+            sage: pL = [p(tuple(d[a] for a in t)) for t in tiles]
+            sage: U = WangTileSet(pL)
+            sage: T.is_equivalent(U)
+            False
+            sage: T.is_equivalent_up_to_isometry(U)
+            True
+            sage: T.is_equivalent_up_to_isometry(U, certificate=True)
+            (True,
+             ((1,4)(2,3),
+              {6: 'x', 7: 'y', 8: 'z'},
+              {1: 'a', 2: 'b', 3: 'c'},
+              Substitution 2d: {0: [[0]], 1: [[1]], 2: [[2]], 3: [[3]], 4: [[4]], 5: [[5]], 6: [[6]]}))
+        """
+        from sage.groups.perm_gps.permgroup_named import DihedralGroup
+        G = DihedralGroup(4)
+        for p in G:
+            p_self = WangTileSet([p(tile) for tile in self._tiles])
+            is_equiv, V_perm, H_perm, tiles_perm = p_self.is_equivalent(other, certificate=True)
+            if is_equiv:
+                return (True, (p,V_perm,H_perm,tiles_perm)) if certificate else True
+        else:
+            return (False, (None,None,None,None)) if certificate else False
+
     def unsynchronized_graph_size2(self, i=1):
         r"""
         INPUT:
@@ -2050,8 +2093,8 @@ class WangTileSet(object):
             sage: from slabbe import WangTileSet
             sage: tiles = [('aa','bb','cc','bb'), ('cc','dd','aa','dd')]
             sage: T = WangTileSet(tiles)
-            sage: G = T.unsynchronized_graph_size2()
-            sage: sorted(G.vertices())
+            sage: G = T.unsynchronized_graph_size2()       # known bug (in Python 3)
+            sage: sorted(G.vertices())                     # known bug (in Python 3)
             [('aa', 'aa', '', 0), ('cc', 'cc', '', 0)]
 
         """
@@ -2150,23 +2193,23 @@ class WangTileSet(object):
             sage: from slabbe import WangTileSet
             sage: tiles = [('aa','bb','cc','bb'), ('cc','dd','aa','dd')]
             sage: T = WangTileSet(tiles)
-            sage: G = T.unsynchronized_graph()
-            sage: sorted(G.vertices()) # known bug
+            sage: G = T.unsynchronized_graph()           # known bug (in Python 3)
+            sage: sorted(G.vertices())                            # known bug
             [(d=(0, 0), b=(0, 0)),
              (d=(0, 0), b=(1, 1)),
              (d=(2, 0), b=(0, 1)),
              (d=(2, 0), b=(1, 0))]
-            sage: G.edges()   # known bug
+            sage: G.edges()                                       # known bug
             [((d=(0, 0), b=(1, 1)), (d=(2, 0), b=(0, 1)), (1, 0)),
              ((d=(0, 0), b=(0, 0)), (d=(2, 0), b=(1, 0)), (0, 1)),
              ((d=(2, 0), b=(1, 0)), (d=(0, 0), b=(1, 1)), (0, 1)),
              ((d=(2, 0), b=(0, 1)), (d=(0, 0), b=(0, 0)), (1, 0))]
-            sage: [node.lengths_x() for node in G]
+            sage: [node.lengths_x() for node in G]                # known bug (in Python 3)
             [[2, 2], [2, 2], [2, 2], [2, 2]]
-            sage: [node.is_synchronized() for node in G]
+            sage: [node.is_synchronized() for node in G]          # known bug (in Python 3)
             [True, True, True, True]
             sage: from slabbe import TikzPicture
-            sage: _ = TikzPicture.from_graph(G).pdf(view=False)
+            sage: _ = TikzPicture.from_graph(G).pdf(view=False)   # known bug (in Python 3)
 
         """
         from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
