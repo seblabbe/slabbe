@@ -2500,10 +2500,28 @@ class WangTileSolver(object):
         assert all(0 <= k < self._height for d in self._preassigned_color for (j,k) in d)
 
     def vertical_alphabet(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSolver
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+            sage: W = WangTileSolver(tiles, 3, 3)
+            sage: W.vertical_alphabet()
+            {0, 1, 2}
+        r"""
         right, top, left, bottom = zip(*self._tiles)
         return set(left) | set(right)
 
     def horizontal_alphabet(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSolver
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2)]
+            sage: W = WangTileSolver(tiles, 3, 3)
+            sage: W.horizontal_alphabet()
+            {0, 1, 2}
+        r"""
         right, top, left, bottom = zip(*self._tiles)
         return set(top) | set(bottom)
 
