@@ -277,6 +277,17 @@ def get_funnel(G):
 
 def reduce_funnel_edges(G, merge_function):
     r"""
+    Reduce a graph by merging all funnel edge.
+
+    We say that an edge (u,v) is a "funnel" edge if u is not v
+    and the out degree of u and the in degree of v are both equal to 1.
+
+    INPUT:
+
+    - ``G`` -- digraph
+    - ``merge_function`` -- function taking two vertices as input and
+      returning a new vertex
+
     EXAMPLES::
 
         sage: from slabbe.graph import reduce_funnel_edges
