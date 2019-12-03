@@ -1218,7 +1218,7 @@ class WangTileSet(object):
 
             sage: T.tiles_allowing_surrounding(1, verbose=True)
             Solution found for tile 0:
-            [[0, 0, 3], [0, 0, 0], [0, 0, 0]]
+            [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
             Solution found for tile 1:
             [[1, 1, 1], [1, 1, 1], [1, 1, 1]]
             Solution found for tile 2:
@@ -1238,11 +1238,17 @@ class WangTileSet(object):
                 L.append(t)
         return WangTileSet(L)
 
-    def tilings_with_surrounding(self, width, height, radius=1, solver=None,
+    def _tilings_with_surrounding(self, width, height, radius=1, solver=None,
             verbose=False):
         r"""
         Return the set of valid tiling of a rectangle of given width and
         height allowing a surrounding of itself of given radius.
+
+        This algorithm is using fusion of Wang tiles horizontally and
+        vertically and then using a solver for the new set of tiles and
+        then tiling the obtained boundary solutions.
+
+        See also the other method :meth:`tilings_with_surrounding`.
 
         INPUT:
 
@@ -1258,7 +1264,7 @@ class WangTileSet(object):
             sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
             sage: tiles = [[str(a) for a in tile] for tile in tiles]
             sage: T = WangTileSet(tiles)
-            sage: S = T.tilings_with_surrounding(2,2)
+            sage: S = T._tilings_with_surrounding(2,2)
             sage: S
             [A wang tiling of a 2 x 2 rectangle,
              A wang tiling of a 2 x 2 rectangle,
@@ -1268,7 +1274,7 @@ class WangTileSet(object):
 
         ::
 
-            sage: S = T.tilings_with_surrounding(3,3)
+            sage: S = T._tilings_with_surrounding(3,3)
             sage: S
             [A wang tiling of a 3 x 3 rectangle,
              A wang tiling of a 3 x 3 rectangle,
@@ -1282,7 +1288,7 @@ class WangTileSet(object):
 
             sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB', 'EBEB']
             sage: T = WangTileSet(tiles)
-            sage: solutions = T.tilings_with_surrounding(1,2)
+            sage: solutions = T._tilings_with_surrounding(1,2)
             sage: [t.table() for t in solutions]
             [[[3, 3]], [[3, 4]], [[4, 3]], [[4, 4]]]
 
@@ -1290,9 +1296,9 @@ class WangTileSet(object):
 
             sage: tiles = [('02', '4', '02', '4'), ('32', '4', '02', '4')]
             sage: T = WangTileSet(tiles)
-            sage: [t.table() for t in T.tilings_with_surrounding(1,2)]
+            sage: [t.table() for t in T._tilings_with_surrounding(1,2)]
             [[[0, 0]]]
-            sage: [t.table() for t in T.tilings_with_surrounding(2,1)]
+            sage: [t.table() for t in T._tilings_with_surrounding(2,1)]
             [[[0], [0]]]
 
         """
@@ -1329,8 +1335,88 @@ class WangTileSet(object):
             L.extend(W.solutions_iterator())
         return L
 
-    not_forbidden_tilings = deprecated_function_alias(123456,tilings_with_surrounding)
-    tiling_with_surrounding = deprecated_function_alias(123456,tilings_with_surrounding)
+    @cached_method
+    def tilings_with_surrounding(self, width, height, radius=1, solver=None,
+            ncpus=1, verbose=False):
+        r"""
+        Return the set of valid tiling of a rectangle of given width and
+        height allowing a surrounding of itself of given radius.
+
+        INPUT:
+
+        - ``width`` - integer
+        - ``height`` - integer
+        - ``radius`` - integer or 2-tuple (default: ``1``), if 2-tuple is
+          given, then it is interpreted as ``(xradius, yradius)``
+        - ``solver`` - string or None (default: ``None``)
+        - ``ncpus`` -- integer (default: ``1``), maximal number of
+          subprocesses to use at the same time, used only if ``solver`` is
+          ``'dancing_links'``.
+        - ``verbose`` - bool
+
+        .. NOTE::
+
+            The ``solver='dancing_links'`` is fast for this question (I think)
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTileSet
+            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
+            sage: tiles = [[str(a) for a in tile] for tile in tiles]
+            sage: T = WangTileSet(tiles)
+            sage: S = T.tilings_with_surrounding(2,2)
+            sage: sorted(tiling.table() for tiling in S)
+            [[[0, 0], [0, 0]], [[1, 1], [1, 1]], [[2, 2], [2, 2]]]
+
+        ::
+
+            sage: S = T.tilings_with_surrounding(3,3)
+            sage: sorted(tiling.table() for tiling in S)
+            [[[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+             [[1, 1, 1], [1, 1, 1], [1, 1, 1]],
+             [[2, 2, 2], [2, 2, 2], [2, 2, 2]]]
+
+        TESTS::
+
+            sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB', 'EBEB']
+            sage: T = WangTileSet(tiles)
+            sage: solutions = T.tilings_with_surrounding(1,2)
+            sage: sorted(tiling.table() for tiling in solutions)
+            [[[3, 3]], [[4, 4]], [[3, 4]], [[4, 3]]]
+
+
+        ::
+
+            sage: tiles = [('02', '4', '02', '4'), ('32', '4', '02', '4')]
+            sage: T = WangTileSet(tiles)
+            sage: [tiling.table() for tiling in T.tilings_with_surrounding(1,2)]
+            [[[0, 0]]]
+            sage: [tiling.table() for tiling in T.tilings_with_surrounding(2,1)]
+            [[[0], [0]]]
+
+        """
+        if isinstance(radius, tuple):
+            xradius,yradius = radius
+        else:
+            xradius = yradius = radius
+
+        total_width = 2*xradius+width
+        total_height = 2*yradius+height
+
+        W = WangTileSolver(self._tiles, width, height)
+
+        L = set()
+        for tiling in W.solutions_iterator():
+            table = tiling._table
+            d = {(x+xradius,y+yradius):table[x][y] for x in range(width) 
+                                                   for y in range(height)}
+            s = self.solver(total_width, total_height, preassigned_tiles=d)
+            if s.has_solution(solver=solver, ncpus=ncpus):
+                if verbose:
+                    print("Solution found for pattern {}:\n {}".format(d, s.solve(solver)._table))
+                L.add(tiling)
+        return L
+
     @cached_method
     def dominoes_with_surrounding(self, i=2, radius=1, solver=None,
             ncpus=1, verbose=False):
@@ -1350,7 +1436,7 @@ class WangTileSet(object):
         .. NOTE::
 
             The ``solver='dancing_links'`` is fast for this question.
-        
+
         EXAMPLES::
 
             sage: from slabbe import WangTileSet
@@ -1404,88 +1490,8 @@ class WangTileSet(object):
                 L.add((i,j))
         return L
 
-    @cached_method
-    def tilings_with_surrounding_new_method(self, width, height, radius=1, solver=None,
-            ncpus=1, verbose=False):
-        r"""
-        Return the set of valid tiling of a rectangle of given width and
-        height allowing a surrounding of itself of given radius.
-
-        INPUT:
-
-        - ``width`` - integer
-        - ``height`` - integer
-        - ``radius`` - integer or 2-tuple (default: ``1``), if 2-tuple is
-          given, then it is interpreted as ``(xradius, yradius)``
-        - ``solver`` - string or None (default: ``None``)
-        - ``ncpus`` -- integer (default: ``1``), maximal number of
-          subprocesses to use at the same time, used only if ``solver`` is
-          ``'dancing_links'``.
-        - ``verbose`` - bool
-
-        .. NOTE::
-
-            The ``solver='dancing_links'`` is fast for this question (I think)
-
-        EXAMPLES::
-
-            sage: from slabbe import WangTileSet
-            sage: tiles = [(0,0,0,0), (1,1,1,1), (2,2,2,2), (0,1,2,0)]
-            sage: tiles = [[str(a) for a in tile] for tile in tiles]
-            sage: T = WangTileSet(tiles)
-            sage: S = T.tilings_with_surrounding_new_method(2,2)
-            sage: S
-            {((0, 0), (0, 0)), ((1, 1), (1, 1)), ((2, 2), (2, 2))}
-
-        ::
-
-            sage: S = T.tilings_with_surrounding_new_method(3,3)
-            sage: S
-            {((0, 0, 0), (0, 0, 0), (0, 0, 0)),
-             ((1, 1, 1), (1, 1, 1), (1, 1, 1)),
-             ((2, 2, 2), (2, 2, 2), (2, 2, 2))}
-
-        TESTS::
-
-            sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB', 'EBEB']
-            sage: T = WangTileSet(tiles)
-            sage: solutions = T.tilings_with_surrounding_new_method(1,2)
-            sage: solutions
-            {((3, 3),), ((3, 4),), ((4, 3),), ((4, 4),)}
-
-        ::
-
-            sage: tiles = [('02', '4', '02', '4'), ('32', '4', '02', '4')]
-            sage: T = WangTileSet(tiles)
-            sage: T.tilings_with_surrounding_new_method(1,2)
-            {((0, 0),)}
-            sage: T.tilings_with_surrounding_new_method(2,1)
-            {((0,), (0,))}
-
-        """
-        if isinstance(radius, tuple):
-            xradius,yradius = radius
-        else:
-            xradius = yradius = radius
-
-        total_width = 2*xradius+width
-        total_height = 2*yradius+height
-
-        W = WangTileSolver(self._tiles, width, height)
-
-        L = set()
-        for tiling in W.solutions_iterator():
-            table = tiling._table
-            d = {(x+xradius,y+yradius):table[x][y] for x in range(width) 
-                                                   for y in range(height)}
-            s = self.solver(total_width, total_height, preassigned_tiles=d)
-            if s.has_solution(solver=solver, ncpus=ncpus):
-                if verbose:
-                    print("Solution found for pattern {}:\n {}".format(d, s.solve(solver)._table))
-                #tiling = WangTiling(table, self._tiles, color=self._color)
-                L.add(tuple(map(tuple,table)))
-        return L
-
+    tiling_with_surrounding = deprecated_function_alias(123456,tilings_with_surrounding)
+    not_forbidden_tilings = deprecated_function_alias(123456,tilings_with_surrounding)
     not_forbidden_dominoes = deprecated_function_alias(123456,dominoes_with_surrounding)
     def is_pattern_surrounded(self, pattern, radius=1, solver=None, ncpus=None):
         r"""
