@@ -1337,7 +1337,7 @@ class WangTileSet(object):
 
     @cached_method
     def tilings_with_surrounding(self, width, height, radius=1, solver=None,
-            ncpus=1, verbose=False):
+            ncpus=1, use_previous_smaller_results=True, verbose=False):
         r"""
         Return the set of valid tiling of a rectangle of given width and
         height allowing a surrounding of itself of given radius.
@@ -1352,7 +1352,8 @@ class WangTileSet(object):
         - ``ncpus`` -- integer (default: ``1``), maximal number of
           subprocesses to use at the same time, used only if ``solver`` is
           ``'dancing_links'``.
-        - ``verbose`` - bool
+        - ``use_previous_smaller_results`` - bool (default: ``True``)
+        - ``verbose`` - bool (default: ``False``)
 
         .. NOTE::
 
@@ -1400,13 +1401,31 @@ class WangTileSet(object):
         else:
             xradius = yradius = radius
 
+        # Check if we cached the result of previous calls with smaller radius
+        previous_calls = [args for (args, kwds) in self.tilings_with_surrounding.cache
+                               if args[0] == width and args[1] == height]
+        smaller_previous_calls = {}
+        for args in previous_calls:
+            radius_ = args[2]
+            if isinstance(radius_, tuple):
+                xradius_,yradius_ = radius_
+            else:
+                xradius_ = yradius_ = radius_
+            if xradius_ <= xradius and yradius_ <= yradius:
+                # the following may erase another previous call, we don't care
+                smaller_previous_calls[xradius_+yradius_] = args 
+        if use_previous_smaller_results and smaller_previous_calls:
+            args = smaller_previous_calls[max(smaller_previous_calls)]
+            previous_solutions = self.tilings_with_surrounding.cache[(args,())]
+        else:
+            W = WangTileSolver(self._tiles, width, height)
+            previous_solutions = W.solutions_iterator()
+
         total_width = 2*xradius+width
         total_height = 2*yradius+height
 
-        W = WangTileSolver(self._tiles, width, height)
-
         L = set()
-        for tiling in W.solutions_iterator():
+        for tiling in previous_solutions:
             table = tiling._table
             d = {(x+xradius,y+yradius):table[x][y] for x in range(width) 
                                                    for y in range(height)}
