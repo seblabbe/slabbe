@@ -334,3 +334,226 @@ def reduce_funnel_edges(G, merge_function):
         funnel = get_funnel(GG)
     return GG
 
+def get_left_special_vertex(G):
+    r"""
+    Return a vertex v such that v is left special but not bispecial, that is,
+    ``G.in_degree(v)>1`` but ``G.out_degree(v)<=1``.
+
+    Return ``None`` if no such vertex is found.
+
+    INPUT:
+
+    - ``G`` -- digraph
+
+    OUTPUT:
+
+    a vertex or ``None`` if no such vertex is found.
+
+    EXAMPLES::
+
+        sage: from slabbe.graph import get_left_special_vertex
+        sage: G = DiGraph([(5,6), (6,7), (6,8)], format='list_of_edges')
+        sage: get_left_special_vertex(G) is None
+        True
+        sage: G = DiGraph([(6,5), (7,6), (8,6)], format='list_of_edges')
+        sage: get_left_special_vertex(G)
+        6
+
+    If there is a bispecial, but no left special it returns ``None``::
+
+        sage: G = DiGraph([(2,3),(3,4),(4,2),(2,5),(5,6),(6,2)], format='list_of_edges')
+        sage: get_left_special_vertex(G) is None
+        True
+
+    """
+    for v in G.vertices():
+        if G.in_degree(v) > 1 and G.out_degree(v) <= 1:
+            return v
+    else:
+        return None
+
+def get_right_special_vertex(G):
+    r"""
+    Return a vertex v such that v is right special but not bispecial, that is,
+    ``G.in_degree(v)<=1`` but ``G.out_degree(v)>1``.
+
+    Return ``None`` if no such vertex is found.
+
+    INPUT:
+
+    - ``G`` -- digraph
+
+    OUTPUT:
+
+    a vertex or ``None`` if no such vertex is found.
+
+    EXAMPLES::
+
+        sage: from slabbe.graph import get_right_special_vertex
+        sage: G = DiGraph([(5,6), (6,7), (6,8)], format='list_of_edges')
+        sage: get_right_special_vertex(G)
+        6
+        sage: G = DiGraph([(6,5), (7,6), (8,6)], format='list_of_edges')
+        sage: get_right_special_vertex(G) is None
+        True
+
+    """
+    for v in G.vertices():
+        if G.in_degree(v) <= 1 and G.out_degree(v) > 1:
+            return v
+    else:
+        return None
+
+def get_bispecial_vertex(G):
+    r"""
+    Return a vertex v such that v is bispecial, that is,
+    ``G.in_degree(v)>1`` but ``G.out_degree(v)>1``.
+
+    Return ``None`` if no such vertex is found.
+
+    INPUT:
+
+    - ``G`` -- digraph
+
+    OUTPUT:
+
+    a vertex or ``None`` if no such vertex is found.
+
+    EXAMPLES::
+
+        sage: from slabbe.graph import get_bispecial_vertex
+        sage: G = DiGraph([(4,6), (5,6), (6,7), (6,8)], format='list_of_edges')
+        sage: get_bispecial_vertex(G)
+        6
+        sage: G = DiGraph([(6,5), (7,6), (8,6)], format='list_of_edges')
+        sage: get_bispecial_vertex(G) is None
+        True
+
+    """
+    for v in G.vertices():
+        if G.in_degree(v) > 1 and G.out_degree(v) > 1:
+            return v
+    else:
+        return None
+
+def reduce_left_special_vertices(G, merge_function):
+    r"""
+    Merge all left special vertices with its in-neighbor(s) ``u`` using
+    ``merge_function(u,v)`` to create the new vertex.
+
+    INPUT:
+
+    - ``G`` -- digraph
+    - ``merge_function`` -- function taking two vertices as input and
+      returning a new vertex
+
+    OUTPUT:
+
+    a digraph
+
+    EXAMPLES::
+
+        sage: from slabbe.graph import reduce_left_special_vertices
+        sage: edges = [(0,1),(1,2),(2,3),(3,4),(4,0),(2,5),(5,6),(6,7),(7,0)]
+        sage: edges = [(str(u),str(v)) for (u,v) in edges]
+        sage: G = DiGraph(edges, format='list_of_edges')
+        sage: merge_function = lambda u,v:u+v
+        sage: GG = reduce_left_special_vertices(G, merge_function)
+        sage: sorted((a,b) for (a,b,_) in GG.edges())
+        [('2', '3'),
+         ('2', '5'),
+         ('3', '401'),
+         ('401', '2'),
+         ('5', '6'),
+         ('6', '701'),
+         ('701', '2')]
+
+    It is idempotent::
+
+        sage: GGG = reduce_left_special_vertices(GG, merge_function)
+        sage: GGG == GG
+        True
+
+    """
+    from copy import copy
+    GG = copy(G)
+    GG.allow_loops(True)
+    #GG.allow_multiple_edges(True)
+
+    v = get_left_special_vertex(GG)
+    while v is not None:
+        for u in GG.neighbors_in(v):
+            u_v = merge_function(u, v)
+            GG.add_edges((s, u_v) for s in GG.neighbors_in(u))
+            if GG.out_degree(u) == 1:
+                GG.delete_vertex(u)
+            GG.add_edges((u_v, t) for t in GG.neighbors_out(v))
+        GG.delete_vertex(v)
+        v = get_left_special_vertex(GG)
+    return GG
+
+def reduce_bispecial_vertices(G, merge_function, filter=None):
+    r"""
+    Merge all bispecial vertices with its in-neighbor(s) ``u`` using
+    ``merge_function(u,v)`` to create the new vertex. Only edges such that
+    ``filter(u,v)`` is True are kept.
+
+    INPUT:
+
+    - ``G`` -- digraph
+    - ``merge_function`` -- function taking two vertices as input and
+      returning a new vertex
+    - ``filter`` -- function from pair of vertices to boolean (default:``None``),
+      Only created edges ``(u,v)`` such that ``filter(u,v) is True`` are kept.
+      If ``None``, then ``filter = lambda a,b:True`` is used.
+
+    OUTPUT:
+
+    a digraph
+
+    EXAMPLES::
+
+        sage: from slabbe.graph import reduce_left_special_vertices
+        sage: from slabbe.graph import reduce_bispecial_vertices
+        sage: edges = [(0,1),(1,2),(2,3),(3,4),(4,0),(2,5),(5,6),(6,7),(7,0)]
+        sage: edges = [(str(u),str(v)) for (u,v) in edges]
+        sage: G = DiGraph(edges, format='list_of_edges')
+        sage: merge_function = lambda u,v:u+v
+        sage: GG = reduce_left_special_vertices(G, merge_function)
+        sage: GGG = reduce_bispecial_vertices(GG, merge_function)
+        sage: sorted((a,b) for (a,b,_) in GGG.edges())
+        [('3', '4012'),
+         ('4012', '3'),
+         ('4012', '5'),
+         ('5', '6'),
+         ('6', '7012'),
+         ('7012', '3'),
+         ('7012', '5')]
+
+    It is idempotent::
+
+        sage: GGGG = reduce_bispecial_vertices(GGG, merge_function)
+        sage: GGGG == GGG
+        True
+
+    """
+    from copy import copy
+    GG = copy(G)
+    GG.allow_loops(True)
+    #GG.allow_multiple_edges(True)
+
+    if filter is None:
+        filter = lambda a,b:True
+
+    v = get_bispecial_vertex(GG)
+    while v is not None:
+        for u in GG.neighbors_in(v):
+            u_v = merge_function(u, v)
+            GG.add_edges((s, u_v) for s in GG.neighbors_in(u))
+            if GG.out_degree(u) == 1:
+                GG.delete_vertex(u)
+            GG.add_edges((u_v, t) for t in GG.neighbors_out(v) if filter(u_v,t))
+        GG.delete_vertex(v)
+        v = get_bispecial_vertex(GG)
+    return GG
+
