@@ -255,6 +255,34 @@ def spectrum(M):
     """
     return max(map(abs, M.eigenvalues()))
 
+def column_norm_ratio(M, p=1):
+    r"""
+    Return the maximum of the ratio of the norm of two columns.
+
+    INPUT:
+
+    - ``p`` - default: 2 - ``p`` can be a real number greater than 1,
+      infinity (``oo`` or ``Infinity``), or a symbolic expression.
+
+      - `p=1`: the taxicab (Manhattan) norm
+      - `p=2`: the usual Euclidean norm (the default)
+      - `p=\infty`: the maximum entry (in absolute value)
+
+    EXAMPLES::
+
+        sage: from slabbe.matrices import column_norm_ratio
+        sage: M = matrix(3, range(9))
+        sage: column_norm_ratio(M)
+        5/3
+
+    """
+    L = [column.norm(p) for column in M.columns()]
+    m = min(L)
+    if m == 0:
+        return Infinity
+    else:
+        return max(L) / m
+
 def map_coefficients_to_variable_index(M, x):
     r"""
     INPUT:
