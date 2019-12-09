@@ -125,9 +125,9 @@ def induced_subgraph(G, filter):
         sage: G = DiGraph()
         sage: G.add_edges([((i, ''), ((i+1)%10, 'plusone')) for i in range(10)])
         sage: G.add_edges([((i, ''), ((i+2)%10, 'plustwo')) for i in range(10)])
+        sage: GG = induced_subgraph(G, lambda v: v[0]%2 == 0)
         sage: G
         Digraph on 30 vertices
-        sage: GG = induced_subgraph(G, lambda v: v[0]%2 == 0)
         sage: GG
         Digraph on 15 vertices
         sage: GG.edges()[0]
