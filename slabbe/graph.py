@@ -492,6 +492,62 @@ def reduce_left_special_vertices(G, merge_function):
         v = get_left_special_vertex(GG)
     return GG
 
+def reduce_right_special_vertices(G, merge_function):
+    r"""
+    Merge all right special vertices with its in-neighbor(s) ``u`` using
+    ``merge_function(u,v)`` to create the new vertex.
+
+    INPUT:
+
+    - ``G`` -- digraph
+    - ``merge_function`` -- function taking two vertices as input and
+      returning a new vertex
+
+    OUTPUT:
+
+    a digraph
+
+    EXAMPLES::
+
+        sage: from slabbe.graph import reduce_right_special_vertices
+        sage: edges = [(0,1),(1,2),(2,3),(3,4),(4,0),(2,5),(5,6),(6,7),(7,0)]
+        sage: edges = [(str(u),str(v)) for (u,v) in edges]
+        sage: G = DiGraph(edges, format='list_of_edges')
+        sage: merge_function = lambda u,v:u+v
+        sage: GG = reduce_right_special_vertices(G, merge_function)
+        sage: sorted((a,b) for (a,b,_) in GG.edges())
+        [('0', '123'),
+         ('0', '125'),
+         ('123', '4'),
+         ('125', '6'),
+         ('4', '0'),
+         ('6', '7'),
+         ('7', '0')]
+
+    It is idempotent::
+
+        sage: GGG = reduce_right_special_vertices(GG, merge_function)
+        sage: GGG == GG
+        True
+
+    """
+    from copy import copy
+    GG = copy(G)
+    GG.allow_loops(True)
+    #GG.allow_multiple_edges(True)
+
+    v = get_right_special_vertex(GG)
+    while v is not None:
+        for w in GG.neighbors_out(v):
+            v_w = merge_function(v, w)
+            GG.add_edges((v_w, s) for s in GG.neighbors_out(w))
+            if GG.in_degree(w) == 1:
+                GG.delete_vertex(w)
+            GG.add_edges((t, v_w) for t in GG.neighbors_in(v))
+        GG.delete_vertex(v)
+        v = get_right_special_vertex(GG)
+    return GG
+
 def reduce_bispecial_vertices(G, merge_function, filter=None):
     r"""
     Merge all bispecial vertices with its in-neighbor(s) ``u`` using

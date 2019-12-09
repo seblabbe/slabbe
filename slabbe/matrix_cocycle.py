@@ -589,6 +589,24 @@ class MatrixCocycle(object):
         #G.delete_vertices(to_remove)
         #return G
 
+    def first_postive_automaton(self, n):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe.matrix_cocycle import cocycles
+            sage: C = cocycles.Cassaigne()
+            sage: A = C.first_postive_automaton(7)
+            sage: A
+            Automaton with 21 states
+            sage: A.graph().plot(edge_labels=True)   # not tested
+        """
+        L = []
+        for i in range(n):
+            L.extend(w for w,M in self.n_matrices_iterator(i) if is_positive(M))
+        alphabet = self._language._alphabet
+        F = FiniteLanguage(alphabet, L)
+        return F.minimal_automaton()
+
     def distorsion_max(self, n, p=1):
         r"""
         EXAMPLES:
