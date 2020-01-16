@@ -23,6 +23,7 @@ from __future__ import absolute_import, print_function
 import itertools
 
 from sage.misc.decorators import rename_keyword
+from sage.misc.superseded import deprecated_function_alias
 
 class Substitution2d(object):
     r"""
@@ -364,6 +365,10 @@ class Substitution2d(object):
         -  ``order`` - integer or plus ``Infinity`` (default: 1)
 
         TODO: implement another call on table with matrix like coordinates
+
+        OUTPUT:
+
+            list of columns
 
         EXAMPLES::
 
@@ -921,7 +926,6 @@ class Substitution2d(object):
         from slabbe import TikzPicture
         return TikzPicture('\n'.join(lines))
 
-
     def list_2x2_factors(self, F=None):
         r"""
         Return the list of 2x2 factors in the associated substitutive
@@ -945,19 +949,19 @@ class Substitution2d(object):
             sage: B = [[1,0],[1,1]]
             sage: d = {0:A, 1:B}
             sage: s = Substitution2d(d)
-            sage: s.list_2x2_factors()
-            [[[0, 1], [0, 1]],
-             [[1, 0], [1, 1]],
-             [[1, 1], [1, 0]],
-             [[1, 1], [1, 1]],
-             [[1, 1], [0, 1]],
-             [[1, 1], [0, 0]],
-             [[0, 1], [1, 1]],
-             [[1, 0], [0, 1]],
-             [[0, 0], [1, 0]],
+            sage: sorted(s.list_2x2_factors())
+            [[[0, 0], [1, 0]],
+             [[0, 1], [0, 1]],
              [[0, 1], [1, 0]],
+             [[0, 1], [1, 1]],
+             [[1, 0], [0, 0]],
+             [[1, 0], [0, 1]],
              [[1, 0], [1, 0]],
-             [[1, 0], [0, 0]]]
+             [[1, 0], [1, 1]],
+             [[1, 1], [0, 0]],
+             [[1, 1], [0, 1]],
+             [[1, 1], [1, 0]],
+             [[1, 1], [1, 1]]]
 
         Restricting to the images of some factors::
 
@@ -1053,7 +1057,43 @@ class Substitution2d(object):
                     result.append(v)
         return result
 
-    def prolongable_origins(self):
+    def prolongable_seeds_graph(self):
+        r"""
+        Return the directed graph of 2x2 factors where (u,v) is an edge if
+        v is the seed at the origin of the image of u under self.
+
+        OUTPUT:
+
+            list of tuple (2x2 matrix, integer)
+
+        EXAMPLES::
+
+            sage: d = {0: [[17]],
+            ....:  1: [[16]],
+            ....:  2: [[15], [11]],
+            ....:  3: [[13], [9]],
+            ....:  4: [[17], [8]],
+            ....:  5: [[16], [8]],
+            ....:  6: [[15], [8]],
+            ....:  7: [[14], [8]],
+            ....:  8: [[14, 6]],
+            ....:  9: [[17, 3]],
+            ....:  10: [[16, 3]],
+            ....:  11: [[14, 2]],
+            ....:  12: [[15, 7], [11, 1]],
+            ....:  13: [[14, 6], [11, 1]],
+            ....:  14: [[13, 7], [9, 1]],
+            ....:  15: [[12, 6], [9, 1]],
+            ....:  16: [[18, 5], [10, 1]],
+            ....:  17: [[13, 4], [9, 1]],
+            ....:  18: [[14, 2], [8, 0]]}
+            sage: from slabbe import Substitution2d
+            sage: omega = Substitution2d(d)
+            sage: G = omega.prolongable_seeds_graph()
+            sage: G
+            Looped digraph on 50 vertices
+
+        """
         from sage.matrix.constructor import matrix
         from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
         seeds = self.list_2x2_factors(F=None)
@@ -1070,6 +1110,61 @@ class Substitution2d(object):
             return [M]
         R = RecursivelyEnumeratedSet(seeds, children)
         return R.to_digraph(multiedges=False)
+
+    prolongable_origins = deprecated_function_alias(123456, prolongable_seeds_graph)
+    def prolongable_seeds_list(self):
+        r"""
+        Return the list of seed which are prolongable for some power of
+        self.
+
+        OUTPUT:
+
+            list of cycles
+
+        EXAMPLES::
+
+            sage: d = {0: [[17]],
+            ....:  1: [[16]],
+            ....:  2: [[15], [11]],
+            ....:  3: [[13], [9]],
+            ....:  4: [[17], [8]],
+            ....:  5: [[16], [8]],
+            ....:  6: [[15], [8]],
+            ....:  7: [[14], [8]],
+            ....:  8: [[14, 6]],
+            ....:  9: [[17, 3]],
+            ....:  10: [[16, 3]],
+            ....:  11: [[14, 2]],
+            ....:  12: [[15, 7], [11, 1]],
+            ....:  13: [[14, 6], [11, 1]],
+            ....:  14: [[13, 7], [9, 1]],
+            ....:  15: [[12, 6], [9, 1]],
+            ....:  16: [[18, 5], [10, 1]],
+            ....:  17: [[13, 4], [9, 1]],
+            ....:  18: [[14, 2], [8, 0]]}
+            sage: from slabbe import Substitution2d
+            sage: omega = Substitution2d(d)
+            sage: omega.prolongable_seeds_list()
+            [[
+             [ 9 14]  [17 13]
+             [ 1  6], [16 15]
+             ],
+             [
+             [ 9 14]  [17 13]
+             [ 8 16], [ 6  5]
+             ],
+             [
+             [10 12]  [16 15]
+             [ 9 14], [ 3  7]
+             ],
+             [
+             [10 14]  [16 13]
+             [11 17], [ 2  4]
+             ]]
+
+        """
+        G = self.prolongable_seeds_graph()
+        return [cycle[:-1] for cycle in G.all_simple_cycles()]
 
     _matrix_ = incidence_matrix
     def relabel_domain(self, other):
@@ -1121,6 +1216,89 @@ class Substitution2d(object):
         p = Substitution2d.from_permutation(p)
         assert self * p == other, "problem: self * p == other not satisfied"
         return p
+
+    def fixed_point_tikz(self, seed, niterations=3):
+        r"""
+        Return a tikz representation of a fixed point defined by the give seed.
+        In the image, rectangular boxes indicate the i-th image of each seed.
+
+        INPUT:
+
+        - ``seed`` -- 2x2 matrix
+        - ``niterations`` -- (default:``3``), number of iterations
+
+        OUTPUT
+
+            tikz picture
+
+        EXAMPLES::
+
+            sage: from slabbe import Substitution2d
+            sage: A = [[1,1],[1,1]]
+            sage: B = [[0,0]]
+            sage: d = {0:A, 1:B}
+            sage: s = Substitution2d(d)
+            sage: tikz = s.fixed_point_tikz([[0,0],[0,0]])
+            sage: _ = tikz.pdf()                              # not tested
+
+        The substitution ``s`` is not prolongable, so the boxes in the
+        image obtained from the square of ``s`` might better::
+
+            sage: s2 = s*s
+            sage: tikz = s2.fixed_point_tikz([[0,0],[0,0]])
+            sage: _ = tikz.pdf()                              # not tested
+
+        """
+        if isinstance(seed, list):
+            [[C,B],[D,A]] = seed
+        else:
+            # we assume it is a 2x2 matrix
+            B,A,C,D = seed.list()
+        quadrants = {}
+        quadrants[1] = [[[A]]]
+        quadrants[2] = [[[B]]]
+        quadrants[3] = [[[C]]]
+        quadrants[4] = [[[D]]]
+        for i in [1,2,3,4]:
+            for order in range(niterations):
+                previous = quadrants[i][-1]
+                quadrants[i].append(self(previous))
+        width_heigth = lambda quad : (len(quad),len(quad[0]))
+        dimq1x,dimq1y = width_heigth(quadrants[1][-1])
+        dimq2x,dimq2y = width_heigth(quadrants[2][-1])
+        dimq3x,dimq3y = width_heigth(quadrants[3][-1])
+        dimq4x,dimq4y = width_heigth(quadrants[4][-1])
+        lines = []
+        lines.append(r"\begin{tikzpicture}")
+        for i,col in enumerate(quadrants[1][-1]):
+            for j,a in enumerate(col):
+                coords = (i+.5,j+.5)
+                lines.append(r"\node at {} {{{}}};".format(coords,a))
+        for i,col in enumerate(quadrants[2][-1]):
+            for j,a in enumerate(col):
+                coords = (i-dimq2x+.5,j+.5)
+                lines.append(r"\node at {} {{{}}};".format(coords,a))
+        for i,col in enumerate(quadrants[3][-1]):
+            for j,a in enumerate(col):
+                coords = (i-dimq3x+.5,j-dimq3y+.5)
+                lines.append(r"\node at {} {{{}}};".format(coords,a))
+        for i,col in enumerate(quadrants[4][-1]):
+            for j,a in enumerate(col):
+                coords = (i+.5,j-dimq4y+.5)
+                lines.append(r"\node at {} {{{}}};".format(coords,a))
+        # axes
+        lines.append(r"\draw {} -- {};".format((0,-dimq4y), (0,dimq1y)))
+        lines.append(r"\draw {} -- {};".format((-dimq2x,0), (dimq1x,0)))
+        # boxes
+        for order in range(niterations):
+            w,h = width_heigth(quadrants[3][order])
+            lower_left = (-w, -h)
+            upper_right = width_heigth(quadrants[1][order])
+            lines.append(r"\draw {} rectangle {};".format(lower_left, upper_right))
+        lines.append(r"\end{tikzpicture}")
+
+        from slabbe import TikzPicture
+        return TikzPicture('\n'.join(lines))
 
 def set_of_factors(table, shape, avoid_border=0):
     r"""
