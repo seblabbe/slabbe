@@ -3647,6 +3647,33 @@ class WangTiling(object):
         """
         return self._table
 
+    def to_image(self):
+        r"""
+        EXAMPLES::
+
+            sage: from slabbe import WangTiling
+            sage: tiles = [(0,3,1,4), (1,4,0,3)]
+            sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+            sage: tiling = WangTiling(table, tiles)
+            sage: tiling.to_image()
+            <PIL.Image.Image image mode=RGB size=4x5 at ...>
+
+        """
+        raise NotImplementedError('still not finished')
+        import numpy as np
+        H = self.height()
+        W = self.width()
+        data = np.zeros( (H,W,3), dtype=np.uint8 )
+        data += 255 # white (=255) as default color
+        black_color = [0,0,0]
+        for i,column in enumerate(self.table()):
+            for j,a in enumerate(column):
+                x,y = i+1,H-j+1
+                if a is not None:
+                    data[y,x] = black_color
+        from PIL import Image
+        return Image.fromarray(data)
+
     def transpose(self):
         r"""
         EXAMPLES::
@@ -3664,6 +3691,97 @@ class WangTiling(object):
         table = [[column[j] for column in self._table]
                             for j in range(self.height())]
         return WangTiling(table, self._tiles, self._color)
+
+    def concatenate_right(self, other):
+        r"""
+        Return a concatenation of self with other on its right.
+
+        INPUT:
+
+        - ``other`` -- a Wang tiling
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTiling
+            sage: tiles = [(0,3,1,2), (1,2,0,3)]
+            sage: tableA = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+            sage: tableB = [[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]]
+            sage: tilingA = WangTiling(tableA, tiles)
+            sage: tilingB = WangTiling(tableB, tiles)
+            sage: t = tilingA.concatenate_right(tilingB)
+            sage: t
+            A wang tiling of a 6 x 4 rectangle
+            sage: t.table()
+            [[0, 0, 0, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0],
+             [1, 1, 1, 1],
+             [1, 1, 1, 1],
+             [1, 1, 1, 1]]
+
+        """
+        table = copy(self.table())
+        table.extend(other.table())
+        return WangTiling(table, self._tiles, color=self._color)
+
+    def concatenate_top(self, other):
+        r"""
+        Return a concatenation of self with other on its top.
+
+        INPUT:
+
+        - ``other`` -- a Wang tiling
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTiling
+            sage: tiles = [(0,3,1,2), (1,2,0,3)]
+            sage: tableA = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+            sage: tableB = [[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]]
+            sage: tilingA = WangTiling(tableA, tiles)
+            sage: tilingB = WangTiling(tableB, tiles)
+            sage: t = tilingA.concatenate_top(tilingB)
+            sage: t
+            A wang tiling of a 3 x 8 rectangle
+            sage: t.table()
+            [[0, 0, 0, 0, 1, 1, 1, 1], 
+             [0, 0, 0, 0, 1, 1, 1, 1], 
+             [0, 0, 0, 0, 1, 1, 1, 1]]
+
+        """
+        table = [colA+colB for colA,colB in zip(self.table(), other.table())]
+        return WangTiling(table, self._tiles, color=self._color)
+
+    def diff(self, other):
+        r"""
+        Return a Wang tiling where positions where the tile in self differs
+        from the tile in other are replaced by ``None``.
+
+        INPUT:
+
+        - ``other`` -- a Wang tiling
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTiling
+            sage: tiles = [(0,3,1,2), (1,2,0,3)]
+            sage: tableA = [[0, 1, 1, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
+            sage: tilingA = WangTiling(tableA, tiles)
+            sage: tableB = [[0, 1, 0, 0], [1, 0, 0, 0], [0, 1, 0, 1]]
+            sage: tilingB = WangTiling(tableB, tiles)
+            sage: d = tilingA.diff(tilingB)
+            sage: d
+            A wang tiling of a 3 x 4 rectangle
+            sage: d.table()
+            [[0, 1, None, None], [1, 0, None, 0], [0, 1, 0, 1]]
+
+        """
+        table = []
+        for colA,colB in zip(self.table(), other.table()):
+            col = [(a if a==b else None) for a,b in zip(colA, colB)]
+            table.append(col)
+        return WangTiling(table, self._tiles, color=self._color)
+
 
     def apply_matrix_transformation(self, M):
         r"""
