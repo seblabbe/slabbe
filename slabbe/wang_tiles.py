@@ -3647,6 +3647,25 @@ class WangTiling(object):
         """
         return self._table
 
+    def rows(self):
+        r"""
+        Return the rows from the top to the bottom.
+
+        EXAMPLES::
+
+            sage: from slabbe import WangTiling
+            sage: tiles = [(0,3,1,4)] * 10
+            sage: table = [[1,2,3,4], [5,6,7,8]]
+            sage: tiling = WangTiling(table, tiles)
+            sage: tiling.rows()
+            [(4, 8), (3, 7), (2, 6), (1, 5)]
+
+        """
+        L = []
+        for row in zip(*self.table()):
+            L.insert(0, row)
+        return L
+
     def to_image(self):
         r"""
         EXAMPLES::
@@ -3655,24 +3674,26 @@ class WangTiling(object):
             sage: tiles = [(0,3,1,4), (1,4,0,3)]
             sage: table = [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1]]
             sage: tiling = WangTiling(table, tiles)
-            sage: tiling.to_image()
-            <PIL.Image.Image image mode=RGB size=4x5 at ...>
+            sage: img = tiling.to_image()
+            sage: img
+            <PIL.Image.Image image mode=RGB size=3x4 at ...>
+            sage: img.resize((100,100)).show()     # not tested
 
         """
-        raise NotImplementedError('still not finished')
+        # Chose a random color for each tiles
+        from random import randrange
+        from collections import defaultdict
+        def random_color():
+                return (randrange(255),randrange(255),randrange(255))
+        color_dict = defaultdict(random_color)
+        color_dict[None] = [0,0,0] # black (=0) as the color for None
+
+        # Create the image
         import numpy as np
-        H = self.height()
-        W = self.width()
-        data = np.zeros( (H,W,3), dtype=np.uint8 )
-        data += 255 # white (=255) as default color
-        black_color = [0,0,0]
-        for i,column in enumerate(self.table()):
-            for j,a in enumerate(column):
-                x,y = i+1,H-j+1
-                if a is not None:
-                    data[y,x] = black_color
         from PIL import Image
-        return Image.fromarray(data)
+        data = [tuple(color_dict[a] for a in row) for row in self.rows()]
+        data = np.array(data, dtype=np.uint8)
+        return Image.fromarray(data)#.resize((100,100))
 
     def transpose(self):
         r"""
@@ -3720,6 +3741,7 @@ class WangTiling(object):
              [1, 1, 1, 1]]
 
         """
+        from copy import copy
         table = copy(self.table())
         table.extend(other.table())
         return WangTiling(table, self._tiles, color=self._color)
