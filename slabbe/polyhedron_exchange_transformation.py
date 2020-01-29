@@ -468,7 +468,7 @@ class PolyhedronExchangeTransformation(object):
 
         return PolyhedronExchangeTransformation(P, translation_dict)
 
-    def __call__(self, p, key_fn=None):
+    def __call__(self, p, key_fn=None, niterations=1):
         r"""
         Apply the transformation.
 
@@ -476,6 +476,7 @@ class PolyhedronExchangeTransformation(object):
 
         - ``p`` -- vector or polyhedron or partition
         - ``key_fn`` -- function to apply on pairs of labels, or ``None``
+        - ``niterations`` -- nonnegative integer (default: ``1``)
 
         OUTPUT:
 
@@ -506,7 +507,21 @@ class PolyhedronExchangeTransformation(object):
             sage: F(P)
             Polyhedron partition of 2 atoms with 2 letters
 
+        Doing many iterations::
+
+            sage: F((1/10, 1/10), niterations=5)
+            (13/30, 1/10)
+            sage: F(p, niterations=5)
+            A 2-dimensional polyhedron in QQ^2 defined as the convex hull of 4 vertices
+            sage: F(P, niterations=5)
+            Polyhedron partition of 3 atoms with 3 letters
+
         TESTS::
+
+            sage: F((1/10, 1/10), niterations=0)
+            (1/10, 1/10)
+
+        ::
 
             sage: from slabbe import PolyhedronPartition
             sage: from slabbe import PolyhedronExchangeTransformation as PET
@@ -532,24 +547,34 @@ class PolyhedronExchangeTransformation(object):
         from sage.structure.element import Vector
         from sage.geometry.polyhedron.base import Polyhedron_base
 
+        if not niterations >= 0:
+            raise NotImplementedError("niterations(={}) supported only"
+                    " when >= 0".format(niterations))
+
         if isinstance(p, (tuple, Vector)):
             p = self.ambient_space()(p)
-            a = self._partition.code(Polyhedron([p]))
-            t = self._translations[a]
-            return p + t
+            for _ in range(niterations):
+                a = self._partition.code(Polyhedron([p]))
+                t = self._translations[a]
+                p = p + t
+            return p
 
         elif isinstance(p, Polyhedron_base):
-            S = set(i for i,atom in self._partition if p <= atom)
-            if len(S) == 1:
-                a = next(iter(S))
-                t = self._translations[a]
-                return p + t
-            elif len(S) > 1:
-                raise ValueError('image of {} is not well-defined as it'
-                ' belongs to many distinct atoms(={}) of the partition'.format(p,S))
-            else:
-                raise ValueError('image of polyhedron (={}) is not defined as it'
-                ' overlaps distinct atoms of the partition'.format(p))
+            for j in range(niterations):
+                S = set(i for i,atom in self._partition if p <= atom)
+                if len(S) == 1:
+                    a = next(iter(S))
+                    t = self._translations[a]
+                    p = p + t
+                elif len(S) > 1:
+                    raise ValueError('During {}-th iteration, image of {} is not' 
+                    ' well-defined as it belongs to many distinct atoms(={})' 
+                    ' of the partition'.format(j,p,S))
+                else:
+                    raise ValueError('During {}-th iteration, image of polyhedron' 
+                    ' (={}) is not defined as it overlaps distinct'
+                    ' atoms of the partition'.format(j,p))
+            return p
 
         elif isinstance(p, PolyhedronPartition):
             if key_fn is None:
@@ -561,13 +586,15 @@ class PolyhedronExchangeTransformation(object):
                         b = (b,)
                     return a + b
 
-            p = p.refinement(self._partition, key_fn=key_fn)
-            L = []
-            for key,atom in p:
-                a = self._partition.code(atom)
-                t = self._translations[a]
-                L.append((key, atom + t))
-            return PolyhedronPartition(L)
+            for _ in range(niterations):
+                p = p.refinement(self._partition, key_fn=key_fn)
+                L = []
+                for key,atom in p:
+                    a = self._partition.code(atom)
+                    t = self._translations[a]
+                    L.append((key, atom + t))
+                p = PolyhedronPartition(L)
+            return p
 
         else:
             raise TypeError('call undefined on input p(={})'.format(p))
