@@ -102,7 +102,7 @@ class PETsCoding(object):
             list of lists (using cartesian coordinates)
 
         EXAMPLES::
-    
+
             sage: from slabbe import PolyhedronPartition
             sage: h = 1/3
             sage: p = Polyhedron([(0,h),(0,1),(h,1)])
@@ -152,3 +152,73 @@ class PETsCoding(object):
             table.append(column)
         return table
 
+
+    def cylinder(self, pattern):
+        r"""
+        Return the coding region of the pattern.
+
+        INPUT:
+
+        - ``pattern`` -- list of lists or dict of positions to code
+
+        OUTPUT:
+
+            polyhedron partition (containing probably only one atom, or
+            more to handle the case of union of polyhedrons)
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition
+            sage: h = 1/3
+            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
+            sage: q = Polyhedron([(0,0), (0,h), (h,1), (h,0)])
+            sage: r = Polyhedron([(h,1), (1,1), (1,h), (h,0)])
+            sage: s = Polyhedron([(h,0), (1,0), (1,h)])
+            sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
+            sage: from slabbe import PolyhedronExchangeTransformation as PET
+            sage: base = identity_matrix(2)
+            sage: Re1 = PET.toral_translation(base, vector((2/3, 0)))
+            sage: Re2 = PET.toral_translation(base, vector((0, 1/4)))
+            sage: from slabbe import PETsCoding
+            sage: X_P_R = PETsCoding((Re1,Re2), P)
+            sage: pattern = [[1, 1, 0, 0, 1], [3, 2, 2, 2, 3], [2, 2, 2, 2, 2]]
+            sage: C = X_P_R.cylinder(pattern)
+            sage: C
+            Polyhedron partition of 1 atoms with 1 letters
+            sage: atom = C.atoms()[0]
+            sage: atom
+            A 2-dimensional polyhedron in QQ^2 defined as the convex hull of 6 vertices
+            sage: atom.vertices()
+            (A vertex at (1/9, 1/18),
+             A vertex at (5/24, 1/4),
+             A vertex at (0, 0),
+             A vertex at (1/6, 1/4),
+             A vertex at (1/18, 7/36),
+             A vertex at (0, 1/12))
+            sage: v = vector((1/7, 1/7))
+            sage: v.set_immutable()
+            sage: v in atom
+            True
+
+        """
+        if isinstance(pattern, dict):
+            raise NotImplementedError
+        elif not isinstance(pattern, (list, tuple)):
+            raise TypeError("pattern(={}) must be a list "
+                    "of lists or a dict".format(pattern))
+
+        Re1 = self._PETs[0]
+        Re2 = self._PETs[1]
+
+        Re1_inv = Re1.inverse()
+        Re2_inv = Re2.inverse()
+
+        region = self._partition
+        if isinstance(pattern, list):
+            for i,column in enumerate(pattern):
+                for j,a in enumerate(column):
+                    translated_back = Re1_inv(self._partition[a], niterations=i)
+                    translated_back = Re2_inv(translated_back, niterations=j)
+                    region = region.refinement(translated_back)
+
+        return region
