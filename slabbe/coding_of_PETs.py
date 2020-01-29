@@ -214,11 +214,12 @@ class PETsCoding(object):
         Re2_inv = Re2.inverse()
 
         region = self._partition
-        if isinstance(pattern, list):
-            for i,column in enumerate(pattern):
-                for j,a in enumerate(column):
-                    translated_back = Re1_inv(self._partition[a], niterations=i)
-                    translated_back = Re2_inv(translated_back, niterations=j)
-                    region = region.refinement(translated_back)
+        for i,column in enumerate(pattern):
+            for j,a in enumerate(column):
+                translated_back = Re1_inv(self._partition[a], niterations=i)
+                translated_back = Re2_inv(translated_back, niterations=j)
+                region = region.refinement(translated_back)
 
         return region
+
+
