@@ -513,7 +513,7 @@ class PolyhedronExchangeTransformation(object):
             sage: F(p, niterations=5)
             A 2-dimensional polyhedron in QQ^2 defined as the convex hull of 4 vertices
             sage: F(P, niterations=5)
-            Polyhedron partition of 3 atoms with 3 letters
+            Polyhedron partition of 3 atoms with 2 letters
 
         TESTS::
 
@@ -538,7 +538,7 @@ class PolyhedronExchangeTransformation(object):
             sage: uP.volume()
             1
             sage: uuP = u(uP); uuP
-            Polyhedron partition of 6 atoms with 6 letters
+            Polyhedron partition of 6 atoms with 4 letters
             sage: uuP.volume()
             1
 
@@ -577,12 +577,14 @@ class PolyhedronExchangeTransformation(object):
 
         elif isinstance(p, PolyhedronPartition):
             for _ in range(niterations):
-                p = p.refinement(self._partition)
+                p,d = p.refinement(self._partition, certificate=True)
                 L = []
                 for key,atom in p:
+                    good_key,pet_key = d[key]
                     a = self._partition.code(atom)
+                    assert a == pet_key, "I think this is true (to check)"
                     t = self._translations[a]
-                    L.append((key, atom + t))
+                    L.append((good_key, atom + t))
                 p = PolyhedronPartition(L)
             return p
 
