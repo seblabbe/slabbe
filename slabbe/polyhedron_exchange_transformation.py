@@ -468,14 +468,13 @@ class PolyhedronExchangeTransformation(object):
 
         return PolyhedronExchangeTransformation(P, translation_dict)
 
-    def __call__(self, p, key_fn=None, niterations=1):
+    def __call__(self, p, niterations=1):
         r"""
         Apply the transformation.
 
         INPUT:
 
         - ``p`` -- vector or polyhedron or partition
-        - ``key_fn`` -- function to apply on pairs of labels, or ``None``
         - ``niterations`` -- nonnegative integer (default: ``1``)
 
         OUTPUT:
@@ -577,17 +576,8 @@ class PolyhedronExchangeTransformation(object):
             return p
 
         elif isinstance(p, PolyhedronPartition):
-            if key_fn is None:
-                # key_fn = lambda a,b:a # the previous default
-                def key_fn(a,b):
-                    if not isinstance(a, tuple):
-                        a = (a,)
-                    if not isinstance(b, tuple):
-                        b = (b,)
-                    return a + b
-
             for _ in range(niterations):
-                p = p.refinement(self._partition, key_fn=key_fn)
+                p = p.refinement(self._partition)
                 L = []
                 for key,atom in p:
                     a = self._partition.code(atom)
@@ -649,14 +639,13 @@ class PolyhedronExchangeTransformation(object):
         T = {a:-t for (a,t) in self._translations.items()}
         return PolyhedronExchangeTransformation(P, T)
 
-    def __mul__(self, other, key_fn=None):
+    def __mul__(self, other):
         r"""
         Return the product of polyhedron exchange transformations.
 
         INPUT:
 
         - ``other`` -- polyhedron exchange transformation
-        - ``key_fn`` -- function to apply on pairs of labels, or ``None``
 
         OUTPUT:
 
@@ -675,29 +664,20 @@ class PolyhedronExchangeTransformation(object):
             sage: F * F
             Polyhedron Exchange Transformation of
             Polyhedron partition of 3 atoms with 3 letters
-            with translations {(0, 0): (2/5, 0), (0, 1): (-3/5, 0), (1, 0): (-3/5, 0)}
+            with translations {0: (2/5, 0), 1: (-3/5, 0), 2: (-3/5, 0)}
             sage: F * F * F
             Polyhedron Exchange Transformation of
             Polyhedron partition of 4 atoms with 4 letters
-            with translations {(0, 0, 0): (3/5, 0), (0, 0, 1): (-2/5, 0), 
-                               (0, 1, 0): (-2/5, 0), (1, 0, 0): (-2/5, 0)}
+            with translations {0: (3/5, 0), 1: (-2/5, 0), 2: (-2/5, 0), 3: (-2/5, 0)}
 
         """
-        key_fn_tuple = lambda a,b:(a,b)
-        R = self.image_partition().refinement(other.partition(),
-                                              key_fn=key_fn_tuple)
-        if key_fn is None:
-            def key_fn(a,b):
-                if not isinstance(a, tuple):
-                    a = (a,)
-                if not isinstance(b, tuple):
-                    b = (b,)
-                return a + b
+        R,d = self.image_partition().refinement(other.partition(),
+                                                certificate=True)
 
         atoms_dict = {}
         trans_dict = {}
-        for (a,b),atom in R:
-            key = key_fn(a,b)
+        for key,atom in R:
+            (a,b) = d[key]
             atoms_dict[key] = atom - self._translations[a]
             trans_dict[key] = self._translations[a] + other._translations[b]
 
@@ -732,9 +712,9 @@ class PolyhedronExchangeTransformation(object):
             sage: ieq = [1/2, -1, 0]   # x0 <= 1/2
             sage: d = u.induced_out_partition(ieq)
             sage: [(i, d[i], d[i].alphabet()) for i in d]
-            [(1, Polyhedron partition of 1 atoms with 1 letters, {(0,)}),
-             (2, Polyhedron partition of 1 atoms with 1 letters, {(0, 1)}),
-             (3, Polyhedron partition of 1 atoms with 1 letters, {(0, 0, 1)})]
+            [(1, Polyhedron partition of 1 atoms with 1 letters, {0}),
+             (2, Polyhedron partition of 1 atoms with 1 letters, {0}),
+             (3, Polyhedron partition of 1 atoms with 1 letters, {0})]
 
         ::
 
@@ -750,18 +730,16 @@ class PolyhedronExchangeTransformation(object):
             sage: [(i, d[i], d[i].alphabet()) for i in d]
             [(3,
               Polyhedron partition of 4 atoms with 4 letters,
-              {(0, 2, 2), (1, 2, 2), (1, 2, 3), (1, 3, 3)})]
+              {0, 1, 2, 3})]
 
         ::
 
             sage: ieq2 = [1/2, -1, 0]   # x0 <= 1/2
             sage: d = u.induced_out_partition(ieq2, P)
             sage: [(i, d[i], d[i].alphabet()) for i in d]
-            [(1, Polyhedron partition of 2 atoms with 2 letters, {(0,), (1,)}),
-             (2, Polyhedron partition of 3 atoms with 3 letters, {(2, 2), (2, 3), (3, 3)}),
-             (3,
-              Polyhedron partition of 4 atoms with 4 letters,
-              {(0, 2, 2), (1, 2, 2), (1, 2, 3), (1, 3, 3)})]
+            [(1, Polyhedron partition of 2 atoms with 2 letters, {0, 1}),
+             (2, Polyhedron partition of 3 atoms with 3 letters, {0, 1, 2}),
+             (3, Polyhedron partition of 4 atoms with 4 letters, {0, 1, 2, 3})]
             sage: Q = PolyhedronPartition(d[1].atoms()+d[2].atoms()+d[3].atoms())
             sage: Q.is_pairwise_disjoint()
             True
@@ -793,8 +771,11 @@ class PolyhedronExchangeTransformation(object):
             sage: d = u.induced_out_partition(ieq5, P)
             sage: [(i, d[i], d[i].alphabet()) for i in d]
             [(1,
-              Polyhedron partition of 6 atoms with 4 letters, 
-              {(0,), (1,), (2,), (3,)})]
+              Polyhedron partition of 6 atoms with 6 letters, 
+              {0, 1, 2, 3, 4, 5})]
+
+        .. TODO:: In the above example, do we want to return something
+           else, as it could be 6 atoms and 4 letters instead?
 
         An irrational rotation::
 
@@ -828,23 +809,21 @@ class PolyhedronExchangeTransformation(object):
             partition = self.partition()
 
         # initial refinement
-        key_fn_left = lambda a,b:a
-        key_fn_both = lambda a,b:a+(b,)
-        P = partition.refinement(half_part, key_fn=key_fn_left)
+        P = partition.refinement(half_part)
         if len(P) == 0:
             raise ValueError("Inequality {} does not intersect P "
                     "(={})".format(half.inequalities()[0], partition))
         level = 1
         ans = {}
-        P = self(P, key_fn=lambda a,b:(a,))
+        P = self(P)
         while len(P):
-            P_returned = P.refinement(half_part, key_fn=key_fn_left)
+            P_returned = P.refinement(half_part)
             if P_returned:
                 ans[level] = P_returned
             # for what is remaining we do:
-            P = P.refinement(other_half_part, key_fn=key_fn_left)
-            P = P.refinement(partition, key_fn=key_fn_both)
-            P = self(P, key_fn=key_fn_left)
+            P = P.refinement(other_half_part)
+            P = P.refinement(partition)
+            P = self(P)
             level += 1
         return ans
 
@@ -900,7 +879,6 @@ class PolyhedronExchangeTransformation(object):
         for i,P in out_partition.items():
             for _ in range(i):
                 P = self_inv(P)
-                #P = self_inv(P, key_fn=lambda a,b:a)
             in_partition[i] = P
         return in_partition
 
@@ -1142,6 +1120,9 @@ class PolyhedronExchangeTransformation(object):
             {0: (0,), 1: (0, 1), 2: (0, 0, 1)}
 
         """
+        raise NotImplementedError("we need to fix it so that w below"
+                " contains the history")
+
         out_partition = self.induced_out_partition(ieq, partition=None)
 
         atoms_dict = {}
@@ -1158,7 +1139,7 @@ class PolyhedronExchangeTransformation(object):
         P = PolyhedronPartition(atoms_dict)
         return PolyhedronExchangeTransformation(P, trans_dict), sub
 
-    def cylinder(self, word, partition=None, key_fn=None):
+    def cylinder(self, word, partition=None):
         r"""
         Return the region associated to the coding word.
 
@@ -1167,8 +1148,6 @@ class PolyhedronExchangeTransformation(object):
         - ``word`` -- list
         - ``partition`` -- polyhedron partition (default:``None``), if
           None, it uses the domain partition of the transformation
-        - ``key_fn`` -- function (default:``lambda a,b:(a,b)``), the
-          concatenation function 
 
         OUTPUT:
 
@@ -1246,21 +1225,17 @@ class PolyhedronExchangeTransformation(object):
         # Default partition
         if partition is None:
             partition = self.partition()
-        # Default key_fn
-        if key_fn is None:
-            key_fn = lambda a,b:(a,b)
-
         if not word:
             return partition
         trans_inv = self.inverse()
         reversed_word = reversed(word)
         P = partition[next(reversed_word)]
         for a in reversed_word:
-            P = trans_inv(P, key_fn=lambda a,b:a)
-            P = partition[a].refinement(P, key_fn=key_fn)
+            P = trans_inv(P)
+            P = partition[a].refinement(P)
         return P
 
-    def cylinders(self, size, partition=None, key_fn=None):
+    def cylinders(self, size, partition=None):
         r"""
         Return the cylinders of given size.
 
@@ -1269,9 +1244,6 @@ class PolyhedronExchangeTransformation(object):
         - ``size`` -- nonnegative integer
         - ``partition`` -- polyhedron partition (default:``None``), if
           None, it uses the domain partition of the transformation
-        - ``key_fn`` -- function (default:``lambda a,b:a+b`` and every key
-          of atoms of the partition is changed into a singleton tuple),
-          the concatenation function 
 
         OUTPUT:
 
@@ -1300,10 +1272,6 @@ class PolyhedronExchangeTransformation(object):
         # Default partition
         if partition is None:
             partition = self.partition()
-        # Default key_fn
-        if key_fn is None:
-            key_fn = lambda a,b:a+b
-            partition = PolyhedronPartition([((a,),p) for a,p in partition])
 
         if size == 0:
             return PolyhedronPartition([(tuple(), self.domain())])
@@ -1311,7 +1279,7 @@ class PolyhedronExchangeTransformation(object):
         P = partition
         trans_inv = self.inverse()
         for i in range(size-1):
-            P = trans_inv(P, key_fn=lambda a,b:a)
-            P = partition.refinement(P, key_fn=key_fn)
+            P = trans_inv(P)
+            P = partition.refinement(P)
         return P
 

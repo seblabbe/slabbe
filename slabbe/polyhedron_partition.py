@@ -1204,7 +1204,7 @@ class PolyhedronPartition(object):
         B = self.refinement(other_half_partition)
         return PolyhedronPartition(A.atoms()+B.atoms())
 
-    def refinement(self, other, key_fn=None):
+    def refinement(self, other, certificate=False):
         r"""
         Return the polyhedron partition obtained by the intersection of the
         atoms of self with the atoms of other.
@@ -1214,11 +1214,17 @@ class PolyhedronPartition(object):
         INPUT:
 
         - ``other`` -- a polyhedron partition
-        - ``key_fn`` -- function to apply on pairs of labels, or None
+        - ``certificate`` -- boolean (default:``False``), return a
+          dictionnary for i:(p,q) if atom number i was obtained as the
+          intersection of atoms p in self and q in other
 
         OUTPUT:
 
             a polyhedron partition
+            
+        or
+
+            (polyhedron partition, dict)
 
         .. TODO::
 
@@ -1244,13 +1250,17 @@ class PolyhedronPartition(object):
             raise TypeError("other (of type={}) must a polyhedron"
                     " partition".format(type(other)))
         L = []
+        d = {}
         for ((a,p),(b,q)) in itertools.product(self, other):
             p_q = p.intersection(q)
             if p_q.is_full_dimensional():
-                if key_fn is None:
-                    L.append(p_q)
-                else:
-                    new_key = key_fn(a,b)
-                    L.append((new_key, p_q))
-        return PolyhedronPartition(L)
+                if certificate:
+                    d[len(L)] = (a,b)
+                L.append(p_q)
+
+        P = PolyhedronPartition(L)
+        if certificate:
+            return P, d
+        else:
+            return P
         
