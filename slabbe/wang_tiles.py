@@ -114,7 +114,7 @@ def tile_to_tikz(tile, position, color=None, id=None, id_color='',
       in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
       label of Wang tiles. If ``None``, it performs a 90 degres rotation
       for left and right labels taking more than one character.
-    - ``label`` -- boolean (default: ``True``) 
+    - ``label`` -- boolean (default: ``True``) or a tuple of four boolean
     - ``label_shift`` -- number (default: ``.2``) translation distance of the
       label from the edge
     - ``label_color`` -- string (default: ``'black'``)
@@ -242,12 +242,21 @@ def tile_to_tikz(tile, position, color=None, id=None, id_color='',
     if bottom_edges:
         lines.append(draw_H[tile[3]].format((x,y)))
 
-    if label:
-        node_str = r'\node[rotate={},{}] at {} {{{}}};'
+    node_str = r'\node[rotate={},{}] at {} {{{}}};'
+    if isinstance(label, bool):
+        if label:
+            label = (True, True, True, True)
+        else:
+            label = (False, False, False, False)
+    if label[0]:
         lines.append(node_str.format(rotate[0],label_color,(x+sx-t,  y+.5*sy),  tile[0]))
+    if label[1]:
         lines.append(node_str.format(rotate[1],label_color,(x+.5*sx, y+sy-t), tile[1]))
+    if label[2]:
         lines.append(node_str.format(rotate[2],label_color,(x+t,     y+.5*sy),  tile[2]))
+    if label[3]:
         lines.append(node_str.format(rotate[3],label_color,(x+.5*sx, y+t),   tile[3]))
+
     #lines.append(r'\end{tikzpicture}')
     return lines
     #return TikzPicture('\n'.join(lines))
@@ -4364,7 +4373,8 @@ class WangTiling(object):
         - ``id_format`` -- string (default: ``r'{}'``) to be called with
           ``id_format.format(key)``
         - ``edges`` -- bool (default: ``True``) 
-        - ``label`` -- boolean (default: ``True``), presence of the color labels
+        - ``label`` -- boolean (default: ``True``) or a tuple of four
+          boolean, presence of the color labels
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
         - ``label_color`` -- string (default: ``'black'``)
