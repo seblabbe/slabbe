@@ -4378,7 +4378,8 @@ class WangTiling(object):
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
         - ``label_color`` -- string (default: ``'black'``)
-        - ``scale`` -- number (default: ``1``), tikzpicture scale
+        - ``scale`` -- number or 2-tuple (default: ``1``), tikzpicture
+          scale. If given a 2-tuple, it is interpreted as (xscale, yscale)
         - ``size`` -- number (default: ``1``) size of tiles
         - ``draw_H`` -- dict (default: ``None``) from tile values -> tikz
           draw commands. If ``None`` the values of the dict get replaced by
@@ -4406,13 +4407,13 @@ class WangTiling(object):
             \documentclass[tikz]{standalone}
             \usepackage{amsmath}
             \begin{document}
-            \begin{tikzpicture}[scale=1]
+            \begin{tikzpicture}
+            [scale=1]
             \tikzstyle{every node}=[font=\normalsize]
             % tile at position (x,y)=(0, 0)
             \node[] at (0.5, 0.5) {0};
-            \draw (0, 0) -- ++ (0,1);
             ...
-            ... 96 lines not printed (3570 characters in total) ...
+            ... 97 lines not printed (3571 characters in total) ...
             ...
             \node[rotate=0,black] at (2.8, 3.5) {0};
             \node[rotate=0,black] at (2.5, 3.8) {0};
@@ -4477,7 +4478,12 @@ class WangTiling(object):
         if color is None:
             color = self._color
         lines = []
-        lines.append(r'\begin{{tikzpicture}}[scale={}]'.format(scale))
+        lines.append(r'\begin{tikzpicture}')
+        if isinstance(scale, tuple):
+            xscale, yscale = scale
+            lines.append('[xscale={},yscale={}]'.format(xscale,yscale))
+        else:
+            lines.append('[scale={}]'.format(scale))
         lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
         if extra_before:
             lines.append(extra_before)
