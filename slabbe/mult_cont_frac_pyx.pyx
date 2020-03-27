@@ -955,6 +955,24 @@ cdef class MCFAlgorithm(object):
         """
         return self.class_name()
 
+    def dimension(self):
+        r"""
+        Return the dimension of the linear space for this algorithm
+
+        EXAMPLES::
+
+            sage: from slabbe.mult_cont_frac_pyx import Brun
+            sage: Brun().dimension()
+            3
+            sage: Brun(3).dimension()
+            3
+            sage: Brun(4).dimension()
+            4
+            sage: Brun(25).dimension()
+            25
+        """
+        return self.dim
+
     def __repr__(self):
         r"""
         EXAMPLES::
