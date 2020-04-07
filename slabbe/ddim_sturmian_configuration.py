@@ -221,7 +221,7 @@ class dSturmianConfiguration(object):
         columns = [col[::-1] for col in table]
         return matrix.column(columns)
 
-    def rectangular_subword_tikz(self, window, node_format=None):
+    def rectangular_subword_tikz(self, window, node_format=None, extra_code_after=''):
         r"""
         Return the rectangular subword appearing in the
         given retangular window (as a TikzPicture).
@@ -229,6 +229,12 @@ class dSturmianConfiguration(object):
         INPUT:
 
         - ``window`` -- tuple of 2-tuples ``(start, stop)``
+        - ``node_format`` -- function or ``None``, a function giving the
+          format for the matrix node at coordinate (i,j) like ``lambda
+          i,j:r"{{\color{{black!60}}\symb{{{}}}}}"``.  If None, it gets
+          replaced by a function which put red at postions `(0,...,0)` and
+          `-e_i` and black elsewhere.
+        - ``extra_code_after`` -- string (default: ``''``)
 
         OUTPUT:
 
@@ -243,7 +249,18 @@ class dSturmianConfiguration(object):
 
         """
         M = self.rectangular_subword_matrix(window)
-        return matrix_to_tikz(M, node_format)
+        if node_format is None:
+            import itertools
+            it = itertools.cycle([0]*self._d+[-1])
+            F = set(tuple(next(it) for _ in range(self._d)) for _ in range(self._d+1))
+            (xmin,xmax), (ymin,ymax) = window
+            def node_format(i,j):
+                if (j+xmin,ymax-1-i) in F:
+                    return r"{{\color{{red!60}}\symb{{{}}}}}"
+                else:
+                    return r"{{\color{{black!60}}\symb{{{}}}}}"
+        return matrix_to_tikz(M, node_format, boundary_dash_line=True,
+                extra_code_after=extra_code_after)
 
     def pattern_number_occurrences(self, shape, window, avoid_border=0):
         r"""
@@ -393,7 +410,7 @@ class dSturmianConfiguration(object):
         L = self.rectangular_subwords(sizes, window)
         return [matrix.column([col[::-1] for col in table]) for table in L]
 
-def matrix_to_tikz(M, node_format=None):
+def matrix_to_tikz(M, node_format=None, boundary_dash_line=False, extra_code_after=''):
     r"""
     Return the rectangular subword appearing in the
     given retangular window (as a TikzPicture).
@@ -402,7 +419,9 @@ def matrix_to_tikz(M, node_format=None):
 
     - ``M`` -- matrix
     - ``node_format`` -- format for the node or ``None``. If None,
-      it gets replaced by ``r"{{\color{{black!60}}\symb{{{}}}}}"``
+      it gets replaced by ``lambda i,j:r"{{\color{{black!60}}\symb{{{}}}}}"``
+    - ``boundary_dash_line`` -- boolean (default: ``False``)
+    - ``extra_code_after`` -- string (default: ``''``)
 
     OUTPUT:
 
@@ -429,19 +448,15 @@ def matrix_to_tikz(M, node_format=None):
                minimum size=1.2ex,text width=1.2ex,
                text height=1.2ex,inner sep=3pt,draw={gray!20},align=center,
         ...
-        ... 5 lines not printed (864 characters in total) ...
+        ... 4 lines not printed (790 characters in total) ...
         ...
-        {\color{black!60}\symb{0}}\&{\color{black!60}\symb{0}}\&{\color{black!60}\symb{1}}\&{\color{black!60}\symb{0}}\\
-        {\color{black!60}\symb{0}}\&{\color{black!60}\symb{0}}\&{\color{black!60}\symb{0}}\&{\color{black!60}\symb{1}}\\
         };
-        \node[draw,rectangle,dashed,help lines,fit=(config), inner sep=0.5ex] {};
         \end{tikzpicture}
         \end{document}
 
-
     """
     if node_format is None:
-        node_format = r"{{\color{{black!60}}\symb{{{}}}}}"
+        node_format = lambda i,j:r"{{\color{{black!60}}\symb{{{}}}}}"
 
     lines = []
     lines.append(r"\begin{tikzpicture}")
@@ -452,10 +467,13 @@ def matrix_to_tikz(M, node_format=None):
     lines.append(r"       anchor=base")
     lines.append(r"     }, row sep=1pt,column sep=1pt")
     lines.append(r"  ] (config) {")
-    for row in M.rows():
-        lines.append(r'\&'.join([node_format.format(a) for a in row]) + r'\\')
+    for i,row in enumerate(M.rows()):
+        lines.append(r'\&'.join([node_format(i,j).format(a) for j,a in enumerate(row)]) + r'\\')
     lines.append(r"};")
-    lines.append(r"\node[draw,rectangle,dashed,help lines,fit=(config), inner sep=0.5ex] {};")
+    if boundary_dash_line:
+        lines.append(r"\node[draw,rectangle,dashed,help lines,fit=(config), inner sep=0.5ex] {};")
+    if extra_code_after:
+        lines.append(extra_code_after)
     lines.append(r"\end{tikzpicture}")
 
     from slabbe import TikzPicture
