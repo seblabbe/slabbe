@@ -221,6 +221,30 @@ class dSturmianConfiguration(object):
         columns = [col[::-1] for col in table]
         return matrix.column(columns)
 
+    def rectangular_subword_tikz(self, window, node_format=None):
+        r"""
+        Return the rectangular subword appearing in the
+        given retangular window (as a TikzPicture).
+
+        INPUT:
+
+        - ``window`` -- tuple of 2-tuples ``(start, stop)``
+
+        OUTPUT:
+
+        TikzPicture
+
+        EXAMPLES::
+
+            sage: from slabbe import dSturmianConfiguration
+            sage: c = dSturmianConfiguration((.34, .72), 0)
+            sage: tikz = c.rectangular_subword_tikz(((0,3),(0,4)))
+            sage: tikz.pdf()    # not tested
+
+        """
+        M = self.rectangular_subword_matrix(window)
+        return matrix_to_tikz(M, node_format)
+
     def pattern_number_occurrences(self, shape, window, avoid_border=0):
         r"""
         Return the number of occurrences of every pattern having a given
@@ -368,4 +392,74 @@ class dSturmianConfiguration(object):
         """
         L = self.rectangular_subwords(sizes, window)
         return [matrix.column([col[::-1] for col in table]) for table in L]
+
+def matrix_to_tikz(M, node_format=None):
+    r"""
+    Return the rectangular subword appearing in the
+    given retangular window (as a TikzPicture).
+
+    INPUT:
+
+    - ``M`` -- matrix
+    - ``node_format`` -- format for the node or ``None``. If None,
+      it gets replaced by ``r"{{\color{{black!60}}\symb{{{}}}}}"``
+
+    OUTPUT:
+
+    TikzPicture
+
+    .. NOTE::
+
+        The tikz code below comes from Sebastián Barbieri.
+
+    EXAMPLES::
+
+        sage: from slabbe.ddim_sturmian_configuration import matrix_to_tikz
+        sage: M = identity_matrix(4)
+        sage: matrix_to_tikz(M)
+        \documentclass[tikz]{standalone}
+        \usepackage{amsmath}
+        \usetikzlibrary{matrix}
+        \usetikzlibrary{fit}
+        \newcommand{\symb}[1]{\mathtt{#1}}  % Symbol
+        \begin{document}
+        \begin{tikzpicture}
+        [baseline=-\the\dimexpr\fontdimen22\textfont2\relax,ampersand replacement=\&]
+          \matrix[matrix of math nodes,nodes={
+               minimum size=1.2ex,text width=1.2ex,
+               text height=1.2ex,inner sep=3pt,draw={gray!20},align=center,
+        ...
+        ... 5 lines not printed (864 characters in total) ...
+        ...
+        {\color{black!60}\symb{0}}\&{\color{black!60}\symb{0}}\&{\color{black!60}\symb{1}}\&{\color{black!60}\symb{0}}\\
+        {\color{black!60}\symb{0}}\&{\color{black!60}\symb{0}}\&{\color{black!60}\symb{0}}\&{\color{black!60}\symb{1}}\\
+        };
+        \node[draw,rectangle,dashed,help lines,fit=(config), inner sep=0.5ex] {};
+        \end{tikzpicture}
+        \end{document}
+
+
+    """
+    if node_format is None:
+        node_format = r"{{\color{{black!60}}\symb{{{}}}}}"
+
+    lines = []
+    lines.append(r"\begin{tikzpicture}")
+    lines.append(r"[baseline=-\the\dimexpr\fontdimen22\textfont2\relax,ampersand replacement=\&]")
+    lines.append(r"  \matrix[matrix of math nodes,nodes={")
+    lines.append(r"       minimum size=1.2ex,text width=1.2ex,")
+    lines.append(r"       text height=1.2ex,inner sep=3pt,draw={gray!20},align=center,")
+    lines.append(r"       anchor=base")
+    lines.append(r"     }, row sep=1pt,column sep=1pt")
+    lines.append(r"  ] (config) {")
+    for row in M.rows():
+        lines.append(r'\&'.join([node_format.format(a) for a in row]) + r'\\')
+    lines.append(r"};")
+    lines.append(r"\node[draw,rectangle,dashed,help lines,fit=(config), inner sep=0.5ex] {};")
+    lines.append(r"\end{tikzpicture}")
+
+    from slabbe import TikzPicture
+    usetikzlibrary = "matrix,fit".split(',')
+    macros = [r'\newcommand{\symb}[1]{\mathtt{#1}}  % Symbol']
+    return TikzPicture('\n'.join(lines), usetikzlibrary=usetikzlibrary, macros=macros)
 
