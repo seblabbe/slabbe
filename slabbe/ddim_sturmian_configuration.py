@@ -262,6 +262,35 @@ class dSturmianConfiguration(object):
         return matrix_to_tikz(M, node_format, boundary_dash_line=True,
                 extra_code_after=extra_code_after)
 
+    def rectangular_subword_discrete_plane_tikz(self, window,
+            extra_code_before='', extra_code_after=''):
+        r"""
+        Return the rectangular subword appearing in the
+        given retangular window (as a TikzPicture).
+
+        INPUT:
+
+        - ``window`` -- tuple of 2-tuples ``(start, stop)``
+        - ``extra_code_before`` -- string (default: ``''``)
+        - ``extra_code_after`` -- string (default: ``''``)
+
+        OUTPUT:
+
+        TikzPicture
+
+        EXAMPLES::
+
+            sage: from slabbe import dSturmianConfiguration
+            sage: c = dSturmianConfiguration((.34, .72), 0)
+            sage: tikz = c.rectangular_subword_discrete_plane_tikz(((0,3),(0,4)))
+            sage: tikz.pdf()    # not tested
+
+        """
+        M = self.rectangular_subword_matrix(window)
+        return matrix_to_discrete_plane_tikz(M,
+                extra_code_before=extra_code_before,
+                extra_code_after=extra_code_after)
+
     def pattern_number_occurrences(self, shape, window, avoid_border=0):
         r"""
         Return the number of occurrences of every pattern having a given
@@ -412,8 +441,7 @@ class dSturmianConfiguration(object):
 
 def matrix_to_tikz(M, node_format=None, boundary_dash_line=False, extra_code_after=''):
     r"""
-    Return the rectangular subword appearing in the
-    given retangular window (as a TikzPicture).
+    Return the matrix as a nice TikzPicture.
 
     INPUT:
 
@@ -480,4 +508,85 @@ def matrix_to_tikz(M, node_format=None, boundary_dash_line=False, extra_code_aft
     usetikzlibrary = "matrix,fit".split(',')
     macros = [r'\newcommand{\symb}[1]{\mathtt{#1}}  % Symbol']
     return TikzPicture('\n'.join(lines), usetikzlibrary=usetikzlibrary, macros=macros)
+
+def matrix_to_discrete_plane_tikz(M, extra_code_before='', extra_code_after=''):
+    r"""
+    Return a discrete plane representation of the matrix over alphabet `0`,
+    `1` and `2`.
+
+    INPUT:
+
+    - ``M`` -- matrix over alphabet `0`, `1` and `2`
+    - ``extra_code_before`` -- string (default: ``''``)
+    - ``extra_code_after`` -- string (default: ``''``)
+
+    OUTPUT:
+
+    TikzPicture
+
+    EXAMPLES::
+
+        sage: from slabbe.ddim_sturmian_configuration import matrix_to_discrete_plane_tikz
+        sage: from slabbe import dSturmianConfiguration
+        sage: c = dSturmianConfiguration((.34, .72), 0)
+        sage: M = c.rectangular_subword_matrix(((0,3),(0,4)))
+        sage: matrix_to_discrete_plane_tikz(M)
+        \documentclass[tikz]{standalone}
+        \usepackage{amsmath}
+        \begin{document}
+        \begin{tikzpicture}
+        \draw[fill=gray] (0.000000000000000, 0.000000000000000) -- ++ (-30:2mm) arc (-30:90:2mm);
+        \draw (0.000000000000000, 0.000000000000000) -- (0.866025403784439, -0.500000000000000) -- (0.866025403784439, 0.500000000000000) -- (0.000000000000000, 1.00000000000000) -- (0.000000000000000, 0.000000000000000);
+        \node[label=30:0] at (0.000000000000000, 0.000000000000000) {};
+        \draw[fill=gray] (0.000000000000000, 1.00000000000000) -- ++ (30:2mm) arc (30:90:2mm);
+        ...
+        ... 28 lines not printed (4371 characters in total) ...
+        ...
+        \node[label=80:1] at (2.59807621135332, -0.500000000000000) {};
+        \draw[fill=gray] (2.59807621135332, 0.500000000000000) -- ++ (30:2mm) arc (30:150:2mm);
+        \draw (2.59807621135332, 0.500000000000000) -- (3.46410161513775, 1.00000000000000) -- (2.59807621135332, 1.50000000000000) -- (1.73205080756888, 1.00000000000000) -- (2.59807621135332, 0.500000000000000);
+        \node[label=90:2] at (2.59807621135332, 0.500000000000000) {};
+        \end{tikzpicture}
+        \end{document}
+
+
+    """
+    import itertools
+    from slabbe import M3to2
+
+    # faces of a unit cube
+    zero = vector((0,0,0))
+    e0 = vector((1,0,0))
+    e1 = vector((0,1,0))
+    e2 = vector((0,0,1))
+    cube_faces = {}
+    cube_faces[0] = [zero, e1, e1+e2, e2, zero]
+    cube_faces[1] = [zero, e2, e2-e0, -e0, zero]
+    cube_faces[2] = [zero, -e0, -e0-e1, -e1, zero]
+    label_angle = {0:30, 1:80, 2:90}
+    cone_angle = {0:(-30,90), 1:(30,90), 2:(30,150)}
+
+    lines = []
+    lines.append(r"\begin{tikzpicture}")
+    if extra_code_before:
+        lines.append(extra_code_before)
+    for (i,j) in itertools.product(range(M.nrows()), range(M.ncols())):
+        a = M[i,j]
+        start = vector((0,i,j))
+        startp = M3to2 * start
+        # arc
+        c,d = cone_angle[a]
+        lines.append(r'\draw[fill=gray] {} -- ++ ({}:2mm) arc ({}:{}:2mm);'.format(startp,c,c,d))
+        # rhombus contour
+        path_2d = [M3to2 * (start+v) for v in cube_faces[a]]
+        path_str = ' -- '.join(r"{}".format(pt) for pt in path_2d)
+        lines.append(r'\draw {};'.format(path_str))
+        # node
+        lines.append(r'\node[label={}:{}] at {} {{}};'.format(label_angle[a],a,startp))
+    if extra_code_after:
+        lines.append(extra_code_after)
+    lines.append(r"\end{tikzpicture}")
+
+    from slabbe import TikzPicture
+    return TikzPicture('\n'.join(lines))
 
