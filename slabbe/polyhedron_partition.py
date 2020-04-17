@@ -1198,15 +1198,15 @@ def jeandel_rao_tilings_partition(backend=None):
             for (key,vertices) in L]
     return PolyhedronPartition(L)
 
-def self_similar_19_tiles_partition():
+def self_similar_19_atoms_partition():
     r"""
     This construct the polygon partition introduced in [Lab2019]_
     associated to the self-similar 19 Wang tiles [Lab2018]_.
 
     EXAMPLES::
 
-        sage: from slabbe.polyhedron_partition import self_similar_19_tiles_partition
-        sage: PU = self_similar_19_tiles_partition()
+        sage: from slabbe.polyhedron_partition import self_similar_19_atoms_partition
+        sage: PU = self_similar_19_atoms_partition()
         sage: PU.is_pairwise_disjoint()
         True
         sage: PU.volume()
