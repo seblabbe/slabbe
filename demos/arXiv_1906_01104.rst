@@ -30,7 +30,8 @@ to reproduce the proof of Proposition 18.
     sage: z = polygen(QQ, 'z')
     sage: K = NumberField(z**2-z-1, 'phi', embedding=RR(1.6))
     sage: phi = K.gen()
-    sage: P0 = PolyhedronPartition.jeandel_rao_tilings_partition()
+    sage: from slabbe.polyhedron_partition import jeandel_rao_tilings_partition
+    sage: P0 = jeandel_rao_tilings_partition()
     sage: Gamma0 = matrix.column([(phi,0), (1,phi+3)])
     sage: fundamental_domain = polytopes.parallelotope([(phi,0), (0,phi+3)])
     sage: R0e2 = PET.toral_translation(Gamma0, vector((0,1)), fundamental_domain)
