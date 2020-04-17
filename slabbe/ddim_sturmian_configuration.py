@@ -263,7 +263,7 @@ class dSturmianConfiguration(object):
                 extra_code_after=extra_code_after)
 
     def rectangular_subword_discrete_plane_tikz(self, window,
-            extra_code_before='', extra_code_after=''):
+            fill_color=None, extra_code_before='', extra_code_after=''):
         r"""
         Return the rectangular subword appearing in the
         given retangular window (as a TikzPicture).
@@ -271,6 +271,11 @@ class dSturmianConfiguration(object):
         INPUT:
 
         - ``window`` -- tuple of 2-tuples ``(start, stop)``
+        - ``fill_color`` -- dict (default: ``None``), if ``None``, it is
+          replaced by ``{0:'black!10',1:'black!30',2:'black!50'}``.
+          Rhombus of type ``a`` have color ``fill_color[a]``.
+          If tuple ``(i,j)`` is in ``fill_color``, then ``fill_color[(i,j)]``
+          gives the color of the rhombus at position (i,j).
         - ``extra_code_before`` -- string (default: ``''``)
         - ``extra_code_after`` -- string (default: ``''``)
 
@@ -286,8 +291,23 @@ class dSturmianConfiguration(object):
             sage: tikz.pdf()    # not tested
 
         """
+        # shift the coordinates of fill_color
+        if fill_color:
+            (xmin,xmax), (ymin,ymax) = window
+            shifted_fill_color = {}
+            for key,color in fill_color.items():
+                try:
+                    x,y = key
+                except: # we allow keys to be the type of rhombus (integer)
+                    shifted_fill_color[key] = color
+                else:
+                    shifted_fill_color[(x-xmin,y-ymin)] = color
+        else:
+            shifted_fill_color = None
+        # get the table
         table = self.rectangular_subword(window)
-        return table_to_discrete_plane_tikz(table,
+        return table_to_discrete_plane_tikz(table, 
+                fill_color=shifted_fill_color,
                 extra_code_before=extra_code_before,
                 extra_code_after=extra_code_after)
 
@@ -509,7 +529,7 @@ def matrix_to_tikz(M, node_format=None, boundary_dash_line=False, extra_code_aft
     macros = [r'\newcommand{\symb}[1]{\mathtt{#1}}  % Symbol']
     return TikzPicture('\n'.join(lines), usetikzlibrary=usetikzlibrary, macros=macros)
 
-def table_to_discrete_plane_tikz(table, extra_code_before='', extra_code_after=''):
+def table_to_discrete_plane_tikz(table, fill_color=None, extra_code_before='', extra_code_after=''):
     r"""
     Return a discrete plane representation of the table over alphabet `0`,
     `1` and `2`.
@@ -520,6 +540,11 @@ def table_to_discrete_plane_tikz(table, extra_code_before='', extra_code_after='
       `0`, `1` and `2`
     - ``extra_code_before`` -- string (default: ``''``)
     - ``extra_code_after`` -- string (default: ``''``)
+    - ``fill_color`` -- dict (default: ``None``), if ``None``, it is
+      replaced by ``{0:'black!10',1:'black!30',2:'black!50'}``.
+      Rhombus of type ``a`` have color ``fill_color[a]``.
+      If tuple ``(i,j)`` is in ``fill_color``, then ``fill_color[(i,j)]``
+      gives the color of the rhombus at position (i,j).
 
     OUTPUT:
 
@@ -536,19 +561,20 @@ def table_to_discrete_plane_tikz(table, extra_code_before='', extra_code_after='
         \usepackage{amsmath}
         \begin{document}
         \begin{tikzpicture}
-        \draw[fill=gray] (0.000000000000000, 0.000000000000000) -- ++ (30:2mm) arc (30:150:2mm);
-        \draw (0.000000000000000, 0.000000000000000) -- (0.866025403784439, 0.500000000000000) -- (0.000000000000000, 1.00000000000000) -- (-0.866025403784439, 0.500000000000000) -- (0.000000000000000, 0.000000000000000);
+        \draw[fill=black!10] (0.000000000000000, 0.000000000000000) -- (0.866025403784439, 0.500000000000000) -- (0.000000000000000, 1.00000000000000) -- (-0.866025403784439, 0.500000000000000) -- (0.000000000000000, 0.000000000000000);
+        \draw[fill=black!70] (0.000000000000000, 0.000000000000000) -- ++ (30:1.7mm) arc (30:150:1.7mm);
         \node[label=90:0] at (0.000000000000000, 0.000000000000000) {};
-        \draw[fill=gray] (0.000000000000000, 1.00000000000000) -- ++ (-30:2mm) arc (-30:90:2mm);
+        \draw[fill=black!50] (0.000000000000000, 1.00000000000000) -- (0.866025403784439, 0.500000000000000) -- (0.866025403784439, 1.50000000000000) -- (0.000000000000000, 2.00000000000000) -- (0.000000000000000, 1.00000000000000);
         ...
-        ... 28 lines not printed (4337 characters in total) ...
+        ... 28 lines not printed (4613 characters in total) ...
         ...
         \node[label=90:0] at (1.73205080756888, 3.00000000000000) {};
-        \draw[fill=gray] (1.73205080756888, 4.00000000000000) -- ++ (-30:2mm) arc (-30:90:2mm);
-        \draw (1.73205080756888, 4.00000000000000) -- (2.59807621135332, 3.50000000000000) -- (2.59807621135332, 4.50000000000000) -- (1.73205080756888, 5.00000000000000) -- (1.73205080756888, 4.00000000000000);
+        \draw[fill=black!50] (1.73205080756888, 4.00000000000000) -- (2.59807621135332, 3.50000000000000) -- (2.59807621135332, 4.50000000000000) -- (1.73205080756888, 5.00000000000000) -- (1.73205080756888, 4.00000000000000);
+        \draw[fill=black!70] (1.73205080756888, 4.00000000000000) -- ++ (-30:1.7mm) arc (-30:90:1.7mm);
         \node[label=30:2] at (1.73205080756888, 4.00000000000000) {};
         \end{tikzpicture}
         \end{document}
+
 
     """
     import itertools
@@ -559,12 +585,15 @@ def table_to_discrete_plane_tikz(table, extra_code_before='', extra_code_after='
     e0 = vector((1,0,0))
     e1 = vector((0,1,0))
     e2 = vector((0,0,1))
-    cube_faces = {}
-    cube_faces[0] = [zero, -e0, -e0-e1, -e1, zero]
-    cube_faces[1] = [zero, e2, e2-e0, -e0, zero]
-    cube_faces[2] = [zero, e1, e1+e2, e2, zero]
+    cube_faces = {0:[zero, -e0, -e0-e1, -e1, zero],
+                  1:[zero, e2, e2-e0, -e0, zero],
+                  2:[zero, e1, e1+e2, e2, zero]}
     label_angle = {0:90, 1:80, 2:30}
     cone_angle = {0:(30,150), 1:(30,90), 2:(-30,90)}
+    if fill_color is None:
+        fill_color = {0:'black!10',
+                      1:'black!30',
+                      2:'black!50'}
 
     lines = []
     lines.append(r"\begin{tikzpicture}")
@@ -576,13 +605,15 @@ def table_to_discrete_plane_tikz(table, extra_code_before='', extra_code_after='
         a = table[i][j]
         start = vector((-i,0,j))
         startp = M3to2 * start
-        # arc
-        c,d = cone_angle[a]
-        lines.append(r'\draw[fill=gray] {} -- ++ ({}:2mm) arc ({}:{}:2mm);'.format(startp,c,c,d))
         # rhombus contour
         path_2d = [M3to2 * (start+v) for v in cube_faces[a]]
         path_str = ' -- '.join(r"{}".format(pt) for pt in path_2d)
-        lines.append(r'\draw {};'.format(path_str))
+        fill = fill_color.get((i,j), fill_color[a])
+        lines.append(r'\draw[fill={}] {};'.format(fill, path_str))
+        # arc
+        c,d = cone_angle[a]
+        lines.append(r'\draw[fill=black!70] {} -- ++ '
+                     r'({}:1.7mm) arc ({}:{}:1.7mm);'.format(startp,c,c,d))
         # node
         lines.append(r'\node[label={}:{}] at {} {{}};'.format(label_angle[a],a,startp))
     if extra_code_after:
