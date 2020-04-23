@@ -106,6 +106,55 @@ def is_union_convex(t):
     r = Polyhedron(vertices, base_ring=base_ring)
     return r.volume() == sum(p.volume() for p in t)
 
+def center_inscribed_sphere_polytope(polytope, solver=None):
+    r"""
+    Return the center and radius of maximal inscribed sphere
+
+    INPUT:
+
+    - ``polytope`` -- polytope
+
+    OUTPUT:
+
+    a 2-tuple (center, radius)
+
+    EXAMPLES::
+
+        sage: from slabbe.polyhedron_partition import center_inscribed_sphere_polytope
+        sage: P = polytopes.associahedron(['A',3])
+        sage: center_inscribed_sphere_polytope(P)
+        ([0.03553390593273766, 0.5355339059327378, 0.03553390593273766],
+         1.4644660940672622)
+        sage: center_inscribed_sphere_polytope(P + vector((10,10,10)))
+        ([10.035533905932738, 10.535533905932738, 10.035533905932738],
+         1.4644660940672622)
+
+    ::
+
+        sage: P = Polyhedron([(0,0), (1,0), (0,10)])
+        sage: center_inscribed_sphere_polytope(P)
+        ([0.47506218943955486, 0.47506218943955486], 0.47506218943955486)
+
+    """
+    from math import sqrt
+    from sage.numerical.mip import MixedIntegerLinearProgram
+    p = MixedIntegerLinearProgram(solver=solver)
+    x = p.new_variable()
+    d = p.new_variable()
+
+    for ineq in polytope.inequalities_list():
+        constant = ineq[0]
+        coeffs = ineq[1:]
+        norm = sqrt(sum(a**2 for a in coeffs))
+        S = p.sum(a/norm*x[i] for (i,a) in enumerate(coeffs))
+        p.add_constraint(constant/norm + S >= d[0])
+    p.set_objective(d[0])
+
+    radius = p.solve()
+    soln = p.get_values(x)
+    center = [soln[k] for k in sorted(x.keys())]
+    return center, radius
+
 class PolyhedronPartition(object):
     r"""
     Return a partition into polyhedron.
