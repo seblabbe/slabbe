@@ -106,7 +106,7 @@ def is_union_convex(t):
     r = Polyhedron(vertices, base_ring=base_ring)
     return r.volume() == sum(p.volume() for p in t)
 
-def center_inscribed_sphere_polytope(polytope, solver=None):
+def center_insphere_polytope(polytope, solver=None):
     r"""
     Return the center and radius of maximal inscribed sphere
 
@@ -120,19 +120,19 @@ def center_inscribed_sphere_polytope(polytope, solver=None):
 
     EXAMPLES::
 
-        sage: from slabbe.polyhedron_partition import center_inscribed_sphere_polytope
+        sage: from slabbe.polyhedron_partition import center_insphere_polytope
         sage: P = polytopes.associahedron(['A',3])
-        sage: center_inscribed_sphere_polytope(P)
+        sage: center_insphere_polytope(P)
         ([0.03553390593273766, 0.5355339059327378, 0.03553390593273766],
          1.4644660940672622)
-        sage: center_inscribed_sphere_polytope(P + vector((10,10,10)))
+        sage: center_insphere_polytope(P + vector((10,10,10)))
         ([10.035533905932738, 10.535533905932738, 10.035533905932738],
          1.4644660940672622)
 
     ::
 
         sage: P = Polyhedron([(0,0), (1,0), (0,10)])
-        sage: center_inscribed_sphere_polytope(P)
+        sage: center_insphere_polytope(P)
         ([0.47506218943955486, 0.47506218943955486], 0.47506218943955486)
 
     """
@@ -769,7 +769,8 @@ class PolyhedronPartition(object):
         G = Graphics()
         for key,P in self:
             G += P.plot(fill='white')
-            G += text(key, P.center())
+            center,radius = center_insphere_polytope(P)
+            G += text(key, center)
         return G
 
     def edges(self):
@@ -883,6 +884,7 @@ class PolyhedronPartition(object):
             sage: _ = P.tikz(label_format=r'$a_{{{}}}$').pdf(view=False)
         """
         from slabbe import TikzPicture
+        from sage.misc.functional import numerical_approx
         lines = []
         lines.append(r'\begin{tikzpicture}')
         lines.append('[scale={}]'.format(scale))
@@ -897,9 +899,9 @@ class PolyhedronPartition(object):
         for key,P in self:
             lines.append(r'% atom with key {}'.format(key))
             label = label_format.format(key)
-            lines.append(node_format.format(fontsize, 
-                                            P.center().n(digits=5),
-                                            label))
+            center,radius = center_insphere_polytope(P)
+            center = tuple(numerical_approx(a,digits=5) for a in center)
+            lines.append(node_format.format(fontsize, center, label))
         lines.append(extra_code)
         lines.append(r'\end{tikzpicture}')
         return TikzPicture('\n'.join(lines))
