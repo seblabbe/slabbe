@@ -751,8 +751,13 @@ class PolyhedronPartition(object):
         else:
             return dict(d)
 
-    def plot(self):
+    def plot(self, label_pos='insphere_center'):
         r"""
+        INPUT:
+
+        - ``label_pos`` -- string (default:``'insphere_center'``) or
+          ``'center'`` for the center of the polytope
+
         EXAMPLES::
 
             sage: from slabbe import PolyhedronPartition
@@ -769,7 +774,12 @@ class PolyhedronPartition(object):
         G = Graphics()
         for key,P in self:
             G += P.plot(fill='white')
-            center,radius = center_insphere_polytope(P)
+            if label_pos == 'insphere_center':
+                center,radius = center_insphere_polytope(P)
+            elif label_pos == 'center':
+                center = P.center()
+            else:
+                raise ValueError('unknown value for label_pos(={})'.format(label_pos))
             G += text(key, center)
         return G
 
@@ -842,9 +852,8 @@ class PolyhedronPartition(object):
                 edges.add(sorted_edge)
         return edges
 
-    def tikz(self, fontsize=r'\normalsize', scale=1, 
-            label_format = r'{}',
-            extra_code=''):
+    def tikz(self, fontsize=r'\normalsize', scale=1, label_format = r'{}',
+            label_pos='insphere_center', extra_code=''):
         r"""
         INPUT:
 
@@ -852,6 +861,8 @@ class PolyhedronPartition(object):
         - ``scale`` -- number (default: ``1``)
         - ``label_format`` -- string (default: ``r'{}'``) to be called with
           ``label_format.format(key)``
+        - ``label_pos`` -- string (default:``'insphere_center'``) or
+          ``'center'`` for the center of the polytope
         - ``extra_code`` -- string (default: ``''``)
 
         EXAMPLES::
@@ -899,8 +910,13 @@ class PolyhedronPartition(object):
         for key,P in self:
             lines.append(r'% atom with key {}'.format(key))
             label = label_format.format(key)
-            center,radius = center_insphere_polytope(P)
-            center = tuple(numerical_approx(a,digits=5) for a in center)
+            if label_pos == 'insphere_center':
+                center,radius = center_insphere_polytope(P)
+                center = tuple(numerical_approx(a,digits=5) for a in center)
+            elif label_pos == 'center':
+                center = P.center()
+            else:
+                raise ValueError('unknown value for label_pos(={})'.format(label_pos))
             lines.append(node_format.format(fontsize, center, label))
         lines.append(extra_code)
         lines.append(r'\end{tikzpicture}')
