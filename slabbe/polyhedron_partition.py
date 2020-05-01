@@ -1181,7 +1181,7 @@ class PolyhedronPartition(object):
         else:
             return P
 
-def jeandel_rao_tilings_partition(backend=None):
+def jeandel_rao_wang_shift_partition(backend=None):
     r"""
     This construct the polygon partition associated to Jeandel-Rao
     tilings introduced in [Lab2019]_.
@@ -1192,8 +1192,8 @@ def jeandel_rao_tilings_partition(backend=None):
 
     EXAMPLES::
 
-        sage: from slabbe.polyhedron_partition import jeandel_rao_tilings_partition
-        sage: P0 = jeandel_rao_tilings_partition()
+        sage: from slabbe.polyhedron_partition import jeandel_rao_wang_shift_partition
+        sage: P0 = jeandel_rao_wang_shift_partition()
         sage: P0.is_pairwise_disjoint()
         True
         sage: P0.volume()
