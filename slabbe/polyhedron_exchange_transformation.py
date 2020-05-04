@@ -101,10 +101,7 @@ class PolyhedronExchangeTransformation(object):
 
         - Do we want to merge atoms mapped by the same translation?
 
-        X Induction should return the induced transformation somehow.
-
-        - Check mathematically that induced_in_partition and
-          induced_out_partition are doing ok
+        - Induction should return the induced transformation somehow.
 
         - Add a ploting function with seperated domain/codomain
 
@@ -686,204 +683,6 @@ class PolyhedronExchangeTransformation(object):
         P = PolyhedronPartition(atoms_dict)
         return PolyhedronExchangeTransformation(P, trans_dict)
 
-    def induced_out_partition(self, ieq, partition=None):
-        r"""
-        Returns the output partition obtained as the induction of the
-        transformation on the domain given by an inequality.
-
-        Note: the output partition corresponds to the arrival partition in
-        the domain, not the initial one.
-
-        INPUT:
-
-        - ``ieq`` -- list, an inequality. An entry equal to "[-1,7,3,4]"
-          represents the inequality 7x_1+3x_2+4x_3>= 1.
-        - ``partition`` -- polyhedron partition (default:``None``), if
-          None, it uses the domain partition of the transformation
-
-        OUTPUT:
-
-            dict of polyhedron partitions with keys giving the return time
-
-        EXAMPLES::
-
-            sage: from slabbe import PolyhedronExchangeTransformation as PET
-            sage: base = identity_matrix(2)
-            sage: translation = vector((1/3, 0))
-            sage: u = PET.toral_translation(base, translation)
-            sage: ieq = [1/2, -1, 0]   # x0 <= 1/2
-            sage: d = u.induced_out_partition(ieq)
-            sage: [(i, d[i], d[i].alphabet()) for i in d]
-            [(1, Polyhedron partition of 1 atoms with 1 letters, {0}),
-             (2, Polyhedron partition of 1 atoms with 1 letters, {0}),
-             (3, Polyhedron partition of 1 atoms with 1 letters, {0})]
-
-        ::
-
-            sage: from slabbe import PolyhedronPartition
-            sage: h = 1/3
-            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
-            sage: q = Polyhedron([(0,0), (0,h), (h,1), (h,0)])
-            sage: r = Polyhedron([(h,1), (1,1), (1,h), (h,0)])
-            sage: s = Polyhedron([(h,0), (1,0), (1,h)])
-            sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
-            sage: ieq = [h, -1, 0]   # x0 <= h
-            sage: d = u.induced_out_partition(ieq, P)
-            sage: [(i, d[i], d[i].alphabet()) for i in d]
-            [(3,
-              Polyhedron partition of 4 atoms with 4 letters,
-              {0, 1, 2, 3})]
-
-        ::
-
-            sage: ieq2 = [1/2, -1, 0]   # x0 <= 1/2
-            sage: d = u.induced_out_partition(ieq2, P)
-            sage: [(i, d[i], d[i].alphabet()) for i in d]
-            [(1, Polyhedron partition of 2 atoms with 2 letters, {0, 1}),
-             (2, Polyhedron partition of 3 atoms with 3 letters, {0, 1, 2}),
-             (3, Polyhedron partition of 4 atoms with 4 letters, {0, 1, 2, 3})]
-            sage: Q = PolyhedronPartition(d[1].atoms()+d[2].atoms()+d[3].atoms())
-            sage: Q.is_pairwise_disjoint()
-            True
-
-        ::
-
-            sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
-            sage: ieq3 = [-1/2, 1, 0]   # x0 >= 1/2
-            sage: u.induced_out_partition(ieq3, P)
-            {1: Polyhedron partition of 2 atoms with 2 letters,
-             2: Polyhedron partition of 3 atoms with 3 letters,
-             3: Polyhedron partition of 4 atoms with 4 letters}
-
-        It is an error if the induced region is empty::
-
-            sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
-            sage: ieq4 = [-1/2, -1, 0]   # x0 <= -1/2
-            sage: u.induced_out_partition(ieq4, P)
-            Traceback (most recent call last):
-            ...
-            ValueError: Inequality An inequality (-2, 0) x - 1 >= 0 does
-            not intersect P (=Polyhedron partition of 4 atoms with 4
-            letters)
-
-        The whole domain::
-
-            sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
-            sage: ieq5 = [1/2, 1, 0]   # x0 >= -1/2
-            sage: d = u.induced_out_partition(ieq5, P)
-            sage: [(i, d[i], d[i].alphabet()) for i in d]
-            [(1,
-              Polyhedron partition of 6 atoms with 6 letters, 
-              {0, 1, 2, 3, 4, 5})]
-
-        .. TODO:: In the above example, do we want to return something
-           else, as it could be 6 atoms and 4 letters instead?
-
-        An irrational rotation::
-
-            sage: z = polygen(QQ, 'z') #z = QQ['z'].0 # same as
-            sage: K = NumberField(z**2-z-1, 'phi', embedding=RR(1.6))
-            sage: phi = K.gen()
-            sage: h = 1/phi^2
-            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
-            sage: q = Polyhedron([(0,0), (0,h), (h,1), (h,0)])
-            sage: r = Polyhedron([(h,1), (1,1), (1,h), (h,0)])
-            sage: s = Polyhedron([(h,0), (1,0), (1,h)])
-            sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s}, base_ring=K)
-            sage: base = identity_matrix(2)
-            sage: translation = vector((1/phi, 0))
-            sage: u = PET.toral_translation(base, translation)
-            sage: ieq = [phi^-4, -1, 0]   # x0 <= phi^-4
-            sage: d = u.induced_out_partition(ieq, P)
-            sage: d
-            {5: Polyhedron partition of 6 atoms with 6 letters,
-             8: Polyhedron partition of 9 atoms with 9 letters}
-        """
-        # good side of the hyperplane
-        half = Polyhedron(ieqs=[ieq])
-        half_part = PolyhedronPartition([half])
-        # the other side of the hyperplane
-        other_half = Polyhedron(ieqs=[[-a for a in ieq]])
-        other_half_part = PolyhedronPartition([other_half])
-
-        # Default partition
-        if partition is None:
-            partition = self.partition()
-
-        # initial refinement
-        P = partition.refinement(half_part)
-        if len(P) == 0:
-            raise ValueError("Inequality {} does not intersect P "
-                    "(={})".format(half.inequalities()[0], partition))
-        level = 1
-        ans = {}
-        P = self(P)
-        while len(P):
-            P_returned = P.refinement(half_part)
-            if P_returned:
-                ans[level] = P_returned
-            # for what is remaining we do:
-            P = P.refinement(other_half_part)
-            P = P.refinement(partition)
-            P = self(P)
-            level += 1
-        return ans
-
-    def induced_in_partition(self, ieq, partition=None):
-        r"""
-        Returns the partition of the induced transformation on the domain.
-        given by an inequality.
-
-        INPUT:
-
-        - ``ieq`` -- list, an inequality. An entry equal to "[-1,7,3,4]"
-          represents the inequality 7x_1+3x_2+4x_3>= 1.
-        - ``partition`` -- polyhedron partition (default:``None``), if
-          None, it uses the domain partition of the transformation
-
-        OUTPUT:
-
-            dict of polyhedron partitions with keys giving the return time
-
-        EXAMPLES::
-
-            sage: from slabbe import PolyhedronPartition
-            sage: h = 1/3
-            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
-            sage: q = Polyhedron([(0,0), (0,h), (h,1), (h,0)])
-            sage: r = Polyhedron([(h,1), (1,1), (1,h), (h,0)])
-            sage: s = Polyhedron([(h,0), (1,0), (1,h)])
-            sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
-
-        ::
-
-            sage: from slabbe import PolyhedronExchangeTransformation as PET
-            sage: base = identity_matrix(2)
-            sage: translation = vector((1/3, 0))
-            sage: u = PET.toral_translation(base, translation)
-            sage: ieq = [h, -1, 0]   # x0 <= h
-            sage: u.induced_in_partition(ieq, P)
-            {3: Polyhedron partition of 4 atoms with 4 letters}
-
-        ::
-
-            sage: P = PolyhedronPartition({0:p, 1:q, 2:r, 3:s})
-            sage: ieq2 = [1/2, -1, 0]   # x0 <= 1/2
-            sage: d = u.induced_in_partition(ieq2, P)
-            sage: d
-            {1: Polyhedron partition of 2 atoms with 2 letters,
-             2: Polyhedron partition of 3 atoms with 3 letters,
-             3: Polyhedron partition of 4 atoms with 4 letters}
-        """
-        out_partition = self.induced_out_partition(ieq, partition)
-        in_partition = {}
-        self_inv = self.inverse()
-        for i,P in out_partition.items():
-            for _ in range(i):
-                P = self_inv(P)
-            in_partition[i] = P
-        return in_partition
-
     def induced_partition(self, ieq, partition=None, substitution_type='dict'):
         r"""
         Returns the partition of the induced transformation on the domain.
@@ -1045,48 +844,61 @@ class PolyhedronExchangeTransformation(object):
         if partition is None:
             partition = self.partition()
 
-        in_partition = self.induced_in_partition(ieq, partition)
+        # good side of the hyperplane
+        half_polyhedron = Polyhedron(ieqs=[ieq])
+        half = PolyhedronPartition([half_polyhedron])
 
-        # Goal: we want two atoms to have the same key if they have
-        # the same behavior under the induction
+        # the other side of the hyperplane
+        other_half_polyhedron = Polyhedron(ieqs=[[-a for a in ieq]])
+        other_half = PolyhedronPartition([other_half_polyhedron])
 
-        # Solution: we construct a dict image of letter -> list of atoms
-        from collections import defaultdict
-        d = defaultdict(list)
-        for return_time,P in in_partition.items():
-            for garbage_key,p in P:
-                p_copy = copy(p)
+        # initial partition is the window, i.e., the intersection of the
+        # domain with the half space
+        domain = PolyhedronPartition([self.domain()])
+        Q = domain.refinement(half)
+        if len(Q) == 0:
+            raise ValueError("Inequality {} does not intersect partition "
+                    "(={})".format(half_polyhedron.inequalities()[0], partition))
+
+        # Compute the induced partition and associated return words
+        return_time = 1
+        ans = []
+        self_inv = self.inverse()
+        while len(Q):
+            Q = self_inv(Q).refinement(partition)
+            Q_returned = Q.refinement(half)
+            for garbage_key,q in Q_returned:
+                q_copy = copy(q)
                 w = []
                 for _ in range(return_time):
-                    w.append(partition.code(p))
-                    p = self(p)
-                d[tuple(w)].append(p_copy)
+                    w.append(partition.code(q))
+                    q = self(q)
+                ans.append((tuple(w), q_copy))
+            Q = Q.refinement(other_half)
+            return_time += 1
 
-        # We construct the list of (key, atom) and the substitution
-        L = []
-        sub = {}
+        # We sort the keys and relabel them with nonnegative integers
         from slabbe.finite_word import sort_word_by_length_lex_key
-        sorted_keys = sorted(d.keys(), key=sort_word_by_length_lex_key)
-        for key,w in enumerate(sorted_keys):
-            atoms = d[w]
-            for atom in atoms:
-                L.append((key,atom))
-                sub[key] = list(w)
+        return_words = set(w for (w,q) in ans)
+        sorted_return_words = sorted(return_words, key=sort_word_by_length_lex_key)
+        key_to_word = {key:list(w) for (key,w) in enumerate(sorted_return_words)}
+        word_to_key = {w:key for (key,w) in enumerate(sorted_return_words)}
+        induced_partition = PolyhedronPartition([(word_to_key[w],q) for (w,q) in ans])
 
         # Build a substitution2d if desired
         if substitution_type == 'dict':
-            pass
-        elif substitution_type in ['column', 'row']:
+            sub = key_to_word
+        elif substitution_type == 'column':
             from slabbe import Substitution2d
-            if substitution_type == 'column':
-                sub = Substitution2d.from_1d_column_substitution(sub)
-            elif substitution_type == 'row':
-                sub = Substitution2d.from_1d_row_substitution(sub)
+            sub = Substitution2d.from_1d_column_substitution(key_to_word)
+        elif substitution_type == 'row':
+            from slabbe import Substitution2d
+            sub = Substitution2d.from_1d_row_substitution(key_to_word)
         else:
             raise ValueError('Unknown value for substitution_type'
                     ' (={})'.format(substitution_type))
 
-        return PolyhedronPartition(L), sub
+        return induced_partition, sub
 
     def induced_transformation(self, ieq):
         r"""
