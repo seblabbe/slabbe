@@ -2,12 +2,12 @@
 Induction of `Z^2`-actions and of partitions of the 2-torus
 ===========================================================
 
-`arXiv:1906.01104`__, June 2019, 36 p.
+`arXiv:1906.01104`__, June 2019, 36 p. (v2: revised in May 2020).
 
 __ https://arxiv.org/abs/1906.01104
 
-Running ``sage -t`` on this file takes 15 seconds with sage-8.7 and
-slabbe-0.5.1.
+Running ``sage -t`` on this file takes 9.3 seconds with sage-9.1 and
+slabbe-0.6.1.
 
 Appendix: Sage code
 -------------------
@@ -19,9 +19,8 @@ implemented in Sage with the optional package slabbe::
     sage: from slabbe import PolyhedronExchangeTransformation as PET
     sage: from slabbe import Substitution2d
 
-The following allows to define the partition $P_0$ of $\R^2/\Gamma_0$, compute
-the induced partition $P_1$ of $\R^2/\Gamma_1$, the substitution $\beta_0$ and
-to reproduce the proof of Proposition 18.
+First we construct the golden mean as a element of a quadratic number field
+because it is more efficient for arithmetic operations and comparisons:
 
 .. link
 
@@ -30,11 +29,36 @@ to reproduce the proof of Proposition 18.
     sage: z = polygen(QQ, 'z')
     sage: K = NumberField(z**2-z-1, 'phi', embedding=RR(1.6))
     sage: phi = K.gen()
-    sage: from slabbe.polyhedron_partition import jeandel_rao_wang_shift_partition
-    sage: P0 = jeandel_rao_wang_shift_partition()
+
+The following defines the lattice $\Gamma_0$ and $\mathbb{Z}^2$-action $R_0$ on
+$\R^2/\Gamma_0$
+
+.. link
+
+::
+
     sage: Gamma0 = matrix.column([(phi,0), (1,phi+3)])
     sage: fundamental_domain = polytopes.parallelotope([(phi,0), (0,phi+3)])
     sage: R0e2 = PET.toral_translation(Gamma0, vector((0,1)), fundamental_domain)
+
+The following allows to define the partition $P_0$ of $\R^2/\Gamma_0$:
+
+.. link
+
+::
+
+    sage: from slabbe.polyhedron_partition import jeandel_rao_wang_shift_partition
+    sage: P0 = jeandel_rao_wang_shift_partition()
+    sage: P0
+    Polyhedron partition of 24 atoms with 11 letters
+
+The following allows to compute the induced partition $P_1$ of $\R^2/\Gamma_1$,
+the substitution $\beta_0$.
+
+.. link
+
+::
+
     sage: y_le_1 = [1, 0, -1]   # syntax for the inequality y <= 1
     sage: P1,beta0 = R0e2.induced_partition(y_le_1, P0, substitution_type='column')
     sage: P1
@@ -42,53 +66,192 @@ to reproduce the proof of Proposition 18.
     sage: beta0
     Substitution 2d: {0: [[0, 9, 3, 7]], 1: [[0, 9, 7, 5]], 2: [[0, 9, 10, 4]], 3: [[1, 3, 3, 7]], 4: [[1, 3, 7, 6]], 5: [[1, 3, 8, 7]], 6: [[1, 7, 2, 5]], 7: [[1, 7, 5, 5]], 8: [[1, 7, 5, 6]], 9: [[1, 8, 7, 5]], 10: [[1, 8, 10, 4]], 11: [[1, 10, 4, 5]], 12: [[1, 10, 4, 6]], 13: [[0, 9, 3, 3, 7]], 14: [[0, 9, 3, 7, 6]], 15: [[0, 9, 3, 8, 7]], 16: [[0, 9, 7, 2, 5]], 17: [[0, 9, 7, 2, 6]], 18: [[0, 9, 7, 5, 5]], 19: [[0, 9, 7, 5, 6]], 20: [[0, 9, 8, 7, 5]], 21: [[0, 9, 8, 10, 4]], 22: [[0, 9, 10, 4, 6]], 23: [[1, 3, 3, 7, 6]], 24: [[1, 3, 8, 7, 6]], 25: [[1, 7, 2, 5, 6]], 26: [[1, 8, 10, 4, 6]], 27: [[1, 10, 4, 5, 6]]}
 
-The following allows to reproduce the proof of Proposition 22, that is, to
-construct the partitions $P_2$, $P_3$, $P_4$, $P_5$, $P_6$, $P_7$, $P_8$,
-$P_9$, $P_{10}$ and show that $P_8$ and $P_{10}$ are equivalent:
+We compute $P_2$, $\Gamma_2$ and $R_2$:
+
+.. link
+
+::
+
+    sage: Gamma2 = Gamma1 = matrix.column([(phi,0), (0,1)])
+    sage: P2 = P1
+    sage: R2e1 = PET.toral_translation(Gamma2, vector((1,0)))
+
+The following allows to compute the induced partition $P_3$ of $\R^2/\Gamma_3$,
+the substitution $\beta_2$.
 
 .. link
 
 ::
 
     sage: x_le_1 = [1, -1, 0]   # x <= 1
-    sage: Gamma2 = Gamma1 = matrix.column([(phi,0), (0,1)])
-    sage: P2 = P1
-    sage: R2e1 = PET.toral_translation(Gamma2, vector((1,0)))
     sage: P3,beta2 = R2e1.induced_partition(x_le_1, P2, substitution_type='row')
+    sage: P3
+    Polyhedron partition of 21 atoms with 20 letters
+    sage: beta2
+    Substitution 2d: {0: [[2]], 1: [[9]], 2: [[10]], 3: [[20]], 4: [[21]], 5: [[22]], 6: [[26]], 7: [[1], [0]], 8: [[6], [5]], 9: [[7], [4]], 10: [[8], [4]], 11: [[11], [3]], 12: [[12], [3]], 13: [[16], [15]], 14: [[17], [15]], 15: [[18], [14]], 16: [[19], [14]], 17: [[22], [13]], 18: [[25], [24]], 19: [[27], [23]]}
+
+The following defines variables for the next steps:
+
+.. link
+
+::
+
     sage: Gamma3 = matrix.column([(1,0), (0,1)])
     sage: Gamma4 = matrix.column([(phi^-1,0), (0,1)])
     sage: R9e1 = R7e1 = R5e1 = R3e1 = PET.toral_translation(Gamma3, vector((phi^-2,0)))
     sage: R8e2 = R6e2 = R4e2 = PET.toral_translation(Gamma4, vector((0,phi^-2)))
     sage: x_le_phi_inv = [phi^-1, -1, 0] # x <= phi^-1
     sage: y_le_phi_inv = [phi^-1, 0, -1] # y <= phi^-1
-    sage: P4,beta3 = R3e1.induced_partition(x_le_phi_inv, P3, substitution_type='row')
-    sage: P5,beta4 = R4e2.induced_partition(y_le_phi_inv, P4, substitution_type='column')
-    sage: P5_scaled = (-phi*P5).translation((1,1))
-    sage: P6,beta5 = R5e1.induced_partition(x_le_phi_inv, P5_scaled, substitution_type='row')
-    sage: P7,beta6 = R6e2.induced_partition(y_le_phi_inv, P6, substitution_type='column')
-    sage: P7_scaled = (-phi*P7).translation((1,1))
-    sage: P8,beta7 = R7e1.induced_partition(x_le_phi_inv, P7_scaled, substitution_type='row')
-    sage: P9,beta8 = R8e2.induced_partition(y_le_phi_inv, P8, substitution_type='column')
-    sage: P9_scaled = (-phi*P9).translation((1,1))
-    sage: P10,beta9 = R9e1.induced_partition(x_le_phi_inv, P9_scaled, substitution_type='row')
-    sage: P8 == P10
-    True
-    sage: eta = Substitution2d.from_permutation(P8.keys_permutation(P10))
-    sage: eta
-    Substitution 2d: {0: [[1]], 1: [[0]], 2: [[4]], 3: [[3]], 4: [[5]], 5: [[2]], 6: [[10]], 7: [[9]], 8: [[11]], 9: [[8]], 10: [[7]], 11: [[6]], 12: [[15]], 13: [[18]], 14: [[17]], 15: [[16]], 16: [[13]], 17: [[14]], 18: [[12]]}
-    sage: beta8*beta9*eta    # the self-similarity for P8
-    Substitution 2d: {0: [[17]], 1: [[12]], 2: [[16, 10]], 3: [[16, 9]], 4: [[17, 7]], 5: [[12, 7]], 6: [[16], [2]], 7: [[14], [4]], 8: [[17], [2]], 9: [[13], [3]], 10: [[13], [2]], 11: [[12], [2]], 12: [[15, 11], [5, 1]], 13: [[18, 10], [4, 1]], 14: [[16, 10], [3, 1]], 15: [[16, 9], [2, 0]], 16: [[14, 6], [4, 1]], 17: [[14, 8], [4, 1]], 18: [[13, 6], [3, 1]]}
 
-We may check that the self-similarity for $\Pcal_8$ satisfies 
-$\rho^{-1}\beta_8\beta_9\eta\rho=\beta_\U$.
+The following allows to compute the induced partition $P_4$ of $\R^2/\Gamma_4$,
+the substitution $\beta_3$.
 
 .. link
 
 ::
 
-    sage: rho = Substitution2d.from_permutation({0:0, 1:1, 2:9, 3:7, 4:8, 5:11, 6:10, 
+    sage: P4,beta3 = R3e1.induced_partition(x_le_phi_inv, P3, substitution_type='row')
+    sage: P4
+    Polyhedron partition of 21 atoms with 20 letters
+    sage: beta3
+    Substitution 2d: {0: [[8]], 1: [[9]], 2: [[10]], 3: [[15]], 4: [[16]], 5: [[18]], 6: [[19]], 7: [[7], [0]], 8: [[7], [2]], 9: [[8], [1]], 10: [[11], [2]], 11: [[12], [2]], 12: [[13], [3]], 13: [[14], [3]], 14: [[15], [5]], 15: [[15], [6]], 16: [[16], [5]], 17: [[16], [6]], 18: [[17], [4]], 19: [[19], [6]]}
+
+The following allows to compute the induced partition $P_5$ of $\R^2/\Gamma_5$,
+the substitution $\beta_4$.
+
+.. link
+
+::
+
+    sage: P5,beta4 = R4e2.induced_partition(y_le_phi_inv, P4, substitution_type='column')
+    sage: P5
+    Polyhedron partition of 22 atoms with 22 letters
+    sage: beta4
+    Substitution 2d: {0: [[3]], 1: [[4]], 2: [[5]], 3: [[6]], 4: [[12]], 5: [[13]], 6: [[14]], 7: [[15]], 8: [[18]], 9: [[4, 0]], 10: [[5, 0]], 11: [[5, 1]], 12: [[5, 2]], 13: [[6, 0]], 14: [[13, 8]], 15: [[14, 10]], 16: [[15, 10]], 17: [[16, 11]], 18: [[17, 9]], 19: [[17, 11]], 20: [[18, 7]], 21: [[19, 9]]}
+
+We rescale the partition $\mathcal{P}_5$:
+
+.. link
+
+::
+
+    sage: P5_scaled = (-phi*P5).translation((1,1))
+
+The following allows to compute the induced partition $P_6$ of $\R^2/\Gamma_6$,
+the substitution $\beta_5$.
+
+.. link
+
+::
+
+    sage: P6,beta5 = R5e1.induced_partition(x_le_phi_inv, P5_scaled, substitution_type='row')
+    sage: P6
+    Polyhedron partition of 18 atoms with 18 letters
+    sage: beta5
+    Substitution 2d: {0: [[8]], 1: [[14]], 2: [[17]], 3: [[20]], 4: [[4], [1]], 5: [[5], [1]], 6: [[6], [3]], 7: [[7], [2]], 8: [[8], [0]], 9: [[14], [9]], 10: [[15], [13]], 11: [[16], [10]], 12: [[16], [11]], 13: [[17], [13]], 14: [[18], [12]], 15: [[19], [10]], 16: [[19], [11]], 17: [[21], [12]]}
+
+The following allows to compute the induced partition $P_7$ of $\R^2/\Gamma_7$,
+the substitution $\beta_6$.
+
+.. link
+
+::
+
+    sage: P7,beta6 = R6e2.induced_partition(y_le_phi_inv, P6, substitution_type='column')
+    sage: P7
+    Polyhedron partition of 21 atoms with 21 letters
+    sage: beta6
+    Substitution 2d: {0: [[1]], 1: [[2]], 2: [[3]], 3: [[12]], 4: [[13]], 5: [[14]], 6: [[15]], 7: [[16]], 8: [[17]], 9: [[1, 0]], 10: [[2, 0]], 11: [[3, 0]], 12: [[9, 8]], 13: [[10, 4]], 14: [[11, 4]], 15: [[12, 6]], 16: [[13, 5]], 17: [[13, 8]], 18: [[14, 7]], 19: [[15, 5]], 20: [[17, 7]]}
+
+We rescale the partition $\mathcal{P}_7$:
+
+.. link
+
+::
+
+    sage: P7_scaled = (-phi*P7).translation((1,1))
+
+The following allows to compute the induced partition $P_8$ of $\R^2/\Gamma_8$,
+the substitution $\beta_7$.
+
+.. link
+
+::
+
+    sage: P8,beta7 = R7e1.induced_partition(x_le_phi_inv, P7_scaled, substitution_type='row')
+    sage: P8
+    Polyhedron partition of 19 atoms with 19 letters
+    sage: beta7
+    Substitution 2d: {0: [[5]], 1: [[8]], 2: [[14]], 3: [[15]], 4: [[18]], 5: [[20]], 6: [[3], [1]], 7: [[4], [2]], 8: [[5], [1]], 9: [[6], [0]], 10: [[7], [1]], 11: [[8], [1]], 12: [[12], [11]], 13: [[13], [11]], 14: [[14], [9]], 15: [[15], [10]], 16: [[16], [11]], 17: [[17], [11]], 18: [[19], [9]]}
+
+The following allows to compute the induced partition $P_9$ of $\R^2/\Gamma_9$,
+the substitution $\beta_8$.
+
+.. link
+
+::
+
+    sage: P9,beta8 = R8e2.induced_partition(y_le_phi_inv, P8, substitution_type='column')
+    sage: P9
+    Polyhedron partition of 21 atoms with 21 letters
+    sage: beta8
+    Substitution 2d: {0: [[2]], 1: [[3]], 2: [[4]], 3: [[12]], 4: [[13]], 5: [[14]], 6: [[16]], 7: [[17]], 8: [[2, 0]], 9: [[3, 1]], 10: [[4, 1]], 11: [[5, 1]], 12: [[12, 7]], 13: [[13, 6]], 14: [[14, 6]], 15: [[14, 8]], 16: [[15, 11]], 17: [[16, 9]], 18: [[16, 10]], 19: [[17, 7]], 20: [[18, 10]]}
+
+We rescale the partition $\mathcal{P}_9$:
+
+.. link
+
+::
+
+    sage: P9_scaled = (-phi*P9).translation((1,1))
+
+The following allows to compute the induced partition $P_10$ of $\R^2/\Gamma_10$,
+the substitution $\beta_9$.
+
+.. link
+
+::
+
+    sage: P10,beta9 = R9e1.induced_partition(x_le_phi_inv, P9_scaled, substitution_type='row')
+    sage: P10
+    Polyhedron partition of 19 atoms with 19 letters
+    sage: beta9
+    Substitution 2d: {0: [[3]], 1: [[7]], 2: [[12]], 3: [[17]], 4: [[18]], 5: [[19]], 6: [[3], [0]], 7: [[4], [0]], 8: [[4], [1]], 9: [[5], [2]], 10: [[6], [0]], 11: [[7], [0]], 12: [[13], [9]], 13: [[14], [10]], 14: [[15], [10]], 15: [[16], [11]], 16: [[17], [8]], 17: [[18], [9]], 18: [[20], [10]]}
+
+We show that $P_8$ and $P_{10}$ are equivalent:
+
+.. link
+
+::
+
+    sage: P8 == P10
+    True
+    
+.. link
+
+::
+
+    sage: tau = Substitution2d.from_permutation(P8.keys_permutation(P10))
+    sage: tau
+    Substitution 2d: {0: [[1]], 1: [[0]], 2: [[4]], 3: [[3]], 4: [[5]], 5: [[2]], 6: [[10]], 7: [[9]], 8: [[11]], 9: [[8]], 10: [[7]], 11: [[6]], 12: [[15]], 13: [[18]], 14: [[17]], 15: [[16]], 16: [[13]], 17: [[14]], 18: [[12]]}
+
+.. link
+
+::
+
+    sage: beta8*beta9*tau    # the self-similarity for P8
+    Substitution 2d: {0: [[17]], 1: [[12]], 2: [[16, 10]], 3: [[16, 9]], 4: [[17, 7]], 5: [[12, 7]], 6: [[16], [2]], 7: [[14], [4]], 8: [[17], [2]], 9: [[13], [3]], 10: [[13], [2]], 11: [[12], [2]], 12: [[15, 11], [5, 1]], 13: [[18, 10], [4, 1]], 14: [[16, 10], [3, 1]], 15: [[16, 9], [2, 0]], 16: [[14, 6], [4, 1]], 17: [[14, 8], [4, 1]], 18: [[13, 6], [3, 1]]}
+
+We may check that the self-similarity for $\Pcal_8$ satisfies 
+$\xi^{-1}\beta_8\beta_9\tau\xi=\beta_\U$.
+
+.. link
+
+::
+
+    sage: xi = Substitution2d.from_permutation({0:0, 1:1, 2:9, 3:7, 4:8, 5:11, 6:10, 
     ....: 7:6, 8:2, 9:4, 10:5, 11:3, 12:18, 13:14, 14:16, 15:13, 16:12, 17:17, 18:15})
-    sage: rho.inverse()*beta8*beta9*eta*rho  # == betaU
+    sage: xi.inverse()*beta8*beta9*tau*xi  # == betaU
     Substitution 2d: {0: [[17]], 1: [[16]], 2: [[15], [11]], 3: [[13], [9]], 4: [[17], [8]], 5: [[16], [8]], 6: [[15], [8]], 7: [[14], [8]], 8: [[14, 6]], 9: [[17, 3]], 10: [[16, 3]], 11: [[14, 2]], 12: [[15, 7], [11, 1]], 13: [[14, 6], [11, 1]], 14: [[13, 7], [9, 1]], 15: [[12, 6], [9, 1]], 16: [[18, 5], [10, 1]], 17: [[13, 4], [9, 1]], 18: [[14, 2], [8, 0]]}
 
 To visualize the partitions and substitutions computed above, do as follows.
