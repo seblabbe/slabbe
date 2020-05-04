@@ -198,7 +198,7 @@ class Substitution2d(object):
             sage: s
             Substitution 2d: {0: [[0, 1]], 1: [[0]]}
         """
-        d = {key:[col] for key,col in s.items()}
+        d = {key:[[a for a in col]] for key,col in s.items()}
         return Substitution2d(d)
 
     @classmethod
@@ -233,7 +233,7 @@ class Substitution2d(object):
             sage: u * t
             Substitution 2d: {0: [[0, 1], [2, 3]], 1: [[1, 0], [4, 3]]}
         """
-        d = {key:[[val]] for key,val in d.items()}
+        d = {key:[[d[key]]] for key in sorted(d)}
         return Substitution2d(d)
 
     def call_on_row(self, row):
