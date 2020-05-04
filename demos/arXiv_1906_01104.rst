@@ -90,18 +90,14 @@ the substitution $\beta_2$.
     sage: beta2
     Substitution 2d: {0: [[2]], 1: [[9]], 2: [[10]], 3: [[20]], 4: [[21]], 5: [[22]], 6: [[26]], 7: [[1], [0]], 8: [[6], [5]], 9: [[7], [4]], 10: [[8], [4]], 11: [[11], [3]], 12: [[12], [3]], 13: [[16], [15]], 14: [[17], [15]], 15: [[18], [14]], 16: [[19], [14]], 17: [[22], [13]], 18: [[25], [24]], 19: [[27], [23]]}
 
-The following defines variables for the next steps:
+We define $\Gamma_3$ and the map $R_3^{\be_1}$ on $\R^2/\Gamma_3$:
 
 .. link
 
 ::
 
     sage: Gamma3 = matrix.column([(1,0), (0,1)])
-    sage: Gamma4 = matrix.column([(phi^-1,0), (0,1)])
-    sage: R9e1 = R7e1 = R5e1 = R3e1 = PET.toral_translation(Gamma3, vector((phi^-2,0)))
-    sage: R8e2 = R6e2 = R4e2 = PET.toral_translation(Gamma4, vector((0,phi^-2)))
-    sage: x_le_phi_inv = [phi^-1, -1, 0] # x <= phi^-1
-    sage: y_le_phi_inv = [phi^-1, 0, -1] # y <= phi^-1
+    sage: R3e1 = PET.toral_translation(Gamma3, vector((phi^-2,0)))
 
 The following allows to compute the induced partition $P_4$ of $\R^2/\Gamma_4$,
 the substitution $\beta_3$.
@@ -110,11 +106,21 @@ the substitution $\beta_3$.
 
 ::
 
+    sage: x_le_phi_inv = [phi^-1, -1, 0] # x <= phi^-1
     sage: P4,beta3 = R3e1.induced_partition(x_le_phi_inv, P3, substitution_type='row')
     sage: P4
     Polyhedron partition of 21 atoms with 20 letters
     sage: beta3
     Substitution 2d: {0: [[8]], 1: [[9]], 2: [[10]], 3: [[15]], 4: [[16]], 5: [[18]], 6: [[19]], 7: [[7], [0]], 8: [[7], [2]], 9: [[8], [1]], 10: [[11], [2]], 11: [[12], [2]], 12: [[13], [3]], 13: [[14], [3]], 14: [[15], [5]], 15: [[15], [6]], 16: [[16], [5]], 17: [[16], [6]], 18: [[17], [4]], 19: [[19], [6]]}
+
+We define $\Gamma_4$ and the map $R_4^{\be_2}$ on $\R^2/\Gamma_4$:
+
+.. link
+
+::
+
+    sage: Gamma4 = matrix.column([(phi^-1,0), (0,1)])
+    sage: R4e2 = PET.toral_translation(Gamma4, vector((0,phi^-2)))
 
 The following allows to compute the induced partition $P_5$ of $\R^2/\Gamma_5$,
 the substitution $\beta_4$.
@@ -123,6 +129,7 @@ the substitution $\beta_4$.
 
 ::
 
+    sage: y_le_phi_inv = [phi^-1, 0, -1] # y <= phi^-1
     sage: P5,beta4 = R4e2.induced_partition(y_le_phi_inv, P4, substitution_type='column')
     sage: P5
     Polyhedron partition of 22 atoms with 22 letters
@@ -144,6 +151,7 @@ the substitution $\beta_5$.
 
 ::
 
+    sage: R5e1 = R3e1
     sage: P6,beta5 = R5e1.induced_partition(x_le_phi_inv, P5_scaled, substitution_type='row')
     sage: P6
     Polyhedron partition of 18 atoms with 18 letters
@@ -157,6 +165,7 @@ the substitution $\beta_6$.
 
 ::
 
+    sage: R6e2 = R4e2
     sage: P7,beta6 = R6e2.induced_partition(y_le_phi_inv, P6, substitution_type='column')
     sage: P7
     Polyhedron partition of 21 atoms with 21 letters
@@ -178,6 +187,7 @@ the substitution $\beta_7$.
 
 ::
 
+    sage: R7e1 = R5e1
     sage: P8,beta7 = R7e1.induced_partition(x_le_phi_inv, P7_scaled, substitution_type='row')
     sage: P8
     Polyhedron partition of 19 atoms with 19 letters
@@ -191,6 +201,7 @@ the substitution $\beta_8$.
 
 ::
 
+    sage: R8e2 = R6e2
     sage: P9,beta8 = R8e2.induced_partition(y_le_phi_inv, P8, substitution_type='column')
     sage: P9
     Polyhedron partition of 21 atoms with 21 letters
@@ -212,6 +223,7 @@ the substitution $\beta_9$.
 
 ::
 
+    sage: R9e1 = R7e1
     sage: P10,beta9 = R9e1.induced_partition(x_le_phi_inv, P9_scaled, substitution_type='row')
     sage: P10
     Polyhedron partition of 19 atoms with 19 letters
@@ -243,7 +255,7 @@ We show that $P_8$ and $P_{10}$ are equivalent:
     Substitution 2d: {0: [[17]], 1: [[12]], 2: [[16, 10]], 3: [[16, 9]], 4: [[17, 7]], 5: [[12, 7]], 6: [[16], [2]], 7: [[14], [4]], 8: [[17], [2]], 9: [[13], [3]], 10: [[13], [2]], 11: [[12], [2]], 12: [[15, 11], [5, 1]], 13: [[18, 10], [4, 1]], 14: [[16, 10], [3, 1]], 15: [[16, 9], [2, 0]], 16: [[14, 6], [4, 1]], 17: [[14, 8], [4, 1]], 18: [[13, 6], [3, 1]]}
 
 We may check that the self-similarity for $\Pcal_8$ satisfies 
-$\xi^{-1}\beta_8\beta_9\tau\xi=\beta_\U$.
+$\xi^{-1}\beta_8\beta_9\tau\xi=\beta_{\mathcal{U}}$.
 
 .. link
 
