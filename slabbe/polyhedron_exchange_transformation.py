@@ -604,6 +604,10 @@ class PolyhedronExchangeTransformation(object):
             sage: F.image_partition()
             Polyhedron partition of 2 atoms with 2 letters
 
+        ::
+
+            sage: print('add test when collisiion of indices')
+
         """
         return PolyhedronPartition({a:p+self._translations[a] 
                                  for (a,p) in self._partition})
@@ -839,6 +843,7 @@ class PolyhedronExchangeTransformation(object):
             WordMorphism: 0->0, 1->1, 2->2, 3->3, 4->4, 5->5, 6->6, 7->7, 8->8, 9->9
             sage: s01*s12*perm == s02
             True
+
         """
         # Default partition
         if partition is None:
@@ -852,38 +857,35 @@ class PolyhedronExchangeTransformation(object):
         other_half_polyhedron = Polyhedron(ieqs=[[-a for a in ieq]])
         other_half = PolyhedronPartition([other_half_polyhedron])
 
-        # initial partition is the window, i.e., the intersection of the
-        # domain with the half space
-        domain = PolyhedronPartition([self.domain()])
-        Q = domain.refinement(half)
-        if len(Q) == 0:
+        # the window is the intersection of the domain with the half space
+        W = self.domain().intersection(half_polyhedron)
+        if W.volume() == 0:
             raise ValueError("Inequality {} does not intersect partition "
                     "(={})".format(half_polyhedron.inequalities()[0], partition))
 
         # Compute the induced partition and associated return words
-        return_time = 1
-        ans = []
+        Q = PolyhedronPartition([(tuple(), W)])
+        S = []
         self_inv = self.inverse()
         while len(Q):
-            Q = self_inv(Q).refinement(partition)
-            Q_returned = Q.refinement(half)
-            for garbage_key,q in Q_returned:
-                q_copy = copy(q)
-                w = []
-                for _ in range(return_time):
-                    w.append(partition.code(q))
-                    q = self(q)
-                ans.append((tuple(w), q_copy))
-            Q = Q.refinement(other_half)
-            return_time += 1
+            Q = self_inv(Q)
+            # Compute the refinement of P and Q (concatenate the labels)
+            PQ,d = partition.refinement(Q, certificate=True)
+            Q = PolyhedronPartition([((d[i][0],)+d[i][1], q) for (i,q) in PQ])
+            # Take what has returned to the window (keep labels from Q only)
+            Q_returned,d = Q.refinement(half, certificate=True)
+            S.extend((d[i][0], q) for (i,q) in Q_returned)
+            # Continue with what is left (keep labels from Q only)
+            Q,d = Q.refinement(other_half, certificate=True)
+            Q = PolyhedronPartition([(d[i][0], q) for (i,q) in Q])
 
         # We sort the keys and relabel them with nonnegative integers
         from slabbe.finite_word import sort_word_by_length_lex_key
-        return_words = set(w for (w,q) in ans)
+        return_words = set(w for (w,q) in S)
         sorted_return_words = sorted(return_words, key=sort_word_by_length_lex_key)
         key_to_word = {key:list(w) for (key,w) in enumerate(sorted_return_words)}
         word_to_key = {w:key for (key,w) in enumerate(sorted_return_words)}
-        induced_partition = PolyhedronPartition([(word_to_key[w],q) for (w,q) in ans])
+        induced_partition = PolyhedronPartition([(word_to_key[w],q) for (w,q) in S])
 
         # Build a substitution2d if desired
         if substitution_type == 'dict':

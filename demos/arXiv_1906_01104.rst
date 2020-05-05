@@ -6,7 +6,7 @@ Induction of `Z^2`-actions and of partitions of the 2-torus
 
 __ https://arxiv.org/abs/1906.01104
 
-Running ``sage -t`` on this file takes 9.3 seconds with sage-9.1 and
+Running ``sage -t`` on this file takes 8.3 seconds with sage-9.1 and
 slabbe-0.6.1.
 
 Appendix: Sage code
