@@ -933,27 +933,13 @@ class PolyhedronExchangeTransformation(object):
             Polyhedron partition of 3 atoms with 3 letters
             with translations {0: (1/3, 0), 1: (-1/3, 0), 2: (0, 0)}
             sage: sub
-            {0: (0,), 1: (0, 1), 2: (0, 0, 1)}
+            {0: [0], 1: [0, 1], 2: [0, 0, 1]}
 
         """
-        raise NotImplementedError("we need to fix it so that w below"
-                " contains the history")
-
-        out_partition = self.induced_out_partition(ieq, partition=None)
-
-        atoms_dict = {}
-        trans_dict = {}
-        sub = {}
-        natural_numbers = itertools.count()
-        for return_time,Q in out_partition.items():
-            for w,atom in Q:
-                i = next(natural_numbers)
-                trans_dict[i] = t = sum(self._translations[a] for a in w)
-                atoms_dict[i] = atom - t
-                sub[i] = w
-
-        P = PolyhedronPartition(atoms_dict)
-        return PolyhedronExchangeTransformation(P, trans_dict), sub
+        newP, sub = self.induced_partition(ieq)
+        T = self.translations()
+        newT = {a:sum(T[b] for b in sub[a]) for a in sub}
+        return PolyhedronExchangeTransformation(newP, newT), sub
 
     def cylinder(self, word, partition=None):
         r"""
