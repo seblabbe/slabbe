@@ -606,11 +606,20 @@ class PolyhedronExchangeTransformation(object):
 
         ::
 
-            sage: print('add test when collisiion of indices')
+            sage: h = 1/3
+            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
+            sage: q = Polyhedron([(0,0), (0,h), (h,1), (h,0)])
+            sage: r = Polyhedron([(h,1), (1,1), (1,h), (h,0)])
+            sage: s = Polyhedron([(h,0), (1,0), (1,h)])
+            sage: P = PolyhedronPartition([(0,p), (0,q), (1,r), (1,s)])
+            sage: T = {0:(1-h,0), 1:(-h,0)}
+            sage: F = PolyhedronExchangeTransformation(P, T)
+            sage: F.image_partition()
+            Polyhedron partition of 4 atoms with 2 letters
 
         """
-        return PolyhedronPartition({a:p+self._translations[a] 
-                                 for (a,p) in self._partition})
+        return PolyhedronPartition([(a,p+self._translations[a])
+                                    for (a,p) in self._partition])
 
     def inverse(self):
         r"""
