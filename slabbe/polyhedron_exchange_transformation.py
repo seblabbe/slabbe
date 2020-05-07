@@ -982,12 +982,12 @@ class PolyhedronExchangeTransformation(object):
             sage: c = u.cylinder([2,2], P); c
             Polyhedron partition of 1 atoms with 1 letters
             sage: c.alphabet()
-            {(2, 2)}
+            {0}
 
         ::
 
             sage: u.cylinder([1,1], P)
-            Polyhedron partition of 2 atoms with 1 letters
+            Polyhedron partition of 2 atoms with 2 letters
             sage: u.cylinder([1], P)
             Polyhedron partition of 1 atoms with 1 letters
 
@@ -1073,11 +1073,7 @@ class PolyhedronExchangeTransformation(object):
              Polyhedron partition of 3 atoms with 3 letters,
              Polyhedron partition of 3 atoms with 3 letters]
             sage: [u.cylinders(i).alphabet() for i in range(5)]
-            [{()},
-             {(0,), (1,)},
-             {(0, 0), (0, 1), (1, 0)},
-             {(0, 0, 1), (0, 1, 0), (1, 0, 0)},
-             {(0, 0, 1, 0), (0, 1, 0, 0), (1, 0, 0, 1)}]
+            [{()}, {0, 1}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}]
 
         """
         # Default partition
