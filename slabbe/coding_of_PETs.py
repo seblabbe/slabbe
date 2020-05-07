@@ -228,7 +228,8 @@ class PETsCoding(object):
 
         INPUT:
 
-        - ``pattern`` -- list of lists or dict of positions to code
+        - ``pattern`` -- list of lists or dict of the form
+          ``{positions:code}``
 
         OUTPUT:
 
