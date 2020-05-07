@@ -683,6 +683,8 @@ class PolyhedronExchangeTransformation(object):
             with translations {0: (3/5, 0), 1: (-2/5, 0), 2: (-2/5, 0), 3: (-2/5, 0)}
 
         """
+        if not isinstance(other, PolyhedronExchangeTransformation):
+            return NotImplemented
         R,d = self.image_partition().refinement(other.partition(),
                                                 certificate=True)
 
@@ -694,6 +696,43 @@ class PolyhedronExchangeTransformation(object):
             trans_dict[key] = self._translations[a] + other._translations[b]
 
         P = PolyhedronPartition(atoms_dict)
+        return PolyhedronExchangeTransformation(P, trans_dict)
+
+    def __rmul__(self, factor):
+        r"""
+        Returns the PET scaled by some factor.
+
+        INPUT:
+
+        - ``factor`` -- real number
+
+        OUTPUT:
+
+        - polyhedron exchange transformation
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition, PolyhedronExchangeTransformation
+            sage: h = 4/5
+            sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
+            sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
+            sage: P = PolyhedronPartition({0:p, 1:q})
+            sage: T = {0:(1-h,0), 1:(-h,0)}
+            sage: F = PolyhedronExchangeTransformation(P, T)
+            sage: 2 * F
+            Polyhedron Exchange Transformation of
+            Polyhedron partition of 2 atoms with 2 letters
+            with translations {0: (2/5, 0), 1: (-8/5, 0)}
+            sage: -2 * F
+            Polyhedron Exchange Transformation of
+            Polyhedron partition of 2 atoms with 2 letters
+            with translations {0: (-2/5, 0), 1: (8/5, 0)}
+
+        """
+        if isinstance(factor, PolyhedronExchangeTransformation):
+            return NotImplemented
+        P = factor * self.partition()
+        trans_dict = {key:factor*t for (key,t) in self.translations().items()}
         return PolyhedronExchangeTransformation(P, trans_dict)
 
     def induced_partition(self, ieq, partition=None, substitution_type='dict'):

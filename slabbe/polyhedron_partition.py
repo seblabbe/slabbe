@@ -457,11 +457,11 @@ class PolyhedronPartition(object):
 
     def __rmul__(self, factor):
         r"""
-        Returns the partition of the induced transformation on the domain.
+        Returns the partition scaled by some factor.
 
         INPUT:
 
-        - ``factor`` -- number
+        - ``factor`` -- real number
 
         OUTPUT:
 
