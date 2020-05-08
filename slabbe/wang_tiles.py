@@ -1227,7 +1227,7 @@ class WangTileSet(object):
 
             sage: T.tiles_allowing_surrounding(1, verbose=True)
             Solution found for tile 0:
-            [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+            [[0, 0, ...], [0, 0, 0], [0, 0, 0]]
             Solution found for tile 1:
             [[1, 1, 1], [1, 1, 1], [1, 1, 1]]
             Solution found for tile 2:
@@ -1391,9 +1391,8 @@ class WangTileSet(object):
             sage: tiles = ['ABCD', 'EFGH', 'AXCY', 'ABAB', 'EBEB']
             sage: T = WangTileSet(tiles)
             sage: solutions = T.tilings_with_surrounding(1,2)
-            sage: sorted(tiling.table() for tiling in solutions)
+            sage: sorted(tiling.table() for tiling in solutions)   # random
             [[[3, 3]], [[4, 4]], [[3, 4]], [[4, 3]]]
-
 
         ::
 

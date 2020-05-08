@@ -293,16 +293,16 @@ class ChristoffelGraph(DiscreteSubset):
             \begin{tikzpicture}
             [scale=1]
             \clip (-5.239453693, 2.025) -- (-5.239453693, -1.025) -- (-4.330127019, -1.55) -- (0.0, -1.05) -- (0.909326674, -0.525) -- (0.909326674, 2.525) -- (0.0, 3.05) -- (-4.330127019, 2.55) -- cycle;
-             \draw[very thick, blue] (0.00000, 0.00000) -- (-0.86603, -0.50000);
+            \draw[very thick, blue] (0.00000, 0.00000) -- (-0.86603, -0.50000);
             \draw[very thick, blue] (0.00000, 0.00000) -- (0.86603, -0.50000);
             ...
             ... 296 lines not printed (24077 characters in total) ...
             ...
-            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (-6.92820, -3.00000) {};
-             \filldraw[fill=white,very thick,dotted,opacity=0.5,even odd rule]
-              (-5.239453693, 2.025) -- (-5.239453693, -1.025) -- (-4.330127019, -1.55) -- (0.0, -1.05) -- (0.909326674, -0.525) -- (0.909326674, 2.525) -- (0.0, 3.05) -- (-4.330127019, 2.55) -- cycle
-              (-4.330127019, 1.5) -- (-4.330127019, -0.5) -- (0.0, 0.0) -- (0.0, 2.0) -- cycle;
-             \end{tikzpicture}
+            \node[circle,fill=black,draw=black,minimum size=0.8mm,inner sep=0pt,] at (-6.92820, 5.00000) {};
+            \filldraw[fill=white,very thick,dotted,opacity=0.5,even odd rule]
+            (-5.239453693, 2.025) -- (-5.239453693, -1.025) -- (-4.330127019, -1.55) -- (0.0, -1.05) -- (0.909326674, -0.525) -- (0.909326674, 2.525) -- (0.0, 3.05) -- (-4.330127019, 2.55) -- cycle
+            (-4.330127019, 1.5) -- (-4.330127019, -0.5) -- (0.0, 0.0) -- (0.0, 2.0) -- cycle;
+            \end{tikzpicture}
             \end{document}
         """
         # kernel to clip

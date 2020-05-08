@@ -22,8 +22,8 @@ A subset from an iterable::
 A discrete 2d disk::
 
     sage: D = DiscreteSubset(dimension=2, predicate=lambda p: p[0]^2 + p[1]^2 < 4)
-    sage: D.list()
-    [(0, 0), (0, 1), (0, -1), (1, 0), (-1, 0), (-1, 1), (1, -1), (1, 1), (-1, -1)]
+    sage: sorted(D.list())
+    [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 0), (0, 1), (1, -1), (1, 0), (1, 1)]
     sage: D
     Subset of ZZ^2
 
@@ -89,7 +89,7 @@ A discrete tube (preimage of a discrete box by a matrix)::
     sage: tube
     DiscreteTube: Preimage of [-5, 5] x [-5, 5] by a 2 by 3 matrix
     sage: it = iter(tube)
-    sage: [next(it) for _ in range(4)]
+    sage: [next(it) for _ in range(4)]  # random
     [(0, 0, 0), (1, 0, 0), (0, 0, 1), (0, 0, -1)]
 
 TODO:
@@ -654,7 +654,7 @@ class DiscreteSubset(SageObject):
             sage: from slabbe import DiscreteSubset
             sage: p = DiscreteSubset(dimension=3, roots=[(0,0,0)])
             sage: it = p.connected_component_iterator()
-            sage: [next(it) for _ in range(5)]
+            sage: [next(it) for _ in range(5)]     # random
             [(0, 0, 0), (1, 0, 0), (0, 0, 1), (0, 0, -1), (0, -1, 0)]
 
         ::
@@ -664,7 +664,7 @@ class DiscreteSubset(SageObject):
             sage: root = vector((0,0,0))
             sage: root.set_immutable()
             sage: it = p.connected_component_iterator(roots=[root])
-            sage: [next(it) for _ in range(5)]
+            sage: [next(it) for _ in range(5)]     # random
             [(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1), (-1, 1, 0)]
         """
         roots = roots if roots else self.roots()
@@ -684,7 +684,7 @@ class DiscreteSubset(SageObject):
             sage: from slabbe import DiscretePlane
             sage: p = DiscretePlane([1,pi,7], 1+pi+7, mu=0)
             sage: it = iter(p)
-            sage: [next(it) for _ in range(5)]
+            sage: [next(it) for _ in range(5)]  # random
             [(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1), (-1, 1, 0)]
 
         ::
@@ -794,9 +794,9 @@ class DiscreteSubset(SageObject):
             ((0, 0, 0), (0, 1, 0))
             sage: next(it)
             ((0, 0, 0), (0, 0, 1))
-            sage: next(it)
+            sage: next(it)         # random
             ((-1, 1, 0), (0, 1, 0))
-            sage: next(it)
+            sage: next(it)         # random
             ((-2, 1, 0), (-1, 1, 0))
         """
         base_edges = self.base_edges()

@@ -600,6 +600,7 @@ class MatrixCocycle(object):
             Automaton with 21 states
             sage: A.graph().plot(edge_labels=True)   # not tested
         """
+        from slabbe.matrices import is_positive
         L = []
         for i in range(n):
             L.extend(w for w,M in self.n_matrices_iterator(i) if is_positive(M))
