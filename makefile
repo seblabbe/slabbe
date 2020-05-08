@@ -12,7 +12,8 @@ develop:
 
 test: 
 	sage -tp --force-lib --show-skipped slabbe/*.py slabbe/*.pyx --log=logs/test.log
-	sage -t demos/*.rst --show-skipped --log=logs/test-demo.log
+testdemos:
+	sage -tp demos/*.rst --show-skipped --log=logs/test-demo.log
 
 testlong:
 	sage -tp --long --force-lib --show-skipped slabbe/*.py slabbe/*.pyx --log=logs/testlong.log
