@@ -47,7 +47,7 @@ The following allows to define the partition $P_0$ of $\R^2/\Gamma_0$:
 
 ::
 
-    sage: from slabbe.polyhedron_partition import jeandel_rao_wang_shift_partition
+    sage: from slabbe.arXiv_1903_06137 import jeandel_rao_wang_shift_partition
     sage: P0 = jeandel_rao_wang_shift_partition()
     sage: P0
     Polyhedron partition of 24 atoms with 11 letters

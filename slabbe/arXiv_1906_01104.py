@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 r"""
-The code contained in the article:
+The code contained in `arXiv:1906.01104`__
 
 S. Labbé, Rauzy induction of polygon partitions and toral $\Z^2$-rotations
-`arXiv:1906.01104`__, June 2019, 36 p. (v2: revised in May 2020).
+arXiv:1906.01104, June 2019, 36 p. (v2: revised in May 2020).
 
 __ https://arxiv.org/abs/1906.01104
 
@@ -19,6 +19,15 @@ EXAMPLES::
     18: [[13, 6], [3, 1]]}
 
 """
+#*****************************************************************************
+#       Copyright (C) 2019-2020 Sébastien Labbé <slabqc@gmail.com>
+#
+#  Distributed under the terms of the GNU General Public License version 2 (GPLv2)
+#
+#  The full text of the GPLv2 is available at:
+#
+#                  http://www.gnu.org/licenses/
+#*****************************************************************************
 from sage.rings.polynomial.polynomial_ring import polygen
 from sage.rings.rational_field import QQ
 from sage.rings.number_field.number_field import NumberField
@@ -30,7 +39,6 @@ from sage.geometry.polyhedron.library import polytopes
 # implemented in Sage with the optional package slabbe
 from slabbe import PolyhedronExchangeTransformation as PET
 from slabbe import Substitution2d
-from slabbe.polyhedron_partition import jeandel_rao_wang_shift_partition
 
 # We construct the golden mean as a element of a quadratic number field
 # because it is more efficient for arithmetic operations and comparisons:
@@ -45,6 +53,7 @@ R0e1 = PET.toral_translation(Gamma0, vector((1,0)), fundamental_domain)
 R0e2 = PET.toral_translation(Gamma0, vector((0,1)), fundamental_domain)
 
 # The initial partition P0
+from slabbe.arXiv_1903_06137 import jeandel_rao_wang_shift_partition
 P0 = jeandel_rao_wang_shift_partition()
 
 # Compute P1 and beta0
