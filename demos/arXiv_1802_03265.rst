@@ -157,7 +157,7 @@ min if using ``solver='dancing_links'``:
 
 ::
 
-    sage: tilings = U.tilings_with_surrounding(2,2,radius=1,solver='dancing_links')
+    sage: tilings = U.tilings_with_surrounding(2,2,radius=2,solver='dancing_links')
     sage: len(tilings)
     50
     sage: S = sorted(t.table() for t in tilings)
