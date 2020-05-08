@@ -436,6 +436,28 @@ def get_bispecial_vertex(G):
     else:
         return None
 
+def bispecial_vertices(G):
+    r"""
+    Return the list of vertices v such that v is bispecial, that is,
+    ``G.in_degree(v)>1`` but ``G.out_degree(v)>1``.
+
+    INPUT:
+
+    - ``G`` -- digraph
+
+    EXAMPLES::
+
+        sage: from slabbe.graph import bispecial_vertices
+        sage: G = DiGraph([(4,6), (5,6), (6,7), (6,8)], format='list_of_edges')
+        sage: bispecial_vertices(G)
+        [6]
+        sage: G = DiGraph([(6,5), (7,6), (8,6)], format='list_of_edges')
+        sage: bispecial_vertices(G)
+        []
+
+    """
+    return [v for v in G.vertices() if G.in_degree(v) > 1 and G.out_degree(v) > 1]
+
 def reduce_left_special_vertices(G, merge_function):
     r"""
     Merge all left special vertices with its in-neighbor(s) ``u`` using
@@ -560,7 +582,7 @@ def reduce_bispecial_vertices(G, merge_function, filter=None):
     - ``merge_function`` -- function taking two vertices as input and
       returning a new vertex
     - ``filter`` -- function from pair of vertices to boolean (default:``None``),
-      Only created edges ``(u,v)`` such that ``filter(u,v) is True`` are kept.
+      Only creates edges ``(u,v)`` such that ``filter(u,v) is True`` are kept.
       If ``None``, then ``filter = lambda a,b:True`` is used.
 
     OUTPUT:
@@ -601,8 +623,11 @@ def reduce_bispecial_vertices(G, merge_function, filter=None):
     if filter is None:
         filter = lambda a,b:True
 
-    v = get_bispecial_vertex(GG)
-    while v is not None:
+    GG_bispecials = bispecial_vertices(GG)
+    for v in GG_bispecials:
+        if v not in GG:
+            # v was deleted earlier in the process
+            continue
         for u in GG.neighbors_in(v):
             u_v = merge_function(u, v)
             GG.add_edges((s, u_v) for s in GG.neighbors_in(u))
@@ -610,6 +635,5 @@ def reduce_bispecial_vertices(G, merge_function, filter=None):
                 GG.delete_vertex(u)
             GG.add_edges((u_v, t) for t in GG.neighbors_out(v) if filter(u_v,t))
         GG.delete_vertex(v)
-        v = get_bispecial_vertex(GG)
     return GG
 
