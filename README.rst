@@ -127,6 +127,15 @@ __ https://trac.sagemath.org/
 Release history
 ---------------
 
+*Version 0.6.1 (May 8, 2020)*
+  New modules to deal with the coding of `Z^d`-action by PETs, `d`-dimensional
+  sturmian configurations. Improved the computation of induced polyhedron partition
+  and induced polyhedron exchange transformation. New modules containing the
+  code for the articles `arxiv:1903.06137`__ and `arXiv:1906.01104`__
+
+__ https://arxiv.org/abs/1903.06137
+__ https://arxiv.org/abs/1906.01104
+
 *Version 0.6 (November 22, 2019)*
   Make the package work with Python 3. Most of the tests pass with Python 3 now.
 
