@@ -5,6 +5,9 @@
 # Compiled c code
 slabbe/*.c
 
+# logs
+logs/*
+
 # Setuptools distribution folder.
 /dist/
 
