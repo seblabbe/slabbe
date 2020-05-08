@@ -97,11 +97,7 @@ class PolyhedronExchangeTransformation(object):
 
         - Code the __pow__ methods.
 
-        X Code the __mul__ methods.
-
         - Do we want to merge atoms mapped by the same translation?
-
-        - Induction should return the induced transformation somehow.
 
         - Add a ploting function with seperated domain/codomain
 
@@ -733,6 +729,44 @@ class PolyhedronExchangeTransformation(object):
             return NotImplemented
         P = factor * self.partition()
         trans_dict = {key:factor*t for (key,t) in self.translations().items()}
+        return PolyhedronExchangeTransformation(P, trans_dict)
+
+    def translate_domain(self, displacement):
+        """
+        Return the PET on a domain translated by some displacement.
+
+        INPUT:
+
+        - ``displacement`` -- a displacement vector or a list/tuple of
+          coordinates that determines a displacement vector.
+
+        OUTPUT:
+
+        The translated PET
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition, PolyhedronExchangeTransformation
+            sage: h = 4/5
+            sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
+            sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
+            sage: P = PolyhedronPartition({0:p, 1:q})
+            sage: T = {0:(1-h,0), 1:(-h,0)}
+            sage: F = PolyhedronExchangeTransformation(P, T)
+            sage: Ft = F.translate_domain((3,1))
+            sage: Ft
+            Polyhedron Exchange Transformation of
+            Polyhedron partition of 2 atoms with 2 letters
+            with translations {0: (1/5, 0), 1: (-4/5, 0)}
+            sage: Ft.domain().vertices()
+            (A vertex at (3, 1),
+             A vertex at (3, 2),
+             A vertex at (4, 1),
+             A vertex at (4, 2))
+
+        """
+        P = self.partition().translate(displacement)
+        trans_dict = {key:t for (key,t) in self.translations().items()}
         return PolyhedronExchangeTransformation(P, trans_dict)
 
     def induced_partition(self, ieq, partition=None, substitution_type='dict'):

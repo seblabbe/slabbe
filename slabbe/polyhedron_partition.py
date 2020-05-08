@@ -667,7 +667,7 @@ class PolyhedronPartition(object):
 
             sage: M = diagonal_matrix((-1,1))
             sage: P = P.apply_linear_map(M)
-            sage: P = P.translation((1,0))
+            sage: P = P.translate((1,0))
             sage: P
             Polyhedron partition of 4 atoms with 4 letters
 
@@ -675,7 +675,7 @@ class PolyhedronPartition(object):
         L = [(key, M*p) for key,p in self]
         return PolyhedronPartition(L)
 
-    def translation(self, displacement):
+    def translate(self, displacement):
         """
         Return the translated partition of polyhedron.
 
@@ -696,7 +696,7 @@ class PolyhedronPartition(object):
             sage: q = Polyhedron([(0,0), (0,h), (h,1), (1,1), (1,h), (h,0)])
             sage: r = Polyhedron([(h,0), (1,0), (1,h)])
             sage: P = PolyhedronPartition([p,q,r])
-            sage: P.translation((1,1))
+            sage: P.translate((1,1))
             Polyhedron partition of 3 atoms with 3 letters
         """
         return PolyhedronPartition([(key,p.translation(displacement)) for (key,p) in self])
