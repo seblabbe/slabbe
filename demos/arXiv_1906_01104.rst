@@ -1,21 +1,30 @@
-===============================================================
-Rauzy induction of polygon partitions and toral `Z^2`-rotations
-===============================================================
+========================================================================
+Rauzy induction of polygon partitions and toral `\mathbb{Z}^2`-rotations
+========================================================================
 
-`arXiv:1906.01104v1`__, June 2019, 36 p.
+This file contains the Sage code contained in the preprints:
 
-`arXiv:1906.01104v2`__, May 2020, 40 p.
+ - `arXiv:1906.01104v1`__, June 2019, 36 p.
+ - `arXiv:1906.01104v2`__, May 2020, 40 p.
 
 __ https://arxiv.org/abs/1906.01104v1
 __ https://arxiv.org/abs/1906.01104v2
 
-Running ``sage -t`` on this file takes 10 seconds with sage-9.1 and
-slabbe-0.6.1.
+The Jupyter notebook ``arXiv_1906_01104.ipynb`` is created from
+``arXiv_1906_01104.rst`` with the command ``sage -rst2ipynb
+arXiv_1906_01104.rst arXiv_1906_01104.ipynb`` plus few manual modifications to
+include the figures of partitions. 
 
-The Sage code contained in the article in recopied below.
+The file ``arXiv_1906_01104.rst`` is in the ``slabbe/demos`` directory of the
+optional SageMath package slabbe__.
+
+__ https://pypi.org/project/slabbe/
+
+Running all examples below with ``sage -t arXiv_1906_01104.rst`` takes 10
+seconds with sage-9.1 and slabbe-0.6.1.
 
 Polyhedron exchange transformations and induction of polyhedron partitions are
-implemented in Sage with the optional package slabbe::
+implemented in the optional package slabbe::
 
     sage: from slabbe import PolyhedronPartition
     sage: from slabbe import PolyhedronExchangeTransformation as PET
@@ -32,8 +41,8 @@ because it is more efficient for arithmetic operations and comparisons:
     sage: K = NumberField(z**2-z-1, 'phi', embedding=RR(1.6))
     sage: phi = K.gen()
 
-The following defines the lattice $\Gamma_0$ and $\mathbb{Z}^2$-action $R_0$ on
-$\R^2/\Gamma_0$
+The following defines the lattice `\Gamma_0` and `\mathbb{Z}^2`-action `R_0` on
+`\mathbb{R}^2/\Gamma_0`
 
 .. link
 
@@ -44,7 +53,7 @@ $\R^2/\Gamma_0$
     sage: R0e1 = PET.toral_translation(Gamma0, vector((1,0)), fundamental_domain)
     sage: R0e2 = PET.toral_translation(Gamma0, vector((0,1)), fundamental_domain)
 
-The following allows to define the partition $P_0$ of $\R^2/\Gamma_0$:
+The following allows to define the partition `\mathcal{P}_0` of `\mathbb{R}^2/\Gamma_0`:
 
 .. link
 
@@ -55,8 +64,8 @@ The following allows to define the partition $P_0$ of $\R^2/\Gamma_0$:
     sage: P0
     Polyhedron partition of 24 atoms with 11 letters
 
-The following allows to compute the induced partition $P_1$ of $\R^2/\Gamma_1$,
-the substitution $\beta_0$.
+The following allows to compute the induced partition `\mathcal{P}_1` of `\mathbb{R}^2/\Gamma_1`,
+the substitution `\beta_0` and the `\mathbb{Z}^2`-action `R_1` on `\mathbb{R}^2/\Gamma_1`.
 
 .. link
 
@@ -66,16 +75,26 @@ the substitution $\beta_0$.
     sage: P1,beta0 = R0e2.induced_partition(y_le_1, P0, substitution_type='column')
     sage: R1e1,_ = R0e1.induced_transformation(y_le_1)
     sage: R1e2,_ = R0e2.induced_transformation(y_le_1)
+
+.. link
+
+::
+
     sage: R1e1
     Polyhedron Exchange Transformation of
     Polyhedron partition of 2 atoms with 2 letters
     with translations {0: (1, 0), 1: (-phi + 1, 0)}
+    sage: R1e2
+    Polyhedron Exchange Transformation of
+    Polyhedron partition of 4 atoms with 4 letters
+    with translations {0: (phi - 1, -phi + 1), 1: (-1, -phi + 1), 
+                       2: (phi - 1, -phi + 2), 3: (-1, -phi + 2)}
     sage: P1
     Polyhedron partition of 30 atoms with 28 letters
     sage: beta0
     Substitution 2d: {0: [[0, 9, 3, 7]], 1: [[0, 9, 7, 5]], 2: [[0, 9, 10, 4]], 3: [[1, 3, 3, 7]], 4: [[1, 3, 7, 6]], 5: [[1, 3, 8, 7]], 6: [[1, 7, 2, 5]], 7: [[1, 7, 5, 5]], 8: [[1, 7, 5, 6]], 9: [[1, 8, 7, 5]], 10: [[1, 8, 10, 4]], 11: [[1, 10, 4, 5]], 12: [[1, 10, 4, 6]], 13: [[0, 9, 3, 3, 7]], 14: [[0, 9, 3, 7, 6]], 15: [[0, 9, 3, 8, 7]], 16: [[0, 9, 7, 2, 5]], 17: [[0, 9, 7, 2, 6]], 18: [[0, 9, 7, 5, 5]], 19: [[0, 9, 7, 5, 6]], 20: [[0, 9, 8, 7, 5]], 21: [[0, 9, 8, 10, 4]], 22: [[0, 9, 10, 4, 6]], 23: [[1, 3, 3, 7, 6]], 24: [[1, 3, 8, 7, 6]], 25: [[1, 7, 2, 5, 6]], 26: [[1, 8, 10, 4, 6]], 27: [[1, 10, 4, 5, 6]]}
 
-We compute $P_2$, $\Gamma_2$ and $R_2$:
+We keep `\mathcal{P}_2`, `\Gamma_2` equal to `\mathcal{P}_1`, `\Gamma_1` and we change the base of the action to get the `\mathbb{Z}^2`-action `R_2` on `\mathbb{R}^2/\Gamma_2`.
 
 .. link
 
@@ -86,8 +105,20 @@ We compute $P_2$, $\Gamma_2$ and $R_2$:
     sage: R2e1 = R1e1
     sage: R2e2 = (R1e1 * R1e2).merge_atoms_with_same_translation()
 
-The following allows to compute the induced partition $P_3$ of $\R^2/\Gamma_3$,
-the substitution $\beta_2$.
+The following confirms that the `R_2^{\boldsymbol{e}_2}` is now a vertical
+rotation on the torus `\mathbb{R^2}/\Gamma_2`.
+
+.. link
+
+::
+
+    sage: R2e2
+    Polyhedron Exchange Transformation of
+    Polyhedron partition of 2 atoms with 2 letters
+    with translations {0: (0, -phi + 1), 1: (0, -phi + 2)}
+
+The following allows to compute the induced partition `\mathcal{P}_3` of `\mathbb{R}^2/\Gamma_3`,
+the substitution `\beta_2` and the `\mathbb{Z}^2`-action `R_3` on `\mathbb{R}^2/\Gamma_3`.
 
 .. link
 
@@ -106,8 +137,9 @@ the substitution $\beta_2$.
     sage: beta2
     Substitution 2d: {0: [[2]], 1: [[9]], 2: [[10]], 3: [[20]], 4: [[21]], 5: [[22]], 6: [[26]], 7: [[1], [0]], 8: [[6], [5]], 9: [[7], [4]], 10: [[8], [4]], 11: [[11], [3]], 12: [[12], [3]], 13: [[16], [15]], 14: [[17], [15]], 15: [[18], [14]], 16: [[19], [14]], 17: [[22], [13]], 18: [[25], [24]], 19: [[27], [23]]}
 
-The following allows to compute the induced partition $P_4$ of $\R^2/\Gamma_4$,
-the substitution $\beta_3$.
+The following allows to compute the induced partition `\mathcal{P}_4` of
+`\mathbb{R}^2/\Gamma_4`, the substitution `\beta_3` and the
+`\mathbb{Z}^2`-action `R_4` on `\mathbb{R}^2/\Gamma_4`
 
 .. link
 
@@ -126,8 +158,10 @@ the substitution $\beta_3$.
     sage: beta3
     Substitution 2d: {0: [[8]], 1: [[9]], 2: [[10]], 3: [[15]], 4: [[16]], 5: [[18]], 6: [[19]], 7: [[7], [0]], 8: [[7], [2]], 9: [[8], [1]], 10: [[11], [2]], 11: [[12], [2]], 12: [[13], [3]], 13: [[14], [3]], 14: [[15], [5]], 15: [[15], [6]], 16: [[16], [5]], 17: [[16], [6]], 18: [[17], [4]], 19: [[19], [6]]}
 
-The following allows to compute the induced partition $P_5$ of $\R^2/\Gamma_5$,
-the substitution $\beta_4$.
+The following allows to compute the induced partition `\mathcal{P}_5` of
+`\mathbb{R}^2/\Gamma_5`, the substitution `\beta_4` and the
+`\mathbb{Z}^2`-action `R_5` on `\mathbb{R}^2/\Gamma_5`.
+
 
 .. link
 
@@ -142,7 +176,7 @@ the substitution $\beta_4$.
     sage: beta4
     Substitution 2d: {0: [[3]], 1: [[4]], 2: [[5]], 3: [[6]], 4: [[12]], 5: [[13]], 6: [[14]], 7: [[15]], 8: [[18]], 9: [[4, 0]], 10: [[5, 0]], 11: [[5, 1]], 12: [[5, 2]], 13: [[6, 0]], 14: [[13, 8]], 15: [[14, 10]], 16: [[15, 10]], 17: [[16, 11]], 18: [[17, 9]], 19: [[17, 11]], 20: [[18, 7]], 21: [[19, 9]]}
 
-We rescale the partition $\mathcal{P}_5$:
+We rescale the partition `\mathcal{P}_5`:
 
 .. link
 
@@ -152,8 +186,10 @@ We rescale the partition $\mathcal{P}_5$:
     sage: R5e1_scaled = (-phi*R5e1).translate_domain((1,1))
     sage: R5e2_scaled = (-phi*R5e2).translate_domain((1,1))
 
-The following allows to compute the induced partition $P_6$ of $\R^2/\Gamma_6$,
-the substitution $\beta_5$.
+The following allows to compute the induced partition `\mathcal{P}_6` of
+`\mathbb{R}^2/\Gamma_6`, the substitution `\beta_5` and the
+`\mathbb{Z}^2`-action `R_6` on `\mathbb{R}^2/\Gamma_6`.
+
 
 .. link
 
@@ -167,8 +203,9 @@ the substitution $\beta_5$.
     sage: beta5
     Substitution 2d: {0: [[8]], 1: [[14]], 2: [[17]], 3: [[20]], 4: [[4], [1]], 5: [[5], [1]], 6: [[6], [3]], 7: [[7], [2]], 8: [[8], [0]], 9: [[14], [9]], 10: [[15], [13]], 11: [[16], [10]], 12: [[16], [11]], 13: [[17], [13]], 14: [[18], [12]], 15: [[19], [10]], 16: [[19], [11]], 17: [[21], [12]]}
 
-The following allows to compute the induced partition $P_7$ of $\R^2/\Gamma_7$,
-the substitution $\beta_6$.
+The following allows to compute the induced partition `\mathcal{P}_7` of
+`\mathbb{R}^2/\Gamma_7`, the substitution `\beta_6` and the
+`\mathbb{Z}^2`-action `R_7` on `\mathbb{R}^2/\Gamma_7`.
 
 .. link
 
@@ -182,7 +219,7 @@ the substitution $\beta_6$.
     sage: beta6
     Substitution 2d: {0: [[1]], 1: [[2]], 2: [[3]], 3: [[12]], 4: [[13]], 5: [[14]], 6: [[15]], 7: [[16]], 8: [[17]], 9: [[1, 0]], 10: [[2, 0]], 11: [[3, 0]], 12: [[9, 8]], 13: [[10, 4]], 14: [[11, 4]], 15: [[12, 6]], 16: [[13, 5]], 17: [[13, 8]], 18: [[14, 7]], 19: [[15, 5]], 20: [[17, 7]]}
 
-We rescale the partition $\mathcal{P}_7$:
+We rescale the partition `\mathcal{P}_7`:
 
 .. link
 
@@ -192,8 +229,9 @@ We rescale the partition $\mathcal{P}_7$:
     sage: R7e1_scaled = (-phi*R7e1).translate_domain((1,1))
     sage: R7e2_scaled = (-phi*R7e2).translate_domain((1,1))
 
-The following allows to compute the induced partition $P_8$ of $\R^2/\Gamma_8$,
-the substitution $\beta_7$.
+The following allows to compute the induced partition `\mathcal{P}_8` of
+`\mathbb{R}^2/\Gamma_8`, the substitution `\beta_7` and the
+`\mathbb{Z}^2`-action `R_8` on `\mathbb{R}^2/\Gamma_8`.
 
 .. link
 
@@ -207,8 +245,10 @@ the substitution $\beta_7$.
     sage: beta7
     Substitution 2d: {0: [[5]], 1: [[8]], 2: [[14]], 3: [[15]], 4: [[18]], 5: [[20]], 6: [[3], [1]], 7: [[4], [2]], 8: [[5], [1]], 9: [[6], [0]], 10: [[7], [1]], 11: [[8], [1]], 12: [[12], [11]], 13: [[13], [11]], 14: [[14], [9]], 15: [[15], [10]], 16: [[16], [11]], 17: [[17], [11]], 18: [[19], [9]]}
 
-The following allows to compute the induced partition $P_9$ of $\R^2/\Gamma_9$,
-the substitution $\beta_8$.
+The following allows to compute the induced partition `\mathcal{P}_9` of
+`\mathbb{R}^2/\Gamma_9`, the substitution `\beta_8` and the
+`\mathbb{Z}^2`-action `R_9` on `\mathbb{R}^2/\Gamma_9`.
+
 
 .. link
 
@@ -222,7 +262,7 @@ the substitution $\beta_8$.
     sage: beta8
     Substitution 2d: {0: [[2]], 1: [[3]], 2: [[4]], 3: [[12]], 4: [[13]], 5: [[14]], 6: [[16]], 7: [[17]], 8: [[2, 0]], 9: [[3, 1]], 10: [[4, 1]], 11: [[5, 1]], 12: [[12, 7]], 13: [[13, 6]], 14: [[14, 6]], 15: [[14, 8]], 16: [[15, 11]], 17: [[16, 9]], 18: [[16, 10]], 19: [[17, 7]], 20: [[18, 10]]}
 
-We rescale the partition $\mathcal{P}_9$:
+We rescale the partition `\mathcal{P}_9`:
 
 .. link
 
@@ -232,8 +272,9 @@ We rescale the partition $\mathcal{P}_9$:
     sage: R9e1_scaled = (-phi*R9e1).translate_domain((1,1))
     sage: R9e2_scaled = (-phi*R9e2).translate_domain((1,1))
 
-The following allows to compute the induced partition $P_10$ of $\R^2/\Gamma_10$,
-the substitution $\beta_9$.
+The following allows to compute the induced partition `\mathcal{P}_{10}` of
+`\mathbb{R}^2/\Gamma_{10}`, the substitution `\beta_9` and the
+`\mathbb{Z}^2`-action `R_{10}` on `\mathbb{R}^2/\Gamma_{10}`.
 
 .. link
 
@@ -247,7 +288,7 @@ the substitution $\beta_9$.
     sage: beta9
     Substitution 2d: {0: [[3]], 1: [[7]], 2: [[12]], 3: [[17]], 4: [[18]], 5: [[19]], 6: [[3], [0]], 7: [[4], [0]], 8: [[4], [1]], 9: [[5], [2]], 10: [[6], [0]], 11: [[7], [0]], 12: [[13], [9]], 13: [[14], [10]], 14: [[15], [10]], 15: [[16], [11]], 16: [[17], [8]], 17: [[18], [9]], 18: [[20], [10]]}
 
-We show that $P_8$ and $P_{10}$ are equivalent:
+We show that `\mathcal{P}_8` and `\mathcal{P}_{10}` are equivalent:
 
 .. link
 
@@ -271,8 +312,8 @@ We show that $P_8$ and $P_{10}$ are equivalent:
     sage: beta8*beta9*tau    # the self-similarity for P8
     Substitution 2d: {0: [[17]], 1: [[12]], 2: [[16, 10]], 3: [[16, 9]], 4: [[17, 7]], 5: [[12, 7]], 6: [[16], [2]], 7: [[14], [4]], 8: [[17], [2]], 9: [[13], [3]], 10: [[13], [2]], 11: [[12], [2]], 12: [[15, 11], [5, 1]], 13: [[18, 10], [4, 1]], 14: [[16, 10], [3, 1]], 15: [[16, 9], [2, 0]], 16: [[14, 6], [4, 1]], 17: [[14, 8], [4, 1]], 18: [[13, 6], [3, 1]]}
 
-We may check that the self-similarity for $\Pcal_8$ satisfies 
-$\zeta^{-1}\beta_8\beta_9\tau\zeta=\beta_{\mathcal{U}}$.
+We may check that the self-similarity for `\mathcal{P}_8` satisfies 
+`\zeta^{-1}\beta_8\beta_9\tau\zeta=\beta_{\mathcal{U}}`.
 
 .. link
 
