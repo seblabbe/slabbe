@@ -40,6 +40,7 @@ from .partial_injection import (number_of_partial_injection,
 from .write_to_file import write_str_to_file
 
 from .jeandel_rao import random_jeandel_rao_tiling_rectangle
+from .inflation_rule import InflationRule, inflation_rules
 
 # BUG (sometimes, cython code does not work properly)
 try:
