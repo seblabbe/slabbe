@@ -95,6 +95,51 @@ def perron_right_eigenvector(M):
         vec_sage = vector(CC, rightv)
     return eig_sage, vec_sage/sum(vec_sage)
 
+def perron_right_eigenvector_in_number_field(M):
+    r"""
+    Return the Perron right eigenvector of a primitive matrix
+
+    INPUT:
+
+    - ``M`` -- primitive matrix
+
+    OUTPUT:
+
+    - Perron eigenvalue
+    - Perron right-eigenvector
+
+    EXAMPLES::
+
+        sage: from slabbe.matrices import perron_right_eigenvector_in_number_field
+        sage: m = matrix(2,[1,1,1,0])
+        sage: perron_right_eigenvector_in_number_field(m)
+        (root, (1, root - 1))
+
+    ::
+
+        sage: m = matrix(2,[11,14,26,29])
+        sage: perron_right_eigenvector_in_number_field(m)
+        (root, (1, 1/14*root - 11/14))
+
+    The characteristic polynomial of the matrix must be irreducible::
+
+        sage: m = matrix(2,[-11,14,-26,29])
+        sage: perron_right_eigenvector_in_number_field(m)
+        Traceback (most recent call last):
+        ...
+        ValueError: defining polynomial (x^2 - 18*x + 45) must be irreducible
+
+    """
+    from sage.rings.number_field.number_field import NumberField
+    perron = max(M.eigenvalues())
+    K = NumberField(M.charpoly(), 'root', embedding=perron.n())
+    root = K.gen()
+    [(V,mul)] = [(V,mul) for (e,V,mul) in M.change_ring(K).eigenvectors_right() if e == root]
+    assert mul == 1, "Multiplicity should be 1 when primitive"
+    assert len(V) == 1, "Multiplicity should be 1 when primitive"
+    perron_right = V[0]
+    return (root, perron_right)
+
 def is_positive(M):
     r"""
     EXAMPLES::
