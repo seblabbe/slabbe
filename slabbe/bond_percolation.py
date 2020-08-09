@@ -171,7 +171,6 @@ from __future__ import absolute_import, print_function
 import os
 import itertools
 from sage.structure.sage_object import SageObject
-from sage.combinat.backtrack import TransitiveIdeal
 from sage.rings.infinity import Infinity
 from sage.graphs.graph import Graph
 from sage.functions.generalized import sgn
@@ -358,10 +357,12 @@ class BondPercolationSample(SageObject):
             (0, 0)
 
         """
+        from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
         if pt is None:
             pt = self.zero()
         generators = [pt]
-        return iter(TransitiveIdeal(self.children, generators))
+        R = RecursivelyEnumeratedSet(generators, self.children)
+        return iter(R)
 
     def cluster_cardinality(self, pt=None):
         r"""
