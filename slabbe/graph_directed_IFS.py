@@ -260,6 +260,13 @@ class GraphDirectedIteratedFunctionSystem(object):
 
     def galois_conjugate(self):
         r"""
+        Return the element-wise Galois conjugate of this GIFS
+
+        INPUT:
+
+        - ``self`` -- an Affine GIFS, defined on a ring where elements have
+          a method ``.galois_conjugate`` (e.g., quadratic number field elements)
+
         EXAMPLES:
 
         Fibonacci substitution::
@@ -279,12 +286,27 @@ class GraphDirectedIteratedFunctionSystem(object):
             sage: s.galois_conjugate()
             Inflation Rule (multiplier=-tau + 1) defined on 4 sets
 
+        ::
+
+            sage: from slabbe import GraphDirectedIteratedFunctionSystem as GIFS
+            sage: z = polygen(QQ, 'z')
+            sage: K = NumberField(z**2-z-1, 'tau', embedding=RR(1.6))
+            sage: tau = K.gen()
+            sage: import itertools
+            sage: d = {(i,j):[] for i,j in itertools.product(range(4),repeat=2)}
+            sage: d[(0,3)] = [vector(K, (tau,tau))]
+            sage: d[(1,2)] = d[(1,3)] = [vector(K, (0,tau))]
+            sage: d[(2,1)] = d[(2,3)] = [vector(K, (tau,0))]
+            sage: d[(3,0)] = d[(3,1)] = d[(3,2)] = d[(3,3)] = [vector(K, (0,0))]
+            sage: ifs = GIFS.from_inflation_rule(K^2, tau, d)
+            sage: ifs.galois_conjugate()
+            GIFS defined by 9 maps on Vector space of dimension 2 over
+            Number Field in tau with defining polynomial z^2 - z - 1 with
+            tau = 1.618033988749895?
+
         """
-        raise NotImplementedError
-        d = {k:[vector(a.galois_conjugate() for a in t) for t in v] 
-             for (k,v) in self._d.items()}
-        return InflationRule(self._multiplier.galois_conjugate(),
-                             self._number_of_sets, d)
+        edges = [(u,v,galois_conjugate(f)) for (u,v,f) in self._edges]
+        return GraphDirectedIteratedFunctionSystem(self._module, edges)
 
     def __call__(self, S=None, n_iterations=1):
         r"""
@@ -496,4 +518,33 @@ class GraphDirectedIteratedFunctionSystem(object):
                 P = [projection*p for p in P]
             G += points(P, color=vertex_to_color[v], legend_label=str(v))
         return G
+
+def galois_conjugate(f):
+    r"""
+    Return the element-wise Galois conjugate of an element of an affine
+    group 
+
+    INPUT:
+
+    - ``f`` -- affine group element
+
+    EXAMPLES::
+
+        sage: from slabbe.graph_directed_IFS import galois_conjugate
+        sage: z = polygen(QQ, 'z')
+        sage: K = NumberField(z**2-z-1, 'phi', embedding=RR(1.6))
+        sage: phi = K.gen()
+        sage: F = AffineGroup(2, K)
+        sage: f = F(phi*identity_matrix(2), (phi,0))
+        sage: galois_conjugate(f)
+              [-phi + 1        0]     [-phi + 1]
+        x |-> [       0 -phi + 1] x + [       0]
+
+    """
+    from sage.matrix.constructor import matrix
+    F = f.parent()
+    dim = F.degree() + 1
+    M = matrix(dim,[a.galois_conjugate() for a in f.matrix().list()])
+    return F(M)
+
 
