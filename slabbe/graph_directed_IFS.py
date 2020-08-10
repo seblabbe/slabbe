@@ -23,7 +23,8 @@ The Cantor set::
     sage: f2
     x |-> [1/3] x + [2/3]
     sage: from slabbe import GraphDirectedIteratedFunctionSystem as GIFS
-    sage: GIFS(QQ^1, [(0,0,f1),(0,0,f2)])
+    sage: cantor_IFS = GIFS(QQ^1, [(0,0,f1),(0,0,f2)])
+    sage: cantor_IFS
     GIFS defined by 2 maps on 
     Vector space of dimension 1 over Rational Field
 
@@ -65,7 +66,7 @@ class GraphDirectedIteratedFunctionSystem(object):
     INPUT:
 
     - ``module`` -- the module on which the functions are defined
-    - ``data`` -- list, list of triples (u,v,f) where f is a function
+    - ``edges`` -- list, list of triples (u,v,f) where f is a function
       associated to the directed edge (u,v).
 
     EXAMPLES:
@@ -85,7 +86,7 @@ class GraphDirectedIteratedFunctionSystem(object):
         Vector space of dimension 1 over Rational Field
 
     """
-    def __init__(self, module, data):
+    def __init__(self, module, edges):
         r"""
         See class documentation.
 
@@ -98,7 +99,7 @@ class GraphDirectedIteratedFunctionSystem(object):
             sage: ifs = GIFS(QQ^1, [(0,0,f1),(0,0,f2)])
         """
         self._module = module
-        self._data = data
+        self._edges = edges
 
     def __repr__(self):
         r"""
@@ -113,7 +114,7 @@ class GraphDirectedIteratedFunctionSystem(object):
             Vector space of dimension 1 over Rational Field
 
         """
-        return ("GIFS defined by {} maps on {}".format(len(self._data),
+        return ("GIFS defined by {} maps on {}".format(len(self._edges),
                 self._module))
 
     @classmethod
@@ -193,10 +194,6 @@ class GraphDirectedIteratedFunctionSystem(object):
             Number Field in tau with defining polynomial z^2 - z - 1
             with tau = 1.618033988749895?
 
-        TODO:
-
-        - fix the call iteration which seems broken (replace (i,j) by (j,i) ?)
-
         """
         from sage.groups.affine_gps.affine_group import AffineGroup
         from sage.matrix.special import identity_matrix
@@ -205,11 +202,11 @@ class GraphDirectedIteratedFunctionSystem(object):
         F = AffineGroup(dimension, ring)
         M = multiplier * identity_matrix(dimension)
 
-        data = [(j,i,F(M, translation)) 
-                for (i,j),L in displacement_matrix.items() 
-                for translation in L]
+        edges = [(j,i,F(M, translation)) 
+                 for (i,j),L in displacement_matrix.items() 
+                 for translation in L]
 
-        return GraphDirectedIteratedFunctionSystem(module, data)
+        return GraphDirectedIteratedFunctionSystem(module, edges)
 
     def to_digraph(self):
         r"""
@@ -225,7 +222,7 @@ class GraphDirectedIteratedFunctionSystem(object):
 
         """
         from sage.graphs.digraph import DiGraph
-        edges = [(u,v) for (u,v,f) in self._data]
+        edges = [(u,v) for (u,v,f) in self._edges]
         return DiGraph(edges, format='list_of_edges', loops=True,
                 multiedges=True)
 
@@ -242,8 +239,8 @@ class GraphDirectedIteratedFunctionSystem(object):
             [0]
 
         """
-        U = [u for (u,v,f) in self._data]
-        V = [v for (u,v,f) in self._data]
+        U = [u for (u,v,f) in self._edges]
+        V = [v for (u,v,f) in self._edges]
         return sorted(set(U)|set(V))
 
     def num_vertices(self):
@@ -407,7 +404,7 @@ class GraphDirectedIteratedFunctionSystem(object):
         if n_iterations == 1:
             S_image = {}
             for v in self.vertices():
-                Ev = [(u,v_,f) for (u,v_,f) in self._data if v_ == v]
+                Ev = [(u,v_,f) for (u,v_,f) in self._edges if v_ == v]
                 S_image[v] = [f(p) for (u,_,f) in Ev for p in S.get(u,[])]
             return S_image
 
