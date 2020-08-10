@@ -131,13 +131,30 @@ class GraphDirectedIteratedFunctionSystem(object):
 
             sage: from slabbe import GraphDirectedIteratedFunctionSystem as GIFS
             sage: m = WordMorphism('a->ab,b->a')
-            sage: m
-            WordMorphism: a->ab, b->a
-            sage: s = GIFS.from_one_dimensional_substitution(m)
-            sage: s
+            sage: g = GIFS.from_one_dimensional_substitution(m)
+            sage: g
+            GIFS defined by 3 maps on
+            Vector space of dimension 1 over
+            Number Field in root with defining polynomial x^2 - x - 1 with
+            root = 1.618033988749895?
 
         """
-        raise NotImplementedError
+        from slabbe.matrices import perron_right_eigenvector_in_number_field
+        M = m.incidence_matrix()
+        root, perron_left = perron_right_eigenvector_in_number_field(M.T)
+        K = root.parent()
+        alphabet = m.domain().alphabet()
+        size = alphabet.cardinality()
+        module = K**1
+        d = {(i,j):[] for i,j in itertools.product(range(size),repeat=2)}
+        for i,a in enumerate(alphabet):
+            m_a = m(a)
+            pos = module.zero()
+            for b in m_a:
+                j = alphabet.index(b)
+                d[(i,j)].append(pos)
+                pos += module([perron_left[j]])
+        return cls.from_inflation_rule(module, root, d)
 
     @classmethod
     def from_two_dimensional_substitution(cls, m):
@@ -275,7 +292,9 @@ class GraphDirectedIteratedFunctionSystem(object):
             sage: m = WordMorphism('a->ab,b->a')
             sage: s = GIFS.from_one_dimensional_substitution(m)
             sage: s.galois_conjugate()
-            Inflation Rule (multiplier=-root + 1) defined on 2 sets
+            GIFS defined by 3 maps on Vector space of dimension 1 over
+            Number Field in root with defining polynomial x^2 - x - 1 with
+            root = 1.618033988749895?
 
         Direct Product of 2 Fibonacci::
 
