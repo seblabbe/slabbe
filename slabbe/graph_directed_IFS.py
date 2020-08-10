@@ -186,9 +186,10 @@ class GraphDirectedIteratedFunctionSystem(object):
             sage: d = {(i,j):[] for i,j in itertools.product(range(4),repeat=2)}
             sage: d[(0,3)] = [vector(K, (tau,tau))]
             sage: d[(1,2)] = d[(1,3)] = [vector(K, (0,tau))]
+            sage: d[(2,1)] = d[(2,3)] = [vector(K, (tau,0))]
             sage: d[(3,0)] = d[(3,1)] = d[(3,2)] = d[(3,3)] = [vector(K, (0,0))]
             sage: GIFS.from_inflation_rule(K^2, tau, d)
-            GIFS defined by 7 maps on Vector space of dimension 2 over
+            GIFS defined by 9 maps on Vector space of dimension 2 over
             Number Field in tau with defining polynomial z^2 - z - 1
             with tau = 1.618033988749895?
 
@@ -198,11 +199,13 @@ class GraphDirectedIteratedFunctionSystem(object):
 
         """
         from sage.groups.affine_gps.affine_group import AffineGroup
+        from sage.matrix.special import identity_matrix
         dimension = module.dimension()
         ring = module.base_ring()
         F = AffineGroup(dimension, ring)
+        M = multiplier * identity_matrix(dimension)
 
-        data = [(i,j,F(multiplier, translation)) 
+        data = [(j,i,F(M, translation)) 
                 for (i,j),L in displacement_matrix.items() 
                 for translation in L]
 
@@ -307,33 +310,79 @@ class GraphDirectedIteratedFunctionSystem(object):
             sage: cantor_ifs({0:[vector([0])]})
             {0: [(0), (2/3)]}
             sage: cantor_ifs(_)
-            {0: [(0), (2/3), (2/9), (8/9)]}
+            {0: [(0), (2/9), (2/3), (8/9)]}
             sage: cantor_ifs(_)
-            {0: [(0), (2/3), (2/9), (8/9), (2/27), (20/27), (8/27), (26/27)]}
+            {0: [(0), (2/27), (2/9), (8/27), (2/3), (20/27), (8/9), (26/27)]}
             sage: cantor_ifs(_)
             {0: [(0),
-              (2/3),
-              (2/9),
-              (8/9),
-              (2/27),
-              (20/27),
-              (8/27),
-              (26/27),
               (2/81),
-              (56/81),
-              (20/81),
-              (74/81),
+              (2/27),
               (8/81),
-              (62/81),
+              (2/9),
+              (20/81),
+              (8/27),
               (26/81),
+              (2/3),
+              (56/81),
+              (20/27),
+              (62/81),
+              (8/9),
+              (74/81),
+              (26/27),
               (80/81)]}
 
         ::
 
             sage: cantor_ifs([[vector([0])]], 2)
-            {0: [(0), (2/3), (2/9), (8/9)]}
+            {0: [(0), (2/9), (2/3), (8/9)]}
             sage: cantor_ifs([[vector([0])]], 3)
-            {0: [(0), (2/3), (2/9), (8/9), (2/27), (20/27), (8/27), (26/27)]}
+            {0: [(0), (2/27), (2/9), (8/27), (2/3), (20/27), (8/9), (26/27)]}
+
+        ::
+
+            sage: from slabbe import GraphDirectedIteratedFunctionSystem as GIFS
+            sage: z = polygen(QQ, 'z')
+            sage: K = NumberField(z**2-z-1, 'tau', embedding=RR(1.6))
+            sage: tau = K.gen()
+            sage: import itertools
+            sage: d = {(i,j):[] for i,j in itertools.product(range(4),repeat=2)}
+            sage: d[(0,3)] = [vector(K, (tau,tau))]
+            sage: d[(1,2)] = d[(1,3)] = [vector(K, (0,tau))]
+            sage: d[(2,1)] = d[(2,3)] = [vector(K, (tau,0))]
+            sage: d[(3,0)] = d[(3,1)] = d[(3,2)] = d[(3,3)] = [vector(K, (0,0))]
+            sage: ifs = GIFS.from_inflation_rule(K^2, tau, d)
+            sage: ifs(n_iterations=1)
+            {0: [], 1: [], 2: [], 3: [(0, 0)]}
+            sage: ifs(n_iterations=2)
+            {0: [(tau, tau)], 1: [(0, tau)], 2: [(tau, 0)], 3: [(0, 0)]}
+            sage: ifs(n_iterations=3)
+            {0: [(tau, tau)],
+             1: [(tau + 1, tau), (0, tau)],
+             2: [(tau, tau + 1), (tau, 0)],
+             3: [(tau + 1, tau + 1), (0, tau + 1), (tau + 1, 0), (0, 0)]}
+            sage: ifs(n_iterations=4)
+            {0: [(3*tau + 1, 3*tau + 1), (tau, 3*tau + 1), (3*tau + 1, tau), (tau, tau)],
+             1: [(tau + 1, 3*tau + 1),
+              (tau + 1, tau),
+              (2*tau + 1, 3*tau + 1),
+              (0, 3*tau + 1),
+              (2*tau + 1, tau),
+              (0, tau)],
+             2: [(3*tau + 1, tau + 1),
+              (tau, tau + 1),
+              (3*tau + 1, 2*tau + 1),
+              (tau, 2*tau + 1),
+              (3*tau + 1, 0),
+              (tau, 0)],
+             3: [(tau + 1, tau + 1),
+              (2*tau + 1, tau + 1),
+              (0, tau + 1),
+              (tau + 1, 2*tau + 1),
+              (tau + 1, 0),
+              (2*tau + 1, 2*tau + 1),
+              (0, 2*tau + 1),
+              (2*tau + 1, 0),
+              (0, 0)]}
 
         TESTS::
 
@@ -346,7 +395,7 @@ class GraphDirectedIteratedFunctionSystem(object):
         # input S
         if S is None:
             zero = self._module.zero()
-            S = {0:zero}
+            S = {0:[zero]}
         elif isinstance(S, list):
             if not len(S) == self.num_vertices():
                 raise ValueError("size of input (={}) must match the number of"
@@ -359,8 +408,7 @@ class GraphDirectedIteratedFunctionSystem(object):
             S_image = {}
             for v in self.vertices():
                 Ev = [(u,v_,f) for (u,v_,f) in self._data if v_ == v]
-                Sv = S.get(v, [])
-                S_image[v] = [f(p) for p in Sv for (_,_,f) in Ev]
+                S_image[v] = [f(p) for (u,_,f) in Ev for p in S.get(u,[])]
             return S_image
 
         # many iterations
