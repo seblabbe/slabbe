@@ -1016,6 +1016,61 @@ class Substitution2d(object):
                 S.update(set_of_factors(self(table), shape))
             return [ [[a, b], [c, d]] for (a,b,c,d) in S]
 
+    def list_dominoes(self, direction):
+        r"""
+        Return the list of 1x2 or 2x1 factors in the language of the
+        associated substitutive shift.
+
+        INPUT:
+
+        - ``self`` -- expansive and primitive 2d substitution
+        - ``direction`` -- string, ``'horizontal'`` or ``'vertical'``
+
+        OUTPUT:
+
+            list of tables
+
+        EXAMPLES::
+
+            sage: from slabbe import Substitution2d
+            sage: A = [[0,1],[0,1]]
+            sage: B = [[1,0],[1,1]]
+            sage: d = {0:A, 1:B}
+            sage: s = Substitution2d(d)
+            sage: sorted(s.list_dominoes(direction='horizontal'))
+            [(0, 0), (0, 1), (1, 0), (1, 1)]
+            sage: sorted(s.list_dominoes(direction='vertical'))
+            [(0, 0), (0, 1), (1, 0), (1, 1)]
+
+        """
+        if not self.codomain_alphabet() <= self.domain_alphabet():
+            raise ValueError("codomain alphabet (='{}') is not a subset of the"
+                    " domain alphabet (={})".format(self.codomain_alphabet(),
+                                              self.domain_alphabet()))
+        from sage.sets.recursively_enumerated_set import RecursivelyEnumeratedSet
+        alphabet = self.domain_alphabet()
+        a = next(iter(alphabet))
+        table = [[a]]
+        while len(table) < 2 or len(table[0]) < 2:
+            table = self(table)
+        if direction == 'horizontal':
+            shape = [(0,0), (1,0)]
+            create_table = lambda factor: [[factor[0]], [factor[1]]]
+        elif direction == 'vertical':
+            shape = [(0,0), (0,1)]
+            create_table = lambda factor: [[factor[0], factor[1]]]
+        else:
+            raise ValueError("direction (={}) should be 'horizontal' or"
+                    " 'vertical'".format(direction))
+        seeds = set_of_factors(table, shape)
+        def children(factor):
+            table = create_table(factor)
+            image = self(table)
+            return set_of_factors(image, shape)
+        R = RecursivelyEnumeratedSet(seeds, children)
+        #return [create_table(f) for f in R]
+        return list(R)
+
     def lines_alphabet(self, direction='horizontal'):
         r"""
         Return the possible alphabets on lines, i.e., the possible alphabet
