@@ -28,9 +28,14 @@ TODO:
       http://larryriddle.agnesscott.org/ifs/ifs.htm
       https://demonstrations.wolfram.com/AttractorsOfIteratedAffineTransformSystems/
       https://www.arxiv-vanity.com/papers/math/0604547/
+      https://encyclopediaofmath.org/wiki/Iterated_function_system
 
     - or rename AffineIteratedTransformSystem to include both inflation and
       contractions ...
+
+      code affine graph-directed ifs, see:
+
+      http://jolivet.org/timo/docs/undfrac.pdf or recent [BV20]_
 
 REFERENCES:
 
@@ -40,6 +45,10 @@ REFERENCES:
 .. [BG13] Michael Baake, Uwe Grimm. Aperiodic order. Vol. 1. Vol. 149.
    Encyclopedia of Mathematics and its Applications. Cambridge University
    Press, Cambridge, 2013. http://www.ams.org/mathscinet-getitem?mr=3136260.
+
+.. [BV20] Michael Barnsley, Andrew Vince. Tilings from Graph Directed
+   Iterated Function Systems. Geometriae Dedicata, 9 août 2020.
+   https://doi.org/10.1007/s10711-020-00560-4
 
 """
 #*****************************************************************************
