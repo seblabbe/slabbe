@@ -85,8 +85,8 @@ class InflationRule(object):
         sage: d = {(i,j):[] for i,j in itertools.product(range(4),repeat=2)}
         sage: d[(0,3)] = [vector(K, (tau,tau))]
         sage: d[(1,2)] = d[(1,3)] = [vector(K, (0,tau))]
-        sage: d[(3,0)] = d[(3,1)] = d[(3,2)] = d[(3,3)] = [vector(K, (0,0))]
         sage: d[(2,1)] = d[(2,3)] = [vector(K, (tau,0))]
+        sage: d[(3,0)] = d[(3,1)] = d[(3,2)] = d[(3,3)] = [vector(K, (0,0))]
         sage: s = InflationRule(tau, 4, d)
         sage: s
         Inflation Rule (multiplier=tau) defined on 4 sets
