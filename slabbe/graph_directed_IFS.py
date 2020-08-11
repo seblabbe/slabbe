@@ -8,25 +8,55 @@ See [JK14] or [BV20] or
 - https://encyclopediaofmath.org/wiki/Iterated_function_system
 
 We allow the functions to be contracting or not. When the functions are
-inflations, it allows to represent inflation rules as in Definition 5.17 of
-[BG13]_.
+inflations, it allows to represent inflation rules and stone inflations as
+in Definition 5.17 of [BG13]_.
 
 EXAMPLES:
 
 The Cantor set::
 
-    sage: F = AffineGroup(1, QQ)
-    sage: f1 = F.linear(1/3)
-    sage: f2 = F(1/3, vector([2/3]))
-    sage: f1
-    x |-> [1/3] x + [0]
-    sage: f2
-    x |-> [1/3] x + [2/3]
     sage: from slabbe import GraphDirectedIteratedFunctionSystem as GIFS
+    sage: F = AffineGroup(1, QQ)
+    sage: f1 = F.linear(1/3); f1
+    x |-> [1/3] x + [0]
+    sage: f2 = F(1/3, vector([2/3])); f2
+    x |-> [1/3] x + [2/3]
     sage: cantor_IFS = GIFS(QQ^1, [(0,0,f1),(0,0,f2)])
     sage: cantor_IFS
     GIFS defined by 2 maps on 
     Vector space of dimension 1 over Rational Field
+
+Fibonacci substitution::
+
+    sage: m = WordMorphism('a->ab,b->a')
+    sage: fibo_ifs = GIFS.from_one_dimensional_substitution(m)
+    sage: fibo_ifs
+    GIFS defined by 3 maps on Vector space of dimension 1 over
+    Number Field in root with defining polynomial x^2 - x - 1 with
+    root = 1.618033988749895?
+
+Its element-wise Galois conjugate is a contracting IFS::
+
+    sage: fibo_ifs.galois_conjugate().pp()
+    GIFS defined by 3 maps on Vector space of dimension 1 over Number Field in root with defining polynomial x^2 - x - 1 with root = 1.618033988749895?
+    edge (0,0):
+    x |-> [-root + 1] x + [0]
+    edge (1,0):
+    x |-> [-root + 1] x + [1]
+    edge (0,1):
+    x |-> [-root + 1] x + [0]
+
+Direct Product of 2 Fibonacci::
+
+    sage: from slabbe import GraphDirectedIteratedFunctionSystem as GIFS
+    sage: from slabbe import Substitution2d
+    sage: d = {0:[[3]], 1:[[3],[2]], 2:[[3,1]], 3:[[3,1],[2,0]]}
+    sage: s = Substitution2d(d)
+    sage: fibo2_ifs = GIFS.from_two_dimensional_substitution(s)
+    sage: fibo2_ifs
+    GIFS defined by 9 maps on Vector space of dimension 2 over 
+    Number Field in rootX with defining polynomial x^2 - x - 1 with 
+    rootX = 1.618033988749895?
 
 REFERENCES:
 
@@ -195,11 +225,7 @@ class GraphDirectedIteratedFunctionSystem(object):
 
             sage: from slabbe import GraphDirectedIteratedFunctionSystem as GIFS
             sage: from slabbe import Substitution2d
-            sage: A = [[3]]
-            sage: B = [[3],[2]]
-            sage: C = [[3,1]]
-            sage: D = [[3,1],[2,0]]
-            sage: d = {0:A, 1:B, 2:C, 3:D}
+            sage: d = {0:[[3]], 1:[[3],[2]], 2:[[3,1]], 3:[[3,1],[2,0]]}
             sage: s = Substitution2d(d)
             sage: ifs = GIFS.from_two_dimensional_substitution(s)
             sage: ifs.pp()
@@ -283,6 +309,9 @@ class GraphDirectedIteratedFunctionSystem(object):
         r"""
         Return the GIFS defined by a 2-dimensional primitive
         substitution
+
+        We follow the convention used in [BFG19]_ for the displacement
+        matrix.
 
         INPUT:
 
@@ -397,37 +426,14 @@ class GraphDirectedIteratedFunctionSystem(object):
 
         Direct Product of 2 Fibonacci::
 
-            sage: from slabbe import GraphDirectedIteratedFunctionSystem as GIFS
             sage: from slabbe import Substitution2d
-            sage: A = [[3]]
-            sage: B = [[3],[2]]
-            sage: C = [[3,1]]
-            sage: D = [[3,1],[2,0]]
-            sage: d = {0:A, 1:B, 2:C, 3:D}
+            sage: d = {0:[[3]], 1:[[3],[2]], 2:[[3,1]], 3:[[3,1],[2,0]]}
             sage: s = Substitution2d(d)
             sage: ifs = GIFS.from_two_dimensional_substitution(s)
             sage: ifs.galois_conjugate()
             GIFS defined by 9 maps on Vector space of dimension 2 over 
             Number Field in rootX with defining polynomial x^2 - x - 1 with 
             rootX = 1.618033988749895?
-
-        ::
-
-            sage: from slabbe import GraphDirectedIteratedFunctionSystem as GIFS
-            sage: z = polygen(QQ, 'z')
-            sage: K = NumberField(z**2-z-1, 'tau', embedding=RR(1.6))
-            sage: tau = K.gen()
-            sage: import itertools
-            sage: d = {(i,j):[] for i,j in itertools.product(range(4),repeat=2)}
-            sage: d[(0,3)] = [vector(K, (tau,tau))]
-            sage: d[(1,2)] = d[(1,3)] = [vector(K, (0,tau))]
-            sage: d[(2,1)] = d[(2,3)] = [vector(K, (tau,0))]
-            sage: d[(3,0)] = d[(3,1)] = d[(3,2)] = d[(3,3)] = [vector(K, (0,0))]
-            sage: ifs = GIFS.from_inflation_rule(K^2, tau, d)
-            sage: ifs.galois_conjugate()
-            GIFS defined by 9 maps on Vector space of dimension 2 over
-            Number Field in tau with defining polynomial z^2 - z - 1 with
-            tau = 1.618033988749895?
 
         """
         edges = [(u,v,galois_conjugate(f)) for (u,v,f) in self._edges]
@@ -587,40 +593,40 @@ class GraphDirectedIteratedFunctionSystem(object):
 
         The Cantor set::
 
+            sage: from slabbe import GraphDirectedIteratedFunctionSystem as GIFS
             sage: F = AffineGroup(1, QQ)
             sage: f1 = F.linear(1/3)
             sage: f2 = F(1/3, vector([2/3]))
-            sage: from slabbe import GraphDirectedIteratedFunctionSystem as GIFS
             sage: cantor_ifs = GIFS(QQ^1, [(0,0,f1),(0,0,f2)])
             sage: G = cantor_ifs.plot(n_iterations=7)
 
-        Projection on the vertical y-axis::
+        Projection on the vertical y-axis instead::
 
             sage: G = cantor_ifs.plot(n_iterations=7, projection=matrix(2,[0,1]))
         
         The usual Fibonacci chain::
 
-            sage: from slabbe import InflationRule
             sage: m = WordMorphism('a->ab,b->a')
-            sage: s = InflationRule.from_one_dimensional_substitution(m)
-            sage: G = s.plot_ifs(7)
+            sage: ifs = GIFS.from_one_dimensional_substitution(m)
+            sage: G = ifs.plot(n_iterations=10)
 
-        Its contracting IFS::
+        and its contracting IFS::
 
-            sage: sc = s.galois_conjugate()
-            sage: G = sc.plot_ifs(10)
+            sage: G = ifs.galois_conjugate().plot(n_iterations=10)
 
         The direct product of two Fibonacci chains::
 
-            sage: from slabbe import inflation_rules
-            sage: s = inflation_rules.direct_product_two_Fibonacci_chains()
-            sage: G = s.plot_ifs(7)
+            sage: from slabbe import GraphDirectedIteratedFunctionSystem as GIFS
+            sage: from slabbe import Substitution2d
+            sage: d = {0:[[3]], 1:[[3],[2]], 2:[[3,1]], 3:[[3,1],[2,0]]}
+            sage: s = Substitution2d(d)
+            sage: ifs = GIFS.from_two_dimensional_substitution(s)
+            sage: G = ifs.plot(n_iterations=7)
 
         This inflation rule is related to a contracting IFS whose unique
         solution is given in formula (4.5) of [BFG19]_::
 
-            sage: sc = s.galois_conjugate()
-            sage: G = sc.plot_ifs(10)
+            sage: G = ifs.galois_conjugate().plot(n_iterations=7)
         """
         from sage.matrix.constructor import matrix
         from sage.plot.colors import rainbow

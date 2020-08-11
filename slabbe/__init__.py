@@ -40,7 +40,6 @@ from .partial_injection import (number_of_partial_injection,
 from .write_to_file import write_str_to_file
 
 from .jeandel_rao import random_jeandel_rao_tiling_rectangle
-from .inflation_rule import InflationRule, inflation_rules
 from .graph_directed_IFS import GraphDirectedIteratedFunctionSystem
 
 # BUG (sometimes, cython code does not work properly)
