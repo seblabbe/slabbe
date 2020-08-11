@@ -129,19 +129,28 @@ def perron_right_eigenvector_in_number_field(M, name='root'):
         sage: perron_right_eigenvector_in_number_field(m, 'rho')
         (rho, (1, 1/14*rho - 11/14))
 
-    The characteristic polynomial of the matrix must be irreducible::
+    Works if the characteristic polynomial is reducible::
+
+        sage: M = matrix(3, [0, 1, 1, 1, 0, 1, 1, 0, 0])
+        sage: M.charpoly().factor()
+        (x + 1) * (x^2 - x - 1)
+        sage: perron_right_eigenvector_in_number_field(M)
+        (root, (1, 1, root - 1))
+
+    With negative entries, why not::
 
         sage: m = matrix(2,[-11,14,-26,29])
         sage: perron_right_eigenvector_in_number_field(m)
-        Traceback (most recent call last):
-        ...
-        ValueError: defining polynomial (x^2 - 18*x + 45) must be irreducible
+        (15, (1, 13/7))
 
     """
     from sage.rings.number_field.number_field import NumberField
     perron = max(M.eigenvalues())
+    polynomials = [f for (f,_) in M.charpoly().factor() if f(perron) == 0]
+    assert len(polynomials) == 1, "there should be only one such polynomial"
+    polynomial = polynomials[0]
 
-    K = NumberField(M.charpoly(), name, embedding=perron.n())
+    K = NumberField(polynomial, name, embedding=perron.n())
     root = K.gen()
     [(V,mul)] = [(V,mul) for (e,V,mul) in M.change_ring(K).eigenvectors_right() if e == root]
     assert mul == 1, "Multiplicity should be 1 when primitive"
@@ -182,14 +191,6 @@ def perron_left_eigenvector_in_number_field(M, name='root'):
 
         sage: perron_left_eigenvector_in_number_field(m, 'rho')
         (rho, (1, 1/26*rho - 11/26))
-
-    The characteristic polynomial of the matrix must be irreducible::
-
-        sage: m = matrix(2,[-11,14,-26,29])
-        sage: perron_left_eigenvector_in_number_field(m)
-        Traceback (most recent call last):
-        ...
-        ValueError: defining polynomial (x^2 - 18*x + 45) must be irreducible
 
     """
     return perron_right_eigenvector_in_number_field(M.T, name)
