@@ -117,6 +117,31 @@ class GraphDirectedIteratedFunctionSystem(object):
         return ("GIFS defined by {} maps on {}".format(len(self._edges),
                 self._module))
 
+    def pp(self):
+        r"""
+        Prints a nicer and complete string representation.
+
+        EXAMPLES::
+
+            sage: from slabbe import GraphDirectedIteratedFunctionSystem as GIFS
+            sage: F = AffineGroup(1, QQ)
+            sage: ifs = f1 = F.linear(1/3)
+            sage: f2 = F(1/3, vector([2/3]))
+            sage: ifs = GIFS(QQ^1, [(0,0,f1),(0,0,f2)])
+            sage: ifs.pp()
+            GIFS defined by 2 maps on Vector space of dimension 1 over Rational Field
+            edge (0,0):
+            x |-> [1/3] x + [0]
+            edge (0,0):
+            x |-> [1/3] x + [2/3]
+
+        """
+        print("GIFS defined by {} maps on {}".format(len(self._edges),
+                                                     self._module))
+        for (a,b,f) in self._edges:
+            print("edge ({},{}):".format(a,b))
+            print(f)
+
     @classmethod
     def from_one_dimensional_substitution(cls, m):
         r"""
@@ -139,9 +164,9 @@ class GraphDirectedIteratedFunctionSystem(object):
             root = 1.618033988749895?
 
         """
-        from slabbe.matrices import perron_right_eigenvector_in_number_field
+        from slabbe.matrices import perron_left_eigenvector_in_number_field
         M = m.incidence_matrix()
-        root, perron_left = perron_right_eigenvector_in_number_field(M.T)
+        root, perron_left = perron_left_eigenvector_in_number_field(M, 'root')
         K = root.parent()
         alphabet = m.domain().alphabet()
         size = alphabet.cardinality()
@@ -157,7 +182,7 @@ class GraphDirectedIteratedFunctionSystem(object):
         return cls.from_inflation_rule(module, root, d)
 
     @classmethod
-    def from_two_dimensional_substitution(cls, m):
+    def from_two_dimensional_substitution(cls, s):
         r"""
         Return the GIFS defined by a 2-dimensional primitive
         substitution
@@ -170,14 +195,88 @@ class GraphDirectedIteratedFunctionSystem(object):
 
             sage: from slabbe import GraphDirectedIteratedFunctionSystem as GIFS
             sage: from slabbe import Substitution2d
-            sage: d = {}                         # not tested
-            sage: m = Substitution2d(d)          # not tested
-            sage: s = InflationRule.from_one_dimensional_substitution(s)  # not tested
-            sage: s                              # not tested
-            Inflation Rule (multiplier=root) defined on 2 sets
+            sage: A = [[3]]
+            sage: B = [[3],[2]]
+            sage: C = [[3,1]]
+            sage: D = [[3,1],[2,0]]
+            sage: d = {0:A, 1:B, 2:C, 3:D}
+            sage: s = Substitution2d(d)
+            sage: ifs = GIFS.from_two_dimensional_substitution(s)
+            sage: ifs.pp()
+            GIFS defined by 9 maps on Vector space of dimension 2 over 
+            Number Field in rootX with defining polynomial x^2 - x - 1 with 
+            rootX = 1.618033988749895?
+            edge (0,3):
+                  [rootX     0]     [0]
+            x |-> [    0 rootX] x + [0]
+            edge (1,3):
+                  [rootX     0]     [0]
+            x |-> [    0 rootX] x + [0]
+            edge (1,2):
+                  [rootX     0]     [rootX]
+            x |-> [    0 rootX] x + [    0]
+            edge (2,3):
+                  [rootX     0]     [0]
+            x |-> [    0 rootX] x + [0]
+            edge (2,1):
+                  [rootX     0]     [    0]
+            x |-> [    0 rootX] x + [rootX]
+            edge (3,3):
+                  [rootX     0]     [0]
+            x |-> [    0 rootX] x + [0]
+            edge (3,1):
+                  [rootX     0]     [    0]
+            x |-> [    0 rootX] x + [rootX]
+            edge (3,2):
+                  [rootX     0]     [rootX]
+            x |-> [    0 rootX] x + [    0]
+            edge (3,0):
+                  [rootX     0]     [rootX]
+            x |-> [    0 rootX] x + [rootX]
 
         """
-        raise NotImplementedError
+        from sage.matrix.constructor import matrix
+        from sage.groups.affine_gps.affine_group import AffineGroup
+
+        rootX, rootY, shapes = s.stone_inflation_shapes()
+        KX = rootX.parent()
+        KY = rootY.parent()
+        inflation_matrix = matrix.diagonal([rootX, rootY])
+        base_ring = inflation_matrix.base_ring()
+        F = AffineGroup(2, base_ring)
+        vector_space = F.vector_space()
+
+        alphabet = s.domain_alphabet()
+
+        edges = []
+        for a in alphabet:
+            s_a = s([[a]])
+
+            # compute the X positions of marker points
+            lower_word = [col[0] for col in s_a]
+            X_pos = []
+            pos = base_ring.zero()
+            for b in lower_word:
+                X_pos.append(pos)
+                pos += shapes[b][0]
+
+            # compute the Y positions of marker points
+            left_word = s_a[0]
+            Y_pos = []
+            pos = base_ring.zero()
+            for b in left_word:
+                Y_pos.append(pos)
+                pos += shapes[b][1]
+
+            # compute the translations
+            for i,col in enumerate(s_a):
+                for j,b in enumerate(col):
+                    translation = (X_pos[i], Y_pos[j])
+                    f = F(inflation_matrix, translation)
+                    edge = (a, b, f)
+                    edges.append(edge)
+
+        return GraphDirectedIteratedFunctionSystem(vector_space, edges)
 
     @classmethod
     def from_inflation_rule(cls, module, multiplier, displacement_matrix):
@@ -300,10 +399,17 @@ class GraphDirectedIteratedFunctionSystem(object):
 
             sage: from slabbe import GraphDirectedIteratedFunctionSystem as GIFS
             sage: from slabbe import Substitution2d
-            sage: m = Substitution2d(...) # not tested
-            sage: s = GIFS.from_two_dimensional_substitution(m)
-            sage: s.galois_conjugate()
-            Inflation Rule (multiplier=-tau + 1) defined on 4 sets
+            sage: A = [[3]]
+            sage: B = [[3],[2]]
+            sage: C = [[3,1]]
+            sage: D = [[3,1],[2,0]]
+            sage: d = {0:A, 1:B, 2:C, 3:D}
+            sage: s = Substitution2d(d)
+            sage: ifs = GIFS.from_two_dimensional_substitution(s)
+            sage: ifs.galois_conjugate()
+            GIFS defined by 9 maps on Vector space of dimension 2 over 
+            Number Field in rootX with defining polynomial x^2 - x - 1 with 
+            rootX = 1.618033988749895?
 
         ::
 
