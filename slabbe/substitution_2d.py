@@ -1042,6 +1042,19 @@ class Substitution2d(object):
             sage: sorted(s.list_dominoes(direction='vertical'))
             [(0, 0), (0, 1), (1, 0), (1, 1)]
 
+        ::
+
+            sage: A = [[3]]
+            sage: B = [[3],[2]]
+            sage: C = [[3,1]]
+            sage: D = [[3,1],[2,0]]
+            sage: d = {0:A, 1:B, 2:C, 3:D}
+            sage: s = Substitution2d(d)
+            sage: sorted(s.list_dominoes(direction='horizontal'))
+            [(0, 1), (1, 0), (1, 1), (2, 3), (3, 2), (3, 3)]
+            sage: sorted(s.list_dominoes(direction='vertical'))
+            [(0, 2), (1, 3), (2, 0), (2, 2), (3, 1), (3, 3)]
+
         """
         if not self.codomain_alphabet() <= self.domain_alphabet():
             raise ValueError("codomain alphabet (='{}') is not a subset of the"
@@ -1070,6 +1083,86 @@ class Substitution2d(object):
         R = RecursivelyEnumeratedSet(seeds, children)
         #return [create_table(f) for f in R]
         return list(R)
+
+    def stone_inflation_shapes(self):
+        r"""
+        Return a dictionary of letters of the domain alphabet associated to
+        pairs ``(width, height)`` describing the rectangular shape
+        associated to the given letter.
+
+        Those rectangular shapes are such that the 2d substitution can be
+        seen as stone inflation, see section 5.6 of [BG13]_.
+
+        INPUT:
+
+        - ``self`` -- expansive and primitive 2d substitution
+
+        OUTPUT:
+
+        - horizontal expansion in X-axis
+        - vertical expansion in Y-axis
+        - dictionary of ``letter:(width, height)``
+
+        EXAMPLES::
+
+            sage: from slabbe import Substitution2d
+            sage: A = [[3]]
+            sage: B = [[3],[2]]
+            sage: C = [[3,1]]
+            sage: D = [[3,1],[2,0]]
+            sage: d = {0:A, 1:B, 2:C, 3:D}
+            sage: s = Substitution2d(d)
+            sage: rootX, rootY, stone_shapes = s.stone_inflation_shapes()
+            sage: stone_shapes
+            {0: (1, 1), 1: (rootX, 1), 2: (1, rootY), 3: (rootX, rootY)}
+            sage: {a:(w.n(),h.n()) for a,(w,h) in stone_shapes.items()}
+            {0: (1.00000000000000, 1.00000000000000),
+             1: (1.61803398874989, 1.00000000000000),
+             2: (1.00000000000000, 1.61803398874989),
+             3: (1.61803398874989, 1.61803398874989)}
+
+        """
+        if not self.codomain_alphabet() <= self.domain_alphabet():
+            raise ValueError("codomain alphabet (='{}') is not a subset of the"
+                    " domain alphabet (={})".format(self.codomain_alphabet(),
+                                              self.domain_alphabet()))
+        alphabet = self.domain_alphabet()
+
+        from sage.sets.disjoint_set import DisjointSet
+        from sage.combinat.words.morphism import WordMorphism
+        from slabbe.matrices import perron_left_eigenvector_in_number_field
+
+        dominoesH = self.list_dominoes(direction='horizontal')
+        partitionH = DisjointSet(alphabet)
+        for a,b in dominoesH:
+            partitionH.union(a,b)
+        pHd = partitionH.element_to_root_dict()
+        pH = Substitution2d.from_permutation(pHd)
+        repH = sorted(partitionH.root_to_elements_dict().keys())
+        qH = Substitution2d.from_permutation({r:r for r in repH})
+        sH = pH * self * qH
+        sH = {k:v[0] for k,v in sH._d.items()}
+        sH = WordMorphism(sH).incidence_matrix()
+        rootY, heights = perron_left_eigenvector_in_number_field(sH, 'rootY')
+        heigths_dict = dict(zip(repH, heights))
+        heigths_dict = {k:heigths_dict[v] for k,v in pHd.items()}
+
+        dominoesV = self.list_dominoes(direction='vertical')
+        partitionV = DisjointSet(alphabet)
+        for a,b in dominoesV:
+            partitionV.union(a,b)
+        pVd = partitionV.element_to_root_dict()
+        pV = Substitution2d.from_permutation(pVd)
+        repV = sorted(partitionV.root_to_elements_dict().keys())
+        qV = Substitution2d.from_permutation({r:r for r in repV})
+        sV = pV * self * qV
+        sV = {k:[col[0] for col in v] for k,v in sV._d.items()}
+        sV = WordMorphism(sV).incidence_matrix()
+        rootX, widths = perron_left_eigenvector_in_number_field(sV, 'rootX')
+        widths_dict = dict(zip(repV, widths))
+        widths_dict = {k:widths_dict[v] for k,v in pVd.items()}
+
+        return rootX, rootY, {a:(widths_dict[a], heigths_dict[a]) for a in alphabet}
 
     def lines_alphabet(self, direction='horizontal'):
         r"""
