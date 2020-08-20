@@ -612,7 +612,8 @@ class PolyhedronExchangeTransformation(object):
 
         """
         return (isinstance(other, PolyhedronExchangeTransformation)
-                and self._partition == other._partition
+                #and self._partition == other._partition # use this when warning is gone
+                and self._partition._items == other._partition._items
                 and self._translations == other._translations)
 
     def image_partition(self):
