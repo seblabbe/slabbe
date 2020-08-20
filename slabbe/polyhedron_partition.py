@@ -348,9 +348,12 @@ class PolyhedronPartition(object):
             False
 
         """
-        equality = (isinstance(other, PolyhedronPartition) and
-                  self._items == other._items)
-        if not equality and self.is_equal_up_to_relabeling(other):
+        is_equivalent = self.is_equal_up_to_relabeling(other)
+        if not is_equivalent:
+            return False
+        d = self.keys_permutation(other)
+        is_identity = all(d[key] == key for key in d)
+        if is_equivalent and not is_identity:
             from sage.misc.superseded import warning
             warning(99999, 
                     ('The two partitions are not equal but are equal up to a '
@@ -358,7 +361,7 @@ class PolyhedronPartition(object):
                      'polyhedron partition is now more strict. Please update '
                      'your code to use method `is_equal_up_to_relabeling` instead.'),
                     FutureWarning)
-        return equality
+        return is_equivalent and is_identity
 
     def is_equal_up_to_relabeling(self, other):
         r"""
