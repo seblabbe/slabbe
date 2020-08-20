@@ -129,7 +129,7 @@ R10e1,_ = R9e1_scaled.induced_transformation(x_le_phi_inv)
 R10e2,_ = R9e2_scaled.induced_transformation(x_le_phi_inv)
 
 # the self-similarity for P8
-assert P8 == P10
+assert P8.is_equal_up_to_relabeling(P10)
 tau = Substitution2d.from_permutation(P8.keys_permutation(P10))
 self_similarity_P8 = beta8*beta9*tau
 

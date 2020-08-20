@@ -294,7 +294,7 @@ We show that `\mathcal{P}_8` and `\mathcal{P}_{10}` are equivalent:
 
 ::
 
-    sage: P8 == P10
+    sage: P8.is_equal_up_to_relabeling(P10)
     True
     
 .. link

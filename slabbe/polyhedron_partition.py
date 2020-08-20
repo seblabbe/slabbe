@@ -122,17 +122,17 @@ def center_insphere_polytope(polytope, solver=None):
 
         sage: from slabbe.polyhedron_partition import center_insphere_polytope
         sage: P = polytopes.associahedron(['A',3])
-        sage: center_insphere_polytope(P)
+        sage: center_insphere_polytope(P)                        # abs tol 1e-6
         ([0.03553390593273766, 0.5355339059327378, 0.03553390593273766],
          1.4644660940672622)
-        sage: center_insphere_polytope(P + vector((10,10,10)))
+        sage: center_insphere_polytope(P + vector((10,10,10)))   # abs tol 1e-6
         ([10.035533905932738, 10.535533905932738, 10.035533905932738],
          1.4644660940672622)
 
     ::
 
         sage: P = Polyhedron([(0,0), (1,0), (0,10)])
-        sage: center_insphere_polytope(P)
+        sage: center_insphere_polytope(P)                        # abs tol 1e-6
         ([0.47506218943955486, 0.47506218943955486], 0.47506218943955486)
 
     """
@@ -314,7 +314,56 @@ class PolyhedronPartition(object):
 
     def __eq__(self, other):
         r"""
-        Return whether two partitions are the same.
+        Return whether two partitions are equal with same coding.
+
+        INPUT:
+
+        - ``other`` -- a partition
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition
+            sage: h = 1/2
+            sage: p = Polyhedron([(0,h),(0,1),(h,1)])
+            sage: q = Polyhedron([(0,0), (0,h), (h,1), (1,1), (1,h), (h,0)])
+            sage: r = Polyhedron([(h,0), (1,0), (1,h)])
+            sage: P = PolyhedronPartition([p,q,r])
+            sage: Q = PolyhedronPartition([p,q])
+            sage: P == P
+            True
+            sage: P == Q
+            False
+
+        The behavior of `__eq__` is now more strict::
+
+            sage: R = PolyhedronPartition({'asd':q, 'yo':r, 'foo':p})
+            sage: P == R
+            doctest:warning
+            ...
+            FutureWarning: The two partitions are not equal but are equal
+            up to a permutation of the coding. The meaning of == for
+            polyhedron partition is now more strict. Please update your
+            code to use method `is_equal_up_to_relabeling` instead.
+            See https://trac.sagemath.org/99999 for details.
+            False
+
+        """
+        equality = (isinstance(other, PolyhedronPartition) and
+                  self._items == other._items)
+        if not equality and self.is_equal_up_to_relabeling(other):
+            from sage.misc.superseded import warning
+            warning(99999, 
+                    ('The two partitions are not equal but are equal up to a '
+                     'permutation of the coding. The meaning of == for '
+                     'polyhedron partition is now more strict. Please update '
+                     'your code to use method `is_equal_up_to_relabeling` instead.'),
+                    FutureWarning)
+        return equality
+
+    def is_equal_up_to_relabeling(self, other):
+        r"""
+        Return whether two partitions are equivalent, i.e., are equal up to
+        a permutation of the coding.
 
         The coding is not considered.
 
@@ -332,11 +381,11 @@ class PolyhedronPartition(object):
             sage: P = PolyhedronPartition([p,q,r])
             sage: Q = PolyhedronPartition([p,q])
             sage: R = PolyhedronPartition({'asd':q, 'yo':r, 'foo':p})
-            sage: P == P
+            sage: P.is_equal_up_to_relabeling(P)
             True
-            sage: P == Q
+            sage: P.is_equal_up_to_relabeling(Q)
             False
-            sage: P == R
+            sage: P.is_equal_up_to_relabeling(R)
             True
         """
         return (isinstance(other, PolyhedronPartition) and

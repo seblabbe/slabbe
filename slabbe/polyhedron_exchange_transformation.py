@@ -584,6 +584,37 @@ class PolyhedronExchangeTransformation(object):
         else:
             raise TypeError('call undefined on input p(={})'.format(p))
 
+    def __eq__(self, other):
+        r"""
+        Return whether two polyhedron exchange transformations are equal.
+
+        INPUT:
+
+        - ``other`` -- polyhedron exchange transformation
+
+        EXAMPLES::
+
+            sage: from slabbe import PolyhedronPartition, PolyhedronExchangeTransformation
+            sage: h = 4/5
+            sage: p = Polyhedron([(0,0),(h,0),(h,1),(0,1)])
+            sage: q = Polyhedron([(1,0),(h,0),(h,1),(1,1)])
+            sage: P = PolyhedronPartition({0:p, 1:q})
+            sage: T = {0:(1-h,0), 1:(-h,0)}
+            sage: F = PolyhedronExchangeTransformation(P, T)
+            sage: F * F
+            Polyhedron Exchange Transformation of
+            Polyhedron partition of 3 atoms with 3 letters
+            with translations {0: (2/5, 0), 1: (-3/5, 0), 2: (-3/5, 0)}
+            sage: F * F * F
+            Polyhedron Exchange Transformation of
+            Polyhedron partition of 4 atoms with 4 letters
+            with translations {0: (3/5, 0), 1: (-2/5, 0), 2: (-2/5, 0), 3: (-2/5, 0)}
+
+        """
+        return (isinstance(other, PolyhedronExchangeTransformation)
+                and self._partition == other._partition
+                and self._translations == other._translations)
+
     def image_partition(self):
         r"""
         Return the partition of the image.
