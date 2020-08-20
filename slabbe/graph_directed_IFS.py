@@ -217,6 +217,9 @@ class GraphDirectedIteratedFunctionSystem(object):
         Return the GIFS defined by a 2-dimensional primitive
         substitution
 
+        The marker point associated to each rectangular tile is assumed to
+        be in the lower left corner.
+
         INPUT:
 
         - ``s`` -- Substitution2d, primitive substitution
@@ -571,6 +574,35 @@ class GraphDirectedIteratedFunctionSystem(object):
         if n_iterations < 1:
             raise ValueError('n_iterations(={}) must be larger or equal to'
                     ' 1'.format(n_iterations))
+
+    def __mul__(self, other):
+        r"""
+        Return the image of the list of list of points.
+
+        INPUT:
+
+        - ``other`` -- a GraphDirectedIteratedFunctionSystem
+
+        EXAMPLES::
+
+            sage: from slabbe import GraphDirectedIteratedFunctionSystem as GIFS
+            sage: F = AffineGroup(1, QQ)
+            sage: f1 = F.linear(1/3)
+            sage: f2 = F(1/3, vector([2/3]))
+            sage: cantor_ifs = GIFS(QQ^1, [(0,0,f1),(0,0,f2)])
+            sage: cantor_ifs * cantor_ifs
+            GIFS defined by 4 maps on Vector space of dimension 1 over
+            Rational Field
+
+        """
+        if not isinstance(other, GraphDirectedIteratedFunctionSystem):
+            raise TypeError('other (={}) is not a GIFS'.format(other))
+
+        edges = [(u,z,f*g) for (u,v,f) in self._edges 
+                           for (w,z,g) in other._edges
+                           if v == w]
+
+        return GraphDirectedIteratedFunctionSystem(self._module, edges)
 
     def plot(self, S=None, n_iterations=1, projection=None):
         r"""
