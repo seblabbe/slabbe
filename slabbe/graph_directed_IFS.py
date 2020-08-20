@@ -632,6 +632,7 @@ class GraphDirectedIteratedFunctionSystem(object):
         from sage.plot.colors import rainbow
         from sage.plot.graphics import Graphics
         from sage.plot.point import points
+        from sage.misc.prandom import shuffle
 
         if self._module.dimension() == 1 and projection is None:
             # default projection on the x-axis
@@ -642,7 +643,9 @@ class GraphDirectedIteratedFunctionSystem(object):
                     ' 2'.format(self._module.dimension()))
 
         G = Graphics()
-        vertex_to_color = dict(zip(self.vertices(), rainbow(self.num_vertices())))
+        bow = rainbow(self.num_vertices())
+        shuffle(bow)
+        vertex_to_color = dict(zip(self.vertices(), bow))
         ifs = self(S=S, n_iterations=n_iterations)
         for v,P in ifs.items():
             if not self._module.dimension() == 2:
