@@ -577,7 +577,7 @@ class GraphDirectedIteratedFunctionSystem(object):
 
     def __mul__(self, other):
         r"""
-        Return the image of the list of list of points.
+        Return the multiplication of two GIFS.
 
         INPUT:
 
@@ -601,6 +601,31 @@ class GraphDirectedIteratedFunctionSystem(object):
         edges = [(u,z,f*g) for (u,v,f) in self._edges 
                            for (w,z,g) in other._edges
                            if v == w]
+
+        return GraphDirectedIteratedFunctionSystem(self._module, edges)
+
+    def __neg__(self):
+        r"""
+        Return GIFS defined by the negative `-` of each function.
+
+        EXAMPLES::
+
+            sage: from slabbe import GraphDirectedIteratedFunctionSystem as GIFS
+            sage: F = AffineGroup(1, QQ)
+            sage: f1 = F.linear(1/3)
+            sage: f2 = F(1/3, vector([2/3]))
+            sage: cantor_ifs = GIFS(QQ^1, [(0,0,f1),(0,0,f2)])
+            sage: - cantor_ifs
+            GIFS defined by 2 maps on Vector space of dimension 1 over
+            Rational Field
+
+        """
+        try:
+            edges = [(u,v,-f) for (u,v,f) in self._edges]
+        except TypeError:
+            _,_,f = self._edges[0]
+            F = f.parent()
+            edges = [(u,v,F(-f.A(), -f.b())) for (u,v,f) in self._edges]
 
         return GraphDirectedIteratedFunctionSystem(self._module, edges)
 
