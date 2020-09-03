@@ -3,13 +3,13 @@ r"""
 d-dimensional Sturmian Configurations
 
 The `d`-dimensional Sturmian configuration is a function
-`\ZZ^d\to\{0,1,\dots,d\}` as follows.
-Given `\boldsymbol{\alpha}=(\alpha_1,\dots,\alpha_d)\in\RR^d`, we define
+`\mathbb{Z}^d\to\{0,1,\dots,d\}` as follows.
+Given `\boldsymbol{\alpha}=(\alpha_1,\dots,\alpha_d)\in\mathbb{R}^d`, we define
 
 .. MATH::
 
     \begin{array}{rccl}
-    s_{\boldsymbol{\alpha}\rho}:&\ZZ^d & \to & \{0,1,\dots,d\}\\
+    s_{\boldsymbol{\alpha}\rho}:&\mathbb{Z}^d & \to & \{0,1,\dots,d\}\\
     &\boldsymbol{n} & \mapsto &
     \sum_{i=1}^d \left(\lfloor\alpha_i+\boldsymbol{n}\cdot\boldsymbol{\alpha}+\rho\rfloor
     -\lfloor\boldsymbol{n}\cdot\boldsymbol{\alpha}+\rho\rfloor\right),\\
@@ -20,7 +20,7 @@ and
 .. MATH::
 
     \begin{array}{rccl}
-    s'_{\boldsymbol{\alpha}\rho}:&\ZZ^d & \to & \{0,1,\dots,d\}\\
+    s'_{\boldsymbol{\alpha}\rho}:&\mathbb{Z}^d & \to & \{0,1,\dots,d\}\\
     &\boldsymbol{n} & \mapsto &
     \sum_{i=1}^d \left(\lceil\alpha_i+\boldsymbol{n}\cdot\boldsymbol{\alpha}+\rho\rceil
     -\lceil\boldsymbol{n}\cdot\boldsymbol{\alpha}+\rho\rceil\right),\\

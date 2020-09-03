@@ -2541,7 +2541,7 @@ class WangTileSolver(object):
             sage: W = WangTileSolver(tiles, 3, 3)
             sage: W.vertical_alphabet()
             {0, 1, 2}
-        r"""
+        """
         right, top, left, bottom = zip(*self._tiles)
         return set(left) | set(right)
 
@@ -2554,7 +2554,7 @@ class WangTileSolver(object):
             sage: W = WangTileSolver(tiles, 3, 3)
             sage: W.horizontal_alphabet()
             {0, 1, 2}
-        r"""
+        """
         right, top, left, bottom = zip(*self._tiles)
         return set(top) | set(bottom)
 

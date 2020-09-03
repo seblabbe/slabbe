@@ -2,7 +2,7 @@
 r"""
 Graph-directed iterated function system (GIFS)
 
-See [JK14] or [BV20] or
+See [JK14]_ or [BV20]_ or
 
 - http://larryriddle.agnesscott.org/ifs/ifs.htm
 - https://encyclopediaofmath.org/wiki/Iterated_function_system
