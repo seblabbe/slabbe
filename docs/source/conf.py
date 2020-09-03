@@ -285,35 +285,6 @@ texinfo_documents = [
 
 # -- Options copied from Sagemath conf.py file -------------------------------
 
-# We use MathJax to build the documentation unless the environment
-# variable SAGE_DOC_MATHJAX is set to "no" or "False".  (Note that if
-# the user does not set this variable, then the script sage-env sets
-# it to "True".)
-
-if (os.environ.get('SAGE_DOC_MATHJAX', 'no') != 'no'
-            and os.environ.get('SAGE_DOC_MATHJAX', 'no') != 'False'):
-
-    extensions.append('sphinx.ext.mathjax')
-    mathjax_path = 'MathJax.js?config=TeX-AMS_HTML-full,../mathjax_sage.js'
-
-    from sage.misc.latex_macros import sage_mathjax_macros
-    # this is broken for now
-    # html_theme_options['mathjax_macros'] = sage_mathjax_macros()
-
-    from pkg_resources import Requirement, working_set
-    sagenb_path = working_set.find(Requirement.parse('sagenb')).location
-    mathjax_relative = os.path.join('sagenb','data','mathjax')
-
-    # It would be really nice if sphinx would copy the entire mathjax directory,
-    # (so we could have a _static/mathjax directory), rather than the contents of the directory
-
-    mathjax_static = os.path.join(sagenb_path, mathjax_relative)
-    html_static_path.append(mathjax_static)
-    exclude_patterns=['**/'+os.path.join(mathjax_relative, i) for i in ('docs', 'README*', 'test',
-                                                                        'unpacked', 'LICENSE')]
-else:
-     extensions.append('sphinx.ext.pngmath')
-
 # This is to make the verbatim font smaller; 
 # Verbatim environment is not breaking long lines 
 from sphinx.highlighting import PygmentsBridge
