@@ -26,7 +26,8 @@ Dynamical systems
    matrices
    polyhedron_exchange_transformation
    substitution_2d
-   wang_tiles
+   coding_of_PETs
+   graph_directed_IFS
 
 Combinatorics
 -------------
@@ -40,6 +41,9 @@ Combinatorics
    combinat
    graph
    partial_injection
+   magic_hexagon
+   wang_tiles
+   jeandel_rao
 
 Combinatorics on words
 ----------------------
@@ -54,6 +58,7 @@ Combinatorics on words
    language
    word_morphisms
    ostrowski
+   ddim_sturmian_configuration
 
 Digital Geometry
 ----------------
@@ -85,6 +90,7 @@ Miscellaneous
    analyze_sage_build
    ranking_scale
    fruit
+   write_to_file
 
 Indices and Tables
 ==================
