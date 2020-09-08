@@ -58,6 +58,7 @@ Combinatorics on words
    language
    word_morphisms
    ostrowski
+   beta_numeration_system
    ddim_sturmian_configuration
 
 Digital Geometry

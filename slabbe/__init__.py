@@ -42,6 +42,8 @@ from .write_to_file import write_str_to_file
 from .jeandel_rao import random_jeandel_rao_tiling_rectangle
 from .graph_directed_IFS import GraphDirectedIteratedFunctionSystem
 
+from .beta_numeration_system import BetaTransformation
+
 # BUG (sometimes, cython code does not work properly)
 try:
     from .kolakoski_word import KolakoskiWord
