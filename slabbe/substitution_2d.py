@@ -697,8 +697,10 @@ class Substitution2d(object):
         raise NotImplementedError('method desubstitute moved to wang tile')
 
     @rename_keyword(fontsize='font')
-    def wang_tikz(self, domain_tiles, codomain_tiles, domain_color=None,
-            codomain_color=None, size=1, scale=1, font=r'\normalsize',
+    def wang_tikz(self, domain_tiles, codomain_tiles, 
+            domain_color=None, codomain_color=None, 
+            domain_color_by_id=None, codomain_color_by_id=None,
+            size=1, scale=1, font=r'\normalsize',
             rotate=None, label_shift=.2, id=True, edges=True, 
             ncolumns=4, direction='right', extra_space=1):
         r"""
@@ -711,6 +713,8 @@ class Substitution2d(object):
         - ``codomain_tiles`` -- tiles of the codomain
         - ``domain_color`` -- dict (default: ``None``) from tile values -> tikz colors
         - ``codomain_color`` -- dict (default: ``None``) from tile values -> tikz colors
+        - ``domain_color_by_id`` -- dict (default: ``None``) from tile values -> tikz colors
+        - ``codomain_color_by_id`` -- dict (default: ``None``) from tile values -> tikz colors
         - ``size`` -- number (default: ``1``), size of the tile
         - ``scale`` -- number (default: ``1``), scale of tikzpicture
         - ``font`` -- string (default: ``r'\normalsize'``
@@ -743,6 +747,15 @@ class Substitution2d(object):
             sage: fn = lambda colors:''.join(map(str, colors))
             sage: domain_tiles = W.desubstitute(s, fn)
             sage: tikz = s.wang_tikz(domain_tiles, codomain_tiles, rotate=(90,0,90,0))
+            sage: _ = tikz.pdf(view=False)      # long time
+
+        Color tiles by their id::
+
+            sage: domain_color_by_id = {4:'red', 5:'blue'}
+            sage: codomain_color_by_id = {0:'orange', 1:'green', 2:'yellow'}
+            sage: tikz = s.wang_tikz(domain_tiles, codomain_tiles,
+            ....: domain_color_by_id=domain_color_by_id,
+            ....: codomain_color_by_id=codomain_color_by_id)
             sage: _ = tikz.pdf(view=False)      # long time
 
         Applying a transformation matrix::
@@ -797,9 +810,16 @@ class Substitution2d(object):
             lines.append(r'\tikzstyle{{every node}}=[font={}]'.format(font))
 
             desubstituted_tile = domain_tiles[a] 
+            # todo: should we create a tiling of a single tile here?
             this_id = a if id else None
+            if domain_color_by_id:
+                color = domain_color_by_id[a]
+            elif domain_color is not None:
+                color = tuple(domain_color[x] for x in desubstituted_tile)
+            else:
+                color = None
             new_lines = tile_to_tikz(desubstituted_tile, (0,0),
-                    color=domain_color, id=this_id, sizex=size, sizey=size,
+                    color=color, id=this_id, sizex=size, sizey=size,
                     rotate=rotate, label_shift=label_shift,
                     right_edges=edges, top_edges=edges, left_edges=edges,
                     bottom_edges=edges)
@@ -810,7 +830,8 @@ class Substitution2d(object):
 
             image_a = self._d[a]
             tiling = WangTiling(image_a, codomain_tiles, codomain_color)
-            tiling_tikz = tiling.tikz(color=codomain_color, font=font,
+            tiling_tikz = tiling.tikz(color=codomain_color,
+                    color_by_tile_id=codomain_color_by_id, font=font,
                     rotate=rotate, label_shift=label_shift, scale=scale,
                     edges=edges, id=id, size=size)
 
