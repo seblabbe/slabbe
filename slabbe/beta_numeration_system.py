@@ -45,7 +45,7 @@ AUTHOR:
 #*****************************************************************************
 from sage.functions.other import floor
 
-class BetaTransformation(SageObject):
+class BetaTransformation(object):
     r"""
     INPUT:
 
