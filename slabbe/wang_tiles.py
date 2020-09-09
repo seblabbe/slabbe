@@ -103,7 +103,9 @@ def tile_to_tikz(tile, position, color=None, id=None, id_color='',
 
     - ``tile`` -- tuple of length 4
     - ``position`` -- tuple of two numbers
-    - ``color`` -- dict (default: ``None``) from tile values -> tikz colors
+    - ``color`` -- dict or tuple or string (default: ``None``), color of the whole
+      tile, or color of each 4 edges (east, north, west, south), or dict of
+      edge id to colors
     - ``id`` -- id (default: ``None``) of the tile to be printed in the center
     - ``id_color`` -- string (default: ``''``) 
     - ``id_format`` -- string (default: ``r'{}'``) to be called with
@@ -214,12 +216,19 @@ def tile_to_tikz(tile, position, color=None, id=None, id_color='',
     #lines.append(r'\begin{tikzpicture}')
     lines.append('% tile at position (x,y)={}'.format((x,y)))
     if color:
-        triangle = r'\fill[{}] {} -- {} -- {};'
-        c = (x+.5*sx,y+.5*sy)
-        lines.append(triangle.format(color[tile[0]],(x+sx,y),c,(x+sx,y+sy)))
-        lines.append(triangle.format(color[tile[1]],(x,y+sy),c,(x+sx,y+sy)))
-        lines.append(triangle.format(color[tile[2]],(x,y),c,(x,y+sy)))
-        lines.append(triangle.format(color[tile[3]],(x,y),c,(x+sx,y)))
+        if isinstance(color, dict):
+            color = tuple(color[a] for a in tile)
+        if isinstance(color, tuple):
+            col0, col1, col2, col3 = color
+            triangle = r'\fill[{}] {} -- {} -- {};'
+            c = (x+.5*sx,y+.5*sy)
+            lines.append(triangle.format(col0, (x+sx,y),c,(x+sx,y+sy)))
+            lines.append(triangle.format(col1, (x,y+sy),c,(x+sx,y+sy)))
+            lines.append(triangle.format(col2, (x,y),c,(x,y+sy)))
+            lines.append(triangle.format(col3, (x,y),c,(x+sx,y)))
+        else:
+            square = r'\fill[{}] {} -- {} -- {} -- {} -- cycle;'
+            lines.append(square.format(color, (x,y), (x+sx,y), (x+sx,y+sy), (x,y+sy)))
 
     if id is not None:
         c = (x+.5*sx,y+.5*sy)
@@ -4351,8 +4360,8 @@ class WangTiling(object):
         return L
 
     @rename_keyword(fontsize='font')
-    def tikz(self, color=None, font=r'\normalsize', rotate=None,
-            id=True, id_color='', id_format='{}', label=True,
+    def tikz(self, color=None, color_by_tile_id=None, font=r'\normalsize',
+            rotate=None, id=True, id_color='', id_format='{}', label=True,
             label_shift=.2, label_color='black', scale=1, size=1,
             edges=True, draw_H=None, draw_V=None, extra_before='',
             extra_after=''):
@@ -4361,14 +4370,16 @@ class WangTiling(object):
 
         INPUT:
 
-        - ``color`` -- None or dict from tile values -> tikz colors
+        - ``color`` -- None or dict from edge values -> tikz color
+        - ``color_by_tile_id`` -- None or dict from tile id -> color, if
+          not ``None``, the result will ignore the ``color`` argument
         - ``font`` -- string (default: ``r'\normalsize'``
         - ``rotate`` -- list or ``None`` (default:``None``) list of four angles
           in degrees like ``(0,0,0,0)``, the rotation angle to apply to each
           label of Wang tiles. If ``None``, it performs a 90 degres rotation
           for left and right labels taking more than one character.
         - ``id`` -- boolean (default: ``True``), presence of the tile id
-        - ``id_color`` -- string (default: ``''``) 
+        - ``id_color`` -- string (default: ``''``), color of the id
         - ``id_format`` -- string (default: ``r'{}'``) to be called with
           ``id_format.format(key)``
         - ``edges`` -- bool (default: ``True``) 
@@ -4376,7 +4387,8 @@ class WangTiling(object):
           boolean, presence of the color labels
         - ``label_shift`` -- number (default: ``.2``) translation distance
           of the label from the edge
-        - ``label_color`` -- string (default: ``'black'``)
+        - ``label_color`` -- string (default: ``'black'``), color of the
+          label
         - ``scale`` -- number or 2-tuple (default: ``1``), tikzpicture
           scale. If given a 2-tuple, it is interpreted as (xscale, yscale)
         - ``size`` -- number (default: ``1``) size of tiles
@@ -4446,6 +4458,11 @@ class WangTiling(object):
             sage: tiling = WangTiling(table, tiles, color)
             sage: t = tiling.tikz()
 
+        Coloring the tiles by their id::
+
+            sage: d = {0:'green', 1:'yellow'}
+            sage: t = tiling.tikz(color_by_tile_id=d)
+
         Testing the options::
 
             sage: tiles = [(0,3,1,2), (1,2,0,3)]
@@ -4506,6 +4523,12 @@ class WangTiling(object):
                 tile = self._tiles[i]
                 right_edges = edges and (j == W - 1 or self._table[j+1][k] is None)
                 top_edges = edges and (k == H - 1 or self._table[j][k+1] is None)
+                if color is None:
+                    pass
+                elif color_by_tile_id:
+                    color = color_by_tile_id[i]
+                else:
+                    color = tuple(color[a] for a in tile)
                 more_lines = tile_to_tikz(tile, position, color=color,
                         id=this_id, id_color=id_color, id_format=id_format,
                         sizex=size, sizey=size, rotate=rotate, label=label,
