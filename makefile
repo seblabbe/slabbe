@@ -24,10 +24,10 @@ pretestpython3:
 coverage:
 	sage -coverage slabbe/*
 
-doc:
+doc:install
 	cd docs && sage -sh -c "make html"
 
-doc-pdf:
+doc-pdf:install
 	cd docs && sage -sh -c "make latexpdf"
 
 dist:
